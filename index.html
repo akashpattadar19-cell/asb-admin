@@ -117,6 +117,16 @@ td.nowrap{white-space:nowrap}
 .bar.over span{background:var(--bad)}
 .bar.done span{background:var(--good)}
 .pill.nodot::before{display:none}
+table.dues tr.due-emp{cursor:pointer} table.dues tr.due-emp:hover td{background:var(--sunk,rgba(0,0,0,.03))}
+table.dues tr.due-emp.open td{background:var(--sunk,rgba(0,0,0,.04));border-bottom:0}
+table.dues .chev{width:14px;color:var(--muted);font-size:12px}
+table.dues tr.due-items>td{padding:0 0 12px 40px;background:var(--sunk,rgba(0,0,0,.04))}
+table.inner{width:100%;background:var(--card,#fff);border:1px solid var(--line);border-radius:10px}
+table.inner th{font-size:11px}
+.danger-t{color:var(--bad)}
+.hrow{display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center;margin-bottom:8px}
+.chk{display:inline-flex;gap:6px;align-items:center;font-size:13px;white-space:nowrap}
+.chk-f .chk{margin-top:10px}
 .rk-sw{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:2px 0;cursor:pointer;font:inherit;font-size:13px;font-weight:600;color:var(--muted)}
 .rk-sw i{position:relative;width:38px;height:22px;border-radius:12px;background:var(--line);transition:.15s;flex:none}
 .rk-sw i::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:.15s}
@@ -388,7 +398,7 @@ let db = null, downloads = null, unsubOps = null, unsubMonth = null;
 const payDoc = () => state.payroll[state.payMonth] ?? null;
 
 /* ───────── routing ───────── */
-const VIEWS = ["dashboard","employees","target","perf","operations","fines","payroll","app","rules","admins"];
+const VIEWS = ["dashboard","employees","target","perf","operations","dues","payroll","app","rules","admins"];
 const SUB_VIEWS = ["target","perf"];
 const view = () => { const h = location.hash.slice(1); return VIEWS.includes(h) ? h : "dashboard"; };
 window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
@@ -430,7 +440,7 @@ function render(){
   if (state.offline) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("offline")}</b></div>`; return; }
   if (!state.ready) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("loading")}</b></div>`; return; }
   const ro = state.canWrite ? "" : `<div class="note warn">${t("readOnly")}</div>`;
-  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, fines: vFines, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
+  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, dues: vDues, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
   main.querySelectorAll("[data-needs-write]").forEach(el => { if (!state.canWrite) el.disabled = true; });
 }
 
@@ -480,7 +490,7 @@ function vDashboard(){
       ${rows.slice(0,10).map(r=>`<tr><td><span class="rank ${r.rank<=3?"r"+r.rank:""}">${r.rank}</span></td><td class="name">${esc(empName(r.id))}</td><td>${plateChip(state.emp[r.id]?.plate)}</td><td class="r"><b>${r.o}</b></td></tr>`).join("")}
       </tbody></table></div>` : `<div class="empty"><b>${t("noOrders")}</b>${t("noOrdersHint")}</div>`}
     </section>
-    <section class="panel"><h2>${t("recentFines")}<a class="btn ghost sm" href="#fines">${t("nav_fines")}</a></h2>
+    <section class="panel"><h2>${t("recentFines")}<a class="btn ghost sm" href="#dues">${t("nav_dues")}</a></h2>
       ${recent.length ? `<div class="scroll"><table><tbody>${recent.map(([,f])=>`<tr><td><div class="name">${esc(empName(f.employeeId))}</div><div class="sub">${esc(f.date)} · ${t(f.category)}</div></td><td class="r nowrap ${f.waived?"sub":"neg"}">${fmt(f.amount)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty"><b>${t("noFines")}</b></div>`}
     </section>
   </div>`;
@@ -621,35 +631,129 @@ document.addEventListener("change", e => {
   if (e.target.id === "payMonth" && e.target.value) { state.payMonth = e.target.value; state.adjDraft = {}; subMonth(); render(); }
 });
 
-/* ───────── Fines & advances ───────── */
-function vFines(){
-  const tab = state.finesTab;
-  const coll = tab === "fines" ? state.fines : state.adv;
-  const list = Object.entries(coll).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+/* ───────── Dues overview: fines, advances and other money a driver owes, in one place ───────── */
+const DUE_TYPES = ["ADVANCE", ...CATS];
+/* every due as one list; advances live in "advances", everything else in "fines" */
+function allDues(){
+  return [
+    ...Object.entries(state.fines).map(([id, x]) => ({ ...x, id, coll: "fines", type: x.category || "OTHER" })),
+    ...Object.entries(state.adv).map(([id, x]) => ({ ...x, id, coll: "advances", type: "ADVANCE" })),
+  ];
+}
+const dueRemaining = x => x.waived ? 0 : (+x.remaining || 0);
+const dueStatus = x => x.waived ? "waived" : (+x.remaining || 0) <= 0 ? "cleared" : "open";
+/* history is the source of truth: remaining = amount − everything recovered */
+function withHistory(amount, history){
+  let left = r2(amount); const h = [];
+  for (const x of history) { left = r2(Math.max(0, left - (+x.amount || 0))); h.push({ ...x, amount: r2(+x.amount || 0), remaining: left }); }
+  return { remaining: left, history: h };
+}
+function vDues(){
+  const q = (state.dq || "").trim().toLowerCase(), ft = state.dType || "", fs = state.dStat || "";
+  const items = allDues().filter(x => (!ft || x.type === ft) && (!fs || dueStatus(x) === fs)
+    && (!q || [empName(x.employeeId), state.emp[x.employeeId]?.residentId, x.reason].some(v => String(v ?? "").toLowerCase().includes(q))));
+  const live = allDues().filter(x => !x.waived);
+  const total = live.reduce((s, x) => s + (+x.amount || 0), 0), left = live.reduce((s, x) => s + dueRemaining(x), 0);
+  const monthly = live.filter(x => dueRemaining(x) > 0).reduce((s, x) => s + Math.min(+x.monthly || 0, dueRemaining(x)), 0);
+  const byEmp = {};
+  for (const x of items) (byEmp[x.employeeId] ??= []).push(x);
+  const groups = Object.entries(byEmp).map(([eid, list]) => ({ eid, list: list.sort((a, b) => String(b.date).localeCompare(String(a.date))),
+    total: list.filter(x => !x.waived).reduce((s, x) => s + (+x.amount || 0), 0), left: list.reduce((s, x) => s + dueRemaining(x), 0),
+    monthly: list.filter(x => dueRemaining(x) > 0).reduce((s, x) => s + Math.min(+x.monthly || 0, dueRemaining(x)), 0) }))
+    .sort((a, b) => b.left - a.left || empName(a.eid).localeCompare(empName(b.eid)));
+  const open = state.dOpen ?? (state.dOpen = {});
+  const stPill = x => { const st = dueStatus(x); return st === "waived" ? `<span class="pill p-mute nodot">${t("waived")}</span>` : st === "cleared" ? `<span class="pill p-good nodot">${t("du_cleared")}</span>` : `<b class="neg">${fmt(x.remaining)}</b>`; };
   return `
-  <div class="head"><div><h1>${t("nav_fines")}</h1><p>${t("outstanding")}: <b class="neg">${fmt(outstandingOf(state.fines))}</b> · ${t("advancesOut")}: <b>${fmt(outstandingOf(state.adv))}</b> ${t("sar")}</p></div>
-    <div class="tools">
-      <button class="btn ghost" data-act="adv-new" data-needs-write>+ ${t("newAdvance")}</button>
-      <button class="btn" data-act="fine-new" data-needs-write>+ ${t("issueFine")}</button>
-    </div></div>
-  <div class="filters">
-    <button class="btn ${tab==="fines"?"":"ghost"} sm" data-act="tab" data-v="fines">${t("fines")} (${Object.keys(state.fines).length})</button>
-    <button class="btn ${tab==="adv"?"":"ghost"} sm" data-act="tab" data-v="adv">${t("advances")} (${Object.keys(state.adv).length})</button>
+  <div class="head"><div><h1>${t("nav_dues")}</h1><p>${t("du_hint")}</p></div>
+    <div class="tools"><button class="btn" data-act="due-new" data-needs-write>+ ${t("du_new")}</button></div></div>
+  <div class="kpis">
+    <div class="kpi"><span>${t("du_total")}</span><b>${fmt(total)}</b><small>${t("sar")}</small></div>
+    <div class="kpi"><span>${t("du_recovered")}</span><b class="pos">${fmt(total - left)}</b><small>${t("sar")}</small></div>
+    <div class="kpi"><span>${t("du_left")}</span><b class="neg">${fmt(left)}</b><small>${t("sar")}</small></div>
+    <div class="kpi"><span>${t("du_monthly")}</span><b>${fmt(monthly)}</b><small>${t("du_monthly_s")}</small></div>
   </div>
-  <section class="panel">${list.length ? `<div class="scroll"><table>
-    <thead><tr><th>${t("date")}</th><th>${t("employee")}</th>${tab==="fines"?`<th>${t("category")}</th>`:""}<th>${t("reason")}</th><th class="r">${t("amount")}</th><th class="r">${t("perMonth")}</th><th class="r">${t("remaining")}</th><th>${t("history")}</th><th></th></tr></thead>
-    <tbody>${list.map(([id,x]) => `<tr>
-      <td class="nowrap">${esc(x.date)}</td>
-      <td class="name">${esc(empName(x.employeeId))}</td>
-      ${tab==="fines"?`<td><span class="pill p-info">${t(x.category)}</span></td>`:""}
-      <td style="max-width:260px">${esc(x.reason)}</td>
-      <td class="r nowrap">${fmt(x.amount)}</td>
-      <td class="r nowrap">${fmt(x.monthly)}<div class="sub">${esc(x.startMonth)}</div></td>
-      <td class="r nowrap">${x.waived?`<span class="pill p-mute">${t("waived")}</span>`:(+x.remaining||0)<=0?`<span class="pill p-good">${t("paid")}</span>`:`<b class="neg">${fmt(x.remaining)}</b>`}</td>
-      <td class="sub">${(x.history??[]).map(h=>`${esc(h.month)}: −${fmt(h.amount)}`).join("<br>")||t("none")}</td>
-      <td>${tab==="fines"&&!x.waived&&(+x.remaining||0)>0?`<button class="btn ghost sm" data-act="fine-waive" data-id="${id}" data-needs-write>${t("waive")}</button>`:""}</td>
-    </tr>`).join("")}</tbody></table></div>`
-    : `<div class="empty"><b>${tab==="fines"?t("noFines"):t("noAdv")}</b></div>`}</section>`;
+  <div class="filters">
+    <input class="input" id="dq" placeholder="${t("search")}" value="${esc(state.dq || "")}">
+    <select class="input" id="dType"><option value="">${t("du_all_types")}</option>${DUE_TYPES.map(c => `<option value="${c}" ${ft === c ? "selected" : ""}>${t(c)}</option>`).join("")}</select>
+    <select class="input" id="dStat"><option value="">${t("du_all_status")}</option>${["open","cleared","waived"].map(c => `<option value="${c}" ${fs === c ? "selected" : ""}>${t("du_st_" + c)}</option>`).join("")}</select>
+  </div>
+  <section class="panel">${groups.length ? `<div class="scroll"><table class="dues">
+    <thead><tr><th>${t("employee")}</th><th class="r">${t("du_items")}</th><th class="r">${t("du_total")}</th><th class="r">${t("du_recovered")}</th><th class="r">${t("du_left")}</th><th class="r">${t("perMonth")}</th><th></th></tr></thead>
+    <tbody>${groups.map(g => { const e = state.emp[g.eid] ?? {}, isOpen = !!open[g.eid]; return `
+      <tr class="due-emp ${isOpen ? "open" : ""}" data-act="due-toggle" data-id="${g.eid}">
+        <td><div style="display:flex;gap:10px;align-items:center"><span class="chev">${isOpen ? "▾" : "▸"}</span>${avatarHtml(e.photoUrl, e.fullName, 34)}<div><div class="name">${esc(e.fullName ?? g.eid)}</div><div class="sub mono">${esc(e.residentId ?? "")}</div></div></div></td>
+        <td class="r">${g.list.length}</td><td class="r nowrap">${fmt(g.total)}</td><td class="r nowrap pos">${fmt(g.total - g.left)}</td>
+        <td class="r nowrap">${g.left > 0 ? `<b class="neg">${fmt(g.left)}</b>` : `<span class="pill p-good nodot">${t("du_cleared")}</span>`}</td>
+        <td class="r nowrap">${fmt(g.monthly)}</td>
+        <td class="r"><button class="btn ghost sm" data-act="due-new" data-emp="${g.eid}" data-needs-write>+ ${t("du_add")}</button></td></tr>
+      ${isOpen ? `<tr class="due-items"><td colspan="7"><table class="inner"><thead><tr><th>${t("date")}</th><th>${t("du_type")}</th><th>${t("reason")}</th><th class="r">${t("amount")}</th><th class="r">${t("perMonth")}</th><th class="r">${t("remaining")}</th><th>${t("history")}</th><th></th></tr></thead><tbody>
+        ${g.list.map(x => `<tr>
+          <td class="nowrap">${esc(x.date)}</td>
+          <td><span class="pill ${x.type === "ADVANCE" ? "p-warn" : "p-info"} nodot">${t(x.type)}</span></td>
+          <td style="max-width:240px">${esc(x.reason) || `<span class="sub">${t("none")}</span>`}</td>
+          <td class="r nowrap">${fmt(x.amount)}</td>
+          <td class="r nowrap">${fmt(x.monthly)}<div class="sub">${t("du_from")} ${esc(x.startMonth || "")}</div></td>
+          <td class="r nowrap">${stPill(x)}</td>
+          <td class="sub">${(x.history ?? []).map(h => `${esc(h.month)}: −${fmt(h.amount)}${h.cash ? ` · ${t("du_cash")}` : ""}`).join("<br>") || t("none")}</td>
+          <td><div class="row-actions">
+            <button class="btn ghost sm" data-act="due-edit" data-id="${x.coll}/${x.id}" data-needs-write>${t("edit")}</button>
+            ${dueStatus(x) === "open" ? `<button class="btn ghost sm" data-act="due-pay" data-id="${x.coll}/${x.id}" data-needs-write>${t("du_pay")}</button>` : ""}
+            <button class="btn ghost sm danger-t" data-act="due-del" data-id="${x.coll}/${x.id}" data-needs-write>${t("delete")}</button>
+          </div></td></tr>`).join("")}
+      </tbody></table></td></tr>` : ""}`; }).join("")}</tbody></table></div>`
+    : `<div class="empty"><b>${t("du_none")}</b>${t("du_none_hint")}</div>`}</section>`;
+}
+document.addEventListener("input", e => {
+  if (e.target.id === "dq") { state.dq = e.target.value; render(); const el = $("#dq"); el.focus(); el.setSelectionRange(el.value.length, el.value.length); }
+});
+document.addEventListener("change", e => {
+  if (e.target.id === "dType") { state.dType = e.target.value; render(); }
+  if (e.target.id === "dStat") { state.dStat = e.target.value; render(); }
+});
+/* one dialog to add or edit a due — every field, including past deductions, can be changed */
+function dueDialog(path, empId){
+  const [coll, did] = path ? path.split("/") : [];
+  const x = path ? (coll === "fines" ? state.fines : state.adv)[did] : null;
+  const type = x ? (coll === "advances" ? "ADVANCE" : (x.category || "OTHER")) : "ADVANCE";
+  const hist = (x?.history ?? []).map(h => ({ ...h }));
+  const hRow = (h, i) => `<div class="hrow" data-i="${i}"><input class="input" type="month" name="hm${i}" value="${esc(h.month || "")}"><input class="input num" type="number" step="0.01" min="0" name="ha${i}" value="${h.amount ?? ""}" placeholder="${t("amount")}">
+    <label class="chk"><input type="checkbox" name="hc${i}" ${h.cash ? "checked" : ""}> ${t("du_cash")}</label><button type="button" class="btn ghost sm" data-hdel="${i}">×</button></div>`;
+  openDialog({ title: x ? t("du_edit") : t("du_new"), submit: t("save"),
+    body: `<label class="f full">${t("employee")} *<select class="input" name="employeeId" required>${empOptions(x?.employeeId ?? empId ?? "")}</select></label>
+      <label class="f">${t("du_type")}<select class="input" name="type">${DUE_TYPES.map(c => `<option value="${c}" ${type === c ? "selected" : ""}>${t(c)}</option>`).join("")}</select></label>
+      <label class="f">${t("date")} *<input class="input" name="date" type="date" value="${esc(x?.date ?? todayKey())}" required></label>
+      <label class="f">${t("amount")} *<input class="input" name="amount" type="number" min="0.01" step="0.01" value="${x?.amount ?? ""}" required></label>
+      <label class="f">${t("perMonth")}<input class="input" name="monthly" type="number" min="0" step="0.01" value="${x?.monthly ?? ""}" placeholder="${t("du_monthly_ph")}"></label>
+      <label class="f">${t("startMonth")}<input class="input" name="startMonth" type="month" value="${esc(x?.startMonth ?? monthKey())}"></label>
+      ${x ? `<label class="f chk-f"><span>${t("waived")}</span><label class="chk"><input type="checkbox" name="waived" ${x.waived ? "checked" : ""}> ${t("du_waive_l")}</label></label>` : `<label class="f">${t("instalments")}<input class="input" name="inst" type="number" min="1" max="36" step="1" value="1"></label>`}
+      <label class="f full">${t("reason")}<textarea class="input" name="reason" rows="2">${esc(x?.reason ?? "")}</textarea></label>
+      ${x ? `<div class="full sec">${t("du_hist_t")}</div><p class="full sub" style="margin:0">${t("du_hist_help")}</p><div class="full" id="hList">${hist.map(hRow).join("")}</div>
+      <div class="full"><button type="button" class="btn ghost sm" id="hAdd">+ ${t("du_hist_add")}</button></div>` : ""}`,
+    onSubmit: async fd => {
+      const amount = r2(fd.amount);
+      if (!fd.employeeId || !(amount > 0) || !fd.date) fail(t("required"));
+      const history = [];
+      for (const k of Object.keys(fd)) if (/^ha\d+$/.test(k)) { const i = k.slice(2), amt = r2(fd[k]); if (fd["hm" + i] && amt > 0) history.push({ month: fd["hm" + i], amount: amt, ...(fd["hc" + i] ? { cash: true } : {}) }); }
+      history.sort((a, b) => a.month.localeCompare(b.month));
+      const inst = Math.min(36, Math.max(1, Math.round(+fd.inst || 1)));
+      const monthly = fd.monthly !== "" && fd.monthly != null ? r2(fd.monthly) : r2(Math.ceil(amount / inst * 100) / 100);
+      const rec = { employeeId: fd.employeeId, amount, date: fd.date, reason: (fd.reason || "").trim(), monthly, startMonth: fd.startMonth || monthKey(),
+        waived: !!fd.waived, ...withHistory(amount, x ? history : []), updatedAt: Date.now() };
+      if (rec.waived && !x?.waived) rec.waivedAt = Date.now();
+      const toColl = fd.type === "ADVANCE" ? "advances" : "fines";
+      if (toColl === "fines") rec.category = fd.type;
+      if (x && coll === toColl) { if (toColl === "advances") rec.category = null; await db.doc(path).set({ ...x, ...rec }); }
+      else {
+        const nid = (toColl === "fines" ? "f" : "a") + uid();
+        await db.doc(toColl + "/" + nid).set({ ...(x ?? {}), ...rec, createdAt: x?.createdAt ?? Date.now(), ...(toColl === "advances" ? { category: null } : {}) });
+        if (x) await db.doc(path).delete();
+      }
+      state.dOpen = { ...(state.dOpen ?? {}), [fd.employeeId]: true };
+      toast(t("du_saved"));
+    }});
+  let n = hist.length;
+  $("#hAdd")?.addEventListener("click", () => { $("#hList").insertAdjacentHTML("beforeend", hRow({ month: monthKey() }, n++)); });
+  $("#hList")?.addEventListener("click", ev => { const b = ev.target.closest("[data-hdel]"); if (b) b.closest(".hrow").remove(); });
 }
 
 function empOptions(sel){ return `<option value="">${t("selectEmp")}</option>` + activeEmps().map(([id,e])=>`<option value="${id}" ${sel===id?"selected":""}>${esc(e.fullName)} — ${esc(e.residentId)}</option>`).join(""); }
@@ -854,6 +958,7 @@ function vPayroll(){
       <input class="input" type="month" id="payMonth" value="${state.payMonth}" style="width:auto">
       <span class="pill ${published?"p-good":"p-warn"}">${published?t("published"):t("draft")}</span>
       <button class="btn ghost" data-act="pay-export">${t("exportCsv")}</button>
+      ${published?`<button class="btn ghost" data-act="pay-reopen" data-needs-write>${t("pay_reopen")}</button>`:""}
       ${published?"":`<button class="btn ghost" data-act="adj-save" data-needs-write>${t("saveAdj")}</button><button class="btn gold" data-act="pay-publish" data-needs-write ${slips.length?"":"disabled"}>${t("publish")}</button>`}
     </div></div>
   <div class="kpis">
@@ -1079,6 +1184,40 @@ document.addEventListener("click", async e => {
         }});
     }
 
+    if (act === "due-toggle") { if (e.target.closest("button")) return; const o = state.dOpen ?? (state.dOpen = {}); o[id] = !o[id]; render(); return; }
+    if (act === "due-new") { dueDialog(null, b.dataset.emp); return; }
+    if (act === "due-edit") { dueDialog(id); return; }
+    if (act === "due-pay") {
+      const [coll, did] = id.split("/"), x = (coll === "fines" ? state.fines : state.adv)[did];
+      openDialog({ title: `${t("du_pay")} · ${esc(empName(x.employeeId))}`, submit: t("save"),
+        body: `<p class="full sub">${t("du_pay_help")}</p>
+          <label class="f">${t("amount")} *<input class="input" name="amount" type="number" min="0.01" step="0.01" max="${x.remaining}" value="${x.remaining}" required></label>
+          <label class="f">${t("month")}<input class="input" name="month" type="month" value="${monthKey()}"></label>`,
+        onSubmit: async fd => {
+          const amt = r2(fd.amount); if (!(amt > 0)) fail(t("required"));
+          const h = [...(x.history ?? []), { month: fd.month || monthKey(), amount: Math.min(amt, +x.remaining || 0), cash: true }];
+          await db.doc(id).update({ ...withHistory(+x.amount || 0, h), updatedAt: Date.now() });
+          toast(t("du_saved"));
+        }});
+      return;
+    }
+    if (act === "due-del") {
+      openDialog({ title: t("delete"), body: `<p class="full">${t("du_del_q")}</p>`, submit: t("delete"), danger: true, onSubmit: async () => { await db.doc(id).delete(); toast(t("du_deleted")); } });
+      return;
+    }
+    if (act === "pay-reopen") {
+      const m = state.payMonth;
+      openDialog({ title: t("pay_reopen"), body: `<p class="full">${t("pay_reopen_q", { m })}</p>`, submit: t("pay_reopen"), onSubmit: async () => {
+        for (const [coll, map] of [["fines", state.fines], ["advances", state.adv]]) for (const [did, x] of Object.entries(map)) {
+          const h = x.history ?? []; if (!h.some(z => z.month === m && !z.cash)) continue;
+          await db.doc(coll + "/" + did).update(withHistory(+x.amount || 0, h.filter(z => !(z.month === m && !z.cash))));
+        }
+        const d = payDoc();
+        await db.doc("payroll/" + m).set({ month: m, status: "DRAFT", adj: d?.adj ?? {}, updatedAt: Date.now() });
+        toast(t("pay_reopened"));
+      }});
+      return;
+    }
     if (act === "fine-new" || act === "adv-new") {
       const isFine = act === "fine-new";
       openDialog({ title: isFine ? t("issueFine") : t("newAdvance"), submit: isFine ? t("issueFine") : t("save"),
@@ -1163,7 +1302,7 @@ Object.assign(I18N.en, {
  wrong_pin:"Resident ID or PIN is wrong.", locked_out:"Too many wrong attempts. Ask your supervisor to reset your PIN.",
  code_title:"Your app code", code_hint:"If sign-in is not confirmed, give this code to your supervisor.", copy:"Copy", copied:"Copied",
  unlock:"Unlock", deactivated:"Your account is deactivated", deactivated_hint:"Contact your supervisor.",
- tab_home:"Home", tab_fines:"Fines", tab_salary:"Salary", tab_profile:"Profile",
+ tab_home:"Home", tab_fines:"Dues", tab_salary:"Salary", tab_profile:"Profile",
  duty_ACTIVE:"Active", duty_ON_DUTY:"On duty", duty_OFFLINE:"Offline",
  rank_today:"Today's rank", no_rank:"No orders yet today", orders_today:"Orders today", orders_month:"This month",
  fuel_left:"Remaining today", fuel_month:"This month", fuel_nocard:"No petrol card assigned",
@@ -1190,7 +1329,7 @@ Object.assign(I18N.bn, {
  wrong_pin:"রেসিডেন্ট আইডি বা পিন ভুল।", locked_out:"অনেকবার ভুল হয়েছে। সুপারভাইজারকে পিন রিসেট করতে বলুন।",
  code_title:"আপনার অ্যাপ কোড", code_hint:"লগইন নিশ্চিত না হলে এই কোডটি সুপারভাইজারকে দিন।", copy:"কপি", copied:"কপি হয়েছে",
  unlock:"খুলুন", deactivated:"আপনার অ্যাকাউন্ট নিষ্ক্রিয়", deactivated_hint:"সুপারভাইজারের সাথে যোগাযোগ করুন।",
- tab_home:"হোম", tab_fines:"জরিমানা", tab_salary:"বেতন", tab_profile:"প্রোফাইল",
+ tab_home:"হোম", tab_fines:"বকেয়া", tab_salary:"বেতন", tab_profile:"প্রোফাইল",
  duty_ACTIVE:"সক্রিয়", duty_ON_DUTY:"ডিউটিতে", duty_OFFLINE:"অফলাইন",
  rank_today:"আজকের র‍্যাংক", no_rank:"আজ এখনো অর্ডার নেই", orders_today:"আজকের অর্ডার", orders_month:"এই মাসে",
  fuel_left:"আজ বাকি", fuel_month:"এই মাসে", fuel_nocard:"পেট্রোল কার্ড দেওয়া হয়নি",
@@ -1217,7 +1356,7 @@ Object.assign(I18N.ar, {
  wrong_pin:"رقم الإقامة أو الرقم السري غير صحيح.", locked_out:"محاولات خاطئة كثيرة. اطلب من المشرف إعادة الرقم السري.",
  code_title:"رمز تطبيقك", code_hint:"إذا لم يتأكد الدخول، أعطِ هذا الرمز للمشرف.", copy:"نسخ", copied:"تم النسخ",
  unlock:"فتح", deactivated:"حسابك موقوف", deactivated_hint:"تواصل مع المشرف.",
- tab_home:"الرئيسية", tab_fines:"المخالفات", tab_salary:"الراتب", tab_profile:"ملفي",
+ tab_home:"الرئيسية", tab_fines:"المستحقات", tab_salary:"الراتب", tab_profile:"ملفي",
  duty_ACTIVE:"نشط", duty_ON_DUTY:"في العمل", duty_OFFLINE:"غير متصل",
  rank_today:"ترتيبك اليوم", no_rank:"لا طلبات اليوم بعد", orders_today:"طلبات اليوم", orders_month:"هذا الشهر",
  fuel_left:"المتبقي اليوم", fuel_month:"هذا الشهر", fuel_nocard:"لا توجد بطاقة وقود",
@@ -1763,7 +1902,13 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "The person then creates an account on this page with that email.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", rk_col: "Rank", rk_on_t: "On = works with Rank. Tap to switch to Unrank.", rk_off_t: "Off = works without Rank. Tap to switch to Rank.", rk_set_on: "{n} now works with Rank", rk_set_off: "{n} now works without Rank (Unrank)",
+  drv_web: "Driver app (web)", nav_dues: "Dues overview", du_hint: "Everything each driver owes — fines, advances, damage and more. Click a driver to see and edit each item.",
+  du_new: "Add due", du_add: "Add", du_edit: "Edit due", du_total: "Total dues", du_recovered: "Recovered", du_left: "Still owed", du_monthly: "Deducted per month", du_monthly_s: "SAR from salary",
+  du_all_types: "All types", du_all_status: "All", du_st_open: "Still owed", du_st_cleared: "Cleared", du_st_waived: "Waived", du_items: "Items", du_type: "Type", du_from: "from",
+  du_cleared: "Cleared", du_cash: "cash", du_pay: "Record payment", du_pay_help: "Money the driver paid back outside payroll (cash or transfer).", du_saved: "Saved", du_deleted: "Deleted",
+  du_del_q: "Delete this due completely? This cannot be undone.", du_none: "No dues", du_none_hint: "Use Add due to record an advance, fine or damage.", du_monthly_ph: "auto from instalments",
+  du_waive_l: "Forgive the rest", du_hist_t: "Deductions and payments", du_hist_help: "Change or remove any past deduction. What is still owed is worked out again when you save.", du_hist_add: "Add a row",
+  ADVANCE: "Advance", delete: "Delete", pay_reopen: "Reopen for editing", pay_reopen_q: "Reopen {m} for editing? The payslips leave the driver app and the dues instalments taken in {m} are put back until you publish again.", pay_reopened: "Month reopened — edit and publish again", rk_col: "Rank", rk_on_t: "On = works with Rank. Tap to switch to Unrank.", rk_off_t: "Off = works without Rank. Tap to switch to Rank.", rk_set_on: "{n} now works with Rank", rk_set_off: "{n} now works without Rank (Unrank)",
   tgt_hint2: "Rank on = Rank rules, off = Unrank rules. The driver sees his own rules in the app.", r_extra_title: "extra order price by rating", fuel_title_all: "Fuel allowance and deductions (Rank and Unrank)",
   rMin: "Minimum orders (below = company decides)", rRate: "Per order (380–499, all ratings)", rT1: "Level 2 starts at", rT2: "Level 3 starts at",
   rB1A: "500–599 salary · A", rB1B: "500–599 salary · B", rB1C: "500–599 salary · C", rB2A: "600+ salary · A", rB2B: "600+ salary · B", rB2C: "600+ salary · C",
@@ -1788,7 +1933,13 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "তারপর ওই ব্যক্তি এই পাতায় সেই ইমেইল দিয়ে অ্যাকাউন্ট খুলবেন।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", rk_col: "Rank", rk_on_t: "অন = Rank নিয়ে কাজ করছে। চাপলে Unrank হবে।", rk_off_t: "অফ = Rank ছাড়া কাজ করছে। চাপলে Rank হবে।", rk_set_on: "{n} এখন Rank নিয়ে কাজ করছে", rk_set_off: "{n} এখন Rank ছাড়া কাজ করছে (Unrank)",
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", nav_dues: "বকেয়ার হিসাব", du_hint: "প্রত্যেক কর্মীর সব বকেয়া — জরিমানা, অগ্রিম, গাড়ির ক্ষতি ইত্যাদি। কর্মীর নামে চাপলে প্রতিটি হিসাব দেখা ও বদলানো যাবে।",
+  du_new: "নতুন বকেয়া", du_add: "যোগ", du_edit: "বকেয়া সম্পাদনা", du_total: "মোট বকেয়া", du_recovered: "আদায় হয়েছে", du_left: "এখনো বাকি", du_monthly: "প্রতি মাসে কাটা", du_monthly_s: "রিয়াল বেতন থেকে",
+  du_all_types: "সব ধরন", du_all_status: "সব", du_st_open: "বাকি আছে", du_st_cleared: "পরিশোধ হয়েছে", du_st_waived: "মাফ", du_items: "হিসাব", du_type: "ধরন", du_from: "শুরু",
+  du_cleared: "পরিশোধ", du_cash: "নগদ", du_pay: "টাকা জমা", du_pay_help: "বেতনের বাইরে কর্মী যে টাকা ফেরত দিয়েছে (নগদ বা ট্রান্সফার)।", du_saved: "সংরক্ষিত", du_deleted: "মুছে ফেলা হয়েছে",
+  du_del_q: "এই বকেয়াটি পুরোপুরি মুছে ফেলবেন? ফেরানো যাবে না।", du_none: "কোনো বকেয়া নেই", du_none_hint: "অগ্রিম, জরিমানা বা ক্ষতি লিখতে \"নতুন বকেয়া\" চাপুন।", du_monthly_ph: "কিস্তি থেকে নিজে হিসাব",
+  du_waive_l: "বাকিটা মাফ", du_hist_t: "কাটা ও জমার হিসাব", du_hist_help: "আগের যেকোনো কাটা বা জমা বদলাতে বা মুছতে পারবেন। সংরক্ষণ করলে বাকি টাকা আবার হিসাব হবে।", du_hist_add: "সারি যোগ",
+  ADVANCE: "অগ্রিম", delete: "মুছুন", pay_reopen: "সম্পাদনার জন্য খুলুন", pay_reopen_q: "{m} মাস আবার সম্পাদনার জন্য খুলবেন? কর্মীদের অ্যাপ থেকে পে-স্লিপ সরে যাবে, আর {m} মাসে কাটা বকেয়ার কিস্তি ফেরত যাবে। আবার প্রকাশ করলে নতুন করে কাটা হবে।", pay_reopened: "মাস খোলা হয়েছে — বদলে আবার প্রকাশ করুন", rk_col: "Rank", rk_on_t: "অন = Rank নিয়ে কাজ করছে। চাপলে Unrank হবে।", rk_off_t: "অফ = Rank ছাড়া কাজ করছে। চাপলে Rank হবে।", rk_set_on: "{n} এখন Rank নিয়ে কাজ করছে", rk_set_off: "{n} এখন Rank ছাড়া কাজ করছে (Unrank)",
   tgt_hint2: "Rank অন = Rank-এর নিয়ম, অফ = Unrank-এর নিয়ম। কর্মী নিজের অ্যাপে নিজের নিয়ম দেখবে।", r_extra_title: "রেটিং অনুযায়ী অতিরিক্ত অর্ডারের মূল্য", fuel_title_all: "জ্বালানি ভাতা ও কর্তন (Rank ও Unrank)",
   rMin: "সর্বনিম্ন অর্ডার (এর কম হলে কোম্পানি নির্ধারণ করবে)", rRate: "প্রতি অর্ডার (৩৮০–৪৯৯, সব রেটিং)", rT1: "দ্বিতীয় ধাপ শুরু", rT2: "তৃতীয় ধাপ শুরু",
   rB1A: "৫০০–৫৯৯ বেতন · A", rB1B: "৫০০–৫৯৯ বেতন · B", rB1C: "৫০০–৫৯৯ বেতন · C", rB2A: "৬০০+ বেতন · A", rB2B: "৬০০+ বেতন · B", rB2C: "৬০০+ বেতন · C",
@@ -1813,7 +1964,13 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "ثم ينشئ الشخص حساباً من هذه الصفحة بنفس البريد.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", rk_col: "Rank", rk_on_t: "تشغيل = يعمل مع Rank. اضغط للتحويل إلى Unrank.", rk_off_t: "إيقاف = يعمل بدون Rank. اضغط للتحويل إلى Rank.", rk_set_on: "{n} يعمل الآن مع Rank", rk_set_off: "{n} يعمل الآن بدون Rank",
+  drv_web: "تطبيق السائق (ويب)", nav_dues: "المستحقات", du_hint: "كل ما على السائق — مخالفات وسلف وأضرار وغيرها. اضغط على السائق لعرض وتعديل كل بند.",
+  du_new: "إضافة مستحق", du_add: "إضافة", du_edit: "تعديل المستحق", du_total: "إجمالي المستحقات", du_recovered: "المسدد", du_left: "المتبقي", du_monthly: "الخصم الشهري", du_monthly_s: "ريال من الراتب",
+  du_all_types: "كل الأنواع", du_all_status: "الكل", du_st_open: "متبقي", du_st_cleared: "مسدد", du_st_waived: "معفى", du_items: "البنود", du_type: "النوع", du_from: "من",
+  du_cleared: "مسدد", du_cash: "نقداً", du_pay: "تسجيل دفعة", du_pay_help: "مبلغ سدده السائق خارج الراتب (نقداً أو تحويل).", du_saved: "تم الحفظ", du_deleted: "تم الحذف",
+  du_del_q: "حذف هذا المستحق نهائياً؟ لا يمكن التراجع.", du_none: "لا مستحقات", du_none_hint: "استخدم إضافة مستحق لتسجيل سلفة أو مخالفة أو ضرر.", du_monthly_ph: "تلقائي من الأقساط",
+  du_waive_l: "إعفاء الباقي", du_hist_t: "الخصومات والدفعات", du_hist_help: "يمكنك تعديل أو حذف أي خصم سابق. يُعاد حساب المتبقي عند الحفظ.", du_hist_add: "إضافة سطر",
+  ADVANCE: "سلفة", delete: "حذف", pay_reopen: "إعادة الفتح للتعديل", pay_reopen_q: "إعادة فتح {m} للتعديل؟ تختفي القسائم من تطبيق السائق وتُعاد أقساط المستحقات المخصومة في {m} حتى تنشر مجدداً.", pay_reopened: "تم فتح الشهر — عدّل وانشر مجدداً", rk_col: "Rank", rk_on_t: "تشغيل = يعمل مع Rank. اضغط للتحويل إلى Unrank.", rk_off_t: "إيقاف = يعمل بدون Rank. اضغط للتحويل إلى Rank.", rk_set_on: "{n} يعمل الآن مع Rank", rk_set_off: "{n} يعمل الآن بدون Rank",
   tgt_hint2: "Rank مفعّل = قواعد Rank، غير مفعّل = قواعد Unrank. يرى السائق قواعده في التطبيق.", r_extra_title: "سعر الطلب الإضافي حسب التقييم", fuel_title_all: "بدل الوقود والخصومات (Rank وUnrank)",
   rMin: "الحد الأدنى للطلبات (أقل منه تحدده الشركة)", rRate: "لكل طلب (380–499، كل التقييمات)", rT1: "بداية المستوى 2", rT2: "بداية المستوى 3",
   rB1A: "راتب 500–599 · A", rB1B: "راتب 500–599 · B", rB1C: "راتب 500–599 · C", rB2A: "راتب 600+ · A", rB2B: "راتب 600+ · B", rB2C: "راتب 600+ · C",
