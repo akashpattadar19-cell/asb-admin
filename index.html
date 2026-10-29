@@ -197,6 +197,9 @@ dialog::backdrop{background:rgba(5,15,25,.5)}
 .p-big-input{font-size:20px;letter-spacing:.1em;padding:12px}
 .p-code{font:500 13px var(--f-mono);background:var(--sunk);border:1px dashed var(--line);padding:8px;border-radius:8px;word-break:break-all}
 .slip-row{width:100%;text-align:start;border:0;border-bottom:1px solid var(--line);background:none;cursor:pointer;color:inherit;font:inherit}
+.ava{border-radius:50%;object-fit:cover;flex:none;background:var(--sunk);display:inline-block;vertical-align:middle}
+.ava-i{display:inline-grid;place-items:center;background:var(--brand);color:var(--brand-ink);font-weight:700;font-family:var(--f-display)}
+.photo-pick{display:flex;gap:14px;align-items:center}
 .preview-wrap{display:grid;grid-template-columns:auto minmax(0,1fr);gap:24px;align-items:start}
 .steps{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:10px}
 @media (max-width:860px){.preview-wrap{grid-template-columns:1fr}.phone-frame{margin:0 auto}}
@@ -448,7 +451,7 @@ function vEmployees(){
   <section class="panel">${list.length ? `<div class="scroll"><table>
     <thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("mobile")}</th><th>${t("plate")}</th><th>${t("card")}</th><th>${t("status")}</th><th>${t("app_col")}</th><th class="r">${t("outstanding")}</th><th></th></tr></thead>
     <tbody>${list.map(([id,e]) => `<tr>
-      <td><div class="name">${esc(e.fullName)}</div><div class="sub">${e.fullNameAr?esc(e.fullNameAr)+" · ":""}${t(e.payType||"TARGET")}</div></td>
+      <td><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 38)}<div><div class="name">${esc(e.fullName)}</div><div class="sub">${e.fullNameAr?esc(e.fullNameAr)+" · ":""}${t(e.payType||"TARGET")}</div></div></div></td>
       <td class="mono">${esc(e.residentId)}</td>
       <td class="nowrap">${esc(e.mobile)}</td>
       <td>${plateChip(e.plate)}</td>
@@ -469,8 +472,35 @@ document.addEventListener("input", e => {
 });
 document.addEventListener("change", e => { if (e.target.id === "qStatus") { state.qStatus = e.target.value; render(); } });
 
+const avatarHtml = (url, name, size = 36, cls = "") => url
+  ? `<img class="ava ${cls}" src="${esc(url)}" alt="" width="${size}" height="${size}" style="width:${size}px;height:${size}px" loading="lazy">`
+  : `<span class="ava ava-i ${cls}" style="width:${size}px;height:${size}px;font-size:${Math.round(size * 0.42)}px">${esc((name || "?")[0].toUpperCase())}</span>`;
+async function squarePhoto(file){
+  const img = await createImageBitmap(file);
+  const side = Math.min(img.width, img.height), S = Math.min(480, side);
+  const c = document.createElement("canvas"); c.width = c.height = S;
+  c.getContext("2d").drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, S, S);
+  return new Promise(ok => c.toBlob(ok, "image/jpeg", 0.86));
+}
+async function uploadPhoto(empId, file){
+  const blob = await squarePhoto(file);
+  const path = `emp/${empId}-${Date.now()}.jpg`;
+  const { error } = await sb.storage.from("photos").upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
+  if (error) throw error;
+  return { photoUrl: sb.storage.from("photos").getPublicUrl(path).data.publicUrl, photoPath: path };
+}
+document.addEventListener("change", e => {
+  if (e.target.id !== "empPhoto") return;
+  const f = e.target.files?.[0]; if (!f) return;
+  $("#empPhotoPrev").innerHTML = `<img class="ava" src="${URL.createObjectURL(f)}" alt="" style="width:84px;height:84px">`;
+  const rm = $("#empPhotoRemove"); if (rm) rm.checked = false;
+});
 function empForm(e = {}){
   return `
+  <div class="full photo-pick"><div id="empPhotoPrev">${avatarHtml(e.photoUrl, e.fullName, 84)}</div>
+    <div style="display:flex;flex-direction:column;gap:6px;min-width:0"><label class="btn ghost sm" style="align-self:flex-start;cursor:pointer">📷 ${t("photo_choose")}<input type="file" id="empPhoto" accept="image/*" hidden></label>
+    ${e.photoUrl ? `<label class="f check" style="font-size:13px"><input type="checkbox" id="empPhotoRemove"> ${t("photo_remove")}</label>` : ""}
+    <span class="sub">${t("photo_hint")}</span></div></div>
   <label class="f full">${t("name")} *<input class="input" name="fullName" value="${esc(e.fullName)}" required></label>
   <label class="f full">${t("nameAr")}<input class="input" name="fullNameAr" dir="rtl" value="${esc(e.fullNameAr)}"></label>
   <label class="f">${t("iqama")} *<input class="input mono" name="residentId" inputmode="numeric" maxlength="10" pattern="\\d{10}" value="${esc(e.residentId)}" required></label>
@@ -695,13 +725,17 @@ document.addEventListener("click", async e => {
 
 
         if (id && fd.residentId !== cur.residentId) data.pinCheck = "";
+        const photoFile = $("#empPhoto")?.files?.[0], photoRemove = $("#empPhotoRemove")?.checked;
+        const empKey = id || ("e" + uid());
+        if (photoFile) Object.assign(data, await uploadPhoto(empKey, photoFile));
+        else if (photoRemove) Object.assign(data, { photoUrl: "", photoPath: "" });
+        if ((photoFile || photoRemove) && cur.photoPath) sb.storage.from("photos").remove([cur.photoPath]).catch(() => {});
         if (id) {
-
           await db.doc("employees/" + id).update(data); toast(data.pinCheck === "" ? t("pin_needed_reset") : t("empSaved"));
         }
         else {
           const pin = randomPin(), salt = uid();
-          const newId = "e" + uid();
+          const newId = empKey;
           await db.doc("employees/" + newId).set({ ...data, status: "PENDING", pinSalt: salt, pinHash: await sha(salt + pin), pinCheck: await pinCheckOf(data.residentId, pin), pinVer: 1, createdAt: Date.now() });
           setTimeout(() => showPin(data.fullName, pin), 50);
         }
@@ -931,11 +965,11 @@ function buildMirror(id){
   const byDate = (a, b) => String(b.date).localeCompare(String(a.date));
   return {
     v: 1, employeeId: id, pinCheck: e.pinCheck || "", pinVer: e.pinVer || 0,
-    profile: { fullName: e.fullName, fullNameAr: e.fullNameAr || "", residentId: e.residentId, mobile: e.mobile, city: e.city || "", plate: e.plate || "",
+    profile: { photo: e.photoUrl || "", fullName: e.fullName, fullNameAr: e.fullNameAr || "", residentId: e.residentId, mobile: e.mobile, city: e.city || "", plate: e.plate || "",
       vehicleModel: e.vehicleModel || "", card: e.card ? String(e.card).slice(-4) : "", dailyLimit: +e.dailyLimit || 0, monthlyLimit: +e.monthlyLimit || 0, payType: e.payType || "TARGET" },
     today: { date: todayKey(), rank: mine?.rank ?? null, of: rk.length, o: +row.o || 0, f: +row.f || 0 },
     month: { key: monthKey(), o: mo, f: r2(mf) },
-    board: rk.slice(0, 10).map(r => ({ r: r.rank, n: (state.emp[r.id]?.fullName || "").split(" ")[0], o: r.o, me: r.id === id })),
+    board: rk.filter((r, i) => i < 5 || r.id === id).map(r => ({ r: r.rank, n: (state.emp[r.id]?.fullName || "").split(" ")[0], p: state.emp[r.id]?.photoUrl || "", o: r.o, me: r.id === id })),
     fines: Object.values(state.fines).filter(x => x.employeeId === id).sort(byDate).map(pickX),
     advances: Object.values(state.adv).filter(x => x.employeeId === id).sort(byDate).map(pickX),
     payslips: Object.values(state.payroll).filter(p => p.status === "PUBLISHED").sort((a, b) => b.month.localeCompare(a.month)).slice(0, 12)
@@ -1006,7 +1040,7 @@ const dutyColor = s => s === "ACTIVE" ? "var(--good)" : s === "ON_DUTY" ? "var(-
 function appScreens(m, opt = {}){
   const p = m.profile, tab = state.appTab;
   const first = (p.fullName || "").split(" ")[0];
-  const top = `<header class="p-top"><div class="p-av">${esc((p.fullName || "?")[0].toUpperCase())}</div>
+  const top = `<header class="p-top">${p.photo ? `<img class="p-av" src="${esc(p.photo)}" alt="" style="object-fit:cover">` : `<div class="p-av">${esc((p.fullName || "?")[0].toUpperCase())}</div>`}
     <div style="min-width:0"><b>${esc(first)}</b><small>${esc(m.today.date)} · ${plateChipLight(p.plate)}</small></div>
     <div class="p-lang">${langMini()}</div></header>`;
   let body = "";
@@ -1046,7 +1080,7 @@ function appHome(m, opt){
   </div>
   ${out > 0 ? `<button class="p-alert" data-tab="fines"><span>${t("outstanding")}</span><span class="neg">${fmt(out)} ${t("sar")}</span></button>` : ""}
   <div class="p-card"><h3>${t("leaderboard")}</h3>
-    ${m.board.length ? `<div class="p-list">${m.board.map(r => `<div class="p-row ${r.me ? "me" : ""}"><span style="display:flex;gap:10px;align-items:center"><span class="rank ${r.r<=3?"r"+r.r:""}">${r.r}</span>${esc(r.n)}${r.me ? ` <span class="pill p-info">${t("you")}</span>` : ""}</span><b>${r.o}</b></div>`).join("")}</div>`
+    ${m.board.length ? `<div class="p-list">${m.board.map(r => `<div class="p-row ${r.me ? "me" : ""}"><span style="display:flex;gap:10px;align-items:center"><span class="rank ${r.r<=3?"r"+r.r:""}">${r.r}</span>${avatarHtml(r.p, r.n, 30)}${esc(r.n)}${r.me ? ` <span class="pill p-info">${t("you")}</span>` : ""}</span><b>${r.o}</b></div>`).join("")}</div>`
     : `<div class="sub">${t("noOrders")}</div>`}
   </div>`;
 }
@@ -1105,7 +1139,7 @@ function appProfile(m, opt){
   const p = m.profile;
   const row = (k, v) => `<div class="p-row"><span class="sub">${k}</span><span style="text-align:end">${v}</span></div>`;
   return `
-  <div class="p-card" style="text-align:center"><div class="p-av" style="margin:0 auto 8px;width:64px;height:64px;font-size:26px">${esc((p.fullName || "?")[0].toUpperCase())}</div>
+  <div class="p-card" style="text-align:center">${p.photo ? `<img class="p-av" src="${esc(p.photo)}" alt="" style="margin:0 auto 8px;width:84px;height:84px;object-fit:cover;display:block">` : `<div class="p-av" style="margin:0 auto 8px;width:64px;height:64px;font-size:26px">${esc((p.fullName || "?")[0].toUpperCase())}</div>`}
     <div class="name" style="font-size:18px">${esc(p.fullName)}</div>${p.fullNameAr ? `<div dir="rtl">${esc(p.fullNameAr)}</div>` : ""}</div>
   <div class="p-card"><div class="p-list">
     ${row(t("iqama"), `<span class="mono">${esc(p.residentId)}</span>`)}${row(t("mobile"), esc(p.mobile))}${p.city ? row(t("city"), esc(p.city)) : ""}${row(t("payType"), t(p.payType))}
@@ -1441,19 +1475,19 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "The person then creates an account on this page with that email.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
+  drv_web: "Driver app (web)", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
 Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB LOGISTICS · কর্মচারী ব্যবস্থাপনা", au_email: "ইমেইল", au_pass: "পাসওয়ার্ড",
   au_signin: "লগইন", au_signup: "এডমিন অ্যাকাউন্ট খুলুন", au_forgot: "পাসওয়ার্ড ভুলে গেছেন?", au_have: "অ্যাকাউন্ট আছে? লগইন করুন", au_new: "প্রথমবার? এডমিন অ্যাকাউন্ট খুলুন",
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "তারপর ওই ব্যক্তি এই পাতায় সেই ইমেইল দিয়ে অ্যাকাউন্ট খুলবেন।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
 Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTICS · إدارة الموظفين", au_email: "البريد الإلكتروني", au_pass: "كلمة المرور",
   au_signin: "دخول", au_signup: "إنشاء حساب مشرف", au_forgot: "نسيت كلمة المرور؟", au_have: "لديك حساب؟ سجّل الدخول", au_new: "أول مرة؟ أنشئ حساب المشرف",
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "ثم ينشئ الشخص حساباً من هذه الصفحة بنفس البريد.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
+  drv_web: "تطبيق السائق (ويب)", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
 
 const auth = { mode: "signin", msg: "", err: "", busy: false, session: null, role: null, admins: [] };
 function renderAuth(){

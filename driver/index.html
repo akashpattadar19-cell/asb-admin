@@ -79,6 +79,7 @@ button{cursor:pointer}
 .plate{display:inline-flex;border:1.5px solid currentColor;border-radius:4px;overflow:hidden;font:600 11.5px var(--f-display);letter-spacing:.05em}
 .plate i{font-style:normal;background:currentColor;padding:0 3px}
 .plate i span{color:var(--cab);font-size:8.5px}
+.card .plate i span{color:var(--card)}
 .plate em{font-style:normal;padding:0 6px}
 .iconbtn{width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:none;color:inherit;display:grid;place-items:center;flex:none}
 .iconbtn svg{width:20px;height:20px}
@@ -118,6 +119,24 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .medal.m1{background:var(--gold);color:var(--gold-ink);border:0}
 .medal.m2{background:#C9D2DB;color:#1E2B36;border:0}
 .medal.m3{background:#D9A574;color:#2A1606;border:0}
+.ph{display:inline-block;border-radius:50%;object-fit:cover;flex:none;background:var(--sunk)}
+.ph-i{display:inline-grid;place-items:center;background:var(--cab-2);color:var(--gold);font-family:var(--f-display);font-weight:700}
+.top .ph{flex:none}
+.hero-grid .rank{font-size:52px;line-height:.95}
+.podium{display:grid;grid-template-columns:1fr 1.15fr 1fr;align-items:end;gap:8px;margin:6px 0 4px}
+.pod{display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0;text-align:center}
+.pod b{font-size:14px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pod .num{font-size:20px}
+.pod-ph{position:relative}
+.pod-ph .ph{border:3px solid var(--line)}
+.pod1 .pod-ph .ph{border-color:var(--gold)}
+.pod-ph .medal{position:absolute;bottom:-6px;inset-inline-end:-6px;width:26px;height:26px;font-size:13px}
+.pod-me b{color:var(--info)}
+.step{width:100%;border-radius:10px 10px 0 0;background:var(--sunk);margin-top:4px}
+.pod1 .step{height:46px;background:color-mix(in srgb,var(--gold) 28%,var(--sunk))}
+.pod2 .step{height:30px}
+.pod3 .step{height:20px}
+.gap{text-align:center;color:var(--muted);letter-spacing:.3em;padding:2px 0}
 .pill{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:600}
 .p-good{background:var(--good-soft);color:var(--good)} .p-bad{background:var(--bad-soft);color:var(--bad)} .p-info{background:var(--info-soft);color:var(--info)} .p-mute{background:var(--sunk);color:var(--muted)}
 .net{background:linear-gradient(135deg,var(--cab),var(--cab-2));color:var(--cab-ink);border-radius:18px;padding:22px;text-align:center}
@@ -154,7 +173,7 @@ en:{brand_sub:"Driver app",signin:"Sign in",signin_sub:"Enter your Iqama number 
  home:"Home",fines:"Fines",salary:"Salary",profile:"Profile",duty_ACTIVE:"Active",duty_ON_DUTY:"On duty",duty_OFFLINE:"Offline",
  rank:"Today's rank",of:"of {n} drivers",norank:"No orders yet today",orders_today:"Orders today",orders_month:"Orders this month",
  fuel:"Fuel today",left:"left",limit:"Daily limit",fuel_month:"This month",nocard:"No petrol card assigned",sar:"SAR",
- outstanding:"Outstanding fines",board:"Leaderboard",you:"You",noboard:"Rankings appear once today's orders are entered.",
+ outstanding:"Outstanding fines",board:"Top 5 today",you:"You",noboard:"Rankings appear once today's orders are entered.",
  fines_out:"Outstanding",fines_paid:"Already deducted",fine_list:"Fines",nofines:"No fines. Keep it up!",waived:"Waived",paid:"Recovered",remaining:"Remaining",per_month:"per month",
  advances:"Advances",deduct_hist:"Monthly deductions",none:"Nothing yet",
  TRAFFIC_VIOLATION:"Traffic violation",DELAY:"Delay",MISSING_ITEM:"Missing item",VEHICLE_DAMAGE:"Vehicle damage",OTHER:"Other",
@@ -169,7 +188,7 @@ bn:{brand_sub:"ড্রাইভার অ্যাপ",signin:"লগইন",s
  home:"হোম",fines:"জরিমানা",salary:"বেতন",profile:"প্রোফাইল",duty_ACTIVE:"সক্রিয়",duty_ON_DUTY:"ডিউটিতে",duty_OFFLINE:"অফলাইন",
  rank:"আজকের র‍্যাংক",of:"{n} জনের মধ্যে",norank:"আজ এখনো অর্ডার নেই",orders_today:"আজকের অর্ডার",orders_month:"এই মাসের অর্ডার",
  fuel:"আজকের পেট্রোল",left:"বাকি",limit:"দৈনিক সীমা",fuel_month:"এই মাসে",nocard:"পেট্রোল কার্ড দেওয়া হয়নি",sar:"রিয়াল",
- outstanding:"বকেয়া জরিমানা",board:"র‍্যাংকিং",you:"আপনি",noboard:"আজকের অর্ডার দেওয়া হলে র‍্যাংকিং দেখাবে।",
+ outstanding:"বকেয়া জরিমানা",board:"আজকের সেরা ৫",you:"আপনি",noboard:"আজকের অর্ডার দেওয়া হলে র‍্যাংকিং দেখাবে।",
  fines_out:"বকেয়া",fines_paid:"কাটা হয়েছে",fine_list:"জরিমানা",nofines:"কোনো জরিমানা নেই। এভাবেই চালিয়ে যান!",waived:"মাফ",paid:"আদায় হয়েছে",remaining:"বাকি",per_month:"প্রতি মাসে",
  advances:"অগ্রিম",deduct_hist:"মাসিক কর্তন",none:"এখনো কিছু নেই",
  TRAFFIC_VIOLATION:"ট্রাফিক আইন ভঙ্গ",DELAY:"দেরি",MISSING_ITEM:"আইটেম হারানো",VEHICLE_DAMAGE:"গাড়ির ক্ষতি",OTHER:"অন্যান্য",
@@ -184,7 +203,7 @@ ar:{brand_sub:"تطبيق السائق",signin:"تسجيل الدخول",signin_
  home:"الرئيسية",fines:"المخالفات",salary:"الراتب",profile:"ملفي",duty_ACTIVE:"نشط",duty_ON_DUTY:"في العمل",duty_OFFLINE:"غير متصل",
  rank:"ترتيبك اليوم",of:"من {n} سائق",norank:"لا طلبات اليوم بعد",orders_today:"طلبات اليوم",orders_month:"طلبات الشهر",
  fuel:"وقود اليوم",left:"متبقي",limit:"الحد اليومي",fuel_month:"هذا الشهر",nocard:"لا توجد بطاقة وقود",sar:"ريال",
- outstanding:"مخالفات مستحقة",board:"الترتيب",you:"أنت",noboard:"يظهر الترتيب بعد إدخال طلبات اليوم.",
+ outstanding:"مخالفات مستحقة",board:"أفضل 5 اليوم",you:"أنت",noboard:"يظهر الترتيب بعد إدخال طلبات اليوم.",
  fines_out:"مستحق",fines_paid:"تم خصمه",fine_list:"المخالفات",nofines:"لا توجد مخالفات. أحسنت!",waived:"معفى",paid:"مسدد",remaining:"المتبقي",per_month:"شهرياً",
  advances:"السلف",deduct_hist:"الخصومات الشهرية",none:"لا شيء بعد",
  TRAFFIC_VIOLATION:"مخالفة مرورية",DELAY:"تأخير",MISSING_ITEM:"صنف مفقود",VEHICLE_DAMAGE:"ضرر بالمركبة",OTHER:"أخرى",
@@ -235,6 +254,9 @@ const SHIELD = `<svg viewBox="0 0 86 96" aria-hidden="true"><defs><linearGradien
 <text x="43" y="54" text-anchor="middle" font-family="Barlow Semi Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="25" fill="#F2BD45" letter-spacing="1.5">ASB</text>
 <path d="M24 64h38" stroke="#F2BD45" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 5"/></svg>`;
 const langBtns = () => [["en","EN"],["bn","বাংলা"],["ar","عربي"]].map(([k,l]) => `<button data-lang="${k}" aria-pressed="${k===lang}">${l}</button>`).join("");
+const ava = (url, name, size, extra = "") => url
+  ? `<img class="ph" src="${esc(url)}" alt="" style="width:${size}px;height:${size}px;${extra}" onerror="this.onerror=null;this.removeAttribute('src')">`
+  : `<span class="ph ph-i" style="width:${size}px;height:${size}px;font-size:${Math.round(size * .42)}px;${extra}">${esc((name || "?")[0].toUpperCase())}</span>`;
 const plate = p => p ? `<span class="plate"><i><span>KSA</span></i><em>${esc(p)}</em></span>` : "";
 const dutyColor = s => s === "ACTIVE" ? "var(--good)" : s === "ON_DUTY" ? "var(--info)" : "var(--muted)";
 function toast(m){ const d = document.createElement("div"); d.className = "toast"; d.textContent = m; document.body.append(d); setTimeout(() => d.remove(), 2600); }
@@ -282,7 +304,7 @@ function vApp(){
   let body = S.tab === "home" ? vHome(m) : S.tab === "fines" ? vFines(m) : S.tab === "salary" ? (S.slip ? vSlip(m, S.slip) : vSalary(m)) : vProfile(m);
   const last = S.lastAt ? new Date(S.lastAt).toLocaleTimeString(lang === "ar" ? "ar-SA" : "en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
   return `<div class="app">
-    <header class="top"><div class="av">${esc((p.fullName || "?")[0].toUpperCase())}</div>
+    <header class="top">${ava(p.photo, p.fullName, 44, "border-radius:14px;border:2px solid var(--gold)")}
       <div class="who"><b>${esc(p.fullName)}</b><small>${plate(p.plate)}<span>${esc(m.today.date)}</span></small></div>
       <button class="iconbtn ${S.refreshing ? "busy" : ""}" data-refresh aria-label="Refresh">${icon("refresh")}</button></header>
     <main>${notices(m)}${body}${last ? `<div class="updated">${t("updated", { t: last })}</div>` : ""}</main>
@@ -309,8 +331,8 @@ function vHome(m){
   return `
   <div class="seg" role="group">${["ACTIVE","ON_DUTY","OFFLINE"].map(s => `<button data-duty="${s}" aria-pressed="${S.duty === s}"><span class="dot" style="color:${dutyColor(s)}"></span>${t("duty_" + s)}</button>`).join("")}</div>
   <section class="card hero">
-    <div class="hero-grid"><div class="rank">${d.rank ? "#" + d.rank : "—"}</div>
-      <div><div class="lbl">${t("rank")}</div><div style="font-size:16px;font-weight:600">${d.rank ? t("of", { n: d.of }) : t("norank")}</div></div></div>
+    <div class="hero-grid">${ava(p.photo, p.fullName, 74, "border-radius:22px;border:3px solid var(--gold)")}
+      <div><div class="lbl">${t("rank")}</div><div class="rank">${d.rank ? "#" + d.rank : "—"}</div><div style="font-size:15px;font-weight:600">${d.rank ? t("of", { n: d.of }) : t("norank")}</div></div></div>
     <div class="hero-stats"><div><div class="lbl">${t("orders_today")}</div><div class="big">${fmt0(d.o)}</div></div>
       <div><div class="lbl">${t("orders_month")}</div><div class="big">${fmt0(m.month.o)}</div></div></div>
   </section>
@@ -323,10 +345,20 @@ function vHome(m){
     : `<div class="muted">${t("nocard")}</div>`}
   </section>
   ${out > 0 ? `<button class="alert" data-tab="fines"><span>${t("outstanding")}</span><span class="neg num" style="font-size:18px">${fmt(out)} ${t("sar")}</span></button>` : ""}
-  <section class="card"><h3>${t("board")}</h3>
-    ${m.board.length ? `<div class="list">${m.board.map(r => `<div class="li ${r.me ? "me" : ""}"><div style="display:flex;gap:12px;align-items:center;min-width:0"><span class="medal ${r.r <= 3 ? "m" + r.r : ""}">${r.r}</span><b>${esc(r.n)}</b>${r.me ? `<span class="pill p-info">${t("you")}</span>` : ""}</div><span class="num" style="font-size:18px">${fmt0(r.o)}</span></div>`).join("")}</div>`
-    : `<div class="muted">${t("noboard")}</div>`}
-  </section>`;
+  <section class="card"><h3>${t("board")}</h3>${board(m.board)}</section>`;
+}
+function board(list){
+  if (!list.length) return `<div class="muted">${t("noboard")}</div>`;
+  const top = list.slice(0, 5), mine = list.slice(5).find(r => r.me);
+  const pod = top.slice(0, 3), rest = top.slice(3);
+  const order = pod.length === 3 ? [pod[1], pod[0], pod[2]] : pod.length === 2 ? [pod[1], pod[0]] : pod;
+  const col = r => { const pos = top.indexOf(r); return `<div class="pod pod${pos + 1} ${r.me ? "pod-me" : ""}">
+      <div class="pod-ph">${ava(r.p, r.n, pos === 0 ? 76 : 60)}<span class="medal m${Math.min(r.r, 3)}">${r.r}</span></div>
+      <b>${esc(r.n)}${r.me ? ` · ${t("you")}` : ""}</b><span class="num">${fmt0(r.o)}</span><div class="step"></div></div>`; };
+  const row = r => `<div class="li ${r.me ? "me" : ""}"><div style="display:flex;gap:12px;align-items:center;min-width:0"><span class="medal">${r.r}</span>${ava(r.p, r.n, 38)}<b>${esc(r.n)}</b>${r.me ? `<span class="pill p-info">${t("you")}</span>` : ""}</div><span class="num" style="font-size:18px">${fmt0(r.o)}</span></div>`;
+  return `<div class="podium">${order.map(col).join("")}</div>
+    ${rest.length ? `<div class="list">${rest.map(row).join("")}</div>` : ""}
+    ${mine ? `<div class="gap">···</div><div class="list">${row(mine)}</div>` : ""}`;
 }
 function vFines(m){
   const fined = m.fines.filter(f => !f.waived).reduce((s, f) => s + (+f.amount || 0), 0);
@@ -369,7 +401,7 @@ function vSlip(m, month){
 }
 function vProfile(m){
   const p = m.profile, row = (k, v) => `<div class="li"><span class="muted">${k}</span><span style="text-align:end">${v}</span></div>`;
-  return `<section class="card" style="text-align:center"><div class="av" style="margin:0 auto 10px;width:70px;height:70px;font-size:30px;border-radius:20px">${esc((p.fullName || "?")[0].toUpperCase())}</div>
+  return `<section class="card" style="text-align:center"><div style="display:flex;justify-content:center;margin-bottom:10px">${ava(p.photo, p.fullName, 112, "border-radius:32px;border:3px solid var(--gold)")}</div>
     <div style="font:600 21px var(--f-display)">${esc(p.fullName)}</div>${p.fullNameAr ? `<div dir="rtl" class="muted">${esc(p.fullNameAr)}</div>` : ""}</section>
   <section class="card"><div class="list">${row(t("resident"), `<span class="num">${esc(p.residentId)}</span>`)}${row(t("mobile"), esc(p.mobile))}${p.city ? row(t("city"), esc(p.city)) : ""}${row(t("paytype"), t(p.payType))}</div></section>
   <section class="card"><div class="list">${row(t("plate"), plate(p.plate) || "—")}${p.vehicleModel ? row(t("model"), esc(p.vehicleModel)) : ""}
