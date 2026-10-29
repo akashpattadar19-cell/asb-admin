@@ -117,6 +117,11 @@ td.nowrap{white-space:nowrap}
 .bar.over span{background:var(--bad)}
 .bar.done span{background:var(--good)}
 .pill.nodot::before{display:none}
+.rk-sw{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:2px 0;cursor:pointer;font:inherit;font-size:13px;font-weight:600;color:var(--muted)}
+.rk-sw i{position:relative;width:38px;height:22px;border-radius:12px;background:var(--line);transition:.15s;flex:none}
+.rk-sw i::after{content:"";position:absolute;top:3px;left:3px;width:16px;height:16px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:.15s}
+.rk-sw.on{color:var(--good)} .rk-sw.on i{background:var(--good)} .rk-sw.on i::after{left:19px}
+.rk-sw:disabled{opacity:.5;cursor:default}
 .grade.sm{width:20px;height:20px;font-size:12px;border-radius:5px;vertical-align:middle}
 .input.sm{padding:5px 8px;font-size:13px}
 table.tgt .input.num{width:84px}
@@ -355,12 +360,15 @@ const todayKey = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh
 const monthKey = () => todayKey().slice(0, 7);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const vehicleText = e => { const n = (e.vehicleName || "").trim(), m = (e.vehicleModel || "").trim(); return n && m.toLowerCase().startsWith(n.toLowerCase()) ? m : [n, m].filter(Boolean).join(" "); };
+const rkSwitch = (id, p) => { const on = (p || "TARGET") === "TARGET";
+  return `<button class="rk-sw ${on ? "on" : ""}" role="switch" aria-checked="${on}" data-act="emp-rank" data-id="${id}" data-needs-write title="${t(on ? "rk_on_t" : "rk_off_t")}"><i></i><span>${on ? "Rank" : "Unrank"}</span></button>`; };
 const rkPill = p => (p || "TARGET") === "TARGET" ? `<span class="pill p-good">${t("rk_TARGET")}</span>` : `<span class="pill p-warn">${t("rk_PER_ORDER")}</span>`;
 const plateChip = p => p ? `<span class="plate"><i>KSA</i><em>${esc(p)}</em></span>` : `<span class="sub">${t("none")}</span>`;
 const statusPill = s => `<span class="pill ${s==="ACTIVE"?"p-good":s==="PENDING"?"p-warn":"p-mute"}">${t(s)}</span>`;
 const empName = id => state.emp[id]?.fullName ?? "—";
 const DEFAULT_RULES = { targetOrders: 450, baseSalary: 2400, bonusPer: 5, penaltyPer: 10, perThreshold: 400, rateHigh: 2.5, rateLow: 2,
-  uMin: 380, uRate: 4, uT1: 500, uB1: 2500, uT2: 600, uB2: 3500, ex1A: 5, ex1B: 4, ex1C: 3, ex2A: 7, ex2B: 6, ex2C: 5, uFuelLow: 2, uFuelHigh: 2.5, absence: 100 };
+  uMin: 380, uRate: 4, uT1: 500, uB1: 2500, uT2: 600, uB2: 3500, ex1A: 5, ex1B: 4, ex1C: 3, ex2A: 7, ex2B: 6, ex2C: 5, uFuelLow: 2, uFuelHigh: 2.5, absence: 100,
+  rMin: 380, rRate: 3.5, rT1: 500, rB1A: 3000, rB1B: 2500, rB1C: 2000, rT2: 600, rB2A: 4250, rB2B: 3800, rB2C: 3000, rx1A: 6, rx1B: 5, rx1C: 4, rx2A: 8, rx2B: 7, rx2C: 6 };
 const CATS = ["TRAFFIC_VIOLATION","DELAY","MISSING_ITEM","VEHICLE_DAMAGE","OTHER"];
 async function sha(s){ const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
 function randomPin(){ let p; do { p = String(crypto.getRandomValues(new Uint32Array(1))[0] % 10000).padStart(4,"0"); } while (/^(\d)\1{3}$|^(0123|1234|2345|3456|4567|5678|6789)$/.test(p)); return p; }
@@ -499,13 +507,13 @@ function vEmployees(){
     <thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("mobile")}</th><th>${t("card")}</th><th>${t("city")}</th><th>${t("plate")}</th><th>${t("vehicle")}</th><th>${t("payType")}</th><th>${t("status")}</th><th>${t("app_col")}</th><th class="r">${t("outstanding")}</th><th></th></tr></thead>
     <tbody>${list.map(([id,e]) => `<tr>
       <td style="min-width:190px"><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 38)}<div><div class="name">${esc(e.fullName)}</div>${e.fullNameAr?`<div class="sub" dir="rtl">${esc(e.fullNameAr)}</div>`:""}</div></div></td>
-      <td class="mono">${esc(e.residentId)}${e.jahezId ? `<div class="sub">J: ${esc(e.jahezId)}</div>` : ""}</td>
+      <td class="mono">${esc(e.residentId)}${e.jahezId ? `<div class="sub">K: ${esc(e.jahezId)}</div>` : ""}</td>
       <td class="nowrap">${esc(e.mobile)}</td>
       <td class="nowrap">${e.card?`<span class="mono">${esc(e.card)}</span>${e.cardSerial?`<div class="sub">${t("serial_short")}: <span class="mono">${esc(e.cardSerial)}</span></div>`:""}<div class="sub">${fmt0(e.dailyLimit)}/${fmt0(e.monthlyLimit)} ${t("sar")}</div>`:`<span class="sub">${t("none")}</span>`}</td>
       <td class="nowrap">${esc(e.city) || `<span class="sub">${t("none")}</span>`}</td>
       <td>${plateChip(e.plate)}</td>
       <td class="nowrap">${esc(vehicleText(e)) || `<span class="sub">${t("none")}</span>`}</td>
-      <td>${rkPill(e.payType)}</td>
+      <td>${rkSwitch(id, e.payType)}</td>
       <td>${statusPill(e.status)}</td>
       <td class="nowrap">${(()=>{const d=state.duty[id];return d?`<span class="pill ${d.s==="OFFLINE"?"p-mute":"p-good"}">${t("duty_"+d.s)}</span><div class="sub" style="margin-top:3px">${new Date(d.at).toLocaleString("en-GB",{timeZone:"Asia/Riyadh",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</div>`:`<span class="pill p-mute">${t("not_linked")}</span>`})()}</td>
       <td class="r nowrap">${(()=>{const o=outstandingOf(state.fines,id)+outstandingOf(state.adv,id);return o?`<span class="neg">${fmt(o)}</span>`:`<span class="sub">0.00</span>`})()}</td>
@@ -649,75 +657,65 @@ function empOptions(sel){ return `<option value="">${t("selectEmp")}</option>` +
 /* ───────── Payroll ───────── */
 const numOrNull = v => (v === "" || v === null || v === undefined || isNaN(+v)) ? null : +v;
 function planOf(e){
-  const R = state.rules, rank = (e.payType || "TARGET") === "TARGET";
-  if (rank) return { rank, target: numOrNull(e.tTarget) ?? +R.targetOrders, base: numOrNull(e.tBase) ?? +R.baseSalary,
-    extra: numOrNull(e.tExtra) ?? +R.bonusPer, short: numOrNull(e.tShort) ?? +R.penaltyPer };
-  return { rank, min: +R.uMin, rate: +R.uRate, t1: +R.uT1, b1: +R.uB1, t2: +R.uT2, b2: +R.uB2,
-    ex1: { A: +R.ex1A, B: +R.ex1B, C: +R.ex1C }, ex2: { A: +R.ex2A, B: +R.ex2B, C: +R.ex2C }, fuelLow: +R.uFuelLow, fuelHigh: +R.uFuelHigh };
+  const R = state.rules, rank = (e.payType || "TARGET") === "TARGET", P = rank ? "r" : "u";
+  const abc = f => ({ A: +f("A"), B: +f("B"), C: +f("C") });
+  return { rank, min: +R[P + "Min"], rate: +R[P + "Rate"], t1: +R[P + "T1"], t2: +R[P + "T2"],
+    b1: rank ? abc(g => R["rB1" + g]) : abc(() => R.uB1), b2: rank ? abc(g => R["rB2" + g]) : abc(() => R.uB2),
+    ex1: rank ? abc(g => R["rx1" + g]) : abc(g => R["ex1" + g]), ex2: rank ? abc(g => R["rx2" + g]) : abc(g => R["ex2" + g]),
+    fuelLow: +R.uFuelLow, fuelHigh: +R.uFuelHigh };
 }
-/* Grade used for Unrank extra-order prices: the one set on the Target page, else the latest Jahez grade, else C. */
+/* Pay rating: the one set on the Target page, else the latest Keeta grade, else C. */
 function payGrade(id, e){
   if (e.tGrade) return { g: e.tGrade, src: "set" };
   const j = [state.perf[todayKey()]?.rows?.[id]?.g, state.perf[yesterdayKey()]?.rows?.[id]?.g].find(g => ["A", "B", "C", "D"].includes(g));
   if (j) return { g: j, src: "jahez" };
   return { g: "C", src: "default" };
 }
-/* Next order milestone: Rank = own target; Unrank = 380 → 500 → 600. */
+/* Next order milestone: 380 → 500 → 600 (from the pay rules). */
 function targetFor(e, orders){
-  const p = planOf(e); if (p.rank) return p.target;
+  const p = planOf(e);
   return orders < p.min ? p.min : orders < p.t1 ? p.t1 : p.t2;
 }
-/* Rank: base salary + extra rate per order above target − deduction per order below target.
-   Unrank: under 380 orders or D rating → the company decides (manual salary);
-   380–499 → 4 SAR per order; 500–599 → 2,500 + orders above 500 × A/B/C price; 600+ → 3,500 + orders above 600 × A/B/C price. */
+/* Rank and Unrank use the same ladder with their own prices:
+   under 380 orders or D rating (500+) → the company decides (manual salary);
+   380–499 → price per order; 500–599 → level-2 salary (by rating for Rank) + orders above 500 × rating price;
+   600+ → level-3 salary + orders above 600 × rating price. */
 function payFor(e, orders, grade = "C"){
-  const p = planOf(e);
-  if (p.rank) { const d = orders - p.target; return { base: p.base, bonus: d > 0 ? d * p.extra : 0, shortfall: d < 0 ? -d * p.short : 0 }; }
-  if (orders < p.min) return { base: 0, bonus: 0, shortfall: 0, manual: "below" };
-  if (orders >= p.t1 && grade === "D") return { base: 0, bonus: 0, shortfall: 0, manual: "gradeD" };
+  const p = planOf(e), g = ["A", "B", "C"].includes(grade) ? grade : "C";
+  if (orders < p.min) return { base: 0, bonus: 0, shortfall: 0, manual: "below", tier: 0 };
+  if (orders >= p.t1 && grade === "D") return { base: 0, bonus: 0, shortfall: 0, manual: "gradeD", tier: orders < p.t2 ? 2 : 3 };
   if (orders < p.t1) return { base: orders * p.rate, bonus: 0, shortfall: 0, tier: 1 };
-  if (orders < p.t2) return { base: p.b1, bonus: (orders - p.t1) * (p.ex1[grade] ?? p.ex1.C), shortfall: 0, tier: 2 };
-  return { base: p.b2, bonus: (orders - p.t2) * (p.ex2[grade] ?? p.ex2.C), shortfall: 0, tier: 3 };
+  if (orders < p.t2) return { base: p.b1[g], bonus: (orders - p.t1) * p.ex1[g], shortfall: 0, tier: 2 };
+  return { base: p.b2[g], bonus: (orders - p.t2) * p.ex2[g], shortfall: 0, tier: 3 };
 }
-/* Unrank fuel allowance (separate from salary): 380–499 → 2 SAR/order, 500+ → 2.5 SAR/order. */
+/* Fuel allowance (separate from salary): 380–499 → 2 SAR/order, 500+ → 2.5 SAR/order. */
 function fuelAllowance(e, orders){
-  const p = planOf(e); if (p.rank || orders < p.min) return 0;
+  const p = planOf(e); if (orders < p.min) return 0;
   return orders * (orders < p.t1 ? p.fuelLow : p.fuelHigh);
 }
 function vTarget(){
   const R = state.rules, rows = monthRows(monthKey());
   const emps = activeEmps().filter(([, e]) => !state.qType || (e.payType || "TARGET") === state.qType);
-  const cell = (id, e, k, def, step = "0.01") => {
-    const v = state.tDraft[id]?.[k] ?? (numOrNull(e[k]) ?? "");
-    return `<td class="r"><input class="input num ${v !== "" ? "own" : ""}" type="number" min="0" step="${step}" data-tgt="${k}" data-id="${id}" value="${v}" placeholder="${def}"></td>`;
-  };
-  const dash = `<td class="r sub">—</td>`;
   return `
-  <div class="head"><div><h1>${t("nav_target")}</h1><p>${t("tgt_hint")}</p></div>
+  <div class="head"><div><h1>${t("nav_target")}</h1><p>${t("tgt_hint2")}</p></div>
     <div class="tools">
       <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
       <a class="btn ghost" href="#rules">${t("tgt_defaults")}</a>
       <button class="btn" data-act="tgt-save" data-needs-write>${t("save")}</button>
     </div></div>
-  <div class="tgt-legend"><span><b>${t("rk_TARGET")}</b> ${t("tgt_rank_rule")}</span><span><b>${t("rk_PER_ORDER")}</b> ${t("tgt_unrank_rule")}</span></div>
+  <div class="tgt-legend"><span><b>Rank</b> ${t("tgt_rank_rule")}</span><span><b>Unrank</b> ${t("tgt_unrank_rule")}</span></div>
   <section class="panel">${emps.length ? `<div class="scroll"><table class="tgt">
-    <thead><tr><th>${t("name")}</th><th>${t("payType")}</th><th class="r">${t("tgt_target")}</th><th class="r">${t("tgt_sofar")}</th><th class="r">${t("tgt_est")}</th>
-      <th class="r">${t("tgt_base")}</th><th class="r">${t("tgt_short")}</th>
-      <th>${t("pg_col")}</th><th>${t("pg_level")}</th>
-      <th class="r">${t("tgt_extra")}</th></tr></thead>
+    <thead><tr><th>${t("name")}</th><th>${t("rk_col")}</th><th class="r">${t("tgt_sofar")}</th><th class="r">${t("tgt_est")}</th>
+      <th>${t("pg_col")}</th><th>${t("pg_level")}</th></tr></thead>
     <tbody>${emps.map(([id, e]) => {
-      const rank = (e.payType || "TARGET") === "TARGET";
-      const draft = { ...e, ...(state.tDraft[id] ?? {}) }, o = rows[id]?.o ?? 0, pg = payGrade(id, draft), pay = payFor(draft, o, pg.g), tg = targetFor(draft, o);
+      const draft = { ...e, ...(state.tDraft[id] ?? {}) }, o = rows[id]?.o ?? 0, pg = payGrade(id, draft), pay = payFor(draft, o, pg.g), tg = targetFor(draft, o), p = planOf(draft), g = ["A","B","C"].includes(pg.g) ? pg.g : "C";
       return `<tr>
         <td><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 34)}<div class="name">${esc(e.fullName)}</div></div></td>
-        <td>${rkPill(e.payType)}</td>
-        ${rank ? cell(id, e, "tTarget", R.targetOrders, "1") : `<td class="r sub nowrap">${t("tgt_next")} ${fmt0(tg)}</td>`}
-        <td class="r nowrap">${fmt0(o)} / ${fmt0(tg)}</td>
-        <td class="r nowrap">${pay.manual ? `<span class="pill p-warn nodot">${t("pay_manual")}</span>` : `<b class="${pay.base + pay.bonus - pay.shortfall < 0 ? "neg" : ""}">${fmt(pay.base + pay.bonus - pay.shortfall)}</b>`}</td>
-        ${rank ? cell(id, e, "tBase", R.baseSalary) + cell(id, e, "tShort", R.penaltyPer) : dash + dash}
-        ${rank ? dash + dash : `<td><select class="input sm" data-tgt="tGrade" data-id="${id}" style="width:auto">${[["", t("pg_auto") + (pg.src !== "set" ? ` (${pg.g})` : "")], ["A", "A"], ["B", "B"], ["C", "C"], ["D", "D"]].map(([v, l]) => `<option value="${v}" ${(draft.tGrade || "") === v ? "selected" : ""}>${l}</option>`).join("")}</select></td>
-          <td class="sub nowrap">${pay.manual ? t("pay_manual") : pay.tier === 1 ? `${fmt0(R.uMin)}–${fmt0(R.uT1 - 1)} · ${fmt(R.uRate)}/${t("orders")}` : pay.tier === 2 ? `${fmt0(R.uB1)} + ${fmt(R["ex1" + pg.g] ?? R.ex1C)}/${t("orders")}` : `${fmt0(R.uB2)} + ${fmt(R["ex2" + pg.g] ?? R.ex2C)}/${t("orders")}`}</td>`}
-        ${rank ? cell(id, e, "tExtra", R.bonusPer) : dash}
+        <td>${rkSwitch(id, e.payType)}</td>
+        <td class="r nowrap">${fmt0(o)} / ${fmt0(tg)}${o >= p.t2 ? " ✓" : ""}</td>
+        <td class="r nowrap">${pay.manual ? `<span class="pill p-warn nodot">${t("pay_manual")}</span>` : `<b>${fmt(pay.base + pay.bonus)}</b>`}</td>
+        <td><select class="input sm" data-tgt="tGrade" data-id="${id}" style="width:auto">${[["", t("pg_auto") + (pg.src !== "set" ? ` (${pg.g})` : "")], ["A", "A"], ["B", "B"], ["C", "C"], ["D", "D"]].map(([v, l]) => `<option value="${v}" ${(draft.tGrade || "") === v ? "selected" : ""}>${l}</option>`).join("")}</select></td>
+        <td class="sub nowrap">${pay.manual ? t("pay_manual") : pay.tier === 1 ? `${fmt0(p.min)}–${fmt0(p.t1 - 1)} · ${fmt(p.rate)}/${t("orders")}` : pay.tier === 2 ? `${fmt0(p.b1[g])} + ${fmt(p.ex1[g])}/${t("orders")}` : `${fmt0(p.b2[g])} + ${fmt(p.ex2[g])}/${t("orders")}`}</td>
       </tr>`; }).join("")}</tbody></table></div>`
     : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</section>
   <p class="sub" style="margin-top:10px">${t("tgt_note")}</p>`;
@@ -730,7 +728,7 @@ document.addEventListener("change", e => { if (e.target.dataset?.tgt) render(); 
 
 /* ───────── Performance: yesterday vs today, older days are removed ───────── */
 const yesterdayKey = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh" }).format(new Date(Date.now() - 864e5));
-/* Jahez daily driver report: g grade (A best … D, "-" not graded), rp ranking % (lower is better),
+/* Keeta daily driver report: g grade (A best … D, "-" not graded), rp ranking % (lower is better),
    fa forced-assignment score, ot on-time, cr completion (not delivery related), ne "Delivered" not pressed too early. */
 const PERF_F = [["g", "pf_grade"], ["rp", "pf_rank"], ["fa", "pf_forced"], ["ot", "pf_ontime"], ["cr", "pf_complete"], ["ne", "pf_early"]];
 const GRADES = ["A", "B", "C", "D", "-"];
@@ -779,7 +777,7 @@ document.addEventListener("click", e => {
   const b = e.target.closest('[data-act="grade-filter"]'); if (!b) return;
   state.qGrade = state.qGrade === b.dataset.v ? "" : b.dataset.v; render();
 });
-/* Parse rows copied from the Jahez report (Excel, Sheets or CSV). Columns:
+/* Parse rows copied from the Keeta report (Excel, Sheets or CSV). Columns:
    driver ID, name, grade, ranking %, forced assignment %, on-time %, completion %, not-early %. */
 function parseJahez(text){
   const out = [];
@@ -820,10 +818,8 @@ function computePayroll(){
     let { base, bonus, shortfall } = pay;
     if (pay.manual) base = +a.man || 0;
     const incent = +a.incent || 0, overtime = +a.overtime || 0, other = +a.other || 0;
-    const rank = (e.payType || "TARGET") === "TARGET";
-    const allowance = rank ? 0 : r2(fuelAllowance(e, orders));
-    const overspend = rank ? ((+e.monthlyLimit || 0) > 0 ? Math.max(0, fuelSpent - e.monthlyLimit) : 0) : 0;
-    const fuelAdj = r2((+a.fuel || 0) + (rank ? -overspend : allowance - fuelSpent));
+    const allowance = r2(fuelAllowance(e, orders));
+    const fuelAdj = r2((+a.fuel || 0) + allowance - fuelSpent);
     const absDed = r2((+a.abs || 0) * (+R.absence || 0));
     const gross = r2(base + bonus + incent + overtime + Math.max(0, fuelAdj) + Math.max(0, other));
     let avail = r2(gross - shortfall - absDed + Math.min(0, fuelAdj) + Math.min(0, other));
@@ -837,7 +833,7 @@ function computePayroll(){
     }
     const net = Math.max(0, avail);
     return { id, name: e.fullName, residentId: e.residentId, payType: e.payType || "TARGET", orders, fuelSpent,
-      base: r2(base), bonus: r2(bonus), incent, overtime, shortfall: r2(shortfall), fuelAdj, other, absDed, absShifts: +a.abs || 0, allowance, grade: rank ? "" : pg.g, gradeSrc: rank ? "" : pg.src, manual: pay.manual || "",
+      base: r2(base), bonus: r2(bonus), incent, overtime, shortfall: r2(shortfall), fuelAdj, other, absDed, absShifts: +a.abs || 0, allowance, grade: pg.g, gradeSrc: pg.src, manual: pay.manual || "",
       fineDed: r2(fineDed), advDed: r2(advDed), gross, deductions: r2(gross - net), net: r2(net), planned, adj: a };
   });
 }
@@ -866,7 +862,7 @@ function vPayroll(){
     <thead><tr><th>${t("name")}</th><th class="r">${t("orders")}</th><th class="r">${t("base")}</th><th class="r">${t("bonus")}</th><th class="r">${t("incent")}</th><th class="r">${t("overtime")}</th><th class="r">${t("shortfall")}</th><th class="r">${t("abs_col")}</th><th class="r">${t("fuelAdj")}</th><th class="r">${t("other")}</th><th class="r">${t("fineDed")}</th><th class="r">${t("advDed")}</th><th class="r">${t("net")}</th></tr></thead>
     <tbody>${slips.map(s => `<tr>
       <td><div class="name">${esc(s.name)}</div><div class="sub">${rkPill(s.payType)}${s.grade ? ` <span class="grade sm ${gradeCls(s.grade)}" title="${t("pg_col")}">${s.grade}</span>${s.gradeSrc === "default" ? ` <span class="sub">(${t("pg_default")})</span>` : ""}` : ""}</div>
-        <div class="sub">${t("fuel")}: ${fmt(s.fuelSpent)}${s.payType === "PER_ORDER" ? ` · ${t("fuel_allow")}: ${fmt(s.allowance)}` : ""}</div>${s.manual ? `<span class="pill p-warn nodot" style="margin-top:4px">${t(s.manual === "gradeD" ? "pay_manual_d" : "pay_manual_low")}</span>` : ""}</td>
+        <div class="sub">${t("fuel")}: ${fmt(s.fuelSpent)} · ${t("fuel_allow")}: ${fmt(s.allowance)}</div>${s.manual ? `<span class="pill p-warn nodot" style="margin-top:4px">${t(s.manual === "gradeD" ? "pay_manual_d" : "pay_manual_low")}</span>` : ""}</td>
       <td class="r">${fmt0(s.orders)}</td>
       ${s.manual && !published ? `<td class="r"><input class="input num" type="number" step="0.01" data-adj="man" data-id="${s.id}" value="${s.adj?.man ?? ""}" placeholder="${t("pay_manual")}" title="${t("pay_manual")}"></td>` : `<td class="r nowrap">${fmt(s.base)}</td>`}
       <td class="r nowrap ${s.bonus?"pos":""}">${fmt(s.bonus)}</td>
@@ -893,13 +889,16 @@ function vRules(){
   return `
   <div class="head"><div><h1>${t("rulesTitle")}</h1><p>${t("rulesHint")}</p></div></div>
   <form class="panel" id="rulesForm">
-    <h2>${t("TARGET")}</h2>
-    <div class="rules">${field("targetOrders")}${field("baseSalary","0.01")}${field("bonusPer","0.01")}${field("penaltyPer","0.01")}</div>
-    <h2 style="border-top:1px solid var(--line)">${t("rk_PER_ORDER")} · ${t("u_title")}</h2>
+    <h2>Rank · ${t("u_title")}</h2>
+    <div class="rules">${field("rMin")}${field("rRate","0.01")}${field("rT1")}${field("rT2")}</div>
+    <div class="rules">${field("rB1A","0.01")}${field("rB1B","0.01")}${field("rB1C","0.01")}<span></span>${field("rB2A","0.01")}${field("rB2B","0.01")}${field("rB2C","0.01")}</div>
+    <h2 style="border-top:1px solid var(--line)">Rank · ${t("r_extra_title")}</h2>
+    <div class="rules">${field("rx1A","0.01")}${field("rx1B","0.01")}${field("rx1C","0.01")}<span></span>${field("rx2A","0.01")}${field("rx2B","0.01")}${field("rx2C","0.01")}</div>
+    <h2 style="border-top:1px solid var(--line)">Unrank · ${t("u_title")}</h2>
     <div class="rules">${field("uMin")}${field("uRate","0.01")}${field("uT1")}${field("uB1","0.01")}${field("uT2")}${field("uB2","0.01")}</div>
     <h2 style="border-top:1px solid var(--line)">${t("u_extra_title")}</h2>
     <div class="rules">${field("ex1A","0.01")}${field("ex1B","0.01")}${field("ex1C","0.01")}${field("ex2A","0.01")}${field("ex2B","0.01")}${field("ex2C","0.01")}</div>
-    <h2 style="border-top:1px solid var(--line)">${t("u_fuel_title")}</h2>
+    <h2 style="border-top:1px solid var(--line)">${t("fuel_title_all")}</h2>
     <div class="rules">${field("uFuelLow","0.01")}${field("uFuelHigh","0.01")}${field("absence","0.01")}</div>
     <p class="sub" style="padding:0 16px">${t("u_note")}</p>
     <div class="dlg-f"><button class="btn" data-needs-write>${t("save")}</button></div>
@@ -966,6 +965,7 @@ document.addEventListener("click", async e => {
       }});
     }
 
+    if (act === "emp-rank") { const cur = (state.emp[id]?.payType || "TARGET") === "TARGET"; await db.doc("employees/" + id).update({ payType: cur ? "PER_ORDER" : "TARGET", updatedAt: Date.now() }); toast(t(cur ? "rk_set_off" : "rk_set_on", { n: state.emp[id]?.fullName ?? "" })); return; }
     if (act === "emp-status") { await db.doc("employees/" + id).update({ status: b.dataset.v, updatedAt: Date.now() }); }
 
     if (act === "emp-pin") {
@@ -1754,61 +1754,73 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "The person then creates an account on this page with that email.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", tgt_next: "Next", pay_manual: "Company decides", pay_manual_low: "Under 380 orders · company decides", pay_manual_d: "D rating · company decides",
+  drv_web: "Driver app (web)", rk_col: "Rank", rk_on_t: "On = works with Rank. Tap to switch to Unrank.", rk_off_t: "Off = works without Rank. Tap to switch to Rank.", rk_set_on: "{n} now works with Rank", rk_set_off: "{n} now works without Rank (Unrank)",
+  tgt_hint2: "Rank on = Rank rules, off = Unrank rules. The driver sees his own rules in the app.", r_extra_title: "extra order price by rating", fuel_title_all: "Fuel allowance and deductions (Rank and Unrank)",
+  rMin: "Minimum orders (below = company decides)", rRate: "Per order (380–499, all ratings)", rT1: "Level 2 starts at", rT2: "Level 3 starts at",
+  rB1A: "500–599 salary · A", rB1B: "500–599 salary · B", rB1C: "500–599 salary · C", rB2A: "600+ salary · A", rB2B: "600+ salary · B", rB2C: "600+ salary · C",
+  rx1A: "Above 500 · A", rx1B: "Above 500 · B", rx1C: "Above 500 · C", rx2A: "Above 600 · A", rx2B: "Above 600 · B", rx2C: "Above 600 · C", tgt_next: "Next", pay_manual: "Company decides", pay_manual_low: "Under 380 orders · company decides", pay_manual_d: "D rating · company decides",
   pg_col: "Pay rating", pg_level: "Current level", pg_auto: "Auto", pg_default: "rating not set, using C", abs_col: "Absent shifts", fuel_allow: "Fuel allowance",
   u_title: "monthly salary", u_extra_title: "Unrank · extra order price by rating", u_fuel_title: "Unrank · fuel allowance and deductions",
   uMin: "Minimum orders (below = company decides)", uRate: "Per order (380–499)", uT1: "Level 2 starts at", uB1: "Level 2 salary", uT2: "Level 3 starts at", uB2: "Level 3 salary",
   ex1A: "Above 500 · A", ex1B: "Above 500 · B", ex1C: "Above 500 · C", ex2A: "Above 600 · A", ex2B: "Above 600 · B", ex2C: "Above 600 · C",
   uFuelLow: "Fuel per order (380–499)", uFuelHigh: "Fuel per order (500+)", absence: "Deduction per missed shift",
-  u_note: "D rating and under 380 orders: the company sets the salary by hand in Payroll. Fuel allowance is separate from salary: unused allowance is paid in cash, overspend is deducted.", jahezId: "Jahez driver ID", pf_grade: "Grade", pf_rank: "Ranking %", pf_forced: "Forced assignment", pf_ontime: "On-time delivery", pf_complete: "Order completion", pf_early: "Not marked delivered early",
-  perf_import: "Import Jahez report", perf_day: "Report day", perf_paste: "Paste the report rows (copy them from Excel)", perf_import_help: "Copy the rows of the Jahez driver report from Excel (driver ID, name, grade, ranking % and the four rates) and paste them here, or upload a CSV. Drivers are matched by Jahez ID, then by name.",
-  perf_nothing: "No report rows found. Copy the rows including the driver ID and the percentages.", perf_unmatched: "Not matched", perf_unmatched_help: "These drivers are not in Employees yet. Add them (with their Jahez ID) and import again.",
-  perf_empty: "No performance yet", perf_empty_hint: "Use Import Jahez report to add today's numbers.", nav_target: "Target", nav_perf: "Performance",
+  u_note: "Rank and Unrank: D rating (500+) and under 380 orders: the company sets the salary by hand in Payroll. Fuel allowance is separate from salary: unused allowance is paid in cash, overspend is deducted.", jahezId: "Keeta driver ID", pf_grade: "Grade", pf_rank: "Ranking %", pf_forced: "Forced assignment", pf_ontime: "On-time delivery", pf_complete: "Order completion", pf_early: "Not marked delivered early",
+  perf_import: "Import Keeta report", perf_day: "Report day", perf_paste: "Paste the report rows (copy them from Excel)", perf_import_help: "Copy the rows of the Keeta driver report from Excel (driver ID, name, grade, ranking % and the four rates) and paste them here, or upload a CSV. Drivers are matched by Keeta ID, then by name.",
+  perf_nothing: "No report rows found. Copy the rows including the driver ID and the percentages.", perf_unmatched: "Not matched", perf_unmatched_help: "These drivers are not in Employees yet. Add them (with their Keeta ID) and import again.",
+  perf_empty: "No performance yet", perf_empty_hint: "Use Import Keeta report to add today's numbers.", nav_target: "Target", nav_perf: "Performance",
   tgt_hint: "Each driver's own monthly target and pay. Leave a box empty to use the default from Pay rules (shown in grey).",
   tgt_defaults: "Default pay rules", tgt_target: "Target orders", tgt_base: "Base salary", tgt_short: "Deduction / missing order", tgt_rlow: "Rate below target", tgt_rhigh: "Rate at target", tgt_extra: "Extra order rate", tgt_sofar: "This month", tgt_est: "Pay so far",
-  tgt_rank_rule: "base salary + extra rate for each order above target − deduction for each order short.", tgt_unrank_rule: "380–499 orders × 4 SAR · 500+ = 2,500 · 600+ = 3,500, plus A/B/C price for each order above 500 or 600. Fuel allowance is paid separately.",
+  tgt_rank_rule: "380–499 × 3.5 SAR · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C), plus rating price for each extra order.", tgt_unrank_rule: "380–499 orders × 4 SAR · 500+ = 2,500 · 600+ = 3,500, plus A/B/C price for each order above 500 or 600. Fuel allowance is paid separately.",
   tgt_note: "Pay so far uses this month's total orders and excludes fines, advances and fuel. Payroll uses these same settings.",
-  perf_hint: "Daily Jahez performance for each driver. Drivers see yesterday and today side by side in their app.", perf_yest: "Yesterday", perf_today: "Today", perf_change: "Orders change",
+  perf_hint: "Daily Keeta performance for each driver. Drivers see yesterday and today side by side in their app.", perf_yest: "Yesterday", perf_today: "Today", perf_change: "Orders change",
   perf_orders: "Orders", perf_hours: "Hours", perf_accept: "Accept %", perf_note: "Only yesterday and today are kept. Older days are deleted automatically.", totalOrders: "Total orders", fuel_month_k: "Fuel this month", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
 Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB LOGISTICS · কর্মচারী ব্যবস্থাপনা", au_email: "ইমেইল", au_pass: "পাসওয়ার্ড",
   au_signin: "লগইন", au_signup: "এডমিন অ্যাকাউন্ট খুলুন", au_forgot: "পাসওয়ার্ড ভুলে গেছেন?", au_have: "অ্যাকাউন্ট আছে? লগইন করুন", au_new: "প্রথমবার? এডমিন অ্যাকাউন্ট খুলুন",
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "তারপর ওই ব্যক্তি এই পাতায় সেই ইমেইল দিয়ে অ্যাকাউন্ট খুলবেন।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", tgt_next: "পরের ধাপ", pay_manual: "কোম্পানি নির্ধারণ করবে", pay_manual_low: "৩৮০-এর কম অর্ডার · কোম্পানি নির্ধারণ করবে", pay_manual_d: "D রেটিং · কোম্পানি নির্ধারণ করবে",
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", rk_col: "Rank", rk_on_t: "অন = Rank নিয়ে কাজ করছে। চাপলে Unrank হবে।", rk_off_t: "অফ = Rank ছাড়া কাজ করছে। চাপলে Rank হবে।", rk_set_on: "{n} এখন Rank নিয়ে কাজ করছে", rk_set_off: "{n} এখন Rank ছাড়া কাজ করছে (Unrank)",
+  tgt_hint2: "Rank অন = Rank-এর নিয়ম, অফ = Unrank-এর নিয়ম। কর্মী নিজের অ্যাপে নিজের নিয়ম দেখবে।", r_extra_title: "রেটিং অনুযায়ী অতিরিক্ত অর্ডারের মূল্য", fuel_title_all: "জ্বালানি ভাতা ও কর্তন (Rank ও Unrank)",
+  rMin: "সর্বনিম্ন অর্ডার (এর কম হলে কোম্পানি নির্ধারণ করবে)", rRate: "প্রতি অর্ডার (৩৮০–৪৯৯, সব রেটিং)", rT1: "দ্বিতীয় ধাপ শুরু", rT2: "তৃতীয় ধাপ শুরু",
+  rB1A: "৫০০–৫৯৯ বেতন · A", rB1B: "৫০০–৫৯৯ বেতন · B", rB1C: "৫০০–৫৯৯ বেতন · C", rB2A: "৬০০+ বেতন · A", rB2B: "৬০০+ বেতন · B", rB2C: "৬০০+ বেতন · C",
+  rx1A: "৫০০-এর বেশি · A", rx1B: "৫০০-এর বেশি · B", rx1C: "৫০০-এর বেশি · C", rx2A: "৬০০-এর বেশি · A", rx2B: "৬০০-এর বেশি · B", rx2C: "৬০০-এর বেশি · C", tgt_next: "পরের ধাপ", pay_manual: "কোম্পানি নির্ধারণ করবে", pay_manual_low: "৩৮০-এর কম অর্ডার · কোম্পানি নির্ধারণ করবে", pay_manual_d: "D রেটিং · কোম্পানি নির্ধারণ করবে",
   pg_col: "বেতনের রেটিং", pg_level: "বর্তমান ধাপ", pg_auto: "স্বয়ংক্রিয়", pg_default: "রেটিং দেওয়া হয়নি, C ধরা হচ্ছে", abs_col: "অনুপস্থিত শিফট", fuel_allow: "জ্বালানি ভাতা",
   u_title: "মাসিক বেতন", u_extra_title: "Unrank · রেটিং অনুযায়ী অতিরিক্ত অর্ডারের মূল্য", u_fuel_title: "Unrank · জ্বালানি ভাতা ও কর্তন",
   uMin: "সর্বনিম্ন অর্ডার (এর কম হলে কোম্পানি নির্ধারণ করবে)", uRate: "প্রতি অর্ডার (৩৮০–৪৯৯)", uT1: "দ্বিতীয় ধাপ শুরু", uB1: "দ্বিতীয় ধাপের বেতন", uT2: "তৃতীয় ধাপ শুরু", uB2: "তৃতীয় ধাপের বেতন",
   ex1A: "৫০০-এর বেশি · A", ex1B: "৫০০-এর বেশি · B", ex1C: "৫০০-এর বেশি · C", ex2A: "৬০০-এর বেশি · A", ex2B: "৬০০-এর বেশি · B", ex2C: "৬০০-এর বেশি · C",
   uFuelLow: "প্রতি অর্ডারে জ্বালানি (৩৮০–৪৯৯)", uFuelHigh: "প্রতি অর্ডারে জ্বালানি (৫০০+)", absence: "প্রতি অনুপস্থিত শিফটে কর্তন",
-  u_note: "D রেটিং ও ৩৮০-এর কম অর্ডার: বেতন পাতায় কোম্পানি হাতে বেতন বসাবে। জ্বালানি ভাতা বেতন থেকে আলাদা: বেঁচে যাওয়া অংশ নগদে ফেরত, বেশি খরচ বেতন থেকে কাটা।", jahezId: "Jahez ড্রাইভার আইডি", pf_grade: "গ্রেড", pf_rank: "র‍্যাংকিং %", pf_forced: "বাধ্যতামূলক অ্যাসাইনমেন্ট", pf_ontime: "সময়মতো ডেলিভারি", pf_complete: "অর্ডার সম্পূর্ণ", pf_early: "আগেভাগে ডেলিভারড চাপেনি",
-  perf_import: "Jahez রিপোর্ট আমদানি", perf_day: "রিপোর্টের দিন", perf_paste: "রিপোর্টের সারিগুলো পেস্ট করুন (Excel থেকে কপি করে)", perf_import_help: "Excel থেকে Jahez ড্রাইভার রিপোর্টের সারিগুলো (ড্রাইভার আইডি, নাম, গ্রেড, র‍্যাংকিং % আর চারটি হার) কপি করে এখানে পেস্ট করুন, অথবা CSV ফাইল দিন। প্রথমে Jahez আইডি, না মিললে নাম দিয়ে কর্মী মেলানো হয়।",
-  perf_nothing: "রিপোর্টের কোনো সারি পাওয়া যায়নি। ড্রাইভার আইডি আর শতাংশগুলোসহ সারি কপি করুন।", perf_unmatched: "মেলেনি", perf_unmatched_help: "এই ড্রাইভাররা এখনো কর্মচারী তালিকায় নেই। তাদের Jahez আইডিসহ যোগ করে আবার আমদানি করুন।",
-  perf_empty: "এখনো পারফরমেন্স নেই", perf_empty_hint: "আজকের সংখ্যা যোগ করতে \"Jahez রিপোর্ট আমদানি\" ব্যবহার করুন।", nav_target: "টার্গেট", nav_perf: "পারফরমেন্স",
+  u_note: "D রেটিং ও ৩৮০-এর কম অর্ডার: বেতন পাতায় কোম্পানি হাতে বেতন বসাবে। জ্বালানি ভাতা বেতন থেকে আলাদা: বেঁচে যাওয়া অংশ নগদে ফেরত, বেশি খরচ বেতন থেকে কাটা।", jahezId: "Keeta ড্রাইভার আইডি", pf_grade: "গ্রেড", pf_rank: "র‍্যাংকিং %", pf_forced: "বাধ্যতামূলক অ্যাসাইনমেন্ট", pf_ontime: "সময়মতো ডেলিভারি", pf_complete: "অর্ডার সম্পূর্ণ", pf_early: "আগেভাগে ডেলিভারড চাপেনি",
+  perf_import: "Keeta রিপোর্ট আমদানি", perf_day: "রিপোর্টের দিন", perf_paste: "রিপোর্টের সারিগুলো পেস্ট করুন (Excel থেকে কপি করে)", perf_import_help: "Excel থেকে Keeta ড্রাইভার রিপোর্টের সারিগুলো (ড্রাইভার আইডি, নাম, গ্রেড, র‍্যাংকিং % আর চারটি হার) কপি করে এখানে পেস্ট করুন, অথবা CSV ফাইল দিন। প্রথমে Keeta আইডি, না মিললে নাম দিয়ে কর্মী মেলানো হয়।",
+  perf_nothing: "রিপোর্টের কোনো সারি পাওয়া যায়নি। ড্রাইভার আইডি আর শতাংশগুলোসহ সারি কপি করুন।", perf_unmatched: "মেলেনি", perf_unmatched_help: "এই ড্রাইভাররা এখনো কর্মচারী তালিকায় নেই। তাদের Keeta আইডিসহ যোগ করে আবার আমদানি করুন।",
+  perf_empty: "এখনো পারফরমেন্স নেই", perf_empty_hint: "আজকের সংখ্যা যোগ করতে \"Keeta রিপোর্ট আমদানি\" ব্যবহার করুন।", nav_target: "টার্গেট", nav_perf: "পারফরমেন্স",
   tgt_hint: "প্রত্যেক কর্মীর নিজের মাসিক টার্গেট ও বেতন। ঘর খালি রাখলে বেতনের নিয়মের সাধারণ মান (ধূসর) ধরা হবে।",
   tgt_defaults: "সাধারণ বেতনের নিয়ম", tgt_target: "টার্গেট অর্ডার", tgt_base: "বেসিক বেতন", tgt_short: "প্রতি কম অর্ডারে কর্তন", tgt_rlow: "টার্গেটের নিচে রেট", tgt_rhigh: "টার্গেট পূরণে রেট", tgt_extra: "অতিরিক্ত অর্ডার রেট", tgt_sofar: "এই মাসে", tgt_est: "এখন পর্যন্ত বেতন",
-  tgt_rank_rule: "বেসিক বেতন + টার্গেটের বেশি প্রতি অর্ডারে অতিরিক্ত রেট − টার্গেটের কম প্রতি অর্ডারে কর্তন।", tgt_unrank_rule: "৩৮০–৪৯৯ অর্ডার × ৪ রিয়াল · ৫০০+ = ২,৫০০ · ৬০০+ = ৩,৫০০, সাথে ৫০০ বা ৬০০-এর বেশি প্রতি অর্ডারে A/B/C মূল্য। জ্বালানি ভাতা আলাদা।",
+  tgt_rank_rule: "৩৮০–৪৯৯ × ৩.৫ রিয়াল · ৫০০+ = ৩,০০০ / ২,৫০০ / ২,০০০ · ৬০০+ = ৪,২৫০ / ৩,৮০০ / ৩,০০০ (A / B / C), সাথে প্রতি অতিরিক্ত অর্ডারে রেটিং মূল্য।", tgt_unrank_rule: "৩৮০–৪৯৯ অর্ডার × ৪ রিয়াল · ৫০০+ = ২,৫০০ · ৬০০+ = ৩,৫০০, সাথে ৫০০ বা ৬০০-এর বেশি প্রতি অর্ডারে A/B/C মূল্য। জ্বালানি ভাতা আলাদা।",
   tgt_note: "এখন পর্যন্ত বেতন এই মাসের মোট অর্ডার থেকে হিসাব, জরিমানা, অগ্রিম ও পেট্রোল বাদে। বেতন হিসাবেও এই একই নিয়ম ব্যবহার হয়।",
-  perf_hint: "প্রত্যেক কর্মীর দৈনিক Jahez পারফরমেন্স। কর্মীরা অ্যাপে গতকাল আর আজ পাশাপাশি দেখবে।", perf_yest: "গতকাল", perf_today: "আজ", perf_change: "অর্ডারের পরিবর্তন",
+  perf_hint: "প্রত্যেক কর্মীর দৈনিক Keeta পারফরমেন্স। কর্মীরা অ্যাপে গতকাল আর আজ পাশাপাশি দেখবে।", perf_yest: "গতকাল", perf_today: "আজ", perf_change: "অর্ডারের পরিবর্তন",
   perf_orders: "অর্ডার", perf_hours: "ঘণ্টা", perf_accept: "গ্রহণ %", perf_note: "শুধু গতকাল আর আজকের তথ্য থাকে। পুরনো দিনের তথ্য নিজে থেকেই মুছে যায়।", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
 Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTICS · إدارة الموظفين", au_email: "البريد الإلكتروني", au_pass: "كلمة المرور",
   au_signin: "دخول", au_signup: "إنشاء حساب مشرف", au_forgot: "نسيت كلمة المرور؟", au_have: "لديك حساب؟ سجّل الدخول", au_new: "أول مرة؟ أنشئ حساب المشرف",
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "ثم ينشئ الشخص حساباً من هذه الصفحة بنفس البريد.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", tgt_next: "التالي", pay_manual: "تحدده الشركة", pay_manual_low: "أقل من 380 طلب · تحدده الشركة", pay_manual_d: "تقييم D · تحدده الشركة",
+  drv_web: "تطبيق السائق (ويب)", rk_col: "Rank", rk_on_t: "تشغيل = يعمل مع Rank. اضغط للتحويل إلى Unrank.", rk_off_t: "إيقاف = يعمل بدون Rank. اضغط للتحويل إلى Rank.", rk_set_on: "{n} يعمل الآن مع Rank", rk_set_off: "{n} يعمل الآن بدون Rank",
+  tgt_hint2: "Rank مفعّل = قواعد Rank، غير مفعّل = قواعد Unrank. يرى السائق قواعده في التطبيق.", r_extra_title: "سعر الطلب الإضافي حسب التقييم", fuel_title_all: "بدل الوقود والخصومات (Rank وUnrank)",
+  rMin: "الحد الأدنى للطلبات (أقل منه تحدده الشركة)", rRate: "لكل طلب (380–499، كل التقييمات)", rT1: "بداية المستوى 2", rT2: "بداية المستوى 3",
+  rB1A: "راتب 500–599 · A", rB1B: "راتب 500–599 · B", rB1C: "راتب 500–599 · C", rB2A: "راتب 600+ · A", rB2B: "راتب 600+ · B", rB2C: "راتب 600+ · C",
+  rx1A: "فوق 500 · A", rx1B: "فوق 500 · B", rx1C: "فوق 500 · C", rx2A: "فوق 600 · A", rx2B: "فوق 600 · B", rx2C: "فوق 600 · C", tgt_next: "التالي", pay_manual: "تحدده الشركة", pay_manual_low: "أقل من 380 طلب · تحدده الشركة", pay_manual_d: "تقييم D · تحدده الشركة",
   pg_col: "تقييم الراتب", pg_level: "المستوى الحالي", pg_auto: "تلقائي", pg_default: "لم يُحدد التقييم، يُحسب C", abs_col: "ورديات الغياب", fuel_allow: "بدل الوقود",
   u_title: "الراتب الشهري", u_extra_title: "Unrank · سعر الطلب الإضافي حسب التقييم", u_fuel_title: "Unrank · بدل الوقود والخصومات",
   uMin: "الحد الأدنى للطلبات (أقل منه تحدده الشركة)", uRate: "لكل طلب (380–499)", uT1: "بداية المستوى 2", uB1: "راتب المستوى 2", uT2: "بداية المستوى 3", uB2: "راتب المستوى 3",
   ex1A: "فوق 500 · A", ex1B: "فوق 500 · B", ex1C: "فوق 500 · C", ex2A: "فوق 600 · A", ex2B: "فوق 600 · B", ex2C: "فوق 600 · C",
   uFuelLow: "وقود لكل طلب (380–499)", uFuelHigh: "وقود لكل طلب (500+)", absence: "خصم لكل وردية غياب",
-  u_note: "تقييم D وأقل من 380 طلب: تحدد الشركة الراتب يدوياً في الرواتب. بدل الوقود منفصل عن الراتب: يُصرف الوفر نقداً ويُخصم الزائد.", jahezId: "معرف سائق جاهز", pf_grade: "المستوى", pf_rank: "نسبة التصنيف", pf_forced: "التعيين الإجباري", pf_ontime: "التوصيل في الموعد", pf_complete: "اكتمال الطلبات", pf_early: "لم يضغط تم التسليم مبكراً",
-  perf_import: "استيراد تقرير جاهز", perf_day: "يوم التقرير", perf_paste: "الصق صفوف التقرير (انسخها من Excel)", perf_import_help: "انسخ صفوف تقرير سائقي جاهز من Excel (المعرف، الاسم، المستوى، نسبة التصنيف والنسب الأربع) والصقها هنا أو ارفع ملف CSV. تتم المطابقة بمعرف جاهز ثم بالاسم.",
-  perf_nothing: "لم يتم العثور على صفوف. انسخ الصفوف مع المعرف والنسب.", perf_unmatched: "غير مطابق", perf_unmatched_help: "هؤلاء السائقون غير موجودين في الموظفين. أضفهم بمعرف جاهز ثم أعد الاستيراد.",
-  perf_empty: "لا يوجد أداء بعد", perf_empty_hint: "استخدم استيراد تقرير جاهز لإضافة أرقام اليوم.", nav_target: "الهدف", nav_perf: "الأداء",
+  u_note: "تقييم D وأقل من 380 طلب: تحدد الشركة الراتب يدوياً في الرواتب. بدل الوقود منفصل عن الراتب: يُصرف الوفر نقداً ويُخصم الزائد.", jahezId: "معرف سائق كيتا", pf_grade: "المستوى", pf_rank: "نسبة التصنيف", pf_forced: "التعيين الإجباري", pf_ontime: "التوصيل في الموعد", pf_complete: "اكتمال الطلبات", pf_early: "لم يضغط تم التسليم مبكراً",
+  perf_import: "استيراد تقرير كيتا", perf_day: "يوم التقرير", perf_paste: "الصق صفوف التقرير (انسخها من Excel)", perf_import_help: "انسخ صفوف تقرير سائقي كيتا من Excel (المعرف، الاسم، المستوى، نسبة التصنيف والنسب الأربع) والصقها هنا أو ارفع ملف CSV. تتم المطابقة بمعرف كيتا ثم بالاسم.",
+  perf_nothing: "لم يتم العثور على صفوف. انسخ الصفوف مع المعرف والنسب.", perf_unmatched: "غير مطابق", perf_unmatched_help: "هؤلاء السائقون غير موجودين في الموظفين. أضفهم بمعرف كيتا ثم أعد الاستيراد.",
+  perf_empty: "لا يوجد أداء بعد", perf_empty_hint: "استخدم استيراد تقرير كيتا لإضافة أرقام اليوم.", nav_target: "الهدف", nav_perf: "الأداء",
   tgt_hint: "هدف وراتب كل سائق الشهري. اترك الخانة فارغة لاستخدام القيمة العامة من قواعد الراتب (بالرمادي).",
   tgt_defaults: "قواعد الراتب العامة", tgt_target: "الطلبات المستهدفة", tgt_base: "الراتب الأساسي", tgt_short: "خصم لكل طلب ناقص", tgt_rlow: "السعر تحت الهدف", tgt_rhigh: "السعر عند الهدف", tgt_extra: "سعر الطلب الإضافي", tgt_sofar: "هذا الشهر", tgt_est: "الراتب حتى الآن",
-  tgt_rank_rule: "الراتب الأساسي + سعر إضافي لكل طلب فوق الهدف − خصم لكل طلب ناقص.", tgt_unrank_rule: "380–499 طلب × 4 ريال · 500+ = 2,500 · 600+ = 3,500، مع سعر A/B/C لكل طلب فوق 500 أو 600. بدل الوقود منفصل.",
+  tgt_rank_rule: "380–499 × 3.5 ريال · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C)، مع سعر التقييم لكل طلب إضافي.", tgt_unrank_rule: "380–499 طلب × 4 ريال · 500+ = 2,500 · 600+ = 3,500، مع سعر A/B/C لكل طلب فوق 500 أو 600. بدل الوقود منفصل.",
   tgt_note: "الراتب حتى الآن من إجمالي طلبات الشهر بدون المخالفات والسلف والوقود. الرواتب تستخدم نفس الإعدادات.",
   perf_hint: "الأداء اليومي لكل سائق. يرى السائق أمس واليوم جنباً إلى جنب في تطبيقه.", perf_yest: "أمس", perf_today: "اليوم", perf_change: "تغير الطلبات",
   perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ أمس واليوم فقط، وتُحذف الأيام الأقدم تلقائياً.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
