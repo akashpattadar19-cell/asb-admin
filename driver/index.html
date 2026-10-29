@@ -145,6 +145,20 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .g-a{background:#1D8358} .g-b{background:#2F6FB5} .g-c{background:#C98C14} .g-d{background:#C0392B} .g-x{background:#7A8794}
 .pf-rank{min-width:0;border-inline-start:1px solid var(--line);padding-inline-start:16px}
 .warnv{color:#B26A00}
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tile{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;text-align:start;color:var(--ink);display:flex;flex-direction:column;gap:4px;min-width:0}
+.tile:active{transform:scale(.98)}
+.tile-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+.tile-ic{width:44px;height:44px;border-radius:12px;background:var(--sunk);display:grid;place-items:center;color:var(--gold)}
+.tile-ic svg{width:24px;height:24px}
+.tile-go{font-size:22px;color:var(--muted)}
+.tile b{font:600 18px var(--f-display);letter-spacing:.02em}
+.tile small{color:var(--muted);font-size:13px}
+.bigg.sm{width:44px;height:44px;font-size:24px;border-radius:12px}
+.tbar2{height:6px;border-radius:6px;background:var(--sunk);overflow:hidden;margin-top:6px}
+.tbar2 span{display:block;height:100%;background:var(--gold);border-radius:6px}
+.subhead{display:flex;align-items:center;gap:10px}
+.subhead h2{margin:0;font:600 22px var(--f-display)}
 .perf-head{border-radius:12px;padding:10px 12px;font-weight:600;margin-bottom:10px;font-size:14.5px}
 .perf-head.up{background:var(--good-soft);color:var(--good)} .perf-head.down{background:var(--bad-soft);color:var(--bad)} .perf-head.same{background:var(--sunk);color:var(--muted)}
 .pr{display:grid;grid-template-columns:1.2fr 1fr 1.3fr;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
@@ -186,7 +200,7 @@ const REFRESH_MS = 15000;
 
 /* ── strings ── */
 const T = {
-en:{pf_grade:"Grade",pf_rank:"Ranking",pf_top:"{p}%",pf_rank_hint:"Lower is better",pf_ungraded:"Not graded yet",pf_forced:"Forced assignment",pf_ontime:"On-time delivery",pf_complete:"Order completion",pf_early:"Not marked delivered early",pf_better:"▲ Better than yesterday in {n} areas. Keep it up!",pf_worse:"▼ Lower than yesterday in {n} areas. Let's improve today.",perf_same2:"Same as yesterday.",perf:"Performance",yest:"Yesterday",today:"Today",p_orders:"Orders",p_hours:"Hours",p_accept:"Acceptance",perf_up:"▲ {n} more orders than yesterday (+{p}%). Great work!",perf_down:"▼ {n} fewer orders than yesterday (−{p}%). You can do better today.",perf_same:"Same number of orders as yesterday.",rank:"This month's rank",orders_month:"Total orders this month",target_r:"Monthly target",target_u:"Higher rate from",upd_on:"Updated {d}",fuel_m:"Fuel this month",norank:"No orders entered yet",board:"Top 5 this month",noboard:"The ranking appears once orders are entered.",brand_sub:"Driver app",signin:"Sign in",signin_sub:"Enter your Iqama number and 4-digit PIN",iqama:"Iqama number",pin:"PIN",remember:"Keep me signed in",forgot:"Forgot PIN?",
+en:{tg:"Target",tg_mine:"My target this month",tg_left:"{n} more orders to reach the target",tg_done:"Target reached! {n} extra orders",tg_rules:"How I am paid",tg_target:"Monthly target",tg_orders:"orders",tg_base:"Base salary",tg_extra:"Each order above target",tg_short:"Each order below target",tg_rlow:"Per order below target",tg_rhigh:"Per order when target is reached",tg_all:"All drivers' targets",tg_f_all:"All",tg_done_s:"done",rk_r:"Rank",rk_u:"Unrank",pf_none:"Not added yet",pf_up_n:"{n} better",pf_down_n:"{n} lower",pf_ok:"Same as yesterday",pf_what:"What these mean",pf_x_grade:"Jahez grade: A is best, then B, C, D.",pf_x_rank:"Your position among all Jahez drivers. Lower is better.",pf_x_forced:"How often you accept orders assigned to you.",pf_x_ontime:"Orders delivered on time.",pf_x_complete:"Orders completed (problems not caused by delivery are not counted).",pf_x_early:"Orders where you did not press Delivered too early.",pf_grade:"Grade",pf_rank:"Ranking",pf_top:"{p}%",pf_rank_hint:"Lower is better",pf_ungraded:"Not graded yet",pf_forced:"Forced assignment",pf_ontime:"On-time delivery",pf_complete:"Order completion",pf_early:"Not marked delivered early",pf_better:"▲ Better than yesterday in {n} areas. Keep it up!",pf_worse:"▼ Lower than yesterday in {n} areas. Let's improve today.",perf_same2:"Same as yesterday.",perf:"Performance",yest:"Yesterday",today:"Today",p_orders:"Orders",p_hours:"Hours",p_accept:"Acceptance",perf_up:"▲ {n} more orders than yesterday (+{p}%). Great work!",perf_down:"▼ {n} fewer orders than yesterday (−{p}%). You can do better today.",perf_same:"Same number of orders as yesterday.",rank:"This month's rank",orders_month:"Total orders this month",target_r:"Monthly target",target_u:"Higher rate from",upd_on:"Updated {d}",fuel_m:"Fuel this month",norank:"No orders entered yet",board:"Top 5 this month",noboard:"The ranking appears once orders are entered.",brand_sub:"Driver app",signin:"Sign in",signin_sub:"Enter your Iqama number and 4-digit PIN",iqama:"Iqama number",pin:"PIN",remember:"Keep me signed in",forgot:"Forgot PIN?",
  forgot_sent:"Request sent. Your supervisor will give you a new PIN.",need_iqama:"Enter your 10-digit Iqama number first.",wrong:"Wrong Iqama or PIN. {n} tries left.",wrong0:"Wrong Iqama or PIN.",
  locked:"Too many wrong tries. Try again in {n} minutes or ask your supervisor.",offline:"No internet connection. Check your data or Wi-Fi.",expired:"Please sign in again.",deactivated:"Your account is not active. Contact your supervisor.",
  home:"Home",fines:"Fines",salary:"Salary",profile:"Profile",duty_ACTIVE:"Active",duty_ON_DUTY:"On duty",duty_OFFLINE:"Offline",
@@ -201,7 +215,7 @@ en:{pf_grade:"Grade",pf_rank:"Ranking",pf_top:"{p}%",pf_rank_hint:"Lower is bett
  pdf:"Download PDF",pdf_ok:"Saved to Downloads",pdf_fail:"Could not create the PDF.",back:"Back",
  resident:"Iqama",mobile:"Mobile",city:"City",paytype:"Pay type",TARGET:"Rank · target + bonus",PER_ORDER:"Unrank · per order",plate:"Vehicle plate",model:"Vehicle",card:"Petrol card",dlimit:"Daily fuel limit",mlimit:"Monthly fuel limit",
  language:"Language",signout:"Sign out",pin_hint:"To change your PIN, ask your supervisor.",updated:"Updated {t}",new_fine:"New fine: {a} SAR",new_slip:"New payslip: {m}",see:"See"},
-bn:{pf_grade:"গ্রেড",pf_rank:"র‍্যাংকিং",pf_top:"{p}%",pf_rank_hint:"যত কম, তত ভালো",pf_ungraded:"এখনো গ্রেড দেওয়া হয়নি",pf_forced:"বাধ্যতামূলক অ্যাসাইনমেন্ট",pf_ontime:"সময়মতো ডেলিভারি",pf_complete:"অর্ডার সম্পূর্ণ",pf_early:"আগেভাগে ডেলিভারড চাপেনি",pf_better:"▲ গতকালের চেয়ে {n}টি বিষয়ে উন্নতি। এভাবেই চালিয়ে যান!",pf_worse:"▼ গতকালের চেয়ে {n}টি বিষয়ে কমেছে। আজ আরও ভালো করুন।",perf_same2:"গতকালের মতোই।",perf:"পারফরমেন্স",yest:"গতকাল",today:"আজ",p_orders:"অর্ডার",p_hours:"ঘণ্টা",p_accept:"গ্রহণ",perf_up:"▲ গতকালের চেয়ে {n}টি অর্ডার বেশি (+{p}%)। দারুণ!",perf_down:"▼ গতকালের চেয়ে {n}টি অর্ডার কম (−{p}%)। আজ আরও ভালো করা যায়।",perf_same:"গতকালের সমান অর্ডার।",rank:"এই মাসের র‍্যাংক",orders_month:"এই মাসের মোট অর্ডার",target_r:"মাসিক টার্গেট",target_u:"বেশি রেট শুরু",upd_on:"হালনাগাদ {d}",fuel_m:"এই মাসের পেট্রোল",norank:"এখনো অর্ডার দেওয়া হয়নি",board:"এই মাসের সেরা ৫",noboard:"অর্ডার দেওয়া হলে র‍্যাংকিং দেখাবে।",brand_sub:"ড্রাইভার অ্যাপ",signin:"লগইন",signin_sub:"ইকামা নম্বর ও ৪ সংখ্যার পিন দিন",iqama:"ইকামা নম্বর",pin:"পিন",remember:"লগইন থাকুক",forgot:"পিন ভুলে গেছেন?",
+bn:{tg:"টার্গেট",tg_mine:"এই মাসে আমার টার্গেট",tg_left:"টার্গেট পূরণে আর {n}টি অর্ডার",tg_done:"টার্গেট পূরণ! {n}টি অতিরিক্ত অর্ডার",tg_rules:"আমার বেতন কীভাবে হয়",tg_target:"মাসিক টার্গেট",tg_orders:"অর্ডার",tg_base:"বেসিক বেতন",tg_extra:"টার্গেটের বেশি প্রতি অর্ডারে",tg_short:"টার্গেটের কম প্রতি অর্ডারে",tg_rlow:"টার্গেটের নিচে প্রতি অর্ডার",tg_rhigh:"টার্গেট পূরণ হলে প্রতি অর্ডার",tg_all:"সব কর্মীর টার্গেট",tg_f_all:"সবাই",tg_done_s:"হয়েছে",rk_r:"Rank",rk_u:"Unrank",pf_none:"এখনো দেওয়া হয়নি",pf_up_n:"{n}টিতে উন্নতি",pf_down_n:"{n}টিতে কম",pf_ok:"গতকালের মতো",pf_what:"এগুলোর মানে",pf_x_grade:"Jahez গ্রেড: A সবচেয়ে ভালো, তারপর B, C, D।",pf_x_rank:"সব Jahez ড্রাইভারের মধ্যে আপনার অবস্থান। যত কম, তত ভালো।",pf_x_forced:"আপনাকে দেওয়া অর্ডার কতবার গ্রহণ করেছেন।",pf_x_ontime:"সময়মতো ডেলিভারি দেওয়া অর্ডার।",pf_x_complete:"সম্পূর্ণ করা অর্ডার (ডেলিভারির বাইরের সমস্যা গোনা হয় না)।",pf_x_early:"যেসব অর্ডারে আগেভাগে \"ডেলিভারড\" চাপেননি।",pf_grade:"গ্রেড",pf_rank:"র‍্যাংকিং",pf_top:"{p}%",pf_rank_hint:"যত কম, তত ভালো",pf_ungraded:"এখনো গ্রেড দেওয়া হয়নি",pf_forced:"বাধ্যতামূলক অ্যাসাইনমেন্ট",pf_ontime:"সময়মতো ডেলিভারি",pf_complete:"অর্ডার সম্পূর্ণ",pf_early:"আগেভাগে ডেলিভারড চাপেনি",pf_better:"▲ গতকালের চেয়ে {n}টি বিষয়ে উন্নতি। এভাবেই চালিয়ে যান!",pf_worse:"▼ গতকালের চেয়ে {n}টি বিষয়ে কমেছে। আজ আরও ভালো করুন।",perf_same2:"গতকালের মতোই।",perf:"পারফরমেন্স",yest:"গতকাল",today:"আজ",p_orders:"অর্ডার",p_hours:"ঘণ্টা",p_accept:"গ্রহণ",perf_up:"▲ গতকালের চেয়ে {n}টি অর্ডার বেশি (+{p}%)। দারুণ!",perf_down:"▼ গতকালের চেয়ে {n}টি অর্ডার কম (−{p}%)। আজ আরও ভালো করা যায়।",perf_same:"গতকালের সমান অর্ডার।",rank:"এই মাসের র‍্যাংক",orders_month:"এই মাসের মোট অর্ডার",target_r:"মাসিক টার্গেট",target_u:"বেশি রেট শুরু",upd_on:"হালনাগাদ {d}",fuel_m:"এই মাসের পেট্রোল",norank:"এখনো অর্ডার দেওয়া হয়নি",board:"এই মাসের সেরা ৫",noboard:"অর্ডার দেওয়া হলে র‍্যাংকিং দেখাবে।",brand_sub:"ড্রাইভার অ্যাপ",signin:"লগইন",signin_sub:"ইকামা নম্বর ও ৪ সংখ্যার পিন দিন",iqama:"ইকামা নম্বর",pin:"পিন",remember:"লগইন থাকুক",forgot:"পিন ভুলে গেছেন?",
  forgot_sent:"অনুরোধ পাঠানো হয়েছে। সুপারভাইজার নতুন পিন দেবেন।",need_iqama:"আগে ১০ সংখ্যার ইকামা নম্বর লিখুন।",wrong:"ইকামা বা পিন ভুল। আর {n} বার চেষ্টা করা যাবে।",wrong0:"ইকামা বা পিন ভুল।",
  locked:"অনেকবার ভুল হয়েছে। {n} মিনিট পরে চেষ্টা করুন বা সুপারভাইজারকে বলুন।",offline:"ইন্টারনেট সংযোগ নেই। ডাটা বা Wi-Fi দেখুন।",expired:"আবার লগইন করুন।",deactivated:"আপনার অ্যাকাউন্ট চালু নেই। সুপারভাইজারের সাথে যোগাযোগ করুন।",
  home:"হোম",fines:"জরিমানা",salary:"বেতন",profile:"প্রোফাইল",duty_ACTIVE:"সক্রিয়",duty_ON_DUTY:"ডিউটিতে",duty_OFFLINE:"অফলাইন",
@@ -216,7 +230,7 @@ bn:{pf_grade:"গ্রেড",pf_rank:"র‍্যাংকিং",pf_top:"{p}
  pdf:"PDF ডাউনলোড",pdf_ok:"Downloads ফোল্ডারে সেভ হয়েছে",pdf_fail:"PDF তৈরি করা যায়নি।",back:"পেছনে",
  resident:"ইকামা",mobile:"মোবাইল",city:"শহর",paytype:"বেতনের ধরন",TARGET:"Rank · টার্গেট + বোনাস",PER_ORDER:"Unrank · প্রতি অর্ডার",plate:"গাড়ির প্লেট",model:"গাড়ি",card:"পেট্রোল কার্ড",dlimit:"দৈনিক পেট্রোল সীমা",mlimit:"মাসিক পেট্রোল সীমা",
  language:"ভাষা",signout:"লগআউট",pin_hint:"পিন বদলাতে সুপারভাইজারকে বলুন।",updated:"হালনাগাদ {t}",new_fine:"নতুন জরিমানা: {a} রিয়াল",new_slip:"নতুন পে-স্লিপ: {m}",see:"দেখুন"},
-ar:{pf_grade:"المستوى",pf_rank:"التصنيف",pf_top:"{p}%",pf_rank_hint:"كلما قل كان أفضل",pf_ungraded:"لم يُصنف بعد",pf_forced:"التعيين الإجباري",pf_ontime:"التوصيل في الموعد",pf_complete:"اكتمال الطلبات",pf_early:"لم يضغط تم التسليم مبكراً",pf_better:"▲ أفضل من أمس في {n} مجالات. استمر!",pf_worse:"▼ أقل من أمس في {n} مجالات. لنتحسن اليوم.",perf_same2:"مثل أمس.",perf:"الأداء",yest:"أمس",today:"اليوم",p_orders:"الطلبات",p_hours:"الساعات",p_accept:"القبول",perf_up:"▲ {n} طلبات أكثر من أمس (+{p}%). عمل رائع!",perf_down:"▼ {n} طلبات أقل من أمس (−{p}%). يمكنك الأفضل اليوم.",perf_same:"نفس عدد طلبات أمس.",rank:"ترتيبك هذا الشهر",orders_month:"إجمالي طلبات الشهر",target_r:"الهدف الشهري",target_u:"السعر الأعلى من",upd_on:"آخر تحديث {d}",fuel_m:"وقود هذا الشهر",norank:"لم تُدخل طلبات بعد",board:"أفضل 5 هذا الشهر",noboard:"يظهر الترتيب بعد إدخال الطلبات.",brand_sub:"تطبيق السائق",signin:"تسجيل الدخول",signin_sub:"أدخل رقم الإقامة والرقم السري المكون من 4 أرقام",iqama:"رقم الإقامة",pin:"الرقم السري",remember:"إبقائي مسجلاً",forgot:"نسيت الرقم السري؟",
+ar:{tg:"الهدف",tg_mine:"هدفي هذا الشهر",tg_left:"باقي {n} طلب للوصول للهدف",tg_done:"تم بلوغ الهدف! {n} طلب إضافي",tg_rules:"كيف يُحسب راتبي",tg_target:"الهدف الشهري",tg_orders:"طلب",tg_base:"الراتب الأساسي",tg_extra:"كل طلب فوق الهدف",tg_short:"كل طلب ناقص عن الهدف",tg_rlow:"لكل طلب تحت الهدف",tg_rhigh:"لكل طلب عند بلوغ الهدف",tg_all:"أهداف جميع السائقين",tg_f_all:"الكل",tg_done_s:"منجز",rk_r:"Rank",rk_u:"Unrank",pf_none:"لم يُضف بعد",pf_up_n:"أفضل في {n}",pf_down_n:"أقل في {n}",pf_ok:"مثل أمس",pf_what:"معنى هذه المؤشرات",pf_x_grade:"مستوى جاهز: A الأفضل ثم B وC وD.",pf_x_rank:"ترتيبك بين سائقي جاهز. كلما قل كان أفضل.",pf_x_forced:"مدى قبولك للطلبات المسندة إليك.",pf_x_ontime:"الطلبات المسلّمة في الموعد.",pf_x_complete:"الطلبات المكتملة (لا تُحسب المشاكل غير المتعلقة بالتوصيل).",pf_x_early:"الطلبات التي لم تضغط فيها تم التسليم مبكراً.",pf_grade:"المستوى",pf_rank:"التصنيف",pf_top:"{p}%",pf_rank_hint:"كلما قل كان أفضل",pf_ungraded:"لم يُصنف بعد",pf_forced:"التعيين الإجباري",pf_ontime:"التوصيل في الموعد",pf_complete:"اكتمال الطلبات",pf_early:"لم يضغط تم التسليم مبكراً",pf_better:"▲ أفضل من أمس في {n} مجالات. استمر!",pf_worse:"▼ أقل من أمس في {n} مجالات. لنتحسن اليوم.",perf_same2:"مثل أمس.",perf:"الأداء",yest:"أمس",today:"اليوم",p_orders:"الطلبات",p_hours:"الساعات",p_accept:"القبول",perf_up:"▲ {n} طلبات أكثر من أمس (+{p}%). عمل رائع!",perf_down:"▼ {n} طلبات أقل من أمس (−{p}%). يمكنك الأفضل اليوم.",perf_same:"نفس عدد طلبات أمس.",rank:"ترتيبك هذا الشهر",orders_month:"إجمالي طلبات الشهر",target_r:"الهدف الشهري",target_u:"السعر الأعلى من",upd_on:"آخر تحديث {d}",fuel_m:"وقود هذا الشهر",norank:"لم تُدخل طلبات بعد",board:"أفضل 5 هذا الشهر",noboard:"يظهر الترتيب بعد إدخال الطلبات.",brand_sub:"تطبيق السائق",signin:"تسجيل الدخول",signin_sub:"أدخل رقم الإقامة والرقم السري المكون من 4 أرقام",iqama:"رقم الإقامة",pin:"الرقم السري",remember:"إبقائي مسجلاً",forgot:"نسيت الرقم السري؟",
  forgot_sent:"تم إرسال الطلب. سيعطيك المشرف رقماً جديداً.",need_iqama:"أدخل رقم الإقامة المكون من 10 أرقام أولاً.",wrong:"رقم الإقامة أو الرقم السري غير صحيح. متبقي {n} محاولات.",wrong0:"رقم الإقامة أو الرقم السري غير صحيح.",
  locked:"محاولات خاطئة كثيرة. حاول بعد {n} دقيقة أو راجع المشرف.",offline:"لا يوجد اتصال بالإنترنت.",expired:"سجّل الدخول مرة أخرى.",deactivated:"حسابك غير مفعل. راجع المشرف.",
  home:"الرئيسية",fines:"المخالفات",salary:"الراتب",profile:"ملفي",duty_ACTIVE:"نشط",duty_ON_DUTY:"في العمل",duty_OFFLINE:"غير متصل",
@@ -265,6 +279,8 @@ const I = {
   profile: '<circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.3-3.7 4.2-5.5 7.5-5.5s6.2 1.8 7.5 5.5"/>',
   refresh: '<path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 5v6h-6"/>',
   back: '<path d="M15 5l-7 7 7 7"/>',
+  chart: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>',
+  target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/>',
 };
 const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
 const SHIELD = `<svg viewBox="0 0 86 96" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2BD45"/><stop offset="1" stop-color="#C98C14"/></linearGradient></defs>
@@ -320,7 +336,7 @@ function vApp(){
   if (!m) return `<div class="login" style="justify-content:center"><div class="brand">${SHIELD}<div class="spin"></div></div></div>`;
   const p = m.profile;
   const outstanding = m.fines.reduce((s, f) => s + (+f.remaining || 0), 0);
-  let body = S.tab === "home" ? vHome(m) : S.tab === "fines" ? vFines(m) : S.tab === "salary" ? (S.slip ? vSlip(m, S.slip) : vSalary(m)) : vProfile(m);
+  let body = S.tab === "home" ? (S.sub === "perf" ? vPerfPage(m) : S.sub === "target" ? vTargetPage(m) : vHome(m)) : S.tab === "fines" ? vFines(m) : S.tab === "salary" ? (S.slip ? vSlip(m, S.slip) : vSalary(m)) : vProfile(m);
   const last = S.lastAt ? new Date(S.lastAt).toLocaleTimeString(lang === "ar" ? "ar-SA" : "en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
   return `<div class="app">
     <header class="top">${ava(p.photo, p.fullName, 44, "border-radius:14px;border:2px solid var(--gold)")}
@@ -345,6 +361,53 @@ function gauge(used, limit){
     <circle cx="46" cy="46" r="${r}" fill="none" stroke="${over ? "var(--bad)" : "var(--gold)"}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${c * pct} ${c}" transform="rotate(-90 46 46)"/>
     <text x="46" y="51" text-anchor="middle" font-family="Barlow Semi Condensed,sans-serif" font-weight="600" font-size="19" fill="var(--ink)">${Math.round(pct * 100)}%</text></svg>`;
 }
+function optionTiles(m){
+  const pf = m.perf || {}, D = pf.today || {}, Y = pf.yest || {}, cur = (D.g || D.rp != null) ? D : Y;
+  const keys = ["g", "rp", "fa", "ot", "cr", "ne"], up = keys.filter(k => pDelta(k, Y[k], D[k]) > 0).length, down = keys.filter(k => pDelta(k, Y[k], D[k]) < 0).length;
+  const mm = m.month, tg = +(m.plan?.target ?? mm.target) || 0, pct = tg ? Math.min(100, mm.o / tg * 100) : 0;
+  return `<div class="tiles">
+    <button class="tile" data-sub="perf">
+      <div class="tile-top">${cur.g ? `<span class="bigg sm ${grCls(cur.g)}">${esc(cur.g)}</span>` : `<span class="tile-ic">${icon("chart")}</span>`}<span class="tile-go">›</span></div>
+      <b>${t("perf")}</b>
+      <small>${!cur.g && cur.rp == null ? t("pf_none") : up > down ? `<span class="chg up">▲ ${t("pf_up_n", { n: up })}</span>` : down > up ? `<span class="chg down">▼ ${t("pf_down_n", { n: down })}</span>` : t("pf_ok")}</small>
+    </button>
+    <button class="tile" data-sub="target">
+      <div class="tile-top"><span class="tile-ic">${icon("target")}</span><span class="tile-go">›</span></div>
+      <b>${t("tg")}</b>
+      <small><span class="num" style="font-size:15px">${fmt0(mm.o)}</span> / ${fmt0(tg)}</small>
+      <div class="tbar2"><span style="width:${pct}%"></span></div>
+    </button></div>`;
+}
+function subHead(title){ return `<div class="subhead"><button class="back" data-subback>‹ ${t("back")}</button><h2>${title}</h2></div>`; }
+function vPerfPage(m){
+  return subHead(t("perf")) + (perfCard(m.perf) || `<section class="card"><div class="empty">${t("pf_none")}</div></section>`) + `<section class="card"><h3>${t("pf_what")}</h3><div class="list">
+    ${[["pf_grade","pf_x_grade"],["pf_rank","pf_x_rank"],["pf_forced","pf_x_forced"],["pf_ontime","pf_x_ontime"],["pf_complete","pf_x_complete"],["pf_early","pf_x_early"]].map(([a, b]) => `<div class="li"><div class="t"><b>${t(a)}</b><small>${t(b)}</small></div></div>`).join("")}</div></section>`;
+}
+function vTargetPage(m){
+  const p = m.profile, plan = m.plan || {}, mm = m.month, tg = +plan.target || +mm.target || 0, left = Math.max(0, tg - mm.o), pct = tg ? Math.min(100, mm.o / tg * 100) : 0;
+  const isRank = p.payType !== "PER_ORDER";
+  const rule = (a, b) => `<div class="li"><span class="muted">${a}</span><b>${b}</b></div>`;
+  const all = (m.targets || []).filter(r => !S.tq || (S.tq === "R" ? r.pt !== "PER_ORDER" : r.pt === "PER_ORDER"))
+    .sort((a, b) => (b.me - a.me) || ((b.o / (b.t || 1)) - (a.o / (a.t || 1))));
+  return subHead(t("tg")) + `
+  <section class="card hero">
+    <div class="lbl">${t("tg_mine")} · ${isRank ? t("rk_r") : t("rk_u")}</div>
+    <div class="row" style="align-items:flex-end;margin-top:4px"><div class="big" style="font-size:44px">${fmt0(mm.o)}<span style="font-size:22px;opacity:.7"> / ${fmt0(tg)}</span></div></div>
+    <div class="tbar ${mm.o >= tg ? "done" : ""}"><span style="width:${pct}%"></span></div>
+    <div style="margin-top:8px;font-weight:600">${mm.o >= tg ? t("tg_done", { n: fmt0(mm.o - tg) }) : t("tg_left", { n: fmt0(left) })}</div>
+  </section>
+  <section class="card"><h3>${t("tg_rules")}</h3><div class="list">
+    ${isRank ? rule(t("tg_target"), `${fmt0(tg)} ${t("tg_orders")}`) + rule(t("tg_base"), `${fmt(plan.base)} ${t("sar")}`) + rule(t("tg_extra"), `+${fmt(plan.extra)} ${t("sar")}`) + rule(t("tg_short"), `−${fmt(plan.short)} ${t("sar")}`)
+      : rule(t("tg_target"), `${fmt0(tg)} ${t("tg_orders")}`) + rule(t("tg_rlow"), `${fmt(plan.rateLow)} ${t("sar")}`) + rule(t("tg_rhigh"), `${fmt(plan.rateHigh)} ${t("sar")}`) + rule(t("tg_extra"), `${fmt(plan.extra)} ${t("sar")}`)}
+  </div></section>
+  <section class="card"><h3>${t("tg_all")}</h3>
+    <div class="seg" style="margin-bottom:10px">${[["", t("tg_f_all")], ["R", t("rk_r")], ["U", t("rk_u")]].map(([k, l]) => `<button data-tq="${k}" aria-pressed="${(S.tq || "") === k}">${l}</button>`).join("")}</div>
+    <div class="list">${all.map(r => { const pc = r.t ? Math.min(100, r.o / r.t * 100) : 0; return `<div class="li ${r.me ? "me" : ""}" style="align-items:center">
+      <div style="display:flex;gap:10px;align-items:center;min-width:0;flex:1">${ava(r.p, r.n, 38)}<div style="min-width:0;flex:1"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.n)}${r.me ? ` · ${t("you")}` : ""}</b>
+        <div class="tbar2" style="margin-top:6px"><span style="width:${pc}%;${r.o >= r.t ? "background:var(--good)" : ""}"></span></div></div></div>
+      <div class="v" style="min-width:86px"><div class="num" style="font-size:17px">${fmt0(r.t)}</div><span class="pill ${r.pt === "PER_ORDER" ? "p-mute" : "p-info"}" style="font-size:11px">${r.pt === "PER_ORDER" ? t("rk_u") : t("rk_r")}</span><div class="muted" style="font-size:12px">${fmt0(r.o)} ${t("tg_done_s")}</div></div></div>`; }).join("")}</div>
+  </section>`;
+}
 function vHome(m){
   const p = m.profile, mm = m.month, out = m.fines.reduce((s, f) => s + (+f.remaining || 0), 0);
   const target = +mm.target || 0, pct = target ? Math.min(100, mm.o / target * 100) : 0, isRank = p.payType !== "PER_ORDER";
@@ -360,7 +423,7 @@ function vHome(m){
         ${target ? `<div class="tbar ${mm.o >= target ? "done" : ""}"><span style="width:${pct}%"></span></div>
         <div class="row" style="font-size:13px;margin-top:6px"><span style="opacity:.8">${isRank ? t("target_r") : t("target_u")}</span><b>${fmt0(mm.o)} / ${fmt0(target)}${mm.o >= target ? " ✓" : ""}</b></div>` : ""}</div></div>
   </section>
-  ${perfCard(m.perf)}
+  ${optionTiles(m)}
   <section class="card"><h3>${t("fuel_m")}</h3>
     ${p.monthlyLimit ? `<div class="gauge">${gauge(mm.f, p.monthlyLimit)}<div style="flex:1;min-width:0">
         <div class="big" style="font-size:26px">${fmt(mm.f)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">/ ${fmt0(p.monthlyLimit)} ${t("sar")}</span></div>
@@ -494,6 +557,7 @@ window.addEventListener("online", () => refresh());
 
 /* Android back button: the app asks the page first */
 window.asbBack = () => {
+  if (S.view === "app" && S.sub) { S.sub = null; render(); return true; }
   if (S.view === "app" && S.slip) { S.slip = null; render(); return true; }
   if (S.view === "app" && S.tab !== "home") { S.tab = "home"; render(); return true; }
   return false;
@@ -543,7 +607,10 @@ document.addEventListener("click", async e => {
     try { await rpc("driver_forgot_pin", { p_rid: S.rid }); S.info = t("forgot_sent"); } catch { S.err = t("offline"); }
     return render();
   }
-  if (el.dataset.tab) { S.tab = el.dataset.tab; S.slip = null; render(); window.scrollTo(0, 0); return; }
+  if (el.dataset.sub) { S.sub = el.dataset.sub; render(); window.scrollTo(0, 0); return; }
+  if (el.matches("[data-subback]")) { S.sub = null; render(); window.scrollTo(0, 0); return; }
+  if (el.dataset.tq !== undefined) { S.tq = el.dataset.tq; return render(); }
+  if (el.dataset.tab) { S.tab = el.dataset.tab; S.slip = null; S.sub = null; render(); window.scrollTo(0, 0); return; }
   if (el.dataset.slip) { S.slip = el.dataset.slip; render(); window.scrollTo(0, 0); return; }
   if (el.matches("[data-back]")) { S.slip = null; return render(); }
   if (el.matches("[data-refresh]")) return refresh(true);
