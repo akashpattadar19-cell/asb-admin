@@ -1441,19 +1441,19 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "The person then creates an account on this page with that email.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)" });
+  drv_web: "Driver app (web)", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
 Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB LOGISTICS · কর্মচারী ব্যবস্থাপনা", au_email: "ইমেইল", au_pass: "পাসওয়ার্ড",
   au_signin: "লগইন", au_signup: "এডমিন অ্যাকাউন্ট খুলুন", au_forgot: "পাসওয়ার্ড ভুলে গেছেন?", au_have: "অ্যাকাউন্ট আছে? লগইন করুন", au_new: "প্রথমবার? এডমিন অ্যাকাউন্ট খুলুন",
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "তারপর ওই ব্যক্তি এই পাতায় সেই ইমেইল দিয়ে অ্যাকাউন্ট খুলবেন।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)" });
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
 Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTICS · إدارة الموظفين", au_email: "البريد الإلكتروني", au_pass: "كلمة المرور",
   au_signin: "دخول", au_signup: "إنشاء حساب مشرف", au_forgot: "نسيت كلمة المرور؟", au_have: "لديك حساب؟ سجّل الدخول", au_new: "أول مرة؟ أنشئ حساب المشرف",
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "ثم ينشئ الشخص حساباً من هذه الصفحة بنفس البريد.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)" });
+  drv_web: "تطبيق السائق (ويب)", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
 
 const auth = { mode: "signin", msg: "", err: "", busy: false, session: null, role: null, admins: [] };
 function renderAuth(){
@@ -1521,8 +1521,20 @@ function vAdmins(){
   <section class="panel"><div class="scroll"><table><thead><tr><th>${t("au_email")}</th><th>${t("status")}</th><th></th></tr></thead><tbody>
   ${auth.admins.map(a => `<tr><td>${esc(a.email)}</td><td><span class="pill ${a.role === "SUPER_ADMIN" ? "p-info" : "p-mute"}">${t("role_" + a.role)}</span></td>
     <td class="r">${sup && a.email !== auth.session?.user?.email ? `<button class="btn ghost sm" data-deladmin="${esc(a.email)}">${t("remove")}</button>` : ""}</td></tr>`).join("")}
-  </tbody></table></div></section>`;
+  </tbody></table></div></section>
+  <form class="panel" id="pwForm" style="margin-top:16px"><h2>${t("pw_title")}</h2>
+    <div class="rules"><label class="f">${t("pw_new")}<input class="input" id="pwNew" type="password" autocomplete="new-password" minlength="8" required></label>
+    <label class="f">${t("pw_again")}<input class="input" id="pwAgain" type="password" autocomplete="new-password" minlength="8" required></label></div>
+    <div class="dlg-f"><button class="btn">${t("save")}</button></div></form>`;
 }
+document.addEventListener("submit", async e => {
+  if (e.target.id !== "pwForm") return; e.preventDefault();
+  const a = $("#pwNew").value, b = $("#pwAgain").value;
+  if (a.length < 8) return toast(t("au_short"));
+  if (a !== b) return toast(t("pw_mismatch"));
+  const { error } = await sb.auth.updateUser({ password: a });
+  if (error) toast(error.message); else { toast(t("pw_done")); e.target.reset(); }
+});
 document.addEventListener("submit", async e => {
   if (e.target.id !== "adminAdd") return; e.preventDefault();
   const email = $("#newAdmin").value.trim().toLowerCase(), role = $("#newRole").value;
@@ -1565,6 +1577,7 @@ async function boot(){
   const { data } = await sb.auth.getSession();
   sb.auth.onAuthStateChange((ev, session) => {
     if (ev === "SIGNED_OUT") { started = false; location.reload(); return; }
+    if (ev === "PASSWORD_RECOVERY") { location.hash = "admins"; setTimeout(() => { toast(t("pw_set")); $("#pwNew")?.focus(); }, 1500); }
     if (session && (ev === "SIGNED_IN" || ev === "INITIAL_SESSION")) startAdmin(session);
   });
   if (data.session) startAdmin(data.session); else renderAuth();
