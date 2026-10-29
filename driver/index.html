@@ -139,6 +139,16 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .pod1 .step{height:46px;background:color-mix(in srgb,var(--gold) 28%,var(--sunk))}
 .pod2 .step{height:30px}
 .pod3 .step{height:20px}
+.perf-head{border-radius:12px;padding:10px 12px;font-weight:600;margin-bottom:10px;font-size:14.5px}
+.perf-head.up{background:var(--good-soft);color:var(--good)} .perf-head.down{background:var(--bad-soft);color:var(--bad)} .perf-head.same{background:var(--sunk);color:var(--muted)}
+.pr{display:grid;grid-template-columns:1.2fr 1fr 1.3fr;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
+.pr:last-child{border-bottom:0}
+.pr.phd{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);padding-top:0}
+.pr.phd small{display:block;text-transform:none;letter-spacing:0;font-weight:500}
+.pr .today{font-weight:600}
+.pr .num.today{font-size:18px}
+.chg{font-size:12px;font-family:var(--f-body);font-weight:600;margin-inline-start:4px}
+.chg.up{color:var(--good)} .chg.down{color:var(--bad)} .chg.same{color:var(--muted)}
 .gap{text-align:center;color:var(--muted);letter-spacing:.3em;padding:2px 0}
 .pill{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:600}
 .p-good{background:var(--good-soft);color:var(--good)} .p-bad{background:var(--bad-soft);color:var(--bad)} .p-info{background:var(--info-soft);color:var(--info)} .p-mute{background:var(--sunk);color:var(--muted)}
@@ -170,7 +180,7 @@ const REFRESH_MS = 15000;
 
 /* ── strings ── */
 const T = {
-en:{rank:"This month's rank",orders_month:"Total orders this month",target_r:"Monthly target",target_u:"Higher rate from",upd_on:"Updated {d}",fuel_m:"Fuel this month",norank:"No orders entered yet",board:"Top 5 this month",noboard:"The ranking appears once orders are entered.",brand_sub:"Driver app",signin:"Sign in",signin_sub:"Enter your Iqama number and 4-digit PIN",iqama:"Iqama number",pin:"PIN",remember:"Keep me signed in",forgot:"Forgot PIN?",
+en:{perf:"Performance",yest:"Yesterday",today:"Today",p_orders:"Orders",p_hours:"Hours",p_accept:"Acceptance",perf_up:"▲ {n} more orders than yesterday (+{p}%). Great work!",perf_down:"▼ {n} fewer orders than yesterday (−{p}%). You can do better today.",perf_same:"Same number of orders as yesterday.",rank:"This month's rank",orders_month:"Total orders this month",target_r:"Monthly target",target_u:"Higher rate from",upd_on:"Updated {d}",fuel_m:"Fuel this month",norank:"No orders entered yet",board:"Top 5 this month",noboard:"The ranking appears once orders are entered.",brand_sub:"Driver app",signin:"Sign in",signin_sub:"Enter your Iqama number and 4-digit PIN",iqama:"Iqama number",pin:"PIN",remember:"Keep me signed in",forgot:"Forgot PIN?",
  forgot_sent:"Request sent. Your supervisor will give you a new PIN.",need_iqama:"Enter your 10-digit Iqama number first.",wrong:"Wrong Iqama or PIN. {n} tries left.",wrong0:"Wrong Iqama or PIN.",
  locked:"Too many wrong tries. Try again in {n} minutes or ask your supervisor.",offline:"No internet connection. Check your data or Wi-Fi.",expired:"Please sign in again.",deactivated:"Your account is not active. Contact your supervisor.",
  home:"Home",fines:"Fines",salary:"Salary",profile:"Profile",duty_ACTIVE:"Active",duty_ON_DUTY:"On duty",duty_OFFLINE:"Offline",
@@ -185,7 +195,7 @@ en:{rank:"This month's rank",orders_month:"Total orders this month",target_r:"Mo
  pdf:"Download PDF",pdf_ok:"Saved to Downloads",pdf_fail:"Could not create the PDF.",back:"Back",
  resident:"Iqama",mobile:"Mobile",city:"City",paytype:"Pay type",TARGET:"Rank · target + bonus",PER_ORDER:"Unrank · per order",plate:"Vehicle plate",model:"Vehicle",card:"Petrol card",dlimit:"Daily fuel limit",mlimit:"Monthly fuel limit",
  language:"Language",signout:"Sign out",pin_hint:"To change your PIN, ask your supervisor.",updated:"Updated {t}",new_fine:"New fine: {a} SAR",new_slip:"New payslip: {m}",see:"See"},
-bn:{rank:"এই মাসের র‍্যাংক",orders_month:"এই মাসের মোট অর্ডার",target_r:"মাসিক টার্গেট",target_u:"বেশি রেট শুরু",upd_on:"হালনাগাদ {d}",fuel_m:"এই মাসের পেট্রোল",norank:"এখনো অর্ডার দেওয়া হয়নি",board:"এই মাসের সেরা ৫",noboard:"অর্ডার দেওয়া হলে র‍্যাংকিং দেখাবে।",brand_sub:"ড্রাইভার অ্যাপ",signin:"লগইন",signin_sub:"ইকামা নম্বর ও ৪ সংখ্যার পিন দিন",iqama:"ইকামা নম্বর",pin:"পিন",remember:"লগইন থাকুক",forgot:"পিন ভুলে গেছেন?",
+bn:{perf:"পারফরমেন্স",yest:"গতকাল",today:"আজ",p_orders:"অর্ডার",p_hours:"ঘণ্টা",p_accept:"গ্রহণ",perf_up:"▲ গতকালের চেয়ে {n}টি অর্ডার বেশি (+{p}%)। দারুণ!",perf_down:"▼ গতকালের চেয়ে {n}টি অর্ডার কম (−{p}%)। আজ আরও ভালো করা যায়।",perf_same:"গতকালের সমান অর্ডার।",rank:"এই মাসের র‍্যাংক",orders_month:"এই মাসের মোট অর্ডার",target_r:"মাসিক টার্গেট",target_u:"বেশি রেট শুরু",upd_on:"হালনাগাদ {d}",fuel_m:"এই মাসের পেট্রোল",norank:"এখনো অর্ডার দেওয়া হয়নি",board:"এই মাসের সেরা ৫",noboard:"অর্ডার দেওয়া হলে র‍্যাংকিং দেখাবে।",brand_sub:"ড্রাইভার অ্যাপ",signin:"লগইন",signin_sub:"ইকামা নম্বর ও ৪ সংখ্যার পিন দিন",iqama:"ইকামা নম্বর",pin:"পিন",remember:"লগইন থাকুক",forgot:"পিন ভুলে গেছেন?",
  forgot_sent:"অনুরোধ পাঠানো হয়েছে। সুপারভাইজার নতুন পিন দেবেন।",need_iqama:"আগে ১০ সংখ্যার ইকামা নম্বর লিখুন।",wrong:"ইকামা বা পিন ভুল। আর {n} বার চেষ্টা করা যাবে।",wrong0:"ইকামা বা পিন ভুল।",
  locked:"অনেকবার ভুল হয়েছে। {n} মিনিট পরে চেষ্টা করুন বা সুপারভাইজারকে বলুন।",offline:"ইন্টারনেট সংযোগ নেই। ডাটা বা Wi-Fi দেখুন।",expired:"আবার লগইন করুন।",deactivated:"আপনার অ্যাকাউন্ট চালু নেই। সুপারভাইজারের সাথে যোগাযোগ করুন।",
  home:"হোম",fines:"জরিমানা",salary:"বেতন",profile:"প্রোফাইল",duty_ACTIVE:"সক্রিয়",duty_ON_DUTY:"ডিউটিতে",duty_OFFLINE:"অফলাইন",
@@ -200,7 +210,7 @@ bn:{rank:"এই মাসের র‍্যাংক",orders_month:"এই ম
  pdf:"PDF ডাউনলোড",pdf_ok:"Downloads ফোল্ডারে সেভ হয়েছে",pdf_fail:"PDF তৈরি করা যায়নি।",back:"পেছনে",
  resident:"ইকামা",mobile:"মোবাইল",city:"শহর",paytype:"বেতনের ধরন",TARGET:"Rank · টার্গেট + বোনাস",PER_ORDER:"Unrank · প্রতি অর্ডার",plate:"গাড়ির প্লেট",model:"গাড়ি",card:"পেট্রোল কার্ড",dlimit:"দৈনিক পেট্রোল সীমা",mlimit:"মাসিক পেট্রোল সীমা",
  language:"ভাষা",signout:"লগআউট",pin_hint:"পিন বদলাতে সুপারভাইজারকে বলুন।",updated:"হালনাগাদ {t}",new_fine:"নতুন জরিমানা: {a} রিয়াল",new_slip:"নতুন পে-স্লিপ: {m}",see:"দেখুন"},
-ar:{rank:"ترتيبك هذا الشهر",orders_month:"إجمالي طلبات الشهر",target_r:"الهدف الشهري",target_u:"السعر الأعلى من",upd_on:"آخر تحديث {d}",fuel_m:"وقود هذا الشهر",norank:"لم تُدخل طلبات بعد",board:"أفضل 5 هذا الشهر",noboard:"يظهر الترتيب بعد إدخال الطلبات.",brand_sub:"تطبيق السائق",signin:"تسجيل الدخول",signin_sub:"أدخل رقم الإقامة والرقم السري المكون من 4 أرقام",iqama:"رقم الإقامة",pin:"الرقم السري",remember:"إبقائي مسجلاً",forgot:"نسيت الرقم السري؟",
+ar:{perf:"الأداء",yest:"أمس",today:"اليوم",p_orders:"الطلبات",p_hours:"الساعات",p_accept:"القبول",perf_up:"▲ {n} طلبات أكثر من أمس (+{p}%). عمل رائع!",perf_down:"▼ {n} طلبات أقل من أمس (−{p}%). يمكنك الأفضل اليوم.",perf_same:"نفس عدد طلبات أمس.",rank:"ترتيبك هذا الشهر",orders_month:"إجمالي طلبات الشهر",target_r:"الهدف الشهري",target_u:"السعر الأعلى من",upd_on:"آخر تحديث {d}",fuel_m:"وقود هذا الشهر",norank:"لم تُدخل طلبات بعد",board:"أفضل 5 هذا الشهر",noboard:"يظهر الترتيب بعد إدخال الطلبات.",brand_sub:"تطبيق السائق",signin:"تسجيل الدخول",signin_sub:"أدخل رقم الإقامة والرقم السري المكون من 4 أرقام",iqama:"رقم الإقامة",pin:"الرقم السري",remember:"إبقائي مسجلاً",forgot:"نسيت الرقم السري؟",
  forgot_sent:"تم إرسال الطلب. سيعطيك المشرف رقماً جديداً.",need_iqama:"أدخل رقم الإقامة المكون من 10 أرقام أولاً.",wrong:"رقم الإقامة أو الرقم السري غير صحيح. متبقي {n} محاولات.",wrong0:"رقم الإقامة أو الرقم السري غير صحيح.",
  locked:"محاولات خاطئة كثيرة. حاول بعد {n} دقيقة أو راجع المشرف.",offline:"لا يوجد اتصال بالإنترنت.",expired:"سجّل الدخول مرة أخرى.",deactivated:"حسابك غير مفعل. راجع المشرف.",
  home:"الرئيسية",fines:"المخالفات",salary:"الراتب",profile:"ملفي",duty_ACTIVE:"نشط",duty_ON_DUTY:"في العمل",duty_OFFLINE:"غير متصل",
@@ -344,6 +354,7 @@ function vHome(m){
         ${target ? `<div class="tbar ${mm.o >= target ? "done" : ""}"><span style="width:${pct}%"></span></div>
         <div class="row" style="font-size:13px;margin-top:6px"><span style="opacity:.8">${isRank ? t("target_r") : t("target_u")}</span><b>${fmt0(mm.o)} / ${fmt0(target)}${mm.o >= target ? " ✓" : ""}</b></div>` : ""}</div></div>
   </section>
+  ${perfCard(m.perf)}
   <section class="card"><h3>${t("fuel_m")}</h3>
     ${p.monthlyLimit ? `<div class="gauge">${gauge(mm.f, p.monthlyLimit)}<div style="flex:1;min-width:0">
         <div class="big" style="font-size:26px">${fmt(mm.f)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">/ ${fmt0(p.monthlyLimit)} ${t("sar")}</span></div>
@@ -352,6 +363,23 @@ function vHome(m){
   </section>
   ${out > 0 ? `<button class="alert" data-tab="fines"><span>${t("outstanding")}</span><span class="neg num" style="font-size:18px">${fmt(out)} ${t("sar")}</span></button>` : ""}
   <section class="card"><h3>${t("board")}</h3>${board(m.board)}</section>`;
+}
+function perfCard(pf){
+  if (!pf) return "";
+  const Y = pf.yest || {}, D = pf.today || {}, has = o => ["o","h","a"].some(k => o[k] !== undefined && o[k] !== null);
+  if (!has(Y) && !has(D)) return "";
+  const dd = iso => new Date(iso + "T12:00:00Z").toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { day: "numeric", month: "short" });
+  const v = (o, k, suf = "") => o[k] === undefined || o[k] === null ? `<span class="muted">—</span>` : `${fmt0(o[k])}${suf}`;
+  const diff = k => { if (Y[k] == null || D[k] == null) return ""; const d = +D[k] - +Y[k]; return d === 0 ? `<span class="chg same">=</span>` : `<span class="chg ${d > 0 ? "up" : "down"}">${d > 0 ? "▲" : "▼"} ${fmt0(Math.abs(d))}</span>`; };
+  let head = "";
+  if (Y.o != null && D.o != null) {
+    const d = +D.o - +Y.o, pc = +Y.o ? Math.round(Math.abs(d) / +Y.o * 100) : null;
+    head = `<div class="perf-head ${d > 0 ? "up" : d < 0 ? "down" : "same"}">${d > 0 ? t("perf_up", { n: fmt0(d), p: pc ?? "—" }) : d < 0 ? t("perf_down", { n: fmt0(-d), p: pc ?? "—" }) : t("perf_same")}</div>`;
+  }
+  const row = (k, label, suf) => `<div class="pr"><span class="muted">${label}</span><span>${v(Y, k, suf)}</span><span class="num today">${v(D, k, suf)} ${diff(k)}</span></div>`;
+  return `<section class="card"><h3>${t("perf")}</h3>${head}
+    <div class="pr phd"><span></span><span>${t("yest")}<small>${dd(Y.date)}</small></span><span class="today">${t("today")}<small>${dd(D.date)}</small></span></div>
+    ${row("o", t("p_orders"), "")}${row("h", t("p_hours"), "")}${row("a", t("p_accept"), "%")}</section>`;
 }
 function board(list){
   if (!list.length) return `<div class="muted">${t("noboard")}</div>`;

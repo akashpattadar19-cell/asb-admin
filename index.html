@@ -49,6 +49,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .nav a:hover{background:color-mix(in srgb,var(--brand-ink) 10%,transparent);opacity:1}
 .nav a[aria-current="page"]{background:color-mix(in srgb,var(--brand-ink) 16%,transparent);opacity:1;font-weight:600}
 .nav a.nav-driver{margin-top:8px;background:var(--gold);color:#1a1205;opacity:1;font-weight:600}
+.nav a.nav-sub{padding-inline-start:30px;font-size:14px;position:relative}
+.nav a.nav-sub::before{content:"";position:absolute;inset-inline-start:18px;top:50%;width:6px;height:1px;background:currentColor;opacity:.6}
 .nav .count{font-size:12px;background:var(--gold);color:#1a1205;border-radius:20px;padding:0 7px;font-weight:600}
 .rail-foot{margin-top:auto;padding:16px 20px 0;display:flex;flex-direction:column;gap:10px;font-size:13px}
 .lang{display:flex;gap:4px}
@@ -114,6 +116,14 @@ td.nowrap{white-space:nowrap}
 .bar span{display:block;height:100%;background:var(--brand)}
 .bar.over span{background:var(--bad)}
 .bar.done span{background:var(--good)}
+.pill.nodot::before{display:none}
+table.tgt .input.num{width:84px}
+.input.num.own{border-color:var(--brand);font-weight:600}
+.input.num.sm{width:76px}
+.tgt-legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13.5px;color:var(--muted);margin-bottom:12px}
+.tgt-legend b{color:var(--ink)}
+table.perf th.grp{text-align:center;border-bottom:1px solid var(--line)}
+table.perf th.today{background:color-mix(in srgb,var(--gold) 14%,var(--sunk))}
 .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
 .filters .input{max-width:320px}
 .filters select.input{max-width:180px}
@@ -353,13 +363,14 @@ const state = {
   todayDoc: null, opsDoc: null, monthDocs: [], payDoc: null, dailyAll: {}, totals: {},
   opsDate: todayKey(), opsMonth: monthKey(), payMonth: monthKey(),
   opsDraft: {}, adjDraft: {}, q: "", qStatus: "", finesTab: "fines",
-  ready: false, canWrite: true, offline: false, qType: "",
+  ready: false, canWrite: true, offline: false, qType: "", tDraft: {}, pDraft: {}, perf: {},
 };
 let db = null, downloads = null, unsubOps = null, unsubMonth = null;
 const payDoc = () => state.payroll[state.payMonth] ?? null;
 
 /* ───────── routing ───────── */
-const VIEWS = ["dashboard","employees","operations","fines","payroll","app","rules","admins"];
+const VIEWS = ["dashboard","employees","target","perf","operations","fines","payroll","app","rules","admins"];
+const SUB_VIEWS = ["target","perf"];
 const view = () => { const h = location.hash.slice(1); return VIEWS.includes(h) ? h : "dashboard"; };
 window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
 
@@ -376,7 +387,7 @@ function renderShell(){
   document.querySelectorAll("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
   const v = view();
   const pendingN = Object.values(state.emp).filter(e => e.status === "PENDING").length;
-  $("#nav").innerHTML = VIEWS.map(k => `<a href="#${k}" ${k===v?'aria-current="page"':""}><span>${t("nav_"+k)}</span>${k==="employees"&&pendingN?`<span class="count">${pendingN}</span>`:""}</a>`).join("") + `<a href="${DRIVER_WEB}" target="_blank" rel="noopener" class="nav-driver"><span>${t("drv_web")} ↗</span></a>`;
+  $("#nav").innerHTML = VIEWS.map(k => `<a href="#${k}" class="${SUB_VIEWS.includes(k) ? "nav-sub" : ""}" ${k===v?'aria-current="page"':""}><span>${t("nav_"+k)}</span>${k==="employees"&&pendingN?`<span class="count">${pendingN}</span>`:""}</a>`).join("") + `<a href="${DRIVER_WEB}" target="_blank" rel="noopener" class="nav-driver"><span>${t("drv_web")} ↗</span></a>`;
   const langBtns = [["en","EN"],["bn","বাংলা"],["ar","عربي"]].map(([k,l]) => `<button data-lang="${k}" aria-pressed="${k===lang}">${l}</button>`).join("");
   $("#lang").innerHTML = langBtns; $("#langM").innerHTML = langBtns;
 }
@@ -400,7 +411,7 @@ function render(){
   if (state.offline) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("offline")}</b></div>`; return; }
   if (!state.ready) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("loading")}</b></div>`; return; }
   const ro = state.canWrite ? "" : `<div class="note warn">${t("readOnly")}</div>`;
-  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, operations: vOperations, fines: vFines, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
+  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, fines: vFines, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
   main.querySelectorAll("[data-needs-write]").forEach(el => { if (!state.canWrite) el.disabled = true; });
 }
 
@@ -568,7 +579,7 @@ function vOperations(){
     <tbody>${emps.map(([id,e]) => {
       const saved = rows[id] ?? {}; const d = state.opsDraft[id] ?? {};
       const o = d.o ?? (saved.o ?? ""), f = d.f ?? (saved.f ?? "");
-      const isT = (e.payType || "TARGET") === "TARGET", target = isT ? +R.targetOrders : +R.perThreshold;
+      const target = planOf(e).target;
       const pct = target ? Math.min(100, (+o || 0) / target * 100) : 0;
       return `<tr>
         <td>${rk[id]?`<span class="rank ${rk[id]<=3?"r"+rk[id]:""}">${rk[id]}</span>`:`<span class="sub">${t("none")}</span>`}</td>
@@ -624,6 +635,102 @@ function vFines(){
 function empOptions(sel){ return `<option value="">${t("selectEmp")}</option>` + activeEmps().map(([id,e])=>`<option value="${id}" ${sel===id?"selected":""}>${esc(e.fullName)} — ${esc(e.residentId)}</option>`).join(""); }
 
 /* ───────── Payroll ───────── */
+const numOrNull = v => (v === "" || v === null || v === undefined || isNaN(+v)) ? null : +v;
+function planOf(e){
+  const R = state.rules, rank = (e.payType || "TARGET") === "TARGET";
+  if (rank) return { rank, target: numOrNull(e.tTarget) ?? +R.targetOrders, base: numOrNull(e.tBase) ?? +R.baseSalary,
+    extra: numOrNull(e.tExtra) ?? +R.bonusPer, short: numOrNull(e.tShort) ?? +R.penaltyPer };
+  const rateHigh = numOrNull(e.tRateHigh) ?? +R.rateHigh;
+  return { rank, target: numOrNull(e.tTarget) ?? +R.perThreshold, rateLow: numOrNull(e.tRateLow) ?? +R.rateLow, rateHigh, extra: numOrNull(e.tExtra) ?? rateHigh };
+}
+/* Rank: base salary, + extra rate per order above target, − deduction per order below target.
+   Unrank: orders up to target × (rate at/above target if reached, else rate below), + extra rate per order above target. */
+function payFor(e, orders){
+  const p = planOf(e);
+  if (p.rank) { const d = orders - p.target; return { base: p.base, bonus: d > 0 ? d * p.extra : 0, shortfall: d < 0 ? -d * p.short : 0 }; }
+  const within = Math.min(orders, p.target), over = Math.max(0, orders - p.target);
+  return { base: within * (orders >= p.target ? p.rateHigh : p.rateLow), bonus: over * p.extra, shortfall: 0 };
+}
+function vTarget(){
+  const R = state.rules, rows = monthRows(monthKey());
+  const emps = activeEmps().filter(([, e]) => !state.qType || (e.payType || "TARGET") === state.qType);
+  const cell = (id, e, k, def, step = "0.01") => {
+    const v = state.tDraft[id]?.[k] ?? (numOrNull(e[k]) ?? "");
+    return `<td class="r"><input class="input num ${v !== "" ? "own" : ""}" type="number" min="0" step="${step}" data-tgt="${k}" data-id="${id}" value="${v}" placeholder="${def}"></td>`;
+  };
+  const dash = `<td class="r sub">—</td>`;
+  return `
+  <div class="head"><div><h1>${t("nav_target")}</h1><p>${t("tgt_hint")}</p></div>
+    <div class="tools">
+      <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
+      <a class="btn ghost" href="#rules">${t("tgt_defaults")}</a>
+      <button class="btn" data-act="tgt-save" data-needs-write>${t("save")}</button>
+    </div></div>
+  <div class="tgt-legend"><span><b>${t("rk_TARGET")}</b> ${t("tgt_rank_rule")}</span><span><b>${t("rk_PER_ORDER")}</b> ${t("tgt_unrank_rule")}</span></div>
+  <section class="panel">${emps.length ? `<div class="scroll"><table class="tgt">
+    <thead><tr><th>${t("name")}</th><th>${t("payType")}</th><th class="r">${t("tgt_target")}</th><th class="r">${t("tgt_sofar")}</th><th class="r">${t("tgt_est")}</th>
+      <th class="r">${t("tgt_base")}</th><th class="r">${t("tgt_short")}</th>
+      <th class="r">${t("tgt_rlow")}</th><th class="r">${t("tgt_rhigh")}</th>
+      <th class="r">${t("tgt_extra")}</th></tr></thead>
+    <tbody>${emps.map(([id, e]) => {
+      const rank = (e.payType || "TARGET") === "TARGET";
+      const draft = { ...e, ...(state.tDraft[id] ?? {}) }, p = planOf(draft), o = rows[id]?.o ?? 0, pay = payFor(draft, o);
+      return `<tr>
+        <td><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 34)}<div class="name">${esc(e.fullName)}</div></div></td>
+        <td>${rkPill(e.payType)}</td>
+        ${cell(id, e, "tTarget", rank ? R.targetOrders : R.perThreshold, "1")}
+        <td class="r nowrap">${fmt0(o)} / ${fmt0(p.target)}</td>
+        <td class="r nowrap"><b class="${pay.base + pay.bonus - pay.shortfall < 0 ? "neg" : ""}">${fmt(pay.base + pay.bonus - pay.shortfall)}</b></td>
+        ${rank ? cell(id, e, "tBase", R.baseSalary) + cell(id, e, "tShort", R.penaltyPer) : dash + dash}
+        ${rank ? dash + dash : cell(id, e, "tRateLow", R.rateLow) + cell(id, e, "tRateHigh", R.rateHigh)}
+        ${cell(id, e, "tExtra", rank ? R.bonusPer : (numOrNull(draft.tRateHigh) ?? R.rateHigh))}
+      </tr>`; }).join("")}</tbody></table></div>`
+    : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</section>
+  <p class="sub" style="margin-top:10px">${t("tgt_note")}</p>`;
+}
+document.addEventListener("input", e => {
+  const k = e.target.dataset?.tgt; if (!k) return;
+  (state.tDraft[e.target.dataset.id] ??= {})[k] = e.target.value;
+});
+document.addEventListener("change", e => { if (e.target.dataset?.tgt) render(); });
+
+/* ───────── Performance: yesterday vs today, older days are removed ───────── */
+const yesterdayKey = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh" }).format(new Date(Date.now() - 864e5));
+const PERF_F = [["o", "perf_orders", "1"], ["h", "perf_hours", "0.5"], ["a", "perf_accept", "1"]];
+function vPerf(){
+  const td = todayKey(), yd = yesterdayKey(), T = state.perf[td]?.rows ?? {}, Y = state.perf[yd]?.rows ?? {};
+  const emps = activeEmps().filter(([, e]) => !state.qType || (e.payType || "TARGET") === state.qType);
+  const inp = (day, id, k, step) => { const v = state.pDraft[day]?.[id]?.[k] ?? ((day === td ? T : Y)[id]?.[k] ?? "");
+    return `<td class="r"><input class="input num sm" type="number" min="0" ${k === "a" ? 'max="100"' : ""} step="${step}" data-perf="${k}" data-day="${day}" data-id="${id}" value="${v}"></td>`; };
+  const val = (day, id, k) => { const v = state.pDraft[day]?.[id]?.[k] ?? ((day === td ? T : Y)[id]?.[k]); return v === "" || v == null ? null : +v; };
+  return `
+  <div class="head"><div><h1>${t("nav_perf")}</h1><p>${t("perf_hint")}</p></div>
+    <div class="tools">
+      <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
+      <button class="btn" data-act="perf-save" data-needs-write>${t("save")}</button>
+    </div></div>
+  <section class="panel">${emps.length ? `<div class="scroll"><table class="perf">
+    <thead><tr><th rowspan="2">${t("name")}</th><th colspan="3" class="grp">${t("perf_yest")} · ${shortDate(Date.parse(yd + "T12:00:00Z"))}</th><th colspan="3" class="grp today">${t("perf_today")} · ${shortDate(Date.now())}</th><th rowspan="2">${t("perf_change")}</th></tr>
+      <tr>${[0, 1].map(() => PERF_F.map(([, l]) => `<th class="r">${t(l)}</th>`).join("")).join("")}</tr></thead>
+    <tbody>${emps.map(([id, e]) => {
+      const yo = val(yd, id, "o"), to = val(td, id, "o");
+      let ch = `<span class="sub">${t("none")}</span>`;
+      if (yo !== null && to !== null) { const d = to - yo, pc = yo ? Math.round(d / yo * 100) : null;
+        ch = `<span class="pill nodot ${d > 0 ? "p-good" : d < 0 ? "p-bad" : "p-mute"}">${d > 0 ? "▲" : d < 0 ? "▼" : "="} ${d > 0 ? "+" : ""}${d}${pc !== null ? ` (${pc > 0 ? "+" : ""}${pc}%)` : ""}</span>`; }
+      return `<tr><td><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 32)}<div><div class="name">${esc(e.fullName)}</div>${rkPill(e.payType)}</div></div></td>
+        ${PERF_F.map(([k, , st]) => inp(yd, id, k, st)).join("")}${PERF_F.map(([k, , st]) => inp(td, id, k, st)).join("")}<td>${ch}</td></tr>`; }).join("")}</tbody></table></div>`
+    : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</section>
+  <p class="sub" style="margin-top:10px">${t("perf_note")}</p>`;
+}
+document.addEventListener("input", e => {
+  const k = e.target.dataset?.perf; if (!k) return;
+  ((state.pDraft[e.target.dataset.day] ??= {})[e.target.dataset.id] ??= {})[k] = e.target.value;
+});
+async function cleanupPerf(){
+  const yd = yesterdayKey();
+  for (const id of Object.keys(state.perf)) if (id < yd) { try { await db.doc("perf/" + id).delete(); } catch {} }
+}
+
 function computePayroll(){
   const R = state.rules, m = state.payMonth;
   const tot = monthRows(m);
@@ -636,11 +743,7 @@ function computePayroll(){
   return activeEmps().map(([id, e]) => {
     const orders = tot[id]?.o ?? 0, fuelSpent = r2(tot[id]?.f ?? 0);
     const a = { ...(savedAdj[id] ?? {}), ...(state.adjDraft[id] ?? {}) };
-    let base = 0, bonus = 0, shortfall = 0;
-    if ((e.payType || "TARGET") === "TARGET") {
-      base = +R.baseSalary; const diff = orders - R.targetOrders;
-      if (diff > 0) bonus = diff * R.bonusPer; if (diff < 0) shortfall = -diff * R.penaltyPer;
-    } else base = orders * (orders >= R.perThreshold ? R.rateHigh : R.rateLow);
+    let { base, bonus, shortfall } = payFor(e, orders);
     const incent = +a.incent || 0, overtime = +a.overtime || 0, other = +a.other || 0;
     const overspend = (+e.monthlyLimit || 0) > 0 ? Math.max(0, fuelSpent - e.monthlyLimit) : 0;
     const fuelAdj = r2((+a.fuel || 0) - overspend);
@@ -787,6 +890,30 @@ document.addEventListener("click", async e => {
         await db.doc("employees/" + id).update({ pinSalt: salt, pinHash: await sha(salt + pin), pinCheck: await pinCheckOf(e2.residentId, pin), pinVer: (+e2.pinVer || 0) + 1, pinResetAt: Date.now() });
         setTimeout(() => showPin(e2.fullName, pin), 50);
       }});
+    }
+
+    if (act === "tgt-save") {
+      const keys = ["tTarget","tBase","tShort","tRateLow","tRateHigh","tExtra"]; let n = 0;
+      for (const [id, d] of Object.entries(state.tDraft)) {
+        const patch = {};
+        for (const k of keys) if (k in d) patch[k] = numOrNull(d[k]);
+        if (Object.keys(patch).length) { await db.doc("employees/" + id).update({ ...patch, updatedAt: Date.now() }); n++; }
+      }
+      state.tDraft = {}; toast(n ? t("empSaved") : t("nothing_changed")); render();
+    }
+
+    if (act === "perf-save") {
+      let n = 0;
+      for (const [day, byEmp] of Object.entries(state.pDraft)) {
+        const rows = { ...(state.perf[day]?.rows ?? {}) };
+        for (const [id, d] of Object.entries(byEmp)) {
+          const cur = { ...(rows[id] ?? {}) };
+          for (const [k, v] of Object.entries(d)) { if (v === "" || v == null) delete cur[k]; else cur[k] = k === "o" ? Math.max(0, Math.round(+v)) : Math.max(0, +v); }
+          if (Object.keys(cur).length) rows[id] = { ...cur, at: Date.now() }; else delete rows[id];
+        }
+        await db.doc("perf/" + day).set({ date: day, rows, updatedAt: Date.now() }); n++;
+      }
+      state.pDraft = {}; await cleanupPerf(); toast(n ? t("daySaved") : t("nothing_changed")); render();
     }
 
     if (act === "save-day") {
@@ -1003,7 +1130,8 @@ function buildMirror(id){
     profile: { photo: e.photoUrl || "", fullName: e.fullName, fullNameAr: e.fullNameAr || "", residentId: e.residentId, mobile: e.mobile, city: e.city || "", plate: e.plate || "",
       vehicleModel: e.vehicleModel || "", card: e.card ? String(e.card).slice(-4) : "", dailyLimit: +e.dailyLimit || 0, monthlyLimit: +e.monthlyLimit || 0, payType: e.payType || "TARGET" },
     today: { date: todayKey(), rank: mine?.rank ?? null, of: rk.length, o: +row.o || 0, f: +row.f || 0 },
-    month: { key: monthKey(), o: mo, f: r2(mf), rank: mine?.rank ?? null, of: rk.length, at: row.at || 0, target: (e.payType || "TARGET") === "TARGET" ? +state.rules.targetOrders : +state.rules.perThreshold },
+    perf: { today: { date: todayKey(), ...(state.perf[todayKey()]?.rows?.[id] ?? {}) }, yest: { date: yesterdayKey(), ...(state.perf[yesterdayKey()]?.rows?.[id] ?? {}) } },
+    month: { key: monthKey(), o: mo, f: r2(mf), rank: mine?.rank ?? null, of: rk.length, at: row.at || 0, target: planOf(e).target },
     board: rk.filter((r, i) => i < 5 || r.id === id).map(r => ({ r: r.rank, n: (state.emp[r.id]?.fullName || "").split(" ")[0], p: state.emp[r.id]?.photoUrl || "", o: r.o, me: r.id === id })),
     fines: Object.values(state.fines).filter(x => x.employeeId === id).sort(byDate).map(pickX),
     advances: Object.values(state.adv).filter(x => x.employeeId === id).sort(byDate).map(pickX),
@@ -1510,19 +1638,37 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "The person then creates an account on this page with that email.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", totalOrders: "Total orders", fuel_month_k: "Fuel this month", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
+  drv_web: "Driver app (web)", nav_target: "Target", nav_perf: "Performance",
+  tgt_hint: "Each driver's own monthly target and pay. Leave a box empty to use the default from Pay rules (shown in grey).",
+  tgt_defaults: "Default pay rules", tgt_target: "Target orders", tgt_base: "Base salary", tgt_short: "Deduction / missing order", tgt_rlow: "Rate below target", tgt_rhigh: "Rate at target", tgt_extra: "Extra order rate", tgt_sofar: "This month", tgt_est: "Pay so far",
+  tgt_rank_rule: "base salary + extra rate for each order above target − deduction for each order short.", tgt_unrank_rule: "orders up to target × rate (higher rate once the target is reached) + extra rate for each order above target.",
+  tgt_note: "Pay so far uses this month's total orders and excludes fines, advances and fuel. Payroll uses these same settings.",
+  perf_hint: "Daily performance for each driver. Drivers see yesterday and today side by side in their app.", perf_yest: "Yesterday", perf_today: "Today", perf_change: "Orders change",
+  perf_orders: "Orders", perf_hours: "Hours", perf_accept: "Accept %", perf_note: "Only yesterday and today are kept. Older days are deleted automatically.", totalOrders: "Total orders", fuel_month_k: "Fuel this month", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
 Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB LOGISTICS · কর্মচারী ব্যবস্থাপনা", au_email: "ইমেইল", au_pass: "পাসওয়ার্ড",
   au_signin: "লগইন", au_signup: "এডমিন অ্যাকাউন্ট খুলুন", au_forgot: "পাসওয়ার্ড ভুলে গেছেন?", au_have: "অ্যাকাউন্ট আছে? লগইন করুন", au_new: "প্রথমবার? এডমিন অ্যাকাউন্ট খুলুন",
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "তারপর ওই ব্যক্তি এই পাতায় সেই ইমেইল দিয়ে অ্যাকাউন্ট খুলবেন।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", nav_target: "টার্গেট", nav_perf: "পারফরমেন্স",
+  tgt_hint: "প্রত্যেক কর্মীর নিজের মাসিক টার্গেট ও বেতন। ঘর খালি রাখলে বেতনের নিয়মের সাধারণ মান (ধূসর) ধরা হবে।",
+  tgt_defaults: "সাধারণ বেতনের নিয়ম", tgt_target: "টার্গেট অর্ডার", tgt_base: "বেসিক বেতন", tgt_short: "প্রতি কম অর্ডারে কর্তন", tgt_rlow: "টার্গেটের নিচে রেট", tgt_rhigh: "টার্গেট পূরণে রেট", tgt_extra: "অতিরিক্ত অর্ডার রেট", tgt_sofar: "এই মাসে", tgt_est: "এখন পর্যন্ত বেতন",
+  tgt_rank_rule: "বেসিক বেতন + টার্গেটের বেশি প্রতি অর্ডারে অতিরিক্ত রেট − টার্গেটের কম প্রতি অর্ডারে কর্তন।", tgt_unrank_rule: "টার্গেট পর্যন্ত অর্ডার × রেট (টার্গেট পূরণ হলে বেশি রেট) + টার্গেটের বেশি প্রতি অর্ডারে অতিরিক্ত রেট।",
+  tgt_note: "এখন পর্যন্ত বেতন এই মাসের মোট অর্ডার থেকে হিসাব, জরিমানা, অগ্রিম ও পেট্রোল বাদে। বেতন হিসাবেও এই একই নিয়ম ব্যবহার হয়।",
+  perf_hint: "প্রত্যেক কর্মীর দৈনিক পারফরমেন্স। কর্মীরা অ্যাপে গতকাল আর আজ পাশাপাশি দেখবে।", perf_yest: "গতকাল", perf_today: "আজ", perf_change: "অর্ডারের পরিবর্তন",
+  perf_orders: "অর্ডার", perf_hours: "ঘণ্টা", perf_accept: "গ্রহণ %", perf_note: "শুধু গতকাল আর আজকের তথ্য থাকে। পুরনো দিনের তথ্য নিজে থেকেই মুছে যায়।", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
 Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTICS · إدارة الموظفين", au_email: "البريد الإلكتروني", au_pass: "كلمة المرور",
   au_signin: "دخول", au_signup: "إنشاء حساب مشرف", au_forgot: "نسيت كلمة المرور؟", au_have: "لديك حساب؟ سجّل الدخول", au_new: "أول مرة؟ أنشئ حساب المشرف",
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "ثم ينشئ الشخص حساباً من هذه الصفحة بنفس البريد.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
+  drv_web: "تطبيق السائق (ويب)", nav_target: "الهدف", nav_perf: "الأداء",
+  tgt_hint: "هدف وراتب كل سائق الشهري. اترك الخانة فارغة لاستخدام القيمة العامة من قواعد الراتب (بالرمادي).",
+  tgt_defaults: "قواعد الراتب العامة", tgt_target: "الطلبات المستهدفة", tgt_base: "الراتب الأساسي", tgt_short: "خصم لكل طلب ناقص", tgt_rlow: "السعر تحت الهدف", tgt_rhigh: "السعر عند الهدف", tgt_extra: "سعر الطلب الإضافي", tgt_sofar: "هذا الشهر", tgt_est: "الراتب حتى الآن",
+  tgt_rank_rule: "الراتب الأساسي + سعر إضافي لكل طلب فوق الهدف − خصم لكل طلب ناقص.", tgt_unrank_rule: "الطلبات حتى الهدف × السعر (سعر أعلى عند بلوغ الهدف) + سعر إضافي لكل طلب فوق الهدف.",
+  tgt_note: "الراتب حتى الآن من إجمالي طلبات الشهر بدون المخالفات والسلف والوقود. الرواتب تستخدم نفس الإعدادات.",
+  perf_hint: "الأداء اليومي لكل سائق. يرى السائق أمس واليوم جنباً إلى جنب في تطبيقه.", perf_yest: "أمس", perf_today: "اليوم", perf_change: "تغير الطلبات",
+  perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ أمس واليوم فقط، وتُحذف الأيام الأقدم تلقائياً.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
 
 const auth = { mode: "signin", msg: "", err: "", busy: false, session: null, role: null, admins: [] };
 function renderAuth(){
@@ -1639,6 +1785,8 @@ async function startAdmin(session){
   db.collection("payroll").onSnapshot(s => { state.payroll = docsMap(s); soon(); }, console.warn);
   db.collection("daily").onSnapshot(s => { state.dailyAll = docsMap(s); soon(); }, console.warn);
   db.collection("totals").onSnapshot(s => { state.totals = docsMap(s); soon(); }, console.warn);
+  let perfCleaned = false;
+  db.collection("perf").onSnapshot(s => { state.perf = docsMap(s); if (!perfCleaned) { perfCleaned = true; cleanupPerf(); } soon(); }, console.warn);
   loadAdmins();
   render();
 }
