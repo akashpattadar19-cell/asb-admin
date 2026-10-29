@@ -200,6 +200,15 @@ dialog::backdrop{background:rgba(5,15,25,.5)}
 .ava{border-radius:50%;object-fit:cover;flex:none;background:var(--sunk);display:inline-block;vertical-align:middle}
 .ava-i{display:inline-grid;place-items:center;background:var(--brand);color:var(--brand-ink);font-weight:700;font-family:var(--f-display)}
 .photo-pick{display:flex;gap:14px;align-items:center}
+.sec{font:600 13px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--brand);border-bottom:1px solid var(--line);padding:8px 0 4px;margin-top:4px}
+.opt{text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)}
+.seg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg2-o{position:relative;display:flex;flex-direction:column;gap:2px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}
+.seg2-o input{position:absolute;opacity:0;pointer-events:none}
+.seg2-o b{font:600 17px var(--f-display)}
+.seg2-o span{font-size:12.5px;color:var(--muted)}
+.seg2-o:has(input:checked){border-color:var(--brand);background:color-mix(in srgb,var(--brand) 8%,var(--surface))}
+.seg2-o:has(input:focus-visible){outline:2px solid var(--gold)}
 .preview-wrap{display:grid;grid-template-columns:auto minmax(0,1fr);gap:24px;align-items:start}
 .steps{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:10px}
 @media (max-width:860px){.preview-wrap{grid-template-columns:1fr}.phone-frame{margin:0 auto}}
@@ -215,7 +224,7 @@ dialog::backdrop{background:rgba(5,15,25,.5)}
     <nav class="nav" id="nav"></nav>
     <div class="rail-foot">
       <div class="lang" id="lang"></div>
-      <div id="who" style="opacity:.75"></div><button class="btn ghost sm" data-signout-admin style="background:none;color:inherit;border-color:currentColor">${"⎋"} <span data-t="au_signout">Sign out</span></button>
+      <div id="who" style="opacity:.75"></div><button class="btn ghost sm" data-signout-admin style="background:none;color:inherit;border-color:currentColor"><span data-t="au_signout">Sign out</span></button>
     </div>
   </aside>
   <main id="main">
@@ -236,7 +245,7 @@ en:{brandSub:"Admin panel",loading:"Loading…",
  today:"Today",activeEmp:"Active employees",pending:"awaiting approval",ordersToday:"Orders today",fuelToday:"Fuel today",reported:"drivers reported",outstanding:"Outstanding fines",advancesOut:"Advances to recover",
  leaderboard:"Today's leaderboard",recentFines:"Recent fines",noOrders:"No orders entered for today",noOrdersHint:"Enter today's orders in Daily operations.",noFines:"No fines issued",
  addEmp:"Add employee",search:"Search name, Iqama, mobile, plate…",allStatus:"All statuses",ACTIVE:"Active",PENDING:"Pending",INACTIVE:"Deactivated",
- name:"Name",nameAr:"Name (Arabic)",iqama:"Resident ID (Iqama)",mobile:"Mobile",city:"City",plate:"Vehicle plate",model:"Vehicle model",card:"Petrol card no.",dailyLimit:"Daily fuel limit",monthlyLimit:"Monthly fuel limit",status:"Status",payType:"Pay type",TARGET:"Target (base + bonus)",PER_ORDER:"Per order",
+ name:"Name",nameAr:"Name (Arabic)",iqama:"Resident ID (Iqama)",mobile:"Mobile",city:"City",plate:"Vehicle plate",model:"Vehicle model",card:"Petrol card no.",dailyLimit:"Daily fuel limit",monthlyLimit:"Monthly fuel limit",status:"Status",payType:"Pay type",TARGET:"Target 450 orders · base + bonus",PER_ORDER:"Paid per order",
  edit:"Edit",approve:"Approve",deactivate:"Deactivate",activate:"Reactivate",resetPin:"Reset PIN",save:"Save",cancel:"Cancel",close:"Close",delete:"Delete",confirm:"Confirm",
  noEmp:"No employees yet",noEmpHint:"Add your first driver with “Add employee”.",empSaved:"Employee saved",
  pinTitle:"New login PIN",pinText:"Give this PIN to the employee privately. It is shown only once.",
@@ -262,7 +271,7 @@ bn:{brandSub:"এডমিন প্যানেল",loading:"লোড হচ�
  today:"আজ",activeEmp:"সক্রিয় কর্মচারী",pending:"অনুমোদনের অপেক্ষায়",ordersToday:"আজকের অর্ডার",fuelToday:"আজকের পেট্রোল",reported:"জন ড্রাইভারের তথ্য",outstanding:"বকেয়া জরিমানা",advancesOut:"বকেয়া অগ্রিম",
  leaderboard:"আজকের র‍্যাংকিং",recentFines:"সাম্প্রতিক জরিমানা",noOrders:"আজকের অর্ডার এখনো দেওয়া হয়নি",noOrdersHint:"দৈনিক কাজ পাতায় আজকের অর্ডার লিখুন।",noFines:"কোনো জরিমানা নেই",
  addEmp:"কর্মচারী যোগ করুন",search:"নাম, ইকামা, মোবাইল, প্লেট খুঁজুন…",allStatus:"সব অবস্থা",ACTIVE:"সক্রিয়",PENDING:"অপেক্ষমাণ",INACTIVE:"নিষ্ক্রিয়",
- name:"নাম",nameAr:"নাম (আরবি)",iqama:"রেসিডেন্ট আইডি (ইকামা)",mobile:"মোবাইল",city:"শহর",plate:"গাড়ির প্লেট",model:"গাড়ির মডেল",card:"পেট্রোল কার্ড নং",dailyLimit:"দৈনিক পেট্রোল সীমা",monthlyLimit:"মাসিক পেট্রোল সীমা",status:"অবস্থা",payType:"বেতনের ধরন",TARGET:"টার্গেট (বেসিক + বোনাস)",PER_ORDER:"প্রতি অর্ডার",
+ name:"নাম",nameAr:"নাম (আরবি)",iqama:"রেসিডেন্ট আইডি (ইকামা)",mobile:"মোবাইল",city:"শহর",plate:"গাড়ির প্লেট",model:"গাড়ির মডেল",card:"পেট্রোল কার্ড নং",dailyLimit:"দৈনিক পেট্রোল সীমা",monthlyLimit:"মাসিক পেট্রোল সীমা",status:"অবস্থা",payType:"বেতনের ধরন",TARGET:"৪৫০ অর্ডার টার্গেট · বেসিক + বোনাস",PER_ORDER:"প্রতি অর্ডারে বেতন",
  edit:"সম্পাদনা",approve:"অনুমোদন",deactivate:"নিষ্ক্রিয় করুন",activate:"আবার সক্রিয়",resetPin:"পিন রিসেট",save:"সংরক্ষণ",cancel:"বাতিল",close:"বন্ধ",delete:"মুছুন",confirm:"নিশ্চিত",
  noEmp:"এখনো কোনো কর্মচারী নেই",noEmpHint:"“কর্মচারী যোগ করুন” দিয়ে প্রথম ড্রাইভার যোগ করুন।",empSaved:"কর্মচারী সংরক্ষিত হয়েছে",
  pinTitle:"নতুন লগইন পিন",pinText:"এই পিনটি কর্মচারীকে গোপনে দিন। এটি শুধু একবার দেখানো হবে।",
@@ -288,7 +297,7 @@ ar:{brandSub:"لوحة الإدارة",loading:"جارٍ التحميل…",
  today:"اليوم",activeEmp:"الموظفون النشطون",pending:"بانتظار الموافقة",ordersToday:"طلبات اليوم",fuelToday:"وقود اليوم",reported:"سائق مسجل",outstanding:"مخالفات مستحقة",advancesOut:"سلف مستحقة",
  leaderboard:"ترتيب اليوم",recentFines:"أحدث المخالفات",noOrders:"لم تُدخل طلبات اليوم بعد",noOrdersHint:"أدخل طلبات اليوم من صفحة العمليات اليومية.",noFines:"لا توجد مخالفات",
  addEmp:"إضافة موظف",search:"ابحث بالاسم، الإقامة، الجوال، اللوحة…",allStatus:"كل الحالات",ACTIVE:"نشط",PENDING:"معلق",INACTIVE:"موقوف",
- name:"الاسم",nameAr:"الاسم بالعربية",iqama:"رقم الإقامة",mobile:"الجوال",city:"المدينة",plate:"رقم اللوحة",model:"طراز المركبة",card:"رقم بطاقة الوقود",dailyLimit:"حد الوقود اليومي",monthlyLimit:"حد الوقود الشهري",status:"الحالة",payType:"نوع الراتب",TARGET:"هدف (أساسي + حافز)",PER_ORDER:"لكل طلب",
+ name:"الاسم",nameAr:"الاسم بالعربية",iqama:"رقم الإقامة",mobile:"الجوال",city:"المدينة",plate:"رقم اللوحة",model:"طراز المركبة",card:"رقم بطاقة الوقود",dailyLimit:"حد الوقود اليومي",monthlyLimit:"حد الوقود الشهري",status:"الحالة",payType:"نوع الراتب",TARGET:"هدف 450 طلب · أساسي + حافز",PER_ORDER:"أجر لكل طلب",
  edit:"تعديل",approve:"موافقة",deactivate:"إيقاف",activate:"إعادة تفعيل",resetPin:"إعادة الرقم السري",save:"حفظ",cancel:"إلغاء",close:"إغلاق",delete:"حذف",confirm:"تأكيد",
  noEmp:"لا يوجد موظفون بعد",noEmpHint:"أضف أول سائق من زر «إضافة موظف».",empSaved:"تم حفظ الموظف",
  pinTitle:"رقم سري جديد",pinText:"سلّم هذا الرقم للموظف بشكل خاص. يظهر مرة واحدة فقط.",
@@ -324,6 +333,8 @@ const fmt0 = n => (+n || 0).toLocaleString("en-US");
 const todayKey = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh" }).format(new Date());
 const monthKey = () => todayKey().slice(0, 7);
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const vehicleText = e => { const n = (e.vehicleName || "").trim(), m = (e.vehicleModel || "").trim(); return n && m.toLowerCase().startsWith(n.toLowerCase()) ? m : [n, m].filter(Boolean).join(" "); };
+const rkPill = p => (p || "TARGET") === "TARGET" ? `<span class="pill p-good">${t("rk_TARGET")}</span>` : `<span class="pill p-warn">${t("rk_PER_ORDER")}</span>`;
 const plateChip = p => p ? `<span class="plate"><i>KSA</i><em>${esc(p)}</em></span>` : `<span class="sub">${t("none")}</span>`;
 const statusPill = s => `<span class="pill ${s==="ACTIVE"?"p-good":s==="PENDING"?"p-warn":"p-mute"}">${t(s)}</span>`;
 const empName = id => state.emp[id]?.fullName ?? "—";
@@ -341,7 +352,7 @@ const state = {
   todayDoc: null, opsDoc: null, monthDocs: [], payDoc: null,
   opsDate: todayKey(), payMonth: monthKey(),
   opsDraft: {}, adjDraft: {}, q: "", qStatus: "", finesTab: "fines",
-  ready: false, canWrite: true, offline: false,
+  ready: false, canWrite: true, offline: false, qType: "",
 };
 let db = null, downloads = null, unsubOps = null, unsubMonth = null;
 const payDoc = () => state.payroll[state.payMonth] ?? null;
@@ -438,7 +449,8 @@ function vEmployees(){
   const q = state.q.trim().toLowerCase();
   const list = Object.entries(state.emp).filter(([,e]) =>
     (!state.qStatus || e.status === state.qStatus) &&
-    (!q || [e.fullName,e.fullNameAr,e.residentId,e.mobile,e.plate].some(v => String(v??"").toLowerCase().includes(q)))
+    (!state.qType || (e.payType || "TARGET") === state.qType) &&
+    (!q || [e.fullName,e.fullNameAr,e.residentId,e.mobile,e.plate,e.card,e.cardSerial,e.city,e.vehicleName,e.vehicleModel].some(v => String(v??"").toLowerCase().includes(q)))
   ).sort((a,b) => (a[1].status==="PENDING"?-1:0)-(b[1].status==="PENDING"?-1:0) || a[1].fullName.localeCompare(b[1].fullName));
   return `
   <div class="head"><div><h1>${t("nav_employees")}</h1><p>${Object.keys(state.emp).length} · ${activeEmps().length} ${t("ACTIVE")}</p></div>
@@ -447,15 +459,19 @@ function vEmployees(){
   <div class="filters">
     <input class="input" id="q" placeholder="${t("search")}" value="${esc(state.q)}">
     <select class="input" id="qStatus"><option value="">${t("allStatus")}</option>${["ACTIVE","PENDING","INACTIVE"].map(s=>`<option value="${s}" ${state.qStatus===s?"selected":""}>${t(s)}</option>`).join("")}</select>
+    <select class="input" id="qType"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
   </div>
   <section class="panel">${list.length ? `<div class="scroll"><table>
-    <thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("mobile")}</th><th>${t("plate")}</th><th>${t("card")}</th><th>${t("status")}</th><th>${t("app_col")}</th><th class="r">${t("outstanding")}</th><th></th></tr></thead>
+    <thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("mobile")}</th><th>${t("card")}</th><th>${t("city")}</th><th>${t("plate")}</th><th>${t("vehicle")}</th><th>${t("payType")}</th><th>${t("status")}</th><th>${t("app_col")}</th><th class="r">${t("outstanding")}</th><th></th></tr></thead>
     <tbody>${list.map(([id,e]) => `<tr>
-      <td><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 38)}<div><div class="name">${esc(e.fullName)}</div><div class="sub">${e.fullNameAr?esc(e.fullNameAr)+" · ":""}${t(e.payType||"TARGET")}</div></div></div></td>
+      <td style="min-width:190px"><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 38)}<div><div class="name">${esc(e.fullName)}</div>${e.fullNameAr?`<div class="sub" dir="rtl">${esc(e.fullNameAr)}</div>`:""}</div></div></td>
       <td class="mono">${esc(e.residentId)}</td>
       <td class="nowrap">${esc(e.mobile)}</td>
+      <td class="nowrap">${e.card?`<span class="mono">${esc(e.card)}</span>${e.cardSerial?`<div class="sub">${t("serial_short")}: <span class="mono">${esc(e.cardSerial)}</span></div>`:""}<div class="sub">${fmt0(e.dailyLimit)}/${fmt0(e.monthlyLimit)} ${t("sar")}</div>`:`<span class="sub">${t("none")}</span>`}</td>
+      <td class="nowrap">${esc(e.city) || `<span class="sub">${t("none")}</span>`}</td>
       <td>${plateChip(e.plate)}</td>
-      <td class="nowrap">${e.card?`<span class="mono">•••• ${esc(String(e.card).slice(-4))}</span><div class="sub">${fmt0(e.dailyLimit)}/${fmt0(e.monthlyLimit)} ${t("sar")}</div>`:`<span class="sub">${t("none")}</span>`}</td>
+      <td class="nowrap">${esc(vehicleText(e)) || `<span class="sub">${t("none")}</span>`}</td>
+      <td>${rkPill(e.payType)}</td>
       <td>${statusPill(e.status)}</td>
       <td class="nowrap">${(()=>{const d=state.duty[id];return d?`<span class="pill ${d.s==="OFFLINE"?"p-mute":"p-good"}">${t("duty_"+d.s)}</span><div class="sub" style="margin-top:3px">${new Date(d.at).toLocaleString("en-GB",{timeZone:"Asia/Riyadh",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</div>`:`<span class="pill p-mute">${t("not_linked")}</span>`})()}</td>
       <td class="r nowrap">${(()=>{const o=outstandingOf(state.fines,id)+outstandingOf(state.adv,id);return o?`<span class="neg">${fmt(o)}</span>`:`<span class="sub">0.00</span>`})()}</td>
@@ -470,7 +486,7 @@ function vEmployees(){
 document.addEventListener("input", e => {
   if (e.target.id === "q") { state.q = e.target.value; const pos = e.target.selectionStart; render(); const el = $("#q"); el.focus(); el.setSelectionRange(pos,pos); }
 });
-document.addEventListener("change", e => { if (e.target.id === "qStatus") { state.qStatus = e.target.value; render(); } });
+document.addEventListener("change", e => { if (e.target.id === "qStatus") { state.qStatus = e.target.value; render(); } if (e.target.id === "qType") { state.qType = e.target.value; render(); } });
 
 const avatarHtml = (url, name, size = 36, cls = "") => url
   ? `<img class="ava ${cls}" src="${esc(url)}" alt="" width="${size}" height="${size}" style="width:${size}px;height:${size}px" loading="lazy">`
@@ -501,17 +517,23 @@ function empForm(e = {}){
     <div style="display:flex;flex-direction:column;gap:6px;min-width:0"><label class="btn ghost sm" style="align-self:flex-start;cursor:pointer">📷 ${t("photo_choose")}<input type="file" id="empPhoto" accept="image/*" hidden></label>
     ${e.photoUrl ? `<label class="f check" style="font-size:13px"><input type="checkbox" id="empPhotoRemove"> ${t("photo_remove")}</label>` : ""}
     <span class="sub">${t("photo_hint")}</span></div></div>
+  <div class="full sec">1 · ${t("sec_person")}</div>
   <label class="f full">${t("name")} *<input class="input" name="fullName" value="${esc(e.fullName)}" required></label>
   <label class="f full">${t("nameAr")}<input class="input" name="fullNameAr" dir="rtl" value="${esc(e.fullNameAr)}"></label>
   <label class="f">${t("iqama")} *<input class="input mono" name="residentId" inputmode="numeric" maxlength="10" pattern="\\d{10}" value="${esc(e.residentId)}" required></label>
-  <label class="f">${t("mobile")} *<input class="input" name="mobile" inputmode="tel" value="${esc(e.mobile)}" required></label>
-  <label class="f">${t("city")}<input class="input" name="city" value="${esc(e.city)}"></label>
-  <label class="f">${t("payType")}<select class="input" name="payType">${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${e.payType===p?"selected":""}>${t(p)}</option>`).join("")}</select></label>
-  <label class="f">${t("plate")}<input class="input mono" name="plate" value="${esc(e.plate)}" placeholder="ABC 1234"></label>
-  <label class="f">${t("model")}<input class="input" name="vehicleModel" value="${esc(e.vehicleModel)}"></label>
-  <label class="f full">${t("card")}<input class="input mono" name="card" inputmode="numeric" value="${esc(e.card)}"></label>
+  <label class="f">${t("mobile")} *<input class="input" name="mobile" inputmode="tel" value="${esc(e.mobile)}" placeholder="05XXXXXXXX" required></label>
+  <div class="full sec">2 · ${t("sec_card")}</div>
+  <label class="f">${t("card")}<input class="input mono" name="card" inputmode="numeric" value="${esc(e.card)}"></label>
+  <label class="f"><span>${t("cardSerial")} <span class="opt">· ${t("optional")}</span></span><input class="input mono" name="cardSerial" value="${esc(e.cardSerial)}"></label>
   <label class="f">${t("dailyLimit")}<input class="input" name="dailyLimit" type="number" min="0" step="1" value="${esc(e.dailyLimit ?? 60)}"></label>
-  <label class="f">${t("monthlyLimit")}<input class="input" name="monthlyLimit" type="number" min="0" step="1" value="${esc(e.monthlyLimit ?? 1500)}"></label>`;
+  <label class="f">${t("monthlyLimit")}<input class="input" name="monthlyLimit" type="number" min="0" step="1" value="${esc(e.monthlyLimit ?? 1500)}"></label>
+  <div class="full sec">3 · ${t("sec_vehicle")}</div>
+  <label class="f">${t("city")}<input class="input" name="city" list="cityList" value="${esc(e.city)}"><datalist id="cityList">${[...new Set(["Riyadh","Jeddah","Makkah","Madinah","Dammam","Khobar","Taif","Abha","Tabuk","Buraidah",...Object.values(state.emp).map(x => x.city).filter(Boolean)])].map(c => `<option value="${esc(c)}">`).join("")}</datalist></label>
+  <label class="f">${t("plate")}<input class="input mono" name="plate" value="${esc(e.plate)}" placeholder="ABC 1234"></label>
+  <label class="f">${t("vehicleName")}<input class="input" name="vehicleName" list="vnList" value="${esc(e.vehicleName)}" placeholder="Hyundai"><datalist id="vnList">${["Toyota","Hyundai","Nissan","Kia","Isuzu","Suzuki","Changan","MG"].map(c => `<option value="${c}">`).join("")}</datalist></label>
+  <label class="f">${t("model")}<input class="input" name="vehicleModel" value="${esc(e.vehicleModel)}" placeholder="H1 2023"></label>
+  <div class="full sec">4 · ${t("payType")}</div>
+  <div class="full seg2" role="radiogroup">${["TARGET","PER_ORDER"].map(p => `<label class="seg2-o"><input type="radio" name="payType" value="${p}" ${(e.payType || "TARGET") === p ? "checked" : ""}><b>${t("rk_" + p)}</b><span>${t(p)}</span></label>`).join("")}</div>`;
 }
 
 /* ───────── Operations ───────── */
@@ -721,7 +743,7 @@ document.addEventListener("click", async e => {
         if (!fd.fullName.trim() || !/^\d{10}$/.test(fd.residentId) || !fd.mobile.trim()) fail(t("required"));
         const dup = Object.entries(state.emp).find(([k,v]) => v.residentId === fd.residentId && k !== id);
         if (dup) fail(t("dupIqama"));
-        const data = { ...fd, fullName: fd.fullName.trim(), plate: fd.plate.trim().toUpperCase(), dailyLimit: +fd.dailyLimit || 0, monthlyLimit: +fd.monthlyLimit || 0, updatedAt: Date.now() };
+        const data = { ...fd, fullName: fd.fullName.trim(), plate: fd.plate.trim().toUpperCase(), card: fd.card.trim(), cardSerial: fd.cardSerial.trim(), vehicleName: fd.vehicleName.trim(), vehicleModel: fd.vehicleModel.trim(), city: fd.city.trim(), dailyLimit: +fd.dailyLimit || 0, monthlyLimit: +fd.monthlyLimit || 0, updatedAt: Date.now() };
 
 
         if (id && fd.residentId !== cur.residentId) data.pinCheck = "";
@@ -1475,19 +1497,19 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "The person then creates an account on this page with that email.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
+  drv_web: "Driver app (web)", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
 Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB LOGISTICS · কর্মচারী ব্যবস্থাপনা", au_email: "ইমেইল", au_pass: "পাসওয়ার্ড",
   au_signin: "লগইন", au_signup: "এডমিন অ্যাকাউন্ট খুলুন", au_forgot: "পাসওয়ার্ড ভুলে গেছেন?", au_have: "অ্যাকাউন্ট আছে? লগইন করুন", au_new: "প্রথমবার? এডমিন অ্যাকাউন্ট খুলুন",
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "তারপর ওই ব্যক্তি এই পাতায় সেই ইমেইল দিয়ে অ্যাকাউন্ট খুলবেন।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
 Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTICS · إدارة الموظفين", au_email: "البريد الإلكتروني", au_pass: "كلمة المرور",
   au_signin: "دخول", au_signup: "إنشاء حساب مشرف", au_forgot: "نسيت كلمة المرور؟", au_have: "لديك حساب؟ سجّل الدخول", au_new: "أول مرة؟ أنشئ حساب المشرف",
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "ثم ينشئ الشخص حساباً من هذه الصفحة بنفس البريد.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
+  drv_web: "تطبيق السائق (ويب)", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
 
 const auth = { mode: "signin", msg: "", err: "", busy: false, session: null, role: null, admins: [] };
 function renderAuth(){
