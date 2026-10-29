@@ -105,6 +105,9 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .bar{height:8px;border-radius:6px;background:var(--sunk);overflow:hidden}
 .bar span{display:block;height:100%;background:var(--cab-2);border-radius:6px}
 .bar.over span{background:var(--bad)}
+.tbar{height:10px;border-radius:8px;background:rgba(255,255,255,.15);overflow:hidden;margin-top:10px}
+.tbar span{display:block;height:100%;background:var(--gold);border-radius:8px}
+.tbar.done span{background:#5FCB97}
 .alert{display:flex;justify-content:space-between;align-items:center;gap:10px;background:var(--bad-soft);border:1px solid color-mix(in srgb,var(--bad) 30%,transparent);border-radius:16px;padding:14px 16px;font-weight:600;width:100%;text-align:start;color:var(--ink)}
 .new{background:var(--gold);color:var(--gold-ink);border-radius:16px;padding:12px 16px;font-weight:600;display:flex;justify-content:space-between;align-items:center;gap:10px;border:0;width:100%;text-align:start}
 .list{display:flex;flex-direction:column}
@@ -167,13 +170,13 @@ const REFRESH_MS = 15000;
 
 /* ── strings ── */
 const T = {
-en:{brand_sub:"Driver app",signin:"Sign in",signin_sub:"Enter your Iqama number and 4-digit PIN",iqama:"Iqama number",pin:"PIN",remember:"Keep me signed in",forgot:"Forgot PIN?",
+en:{rank:"This month's rank",orders_month:"Total orders this month",target_r:"Monthly target",target_u:"Higher rate from",upd_on:"Updated {d}",fuel_m:"Fuel this month",norank:"No orders entered yet",board:"Top 5 this month",noboard:"The ranking appears once orders are entered.",brand_sub:"Driver app",signin:"Sign in",signin_sub:"Enter your Iqama number and 4-digit PIN",iqama:"Iqama number",pin:"PIN",remember:"Keep me signed in",forgot:"Forgot PIN?",
  forgot_sent:"Request sent. Your supervisor will give you a new PIN.",need_iqama:"Enter your 10-digit Iqama number first.",wrong:"Wrong Iqama or PIN. {n} tries left.",wrong0:"Wrong Iqama or PIN.",
  locked:"Too many wrong tries. Try again in {n} minutes or ask your supervisor.",offline:"No internet connection. Check your data or Wi-Fi.",expired:"Please sign in again.",deactivated:"Your account is not active. Contact your supervisor.",
  home:"Home",fines:"Fines",salary:"Salary",profile:"Profile",duty_ACTIVE:"Active",duty_ON_DUTY:"On duty",duty_OFFLINE:"Offline",
- rank:"Today's rank",of:"of {n} drivers",norank:"No orders yet today",orders_today:"Orders today",orders_month:"Orders this month",
+ of:"of {n} drivers",orders_today:"Orders today",
  fuel:"Fuel today",left:"left",limit:"Daily limit",fuel_month:"This month",nocard:"No petrol card assigned",sar:"SAR",
- outstanding:"Outstanding fines",board:"Top 5 today",you:"You",noboard:"Rankings appear once today's orders are entered.",
+ outstanding:"Outstanding fines",you:"You",
  fines_out:"Outstanding",fines_paid:"Already deducted",fine_list:"Fines",nofines:"No fines. Keep it up!",waived:"Waived",paid:"Recovered",remaining:"Remaining",per_month:"per month",
  advances:"Advances",deduct_hist:"Monthly deductions",none:"Nothing yet",
  TRAFFIC_VIOLATION:"Traffic violation",DELAY:"Delay",MISSING_ITEM:"Missing item",VEHICLE_DAMAGE:"Vehicle damage",OTHER:"Other",
@@ -182,13 +185,13 @@ en:{brand_sub:"Driver app",signin:"Sign in",signin_sub:"Enter your Iqama number 
  pdf:"Download PDF",pdf_ok:"Saved to Downloads",pdf_fail:"Could not create the PDF.",back:"Back",
  resident:"Iqama",mobile:"Mobile",city:"City",paytype:"Pay type",TARGET:"Rank · target + bonus",PER_ORDER:"Unrank · per order",plate:"Vehicle plate",model:"Vehicle",card:"Petrol card",dlimit:"Daily fuel limit",mlimit:"Monthly fuel limit",
  language:"Language",signout:"Sign out",pin_hint:"To change your PIN, ask your supervisor.",updated:"Updated {t}",new_fine:"New fine: {a} SAR",new_slip:"New payslip: {m}",see:"See"},
-bn:{brand_sub:"ড্রাইভার অ্যাপ",signin:"লগইন",signin_sub:"ইকামা নম্বর ও ৪ সংখ্যার পিন দিন",iqama:"ইকামা নম্বর",pin:"পিন",remember:"লগইন থাকুক",forgot:"পিন ভুলে গেছেন?",
+bn:{rank:"এই মাসের র‍্যাংক",orders_month:"এই মাসের মোট অর্ডার",target_r:"মাসিক টার্গেট",target_u:"বেশি রেট শুরু",upd_on:"হালনাগাদ {d}",fuel_m:"এই মাসের পেট্রোল",norank:"এখনো অর্ডার দেওয়া হয়নি",board:"এই মাসের সেরা ৫",noboard:"অর্ডার দেওয়া হলে র‍্যাংকিং দেখাবে।",brand_sub:"ড্রাইভার অ্যাপ",signin:"লগইন",signin_sub:"ইকামা নম্বর ও ৪ সংখ্যার পিন দিন",iqama:"ইকামা নম্বর",pin:"পিন",remember:"লগইন থাকুক",forgot:"পিন ভুলে গেছেন?",
  forgot_sent:"অনুরোধ পাঠানো হয়েছে। সুপারভাইজার নতুন পিন দেবেন।",need_iqama:"আগে ১০ সংখ্যার ইকামা নম্বর লিখুন।",wrong:"ইকামা বা পিন ভুল। আর {n} বার চেষ্টা করা যাবে।",wrong0:"ইকামা বা পিন ভুল।",
  locked:"অনেকবার ভুল হয়েছে। {n} মিনিট পরে চেষ্টা করুন বা সুপারভাইজারকে বলুন।",offline:"ইন্টারনেট সংযোগ নেই। ডাটা বা Wi-Fi দেখুন।",expired:"আবার লগইন করুন।",deactivated:"আপনার অ্যাকাউন্ট চালু নেই। সুপারভাইজারের সাথে যোগাযোগ করুন।",
  home:"হোম",fines:"জরিমানা",salary:"বেতন",profile:"প্রোফাইল",duty_ACTIVE:"সক্রিয়",duty_ON_DUTY:"ডিউটিতে",duty_OFFLINE:"অফলাইন",
- rank:"আজকের র‍্যাংক",of:"{n} জনের মধ্যে",norank:"আজ এখনো অর্ডার নেই",orders_today:"আজকের অর্ডার",orders_month:"এই মাসের অর্ডার",
+ of:"{n} জনের মধ্যে",orders_today:"আজকের অর্ডার",
  fuel:"আজকের পেট্রোল",left:"বাকি",limit:"দৈনিক সীমা",fuel_month:"এই মাসে",nocard:"পেট্রোল কার্ড দেওয়া হয়নি",sar:"রিয়াল",
- outstanding:"বকেয়া জরিমানা",board:"আজকের সেরা ৫",you:"আপনি",noboard:"আজকের অর্ডার দেওয়া হলে র‍্যাংকিং দেখাবে।",
+ outstanding:"বকেয়া জরিমানা",you:"আপনি",
  fines_out:"বকেয়া",fines_paid:"কাটা হয়েছে",fine_list:"জরিমানা",nofines:"কোনো জরিমানা নেই। এভাবেই চালিয়ে যান!",waived:"মাফ",paid:"আদায় হয়েছে",remaining:"বাকি",per_month:"প্রতি মাসে",
  advances:"অগ্রিম",deduct_hist:"মাসিক কর্তন",none:"এখনো কিছু নেই",
  TRAFFIC_VIOLATION:"ট্রাফিক আইন ভঙ্গ",DELAY:"দেরি",MISSING_ITEM:"আইটেম হারানো",VEHICLE_DAMAGE:"গাড়ির ক্ষতি",OTHER:"অন্যান্য",
@@ -197,13 +200,13 @@ bn:{brand_sub:"ড্রাইভার অ্যাপ",signin:"লগইন",s
  pdf:"PDF ডাউনলোড",pdf_ok:"Downloads ফোল্ডারে সেভ হয়েছে",pdf_fail:"PDF তৈরি করা যায়নি।",back:"পেছনে",
  resident:"ইকামা",mobile:"মোবাইল",city:"শহর",paytype:"বেতনের ধরন",TARGET:"Rank · টার্গেট + বোনাস",PER_ORDER:"Unrank · প্রতি অর্ডার",plate:"গাড়ির প্লেট",model:"গাড়ি",card:"পেট্রোল কার্ড",dlimit:"দৈনিক পেট্রোল সীমা",mlimit:"মাসিক পেট্রোল সীমা",
  language:"ভাষা",signout:"লগআউট",pin_hint:"পিন বদলাতে সুপারভাইজারকে বলুন।",updated:"হালনাগাদ {t}",new_fine:"নতুন জরিমানা: {a} রিয়াল",new_slip:"নতুন পে-স্লিপ: {m}",see:"দেখুন"},
-ar:{brand_sub:"تطبيق السائق",signin:"تسجيل الدخول",signin_sub:"أدخل رقم الإقامة والرقم السري المكون من 4 أرقام",iqama:"رقم الإقامة",pin:"الرقم السري",remember:"إبقائي مسجلاً",forgot:"نسيت الرقم السري؟",
+ar:{rank:"ترتيبك هذا الشهر",orders_month:"إجمالي طلبات الشهر",target_r:"الهدف الشهري",target_u:"السعر الأعلى من",upd_on:"آخر تحديث {d}",fuel_m:"وقود هذا الشهر",norank:"لم تُدخل طلبات بعد",board:"أفضل 5 هذا الشهر",noboard:"يظهر الترتيب بعد إدخال الطلبات.",brand_sub:"تطبيق السائق",signin:"تسجيل الدخول",signin_sub:"أدخل رقم الإقامة والرقم السري المكون من 4 أرقام",iqama:"رقم الإقامة",pin:"الرقم السري",remember:"إبقائي مسجلاً",forgot:"نسيت الرقم السري؟",
  forgot_sent:"تم إرسال الطلب. سيعطيك المشرف رقماً جديداً.",need_iqama:"أدخل رقم الإقامة المكون من 10 أرقام أولاً.",wrong:"رقم الإقامة أو الرقم السري غير صحيح. متبقي {n} محاولات.",wrong0:"رقم الإقامة أو الرقم السري غير صحيح.",
  locked:"محاولات خاطئة كثيرة. حاول بعد {n} دقيقة أو راجع المشرف.",offline:"لا يوجد اتصال بالإنترنت.",expired:"سجّل الدخول مرة أخرى.",deactivated:"حسابك غير مفعل. راجع المشرف.",
  home:"الرئيسية",fines:"المخالفات",salary:"الراتب",profile:"ملفي",duty_ACTIVE:"نشط",duty_ON_DUTY:"في العمل",duty_OFFLINE:"غير متصل",
- rank:"ترتيبك اليوم",of:"من {n} سائق",norank:"لا طلبات اليوم بعد",orders_today:"طلبات اليوم",orders_month:"طلبات الشهر",
+ of:"من {n} سائق",orders_today:"طلبات اليوم",
  fuel:"وقود اليوم",left:"متبقي",limit:"الحد اليومي",fuel_month:"هذا الشهر",nocard:"لا توجد بطاقة وقود",sar:"ريال",
- outstanding:"مخالفات مستحقة",board:"أفضل 5 اليوم",you:"أنت",noboard:"يظهر الترتيب بعد إدخال طلبات اليوم.",
+ outstanding:"مخالفات مستحقة",you:"أنت",
  fines_out:"مستحق",fines_paid:"تم خصمه",fine_list:"المخالفات",nofines:"لا توجد مخالفات. أحسنت!",waived:"معفى",paid:"مسدد",remaining:"المتبقي",per_month:"شهرياً",
  advances:"السلف",deduct_hist:"الخصومات الشهرية",none:"لا شيء بعد",
  TRAFFIC_VIOLATION:"مخالفة مرورية",DELAY:"تأخير",MISSING_ITEM:"صنف مفقود",VEHICLE_DAMAGE:"ضرر بالمركبة",OTHER:"أخرى",
@@ -327,21 +330,24 @@ function gauge(used, limit){
     <text x="46" y="51" text-anchor="middle" font-family="Barlow Semi Condensed,sans-serif" font-weight="600" font-size="19" fill="var(--ink)">${Math.round(pct * 100)}%</text></svg>`;
 }
 function vHome(m){
-  const p = m.profile, d = m.today, out = m.fines.reduce((s, f) => s + (+f.remaining || 0), 0);
+  const p = m.profile, mm = m.month, out = m.fines.reduce((s, f) => s + (+f.remaining || 0), 0);
+  const target = +mm.target || 0, pct = target ? Math.min(100, mm.o / target * 100) : 0, isRank = p.payType !== "PER_ORDER";
+  const upd = mm.at ? new Date(mm.at).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { timeZone: "Asia/Riyadh", day: "numeric", month: "short" }) : "";
   return `
   <div class="seg" role="group">${["ACTIVE","ON_DUTY","OFFLINE"].map(s => `<button data-duty="${s}" aria-pressed="${S.duty === s}"><span class="dot" style="color:${dutyColor(s)}"></span>${t("duty_" + s)}</button>`).join("")}</div>
   <section class="card hero">
     <div class="hero-grid">${ava(p.photo, p.fullName, 74, "border-radius:22px;border:3px solid var(--gold)")}
-      <div><div class="lbl">${t("rank")}</div><div class="rank">${d.rank ? "#" + d.rank : "—"}</div><div style="font-size:15px;font-weight:600">${d.rank ? t("of", { n: d.of }) : t("norank")}</div></div></div>
-    <div class="hero-stats"><div><div class="lbl">${t("orders_today")}</div><div class="big">${fmt0(d.o)}</div></div>
-      <div><div class="lbl">${t("orders_month")}</div><div class="big">${fmt0(m.month.o)}</div></div></div>
+      <div><div class="lbl">${t("rank")}</div><div class="rank">${mm.rank ? "#" + mm.rank : "—"}</div><div style="font-size:15px;font-weight:600">${mm.rank ? t("of", { n: mm.of }) : t("norank")}</div></div></div>
+    <div class="hero-stats" style="grid-template-columns:1fr">
+      <div><div class="row"><div class="lbl">${t("orders_month")}</div>${upd ? `<div class="lbl">${t("upd_on", { d: upd })}</div>` : ""}</div>
+        <div class="big" style="font-size:44px">${fmt0(mm.o)}</div>
+        ${target ? `<div class="tbar ${mm.o >= target ? "done" : ""}"><span style="width:${pct}%"></span></div>
+        <div class="row" style="font-size:13px;margin-top:6px"><span style="opacity:.8">${isRank ? t("target_r") : t("target_u")}</span><b>${fmt0(mm.o)} / ${fmt0(target)}${mm.o >= target ? " ✓" : ""}</b></div>` : ""}</div></div>
   </section>
-  <section class="card"><h3>${t("fuel")}</h3>
-    ${p.dailyLimit ? `<div class="gauge">${gauge(d.f, p.dailyLimit)}<div style="flex:1;min-width:0">
-        <div class="big" style="font-size:26px">${fmt(d.f)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">/ ${fmt0(p.dailyLimit)} ${t("sar")}</span></div>
-        <div class="muted" style="font-size:14px">${fmt(Math.max(0, p.dailyLimit - d.f))} ${t("sar")} ${t("left")}</div></div></div>
-      <div style="margin-top:14px"><div class="row" style="font-size:13px"><span class="muted">${t("fuel_month")}</span><span>${fmt(m.month.f)} / ${fmt0(p.monthlyLimit)}</span></div>
-        <div class="bar ${m.month.f > p.monthlyLimit ? "over" : ""}" style="margin-top:6px"><span style="width:${p.monthlyLimit ? Math.min(100, m.month.f / p.monthlyLimit * 100) : 0}%"></span></div></div>`
+  <section class="card"><h3>${t("fuel_m")}</h3>
+    ${p.monthlyLimit ? `<div class="gauge">${gauge(mm.f, p.monthlyLimit)}<div style="flex:1;min-width:0">
+        <div class="big" style="font-size:26px">${fmt(mm.f)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">/ ${fmt0(p.monthlyLimit)} ${t("sar")}</span></div>
+        <div class="muted" style="font-size:14px">${fmt(Math.max(0, p.monthlyLimit - mm.f))} ${t("sar")} ${t("left")}</div></div></div>`
     : `<div class="muted">${t("nocard")}</div>`}
   </section>
   ${out > 0 ? `<button class="alert" data-tab="fines"><span>${t("outstanding")}</span><span class="neg num" style="font-size:18px">${fmt(out)} ${t("sar")}</span></button>` : ""}
