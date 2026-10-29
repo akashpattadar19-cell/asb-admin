@@ -778,7 +778,8 @@ document.addEventListener("click", e => {
   state.qGrade = state.qGrade === b.dataset.v ? "" : b.dataset.v; render();
 });
 /* Parse rows copied from the Keeta report (Excel, Sheets or CSV). Columns:
-   driver ID, name, grade, ranking %, forced assignment %, on-time %, completion %, not-early %. */
+   driver ID, name, grade, ranking %, forced assignment %, on-time %, completion %, not-early % [, order volume].
+   The new Keeta export gives rates as fractions (0.9993 = 99.93%) and adds the month's total orders up to yesterday. */
 function parseJahez(text){
   const out = [];
   for (const line of text.replace(/^﻿/, "").split(/\r?\n/)) {
@@ -791,8 +792,11 @@ function parseJahez(text){
     const name = cells.find(c => c !== id && c.toUpperCase() !== grade && !/^-?\d+(\.\d+)?\s*%?$/.test(c) && !/^[-–—]$/.test(c)) || "";
     if (!id && !name) continue;
     if (nums.length < 5) continue;
-    const [rp, fa, ot, cr, ne] = nums.slice(-5);
-    out.push({ id, name, row: { g: grade || "-", rp, fa, ot, cr, ne } });
+    let vol = null, five = nums.slice(-5);
+    if (nums.length >= 6 && five.slice(0, 4).every(v => v <= 1) && nums[nums.length - 1] > 1) { vol = Math.round(nums[nums.length - 1]); five = nums.slice(-6, -1); }
+    if (!line.includes("%") && five.every(v => v <= 1)) five = five.map(v => Math.round(v * 10000) / 100);
+    const [rp, fa, ot, cr, ne] = five;
+    out.push({ id, name, vol, row: { g: grade || "-", rp, fa, ot, cr, ne } });
   }
   return out;
 }
@@ -992,7 +996,7 @@ document.addEventListener("click", async e => {
         body: `<p class="full sub">${t("perf_import_help")}</p>
           <label class="f full">${t("perf_day")}<select class="input" name="day"><option value="${todayKey()}">${t("perf_today")} · ${todayKey()}</option><option value="${yesterdayKey()}">${t("perf_yest")} · ${yesterdayKey()}</option></select></label>
           <label class="f full">CSV / Excel<input class="input" type="file" accept=".csv,.txt,text/csv" id="csvFile"></label>
-          <label class="f full">${t("perf_paste")}<textarea class="input mono" name="csv" rows="8" placeholder="1788197599088722\tShehab Alshehab\tA\t2.08%\t100.00%\t100.00%\t100.00%\t100.00%"></textarea></label>`,
+          <label class="f full">${t("perf_paste")}<textarea class="input mono" name="csv" rows="8" placeholder="1788197599088722\tShehab Alshehab\tA\t0.0145\t1\t1.0\t1\t1.0\t584.0"></textarea></label>`,
         onSubmit: async fd => {
           let text = fd.csv || ""; const file = $("#csvFile").files?.[0]; if (file) text = await file.text();
           const rowsIn = parseJahez(text);
@@ -1000,15 +1004,20 @@ document.addEventListener("click", async e => {
           const byJ = {}, byN = {};
           for (const [id, e] of Object.entries(state.emp)) { if (e.jahezId) byJ[e.jahezId] = id; byN[normName(e.fullName)] = id; }
           const day = fd.day, rows = { ...(state.perf[day]?.rows ?? {}) }, missing = [];
+          // order volume = this month's total orders up to the day before the report
+          const volMonth = new Date(Date.parse(day + "T12:00:00Z") - 864e5).toISOString().slice(0, 7);
+          const tot = { ...(state.totals[volMonth]?.rows ?? {}) }; let nVol = 0;
           for (const r of rowsIn) {
             const eid = (r.id && byJ[r.id]) || byN[normName(r.name)];
             if (!eid) { missing.push(r.name || r.id); continue; }
             rows[eid] = { ...r.row, at: Date.now() };
+            if (r.vol != null) { tot[eid] = { o: r.vol, f: tot[eid]?.f ?? monthRows(volMonth)[eid]?.f ?? 0, at: Date.now() }; nVol++; }
             if (r.id && !state.emp[eid].jahezId) await db.doc("employees/" + eid).update({ jahezId: r.id });
           }
           if (Object.keys(rows).length) await db.doc("perf/" + day).set({ date: day, rows, updatedAt: Date.now() });
+          if (nVol) await db.doc("totals/" + volMonth).set({ month: volMonth, rows: tot, updatedAt: Date.now() });
           await cleanupPerf();
-          toast(`${t("imported")}: ${rowsIn.length - missing.length} · ${t("perf_unmatched")}: ${missing.length}`);
+          toast(`${t("imported")}: ${rowsIn.length - missing.length}${nVol ? ` · ${t("totalOrders")}: ${nVol}` : ""} · ${t("perf_unmatched")}: ${missing.length}`);
           if (missing.length) setTimeout(() => openDialog({ title: t("perf_unmatched"), body: `<p class="full">${t("perf_unmatched_help")}</p><p class="full mono sub">${missing.map(esc).join("<br>")}</p>`, footer: `<button type="button" class="btn" data-close>${t("close")}</button>` }), 60);
         }});
     }
@@ -1765,7 +1774,7 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   ex1A: "Above 500 · A", ex1B: "Above 500 · B", ex1C: "Above 500 · C", ex2A: "Above 600 · A", ex2B: "Above 600 · B", ex2C: "Above 600 · C",
   uFuelLow: "Fuel per order (380–499)", uFuelHigh: "Fuel per order (500+)", absence: "Deduction per missed shift",
   u_note: "Rank and Unrank: D rating (500+) and under 380 orders: the company sets the salary by hand in Payroll. Fuel allowance is separate from salary: unused allowance is paid in cash, overspend is deducted.", jahezId: "Keeta driver ID", pf_grade: "Grade", pf_rank: "Ranking %", pf_forced: "Forced assignment", pf_ontime: "On-time delivery", pf_complete: "Order completion", pf_early: "Not marked delivered early",
-  perf_import: "Import Keeta report", perf_day: "Report day", perf_paste: "Paste the report rows (copy them from Excel)", perf_import_help: "Copy the rows of the Keeta driver report from Excel (driver ID, name, grade, ranking % and the four rates) and paste them here, or upload a CSV. Drivers are matched by Keeta ID, then by name.",
+  perf_import: "Import Keeta report", perf_day: "Report day", perf_paste: "Paste the report rows (copy them from Excel)", perf_import_help: "Copy the rows of the Keeta driver report from Excel (driver ID, name, grade, ranking, the four rates and Order volume) and paste them here, or upload a CSV. Order volume is saved as the month's total orders up to yesterday. Drivers are matched by Keeta ID, then by name.",
   perf_nothing: "No report rows found. Copy the rows including the driver ID and the percentages.", perf_unmatched: "Not matched", perf_unmatched_help: "These drivers are not in Employees yet. Add them (with their Keeta ID) and import again.",
   perf_empty: "No performance yet", perf_empty_hint: "Use Import Keeta report to add today's numbers.", nav_target: "Target", nav_perf: "Performance",
   tgt_hint: "Each driver's own monthly target and pay. Leave a box empty to use the default from Pay rules (shown in grey).",
@@ -1790,7 +1799,7 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   ex1A: "৫০০-এর বেশি · A", ex1B: "৫০০-এর বেশি · B", ex1C: "৫০০-এর বেশি · C", ex2A: "৬০০-এর বেশি · A", ex2B: "৬০০-এর বেশি · B", ex2C: "৬০০-এর বেশি · C",
   uFuelLow: "প্রতি অর্ডারে জ্বালানি (৩৮০–৪৯৯)", uFuelHigh: "প্রতি অর্ডারে জ্বালানি (৫০০+)", absence: "প্রতি অনুপস্থিত শিফটে কর্তন",
   u_note: "D রেটিং ও ৩৮০-এর কম অর্ডার: বেতন পাতায় কোম্পানি হাতে বেতন বসাবে। জ্বালানি ভাতা বেতন থেকে আলাদা: বেঁচে যাওয়া অংশ নগদে ফেরত, বেশি খরচ বেতন থেকে কাটা।", jahezId: "Keeta ড্রাইভার আইডি", pf_grade: "গ্রেড", pf_rank: "র‍্যাংকিং %", pf_forced: "বাধ্যতামূলক অ্যাসাইনমেন্ট", pf_ontime: "সময়মতো ডেলিভারি", pf_complete: "অর্ডার সম্পূর্ণ", pf_early: "আগেভাগে ডেলিভারড চাপেনি",
-  perf_import: "Keeta রিপোর্ট আমদানি", perf_day: "রিপোর্টের দিন", perf_paste: "রিপোর্টের সারিগুলো পেস্ট করুন (Excel থেকে কপি করে)", perf_import_help: "Excel থেকে Keeta ড্রাইভার রিপোর্টের সারিগুলো (ড্রাইভার আইডি, নাম, গ্রেড, র‍্যাংকিং % আর চারটি হার) কপি করে এখানে পেস্ট করুন, অথবা CSV ফাইল দিন। প্রথমে Keeta আইডি, না মিললে নাম দিয়ে কর্মী মেলানো হয়।",
+  perf_import: "Keeta রিপোর্ট আমদানি", perf_day: "রিপোর্টের দিন", perf_paste: "রিপোর্টের সারিগুলো পেস্ট করুন (Excel থেকে কপি করে)", perf_import_help: "Excel থেকে Keeta ড্রাইভার রিপোর্টের সারিগুলো (ড্রাইভার আইডি, নাম, গ্রেড, র‍্যাংকিং, চারটি হার আর Order volume) কপি করে এখানে পেস্ট করুন, অথবা CSV ফাইল দিন। Order volume গতকাল পর্যন্ত এই মাসের মোট অর্ডার হিসেবে বসবে। প্রথমে Keeta আইডি, না মিললে নাম দিয়ে কর্মী মেলানো হয়।",
   perf_nothing: "রিপোর্টের কোনো সারি পাওয়া যায়নি। ড্রাইভার আইডি আর শতাংশগুলোসহ সারি কপি করুন।", perf_unmatched: "মেলেনি", perf_unmatched_help: "এই ড্রাইভাররা এখনো কর্মচারী তালিকায় নেই। তাদের Keeta আইডিসহ যোগ করে আবার আমদানি করুন।",
   perf_empty: "এখনো পারফরমেন্স নেই", perf_empty_hint: "আজকের সংখ্যা যোগ করতে \"Keeta রিপোর্ট আমদানি\" ব্যবহার করুন।", nav_target: "টার্গেট", nav_perf: "পারফরমেন্স",
   tgt_hint: "প্রত্যেক কর্মীর নিজের মাসিক টার্গেট ও বেতন। ঘর খালি রাখলে বেতনের নিয়মের সাধারণ মান (ধূসর) ধরা হবে।",
