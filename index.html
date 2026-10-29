@@ -1,0 +1,1575 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0B3B60">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+</head><body>
+<title>ASB Admin Panel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Hind+Siliguri:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: fixed left rail of sections (top scroller on phones) + one working surface; tables are the main object */
+:root{
+  --bg:#EEF2F5; --surface:#FFFFFF; --sunk:#F6F8FA; --ink:#0E2233; --muted:#5A6B7A; --line:#D8E0E7;
+  --brand:#0B3B60; --brand-ink:#FFFFFF; --gold:#B9830F; --gold-soft:#FBF1D9;
+  --good:#1E7F55; --good-soft:#E3F3EB; --warn:#9A6411; --warn-soft:#FBEFD7; --bad:#B4332A; --bad-soft:#F9E4E2; --info:#1F5F99; --info-soft:#E3EEF8;
+  --f-display:"Barlow Semi Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans","Hind Siliguri","IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0A1520; --surface:#112131; --sunk:#0D1A27; --ink:#E4ECF2; --muted:#8EA2B4; --line:#203546;
+  --brand:#6FA8DC; --brand-ink:#08131D; --gold:#E2AE45; --gold-soft:#33280F;
+  --good:#5CC492; --good-soft:#12301F; --warn:#E2AE45; --warn-soft:#33280F; --bad:#EE7F75; --bad-soft:#3A1715; --info:#7DB5E8; --info-soft:#132B42; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A1520; --surface:#112131; --sunk:#0D1A27; --ink:#E4ECF2; --muted:#8EA2B4; --line:#203546;
+  --brand:#6FA8DC; --brand-ink:#08131D; --gold:#E2AE45; --gold-soft:#33280F;
+  --good:#5CC492; --good-soft:#12301F; --warn:#E2AE45; --warn-soft:#33280F; --bad:#EE7F75; --bad-soft:#3A1715; --info:#7DB5E8; --info-soft:#132B42; color-scheme:dark}
+:lang(bn){--f-body:"Hind Siliguri","IBM Plex Sans",system-ui,sans-serif}
+:lang(ar){--f-body:"IBM Plex Sans Arabic","IBM Plex Sans",system-ui,sans-serif}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--f-body);font-variant-numeric:tabular-nums}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.app{display:grid;grid-template-columns:232px minmax(0,1fr);min-height:100%}
+.rail{background:var(--brand);color:var(--brand-ink);display:flex;flex-direction:column;padding-block:20px;position:sticky;top:0;height:100vh}
+:root[data-theme="dark"] .rail,.rail{border-inline-end:1px solid var(--line)}
+.brand{padding:0 20px 18px;display:flex;gap:10px;align-items:center}
+.mark{width:36px;height:36px;border-radius:8px;background:var(--gold);color:#1a1205;display:grid;place-items:center;font:700 15px var(--f-display);letter-spacing:.04em;flex:none}
+.brand b{font:700 19px/1.1 var(--f-display);letter-spacing:.03em;display:block}
+.brand small{opacity:.75;font-size:12px}
+.nav{display:flex;flex-direction:column;gap:2px;padding:0 10px}
+.nav a{color:inherit;text-decoration:none;padding:9px 12px;border-radius:8px;font-weight:500;display:flex;justify-content:space-between;gap:8px;opacity:.85}
+.nav a:hover{background:color-mix(in srgb,var(--brand-ink) 10%,transparent);opacity:1}
+.nav a[aria-current="page"]{background:color-mix(in srgb,var(--brand-ink) 16%,transparent);opacity:1;font-weight:600}
+.nav a.nav-driver{margin-top:8px;background:var(--gold);color:#1a1205;opacity:1;font-weight:600}
+.nav .count{font-size:12px;background:var(--gold);color:#1a1205;border-radius:20px;padding:0 7px;font-weight:600}
+.rail-foot{margin-top:auto;padding:16px 20px 0;display:flex;flex-direction:column;gap:10px;font-size:13px}
+.lang{display:flex;gap:4px}
+.lang button{flex:1;border:1px solid color-mix(in srgb,var(--brand-ink) 35%,transparent);background:none;color:var(--brand-ink);border-radius:6px;padding:4px 0;cursor:pointer;font-size:13px}
+.lang button[aria-pressed="true"]{background:var(--brand-ink);color:var(--brand)}
+main{min-width:0;padding-block:28px 60px;padding-left:max(28px,env(safe-area-inset-left,0px));padding-right:max(28px,env(safe-area-inset-right,0px))}
+.head{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.head h1{font:600 30px/1.1 var(--f-display);letter-spacing:.01em;margin:0;text-wrap:balance}
+.head p{margin:4px 0 0;color:var(--muted);font-size:14px}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+.btn{display:inline-flex;align-items:center;gap:6px;border:1px solid transparent;background:var(--brand);color:var(--brand-ink);border-radius:8px;padding:8px 14px;font-weight:600;font-size:14px;cursor:pointer;white-space:nowrap}
+.btn:hover{filter:brightness(1.08)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{background:var(--sunk)}
+.btn.gold{background:var(--gold);color:#1a1205}
+.btn.danger{background:var(--bad);color:#fff}
+.btn.sm{padding:5px 10px;font-size:13px;font-weight:500}
+.input,select.input,textarea.input{width:100%;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;min-width:0}
+.input:focus{border-color:var(--brand);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 18%,transparent)}
+.input.num{width:96px;text-align:end}
+label.f{display:flex;flex-direction:column;gap:4px;font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.03em;text-transform:uppercase}
+label.f.check{flex-direction:row;align-items:center;text-transform:none;font-size:14px;color:var(--ink);font-weight:500}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r)}
+.panel h2{font:600 18px var(--f-display);letter-spacing:.02em;margin:0;padding:14px 16px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:8px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin-bottom:18px}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px}
+.kpi span{display:block;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+.kpi b{display:block;font:600 30px/1.2 var(--f-display);margin-top:2px}
+.kpi small{color:var(--muted);font-size:13px}
+.kpi.alert{border-color:color-mix(in srgb,var(--bad) 45%,var(--line));background:var(--bad-soft)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px}
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:start;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--sunk);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:end}
+td.nowrap{white-space:nowrap}
+.name{font-weight:600}
+.sub{color:var(--muted);font-size:12.5px}
+.mono{font-family:var(--f-mono);font-size:13px;letter-spacing:.02em}
+.neg{color:var(--bad)}
+.pos{color:var(--good)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-weight:600;margin-bottom:4px}
+
+.pill{display:inline-flex;align-items:center;gap:5px;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:600;white-space:nowrap}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.p-good{background:var(--good-soft);color:var(--good)} .p-warn{background:var(--warn-soft);color:var(--warn)}
+.p-bad{background:var(--bad-soft);color:var(--bad)} .p-info{background:var(--info-soft);color:var(--info)} .p-mute{background:var(--sunk);color:var(--muted)}
+/* Saudi plate chip */
+.plate{display:inline-flex;align-items:stretch;border:1.5px solid var(--ink);border-radius:4px;overflow:hidden;font:500 12.5px var(--f-mono);white-space:nowrap}
+.plate i{font-style:normal;background:var(--ink);color:var(--surface);padding:1px 4px;font-size:9px;display:grid;place-items:center;letter-spacing:.05em}
+.plate em{font-style:normal;padding:1px 7px}
+.rank{width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;font:700 14px var(--f-display);background:var(--sunk);border:1px solid var(--line)}
+.rank.r1{background:var(--gold);color:#1a1205;border-color:transparent}
+.rank.r2{background:color-mix(in srgb,var(--muted) 30%,var(--surface))}
+.rank.r3{background:color-mix(in srgb,var(--gold) 35%,var(--surface))}
+.bar{height:6px;background:var(--sunk);border-radius:4px;overflow:hidden;min-width:60px}
+.bar span{display:block;height:100%;background:var(--brand)}
+.bar.over span{background:var(--bad)}
+.filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.filters .input{max-width:320px}
+.filters select.input{max-width:180px}
+.note{background:var(--info-soft);color:var(--ink);border-radius:var(--r);padding:12px 14px;font-size:14px;margin-bottom:16px;border:1px solid color-mix(in srgb,var(--info) 30%,transparent)}
+.note.warn{background:var(--warn-soft);border-color:color-mix(in srgb,var(--warn) 30%,transparent)}
+.pinbox{font:600 34px var(--f-mono);letter-spacing:.35em;text-align:center;background:var(--gold-soft);border:1px dashed var(--gold);border-radius:var(--r);padding:12px;margin:8px 0}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;padding:16px}
+.row-actions{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap}
+
+dialog{border:1px solid var(--line);border-radius:14px;padding:0;background:var(--surface);color:var(--ink);width:min(560px,calc(100vw - 32px));max-height:calc(100dvh - 48px)}
+dialog::backdrop{background:rgba(5,15,25,.5)}
+.dlg-h{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line)}
+.dlg-h h3{margin:0;font:600 20px var(--f-display)}
+.dlg-b{padding:16px 18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dlg-b .full{grid-column:1/-1}
+.dlg-f{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--line)}
+.x{background:none;border:0;font-size:22px;line-height:1;cursor:pointer;color:var(--muted)}
+.toast{position:fixed;inset-inline-end:max(16px,env(safe-area-inset-right,0px));bottom:calc(16px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--surface);padding:10px 16px;border-radius:8px;font-size:14px;z-index:50;max-width:min(420px,calc(100vw - 32px))}
+.err{color:var(--bad);font-size:13px}
+
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  .rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;height:auto;padding-block:10px 0;flex-direction:column}
+  body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--brand)}
+  .brand{padding:0 max(16px,env(safe-area-inset-left,0px)) 8px;padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .nav{flex-direction:row;overflow-x:auto;padding:0 max(10px,env(safe-area-inset-left,0px)) 8px;scrollbar-width:none}
+  .nav a{white-space:nowrap;padding:7px 11px;font-size:14px}
+  .rail-foot{display:none}
+  .mobile-tools{display:flex!important}
+  main{padding-block:18px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .grid2{grid-template-columns:1fr}
+  .head h1{font-size:25px}
+  .dlg-b{grid-template-columns:1fr}
+}
+.mobile-tools{display:none;gap:6px;margin-inline-start:auto}
+.mobile-tools .lang button{padding:3px 8px}
+@media (prefers-reduced-motion:no-preference){.panel,.kpi{transition:border-color .2s}}
+
+/* ── employee app (phone) ── */
+.phone{background:var(--bg);color:var(--ink);display:flex;flex-direction:column;min-height:100%}
+.phone.full{min-height:100dvh}
+.phone-frame{width:min(380px,100%);height:740px;max-height:calc(100dvh - 140px);min-height:520px;border:10px solid var(--ink);border-radius:36px;overflow:hidden;background:var(--bg)}
+.phone-frame .phone{height:100%;overflow-y:auto;min-height:0}
+.p-top{position:sticky;top:0;z-index:5;background:var(--brand);color:var(--brand-ink);padding:14px 16px;display:flex;align-items:center;gap:12px}
+.phone.full .p-top{top:env(safe-area-inset-top,0px);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.p-av{width:42px;height:42px;border-radius:50%;background:var(--gold);color:#1a1205;display:grid;place-items:center;font:700 18px var(--f-display);flex:none}
+.p-top b{font:600 19px/1.1 var(--f-display);display:block;letter-spacing:.02em}
+.p-top small{opacity:.85;font-size:12.5px}
+.p-lang{display:flex;gap:4px;margin-inline-start:auto;flex:none}
+.p-lang button{border:1px solid color-mix(in srgb,var(--brand-ink) 40%,transparent);background:none;color:var(--brand-ink);border-radius:6px;padding:2px 7px;font-size:12px;cursor:pointer}
+.p-lang button[aria-pressed="true"]{background:var(--brand-ink);color:var(--brand)}
+.p-body{flex:1;padding:14px 14px 20px;display:flex;flex-direction:column;gap:12px}
+.phone.full .p-body{padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px));width:100%;max-width:560px;margin:0 auto}
+.p-card{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px;min-width:0}
+.p-card h3{margin:0 0 8px;font:600 14px var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.p-rank{display:flex;align-items:center;gap:16px}
+.p-rank .big{font:700 54px/1 var(--f-display);color:var(--gold)}
+.p-two{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.p-num{font:600 28px/1.15 var(--f-display)}
+.p-lbl{font-size:11.5px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em}
+.p-seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.p-seg button{border:0;background:none;border-radius:9px;padding:10px 4px;font-weight:600;font-size:13px;cursor:pointer;color:var(--muted);display:flex;gap:6px;align-items:center;justify-content:center}
+.p-seg button[aria-pressed="true"]{background:var(--sunk);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
+.dot{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none}
+.p-nav{position:sticky;bottom:0;z-index:5;display:grid;grid-template-columns:repeat(4,1fr);background:var(--surface);border-top:1px solid var(--line);padding:6px 4px}
+.phone.full .p-nav{padding-bottom:calc(6px + env(safe-area-inset-bottom,0px));padding-left:max(4px,env(safe-area-inset-left,0px));padding-right:max(4px,env(safe-area-inset-right,0px))}
+.p-nav button{position:relative;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11.5px;font-weight:600;color:var(--muted);padding:6px 0;cursor:pointer}
+.p-nav button svg{width:23px;height:23px}
+.p-nav button[aria-current="page"]{color:var(--brand)}
+.p-badge{position:absolute;top:4px;inset-inline-start:calc(50% + 6px);width:8px;height:8px;border-radius:50%;background:var(--bad)}
+.p-list{display:flex;flex-direction:column}
+.p-row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--line);align-items:center;min-width:0}
+.p-row:last-child{border-bottom:0}
+.p-row.me{background:var(--info-soft);margin:0 -14px;padding-inline:14px}
+.p-alert{width:100%;background:var(--bad-soft);border:1px solid color-mix(in srgb,var(--bad) 35%,transparent);border-radius:14px;padding:13px 14px;display:flex;justify-content:space-between;align-items:center;font-weight:600;cursor:pointer;color:var(--ink)}
+.p-net{background:var(--brand);color:var(--brand-ink);border-radius:14px;padding:18px;text-align:center}
+.p-net .p-num{font-size:34px}
+.p-login{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;padding-block:28px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));max-width:440px;margin:0 auto;width:100%}
+.p-login .mark{width:58px;height:58px;font-size:20px;border-radius:14px}
+.p-login h1{font:700 27px/1.1 var(--f-display);margin:0}
+.p-btn{width:100%;padding:13px;font-size:16px;justify-content:center}
+.p-big-input{font-size:20px;letter-spacing:.1em;padding:12px}
+.p-code{font:500 13px var(--f-mono);background:var(--sunk);border:1px dashed var(--line);padding:8px;border-radius:8px;word-break:break-all}
+.slip-row{width:100%;text-align:start;border:0;border-bottom:1px solid var(--line);background:none;cursor:pointer;color:inherit;font:inherit}
+.preview-wrap{display:grid;grid-template-columns:auto minmax(0,1fr);gap:24px;align-items:start}
+.steps{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:10px}
+@media (max-width:860px){.preview-wrap{grid-template-columns:1fr}.phone-frame{margin:0 auto}}
+</style>
+
+<div class="app" id="app">
+  <aside class="rail">
+    <div class="brand">
+      <div class="mark">ASB</div>
+      <div><b>ASB LOGISTICS</b><small data-t="brandSub">Admin panel</small></div>
+      <div class="mobile-tools"><div class="lang" id="langM"></div></div>
+    </div>
+    <nav class="nav" id="nav"></nav>
+    <div class="rail-foot">
+      <div class="lang" id="lang"></div>
+      <div id="who" style="opacity:.75"></div><button class="btn ghost sm" data-signout-admin style="background:none;color:inherit;border-color:currentColor">${"⎋"} <span data-t="au_signout">Sign out</span></button>
+    </div>
+  </aside>
+  <main id="main">
+    <div class="empty" style="padding-top:80px"><b data-t="loading">Loading…</b></div>
+  </main>
+</div>
+<div id="emp" hidden></div>
+<dialog id="dlg"></dialog>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+"use strict";
+/* ───────── i18n ───────── */
+const I18N = {
+en:{brandSub:"Admin panel",loading:"Loading…",
+ nav_dashboard:"Dashboard",nav_employees:"Employees",nav_operations:"Daily operations",nav_fines:"Fines & advances",nav_payroll:"Payroll",nav_rules:"Pay rules",nav_admins:"Admins",
+ today:"Today",activeEmp:"Active employees",pending:"awaiting approval",ordersToday:"Orders today",fuelToday:"Fuel today",reported:"drivers reported",outstanding:"Outstanding fines",advancesOut:"Advances to recover",
+ leaderboard:"Today's leaderboard",recentFines:"Recent fines",noOrders:"No orders entered for today",noOrdersHint:"Enter today's orders in Daily operations.",noFines:"No fines issued",
+ addEmp:"Add employee",search:"Search name, Iqama, mobile, plate…",allStatus:"All statuses",ACTIVE:"Active",PENDING:"Pending",INACTIVE:"Deactivated",
+ name:"Name",nameAr:"Name (Arabic)",iqama:"Resident ID (Iqama)",mobile:"Mobile",city:"City",plate:"Vehicle plate",model:"Vehicle model",card:"Petrol card no.",dailyLimit:"Daily fuel limit",monthlyLimit:"Monthly fuel limit",status:"Status",payType:"Pay type",TARGET:"Target (base + bonus)",PER_ORDER:"Per order",
+ edit:"Edit",approve:"Approve",deactivate:"Deactivate",activate:"Reactivate",resetPin:"Reset PIN",save:"Save",cancel:"Cancel",close:"Close",delete:"Delete",confirm:"Confirm",
+ noEmp:"No employees yet",noEmpHint:"Add your first driver with “Add employee”.",empSaved:"Employee saved",
+ pinTitle:"New login PIN",pinText:"Give this PIN to the employee privately. It is shown only once.",
+ date:"Date",orders:"Orders",fuel:"Fuel (SAR)",rank:"Rank",saveDay:"Save day",importCsv:"Import CSV",daySaved:"Day saved · rankings updated",
+ csvHelp:"CSV columns: residentId,date,orders,fuel — one row per driver per day. Upload a file or paste the rows.",csvPaste:"Paste CSV rows",csvImport:"Import",imported:"Imported",skipped:"skipped",
+ opsHint:"Type each driver's orders and fuel, then Save day. Rankings and the leaderboard update for everyone at once.",
+ issueFine:"Issue fine",newAdvance:"Record advance",employee:"Employee",selectEmp:"Select employee…",amount:"Amount (SAR)",category:"Category",reason:"Reason / details",instalments:"Monthly instalments",startMonth:"Start deducting from",
+ TRAFFIC_VIOLATION:"Traffic violation",DELAY:"Delay",MISSING_ITEM:"Missing item",VEHICLE_DAMAGE:"Vehicle damage",OTHER:"Other",
+ remaining:"Remaining",perMonth:"Per month",waive:"Waive",waived:"Waived",paid:"Recovered",fines:"Fines",advances:"Advances",noAdv:"No advances recorded",
+ fineSaved:"Fine issued",advSaved:"Advance recorded",waiveQ:"Waive this fine? Nothing more will be deducted for it.",
+ month:"Month",draft:"Draft",published:"Published",publish:"Publish payroll",exportCsv:"Export CSV",
+ base:"Base",bonus:"Order bonus",incent:"Bonus",overtime:"Overtime",shortfall:"Shortfall",fuelAdj:"Fuel ±",other:"Other ±",fineDed:"Fines",advDed:"Advances",net:"Net pay",gross:"Gross",deductions:"Deductions",
+ payHint:"Draft figures update live from daily orders, fuel, fines and advances. Type bonus, overtime, fuel or other adjustments per driver, then publish.",
+ publishQ:"Publish payroll for {m}? Fine and advance instalments will be deducted and this month will be locked.",publishedOk:"Payroll published",
+ lockedNote:"This month is published. Figures below are the final payslips.",saveAdj:"Save adjustments",adjSaved:"Adjustments saved",
+ rulesTitle:"Pay rules",rulesHint:"These rules drive every payroll calculation.",targetOrders:"Monthly order target",baseSalary:"Base salary (SAR)",bonusPer:"Bonus per extra order",penaltyPer:"Deduction per missing order",perThreshold:"Per-order threshold",rateHigh:"Rate at or above threshold",rateLow:"Rate below threshold",rulesSaved:"Pay rules saved",
+ readOnly:"You can view this panel but not change it. Ask the owner for Contributor access.",
+ offline:"This panel needs the Claude app or claude.ai to load its data.",required:"Fill in the required fields.",dupIqama:"An employee with this Iqama already exists.",
+ riyadh:"Riyadh time",totalOrders:"Orders this month",ofDrivers:"of {n}",you:"you",history:"Deduction history",none:"—",
+ sar:"SAR",orders_n:"{n} orders",dbErr:"Could not save. Check your connection and try again."},
+bn:{brandSub:"এডমিন প্যানেল",loading:"লোড হচ্ছে…",
+ nav_dashboard:"ড্যাশবোর্ড",nav_employees:"কর্মচারী",nav_operations:"দৈনিক কাজ",nav_fines:"জরিমানা ও অগ্রিম",nav_payroll:"বেতন",nav_rules:"বেতনের নিয়ম",nav_admins:"এডমিন",
+ today:"আজ",activeEmp:"সক্রিয় কর্মচারী",pending:"অনুমোদনের অপেক্ষায়",ordersToday:"আজকের অর্ডার",fuelToday:"আজকের পেট্রোল",reported:"জন ড্রাইভারের তথ্য",outstanding:"বকেয়া জরিমানা",advancesOut:"বকেয়া অগ্রিম",
+ leaderboard:"আজকের র‍্যাংকিং",recentFines:"সাম্প্রতিক জরিমানা",noOrders:"আজকের অর্ডার এখনো দেওয়া হয়নি",noOrdersHint:"দৈনিক কাজ পাতায় আজকের অর্ডার লিখুন।",noFines:"কোনো জরিমানা নেই",
+ addEmp:"কর্মচারী যোগ করুন",search:"নাম, ইকামা, মোবাইল, প্লেট খুঁজুন…",allStatus:"সব অবস্থা",ACTIVE:"সক্রিয়",PENDING:"অপেক্ষমাণ",INACTIVE:"নিষ্ক্রিয়",
+ name:"নাম",nameAr:"নাম (আরবি)",iqama:"রেসিডেন্ট আইডি (ইকামা)",mobile:"মোবাইল",city:"শহর",plate:"গাড়ির প্লেট",model:"গাড়ির মডেল",card:"পেট্রোল কার্ড নং",dailyLimit:"দৈনিক পেট্রোল সীমা",monthlyLimit:"মাসিক পেট্রোল সীমা",status:"অবস্থা",payType:"বেতনের ধরন",TARGET:"টার্গেট (বেসিক + বোনাস)",PER_ORDER:"প্রতি অর্ডার",
+ edit:"সম্পাদনা",approve:"অনুমোদন",deactivate:"নিষ্ক্রিয় করুন",activate:"আবার সক্রিয়",resetPin:"পিন রিসেট",save:"সংরক্ষণ",cancel:"বাতিল",close:"বন্ধ",delete:"মুছুন",confirm:"নিশ্চিত",
+ noEmp:"এখনো কোনো কর্মচারী নেই",noEmpHint:"“কর্মচারী যোগ করুন” দিয়ে প্রথম ড্রাইভার যোগ করুন।",empSaved:"কর্মচারী সংরক্ষিত হয়েছে",
+ pinTitle:"নতুন লগইন পিন",pinText:"এই পিনটি কর্মচারীকে গোপনে দিন। এটি শুধু একবার দেখানো হবে।",
+ date:"তারিখ",orders:"অর্ডার",fuel:"পেট্রোল (রিয়াল)",rank:"র‍্যাংক",saveDay:"দিন সংরক্ষণ",importCsv:"CSV আমদানি",daySaved:"সংরক্ষিত · র‍্যাংকিং হালনাগাদ",
+ csvHelp:"CSV কলাম: residentId,date,orders,fuel — প্রতি ড্রাইভার প্রতি দিনে এক সারি। ফাইল দিন বা সারিগুলো পেস্ট করুন।",csvPaste:"CSV সারি পেস্ট করুন",csvImport:"আমদানি",imported:"আমদানি হয়েছে",skipped:"বাদ গেছে",
+ opsHint:"প্রত্যেক ড্রাইভারের অর্ডার ও পেট্রোল লিখে “দিন সংরক্ষণ” চাপুন। র‍্যাংকিং সবার জন্য সাথে সাথে বদলাবে।",
+ issueFine:"জরিমানা দিন",newAdvance:"অগ্রিম লিখুন",employee:"কর্মচারী",selectEmp:"কর্মচারী বাছুন…",amount:"পরিমাণ (রিয়াল)",category:"ধরন",reason:"কারণ / বিবরণ",instalments:"মাসিক কিস্তি",startMonth:"কাটা শুরু হবে",
+ TRAFFIC_VIOLATION:"ট্রাফিক আইন ভঙ্গ",DELAY:"দেরি",MISSING_ITEM:"আইটেম হারানো",VEHICLE_DAMAGE:"গাড়ির ক্ষতি",OTHER:"অন্যান্য",
+ remaining:"বাকি",perMonth:"প্রতি মাসে",waive:"মাফ করুন",waived:"মাফ",paid:"আদায় হয়েছে",fines:"জরিমানা",advances:"অগ্রিম",noAdv:"কোনো অগ্রিম নেই",
+ fineSaved:"জরিমানা দেওয়া হয়েছে",advSaved:"অগ্রিম লেখা হয়েছে",waiveQ:"এই জরিমানা মাফ করবেন? এর জন্য আর কিছু কাটা হবে না।",
+ month:"মাস",draft:"খসড়া",published:"প্রকাশিত",publish:"বেতন প্রকাশ",exportCsv:"CSV ডাউনলোড",
+ base:"বেসিক",bonus:"অর্ডার বোনাস",incent:"বোনাস",overtime:"ওভারটাইম",shortfall:"ঘাটতি",fuelAdj:"পেট্রোল ±",other:"অন্যান্য ±",fineDed:"জরিমানা",advDed:"অগ্রিম",net:"নিট বেতন",gross:"মোট আয়",deductions:"কর্তন",
+ payHint:"খসড়ার হিসাব দৈনিক অর্ডার, পেট্রোল, জরিমানা ও অগ্রিম থেকে সাথে সাথে বদলায়। প্রতি ড্রাইভারের বোনাস, ওভারটাইম, পেট্রোল বা অন্যান্য সমন্বয় লিখে প্রকাশ করুন।",
+ publishQ:"{m} মাসের বেতন প্রকাশ করবেন? জরিমানা ও অগ্রিমের কিস্তি কাটা হবে এবং মাসটি লক হয়ে যাবে।",publishedOk:"বেতন প্রকাশিত হয়েছে",
+ lockedNote:"এই মাস প্রকাশিত। নিচের হিসাবই চূড়ান্ত পে-স্লিপ।",saveAdj:"সমন্বয় সংরক্ষণ",adjSaved:"সমন্বয় সংরক্ষিত",
+ rulesTitle:"বেতনের নিয়ম",rulesHint:"প্রতিটি বেতন হিসাব এই নিয়মে হয়।",targetOrders:"মাসিক অর্ডার টার্গেট",baseSalary:"বেসিক বেতন (রিয়াল)",bonusPer:"প্রতি বাড়তি অর্ডারে বোনাস",penaltyPer:"প্রতি কম অর্ডারে কর্তন",perThreshold:"প্রতি-অর্ডার সীমা",rateHigh:"সীমা বা বেশি হলে রেট",rateLow:"সীমার কম হলে রেট",rulesSaved:"নিয়ম সংরক্ষিত",
+ readOnly:"আপনি প্যানেল দেখতে পারবেন কিন্তু পরিবর্তন করতে পারবেন না। মালিকের কাছে Contributor অনুমতি চান।",
+ offline:"ডেটা লোড করতে প্যানেলটি Claude অ্যাপ বা claude.ai-তে খুলুন।",required:"প্রয়োজনীয় ঘরগুলো পূরণ করুন।",dupIqama:"এই ইকামা নম্বরের কর্মচারী আগে থেকেই আছে।",
+ riyadh:"রিয়াদ সময়",totalOrders:"এই মাসের অর্ডার",ofDrivers:"{n} জনের মধ্যে",you:"আপনি",history:"কর্তনের ইতিহাস",none:"—",
+ sar:"রিয়াল",orders_n:"{n} অর্ডার",dbErr:"সংরক্ষণ হয়নি। সংযোগ দেখে আবার চেষ্টা করুন।"},
+ar:{brandSub:"لوحة الإدارة",loading:"جارٍ التحميل…",
+ nav_dashboard:"الرئيسية",nav_employees:"الموظفون",nav_operations:"العمليات اليومية",nav_fines:"المخالفات والسلف",nav_payroll:"الرواتب",nav_rules:"قواعد الراتب",nav_admins:"المشرفون",
+ today:"اليوم",activeEmp:"الموظفون النشطون",pending:"بانتظار الموافقة",ordersToday:"طلبات اليوم",fuelToday:"وقود اليوم",reported:"سائق مسجل",outstanding:"مخالفات مستحقة",advancesOut:"سلف مستحقة",
+ leaderboard:"ترتيب اليوم",recentFines:"أحدث المخالفات",noOrders:"لم تُدخل طلبات اليوم بعد",noOrdersHint:"أدخل طلبات اليوم من صفحة العمليات اليومية.",noFines:"لا توجد مخالفات",
+ addEmp:"إضافة موظف",search:"ابحث بالاسم، الإقامة، الجوال، اللوحة…",allStatus:"كل الحالات",ACTIVE:"نشط",PENDING:"معلق",INACTIVE:"موقوف",
+ name:"الاسم",nameAr:"الاسم بالعربية",iqama:"رقم الإقامة",mobile:"الجوال",city:"المدينة",plate:"رقم اللوحة",model:"طراز المركبة",card:"رقم بطاقة الوقود",dailyLimit:"حد الوقود اليومي",monthlyLimit:"حد الوقود الشهري",status:"الحالة",payType:"نوع الراتب",TARGET:"هدف (أساسي + حافز)",PER_ORDER:"لكل طلب",
+ edit:"تعديل",approve:"موافقة",deactivate:"إيقاف",activate:"إعادة تفعيل",resetPin:"إعادة الرقم السري",save:"حفظ",cancel:"إلغاء",close:"إغلاق",delete:"حذف",confirm:"تأكيد",
+ noEmp:"لا يوجد موظفون بعد",noEmpHint:"أضف أول سائق من زر «إضافة موظف».",empSaved:"تم حفظ الموظف",
+ pinTitle:"رقم سري جديد",pinText:"سلّم هذا الرقم للموظف بشكل خاص. يظهر مرة واحدة فقط.",
+ date:"التاريخ",orders:"الطلبات",fuel:"الوقود (ريال)",rank:"الترتيب",saveDay:"حفظ اليوم",importCsv:"استيراد CSV",daySaved:"تم الحفظ · تحدث الترتيب",
+ csvHelp:"أعمدة CSV: residentId,date,orders,fuel — صف لكل سائق لكل يوم. ارفع ملفاً أو الصق الصفوف.",csvPaste:"الصق صفوف CSV",csvImport:"استيراد",imported:"تم استيراد",skipped:"تم تخطي",
+ opsHint:"أدخل طلبات ووقود كل سائق ثم اضغط حفظ اليوم. يتحدث الترتيب للجميع فوراً.",
+ issueFine:"إصدار مخالفة",newAdvance:"تسجيل سلفة",employee:"الموظف",selectEmp:"اختر الموظف…",amount:"المبلغ (ريال)",category:"النوع",reason:"السبب / التفاصيل",instalments:"عدد الأقساط الشهرية",startMonth:"يبدأ الخصم من",
+ TRAFFIC_VIOLATION:"مخالفة مرورية",DELAY:"تأخير",MISSING_ITEM:"صنف مفقود",VEHICLE_DAMAGE:"ضرر بالمركبة",OTHER:"أخرى",
+ remaining:"المتبقي",perMonth:"شهرياً",waive:"إعفاء",waived:"معفى",paid:"مسدد",fines:"المخالفات",advances:"السلف",noAdv:"لا توجد سلف",
+ fineSaved:"تم إصدار المخالفة",advSaved:"تم تسجيل السلفة",waiveQ:"إعفاء هذه المخالفة؟ لن يُخصم منها شيء بعد الآن.",
+ month:"الشهر",draft:"مسودة",published:"منشور",publish:"نشر الرواتب",exportCsv:"تصدير CSV",
+ base:"الأساسي",bonus:"حافز الطلبات",incent:"مكافأة",overtime:"إضافي",shortfall:"نقص الطلبات",fuelAdj:"الوقود ±",other:"أخرى ±",fineDed:"المخالفات",advDed:"السلف",net:"صافي الراتب",gross:"الإجمالي",deductions:"الخصومات",
+ payHint:"أرقام المسودة تتحدث مباشرة من الطلبات والوقود والمخالفات والسلف. أدخل المكافأة أو الإضافي أو تعديل الوقود لكل سائق ثم انشر.",
+ publishQ:"نشر رواتب {m}؟ سيتم خصم أقساط المخالفات والسلف وقفل الشهر.",publishedOk:"تم نشر الرواتب",
+ lockedNote:"هذا الشهر منشور. الأرقام أدناه هي قسائم الرواتب النهائية.",saveAdj:"حفظ التعديلات",adjSaved:"تم حفظ التعديلات",
+ rulesTitle:"قواعد الراتب",rulesHint:"تُحسب كل الرواتب وفق هذه القواعد.",targetOrders:"هدف الطلبات الشهري",baseSalary:"الراتب الأساسي (ريال)",bonusPer:"حافز لكل طلب إضافي",penaltyPer:"خصم لكل طلب ناقص",perThreshold:"حد نظام الطلب الواحد",rateHigh:"السعر عند الحد أو أكثر",rateLow:"السعر تحت الحد",rulesSaved:"تم حفظ القواعد",
+ readOnly:"يمكنك عرض اللوحة فقط. اطلب من المالك صلاحية Contributor.",
+ offline:"افتح اللوحة في تطبيق Claude أو claude.ai لتحميل البيانات.",required:"أكمل الحقول المطلوبة.",dupIqama:"يوجد موظف بنفس رقم الإقامة.",
+ riyadh:"بتوقيت الرياض",totalOrders:"طلبات هذا الشهر",ofDrivers:"من {n}",you:"أنت",history:"سجل الخصومات",none:"—",
+ sar:"ريال",orders_n:"{n} طلب",dbErr:"تعذر الحفظ. تحقق من الاتصال وحاول مرة أخرى."}
+};
+let lang = "en";
+try { lang = localStorage.getItem("asb-lang") || "en"; } catch {}
+if (!I18N[lang]) lang = "en";
+const t = (k, vars) => { let s = I18N[lang][k] ?? I18N.en[k] ?? k; if (vars) for (const [a,b] of Object.entries(vars)) s = s.replace(`{${a}}`, b); return s; };
+
+/* ───────── helpers ───────── */
+const $ = (s, r = document) => r.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const r2 = n => Math.round((+n || 0) * 100) / 100;
+const fmt = n => (+n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+const fmt0 = n => (+n || 0).toLocaleString("en-US");
+const todayKey = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh" }).format(new Date());
+const monthKey = () => todayKey().slice(0, 7);
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+const plateChip = p => p ? `<span class="plate"><i>KSA</i><em>${esc(p)}</em></span>` : `<span class="sub">${t("none")}</span>`;
+const statusPill = s => `<span class="pill ${s==="ACTIVE"?"p-good":s==="PENDING"?"p-warn":"p-mute"}">${t(s)}</span>`;
+const empName = id => state.emp[id]?.fullName ?? "—";
+const DEFAULT_RULES = { targetOrders: 450, baseSalary: 2400, bonusPer: 5, penaltyPer: 10, perThreshold: 400, rateHigh: 2.5, rateLow: 2 };
+const CATS = ["TRAFFIC_VIOLATION","DELAY","MISSING_ITEM","VEHICLE_DAMAGE","OTHER"];
+async function sha(s){ const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
+function randomPin(){ let p; do { p = String(crypto.getRandomValues(new Uint32Array(1))[0] % 10000).padStart(4,"0"); } while (/^(\d)\1{3}$|^(0123|1234|2345|3456|4567|5678|6789)$/.test(p)); return p; }
+
+function toast(msg){ const el = document.createElement("div"); el.className = "toast"; el.textContent = msg; document.body.append(el); setTimeout(()=>el.remove(), 2800); }
+
+/* ───────── state ───────── */
+const state = {
+  staff: {}, claimlog: {}, duty: {}, pinreq: {}, payroll: {}, curMonthDocs: [], mode: "admin", myId: null, appTab: "home", appSlip: null, previewId: "",
+  emp: {}, fines: {}, adv: {}, rules: { ...DEFAULT_RULES },
+  todayDoc: null, opsDoc: null, monthDocs: [], payDoc: null,
+  opsDate: todayKey(), payMonth: monthKey(),
+  opsDraft: {}, adjDraft: {}, q: "", qStatus: "", finesTab: "fines",
+  ready: false, canWrite: true, offline: false,
+};
+let db = null, downloads = null, unsubOps = null, unsubMonth = null;
+const payDoc = () => state.payroll[state.payMonth] ?? null;
+
+/* ───────── routing ───────── */
+const VIEWS = ["dashboard","employees","operations","fines","payroll","app","rules","admins"];
+const view = () => { const h = location.hash.slice(1); return VIEWS.includes(h) ? h : "dashboard"; };
+window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
+
+/* Avoid wiping a field the admin is typing in when live data arrives */
+let pendingRender = false;
+const editing = () => { const a = document.activeElement; return a && ($("#main").contains(a) || $("#emp").contains(a)) && /INPUT|SELECT|TEXTAREA/.test(a.tagName); };
+function soon(){ scheduleSync(); if (editing()) { pendingRender = true; return; } render(); }
+document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender && !editing()) { pendingRender = false; render(); } }, 0));
+
+/* ───────── shell ───────── */
+function renderShell(){
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  document.querySelectorAll("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
+  const v = view();
+  const pendingN = Object.values(state.emp).filter(e => e.status === "PENDING").length;
+  $("#nav").innerHTML = VIEWS.map(k => `<a href="#${k}" ${k===v?'aria-current="page"':""}><span>${t("nav_"+k)}</span>${k==="employees"&&pendingN?`<span class="count">${pendingN}</span>`:""}</a>`).join("") + `<a href="${DRIVER_WEB}" target="_blank" rel="noopener" class="nav-driver"><span>${t("drv_web")} ↗</span></a>`;
+  const langBtns = [["en","EN"],["bn","বাংলা"],["ar","عربي"]].map(([k,l]) => `<button data-lang="${k}" aria-pressed="${k===lang}">${l}</button>`).join("");
+  $("#lang").innerHTML = langBtns; $("#langM").innerHTML = langBtns;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-lang]"); if (!b) return;
+  lang = b.dataset.lang; try { localStorage.setItem("asb-lang", lang); } catch {}
+  render();
+});
+
+function render(){
+  if (state.mode === "employee") return renderEmployee();
+  const h = location.hash.slice(1);
+  if (h === "driver") { try { localStorage.setItem("asb-view", "driver"); } catch {} }
+  else if (VIEWS.includes(h)) { try { localStorage.setItem("asb-view", "admin"); } catch {} }
+  let stored = null; try { stored = localStorage.getItem("asb-view"); } catch {}
+  state.mode = "admin";
+  if (state.mode === "driverTest") return renderEmployee();
+  $("#app").hidden = false; $("#emp").hidden = true;
+  renderShell();
+  const main = $("#main");
+  if (state.offline) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("offline")}</b></div>`; return; }
+  if (!state.ready) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("loading")}</b></div>`; return; }
+  const ro = state.canWrite ? "" : `<div class="note warn">${t("readOnly")}</div>`;
+  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, operations: vOperations, fines: vFines, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
+  main.querySelectorAll("[data-needs-write]").forEach(el => { if (!state.canWrite) el.disabled = true; });
+}
+
+/* ───────── derived ───────── */
+const activeEmps = () => Object.entries(state.emp).filter(([,e]) => e.status === "ACTIVE").sort((a,b)=>a[1].fullName.localeCompare(b[1].fullName));
+function ranked(doc){
+  const rows = Object.entries(doc?.rows ?? {}).filter(([id]) => state.emp[id]).map(([id, r]) => ({ id, o: +r.o || 0, f: +r.f || 0 }))
+    .filter(r => r.o > 0).sort((a,b) => b.o - a.o);
+  let rank = 0, prev = -1;
+  rows.forEach((r, i) => { if (r.o !== prev) { rank = i + 1; prev = r.o; } r.rank = rank; });
+  return rows;
+}
+const outstandingOf = (coll, empId) => Object.values(coll).filter(x => !x.waived && (!empId || x.employeeId === empId)).reduce((s,x)=>s + (+x.remaining||0), 0);
+
+/* ───────── Dashboard ───────── */
+function vDashboard(){
+  const emps = Object.values(state.emp);
+  const active = emps.filter(e=>e.status==="ACTIVE").length, pend = emps.filter(e=>e.status==="PENDING").length;
+  const rows = ranked(state.todayDoc);
+  const allRows = Object.values(state.todayDoc?.rows ?? {});
+  const orders = allRows.reduce((s,r)=>s+(+r.o||0),0), fuel = allRows.reduce((s,r)=>s+(+r.f||0),0);
+  const fOut = outstandingOf(state.fines), aOut = outstandingOf(state.adv);
+  const recent = Object.entries(state.fines).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0)).slice(0,6);
+  return `
+  <div class="head"><div><h1>${t("today")} · ${todayKey()}</h1><p>${t("riyadh")}</p></div><div class="tools"><a class="btn gold" href="${DRIVER_WEB}" target="_blank" rel="noopener">${t("drv_web")} ↗</a></div></div>
+  <div class="kpis">
+    <div class="kpi"><span>${t("activeEmp")}</span><b>${active}</b><small>${pend} ${t("pending")}</small></div>
+    <div class="kpi"><span>${t("ordersToday")}</span><b>${fmt0(orders)}</b><small>${allRows.length} ${t("reported")}</small></div>
+    <div class="kpi"><span>${t("fuelToday")}</span><b>${fmt(fuel)}</b><small>${t("sar")}</small></div>
+    <div class="kpi ${fOut>0?"alert":""}"><span>${t("outstanding")}</span><b>${fmt(fOut)}</b><small>${t("sar")}</small></div>
+    <div class="kpi"><span>${t("advancesOut")}</span><b>${fmt(aOut)}</b><small>${t("sar")}</small></div>
+  </div>
+  <div class="grid2">
+    <section class="panel"><h2>${t("leaderboard")}</h2>
+      ${rows.length ? `<div class="scroll"><table><thead><tr><th>${t("rank")}</th><th>${t("name")}</th><th>${t("plate")}</th><th class="r">${t("orders")}</th></tr></thead><tbody>
+      ${rows.slice(0,10).map(r=>`<tr><td><span class="rank ${r.rank<=3?"r"+r.rank:""}">${r.rank}</span></td><td class="name">${esc(empName(r.id))}</td><td>${plateChip(state.emp[r.id]?.plate)}</td><td class="r"><b>${r.o}</b></td></tr>`).join("")}
+      </tbody></table></div>` : `<div class="empty"><b>${t("noOrders")}</b>${t("noOrdersHint")}</div>`}
+    </section>
+    <section class="panel"><h2>${t("recentFines")}<a class="btn ghost sm" href="#fines">${t("nav_fines")}</a></h2>
+      ${recent.length ? `<div class="scroll"><table><tbody>${recent.map(([,f])=>`<tr><td><div class="name">${esc(empName(f.employeeId))}</div><div class="sub">${esc(f.date)} · ${t(f.category)}</div></td><td class="r nowrap ${f.waived?"sub":"neg"}">${fmt(f.amount)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty"><b>${t("noFines")}</b></div>`}
+    </section>
+  </div>`;
+}
+
+/* ───────── Employees ───────── */
+function vEmployees(){
+  const q = state.q.trim().toLowerCase();
+  const list = Object.entries(state.emp).filter(([,e]) =>
+    (!state.qStatus || e.status === state.qStatus) &&
+    (!q || [e.fullName,e.fullNameAr,e.residentId,e.mobile,e.plate].some(v => String(v??"").toLowerCase().includes(q)))
+  ).sort((a,b) => (a[1].status==="PENDING"?-1:0)-(b[1].status==="PENDING"?-1:0) || a[1].fullName.localeCompare(b[1].fullName));
+  return `
+  <div class="head"><div><h1>${t("nav_employees")}</h1><p>${Object.keys(state.emp).length} · ${activeEmps().length} ${t("ACTIVE")}</p></div>
+    <div class="tools"><button class="btn" data-act="emp-new" data-needs-write>+ ${t("addEmp")}</button></div></div>
+  ${(()=>{const req=Object.entries(state.emp).filter(([id,e])=>(state.pinreq[id]?.at||0)>(e.pinResetAt||0));return req.length?`<div class="note warn"><b>${t("pin_req")}:</b> ${req.map(([id,e])=>`<button class="btn ghost sm" data-act="emp-pin" data-id="${id}" data-needs-write style="margin:4px 4px 0 0">${esc(e.fullName)} · ${t("resetPin")}</button>`).join("")}</div>`:""})()}
+  <div class="filters">
+    <input class="input" id="q" placeholder="${t("search")}" value="${esc(state.q)}">
+    <select class="input" id="qStatus"><option value="">${t("allStatus")}</option>${["ACTIVE","PENDING","INACTIVE"].map(s=>`<option value="${s}" ${state.qStatus===s?"selected":""}>${t(s)}</option>`).join("")}</select>
+  </div>
+  <section class="panel">${list.length ? `<div class="scroll"><table>
+    <thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("mobile")}</th><th>${t("plate")}</th><th>${t("card")}</th><th>${t("status")}</th><th>${t("app_col")}</th><th class="r">${t("outstanding")}</th><th></th></tr></thead>
+    <tbody>${list.map(([id,e]) => `<tr>
+      <td><div class="name">${esc(e.fullName)}</div><div class="sub">${e.fullNameAr?esc(e.fullNameAr)+" · ":""}${t(e.payType||"TARGET")}</div></td>
+      <td class="mono">${esc(e.residentId)}</td>
+      <td class="nowrap">${esc(e.mobile)}</td>
+      <td>${plateChip(e.plate)}</td>
+      <td class="nowrap">${e.card?`<span class="mono">•••• ${esc(String(e.card).slice(-4))}</span><div class="sub">${fmt0(e.dailyLimit)}/${fmt0(e.monthlyLimit)} ${t("sar")}</div>`:`<span class="sub">${t("none")}</span>`}</td>
+      <td>${statusPill(e.status)}</td>
+      <td class="nowrap">${(()=>{const d=state.duty[id];return d?`<span class="pill ${d.s==="OFFLINE"?"p-mute":"p-good"}">${t("duty_"+d.s)}</span><div class="sub" style="margin-top:3px">${new Date(d.at).toLocaleString("en-GB",{timeZone:"Asia/Riyadh",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</div>`:`<span class="pill p-mute">${t("not_linked")}</span>`})()}</td>
+      <td class="r nowrap">${(()=>{const o=outstandingOf(state.fines,id)+outstandingOf(state.adv,id);return o?`<span class="neg">${fmt(o)}</span>`:`<span class="sub">0.00</span>`})()}</td>
+      <td><div class="row-actions">
+        ${e.status==="PENDING"?`<button class="btn sm" data-act="emp-status" data-id="${id}" data-v="ACTIVE" data-needs-write>${t("approve")}</button>`:""}
+        <button class="btn ghost sm" data-act="emp-edit" data-id="${id}" data-needs-write>${t("edit")}</button>
+        <button class="btn ghost sm" data-act="emp-pin" data-id="${id}" data-needs-write>${t("resetPin")}</button>
+        ${e.status==="ACTIVE"?`<button class="btn ghost sm" data-act="emp-status" data-id="${id}" data-v="INACTIVE" data-needs-write>${t("deactivate")}</button>`:e.status==="INACTIVE"?`<button class="btn ghost sm" data-act="emp-status" data-id="${id}" data-v="ACTIVE" data-needs-write>${t("activate")}</button>`:""}
+      </div></td></tr>`).join("")}</tbody></table></div>`
+    : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</section>`;
+}
+document.addEventListener("input", e => {
+  if (e.target.id === "q") { state.q = e.target.value; const pos = e.target.selectionStart; render(); const el = $("#q"); el.focus(); el.setSelectionRange(pos,pos); }
+});
+document.addEventListener("change", e => { if (e.target.id === "qStatus") { state.qStatus = e.target.value; render(); } });
+
+function empForm(e = {}){
+  return `
+  <label class="f full">${t("name")} *<input class="input" name="fullName" value="${esc(e.fullName)}" required></label>
+  <label class="f full">${t("nameAr")}<input class="input" name="fullNameAr" dir="rtl" value="${esc(e.fullNameAr)}"></label>
+  <label class="f">${t("iqama")} *<input class="input mono" name="residentId" inputmode="numeric" maxlength="10" pattern="\\d{10}" value="${esc(e.residentId)}" required></label>
+  <label class="f">${t("mobile")} *<input class="input" name="mobile" inputmode="tel" value="${esc(e.mobile)}" required></label>
+  <label class="f">${t("city")}<input class="input" name="city" value="${esc(e.city)}"></label>
+  <label class="f">${t("payType")}<select class="input" name="payType">${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${e.payType===p?"selected":""}>${t(p)}</option>`).join("")}</select></label>
+  <label class="f">${t("plate")}<input class="input mono" name="plate" value="${esc(e.plate)}" placeholder="ABC 1234"></label>
+  <label class="f">${t("model")}<input class="input" name="vehicleModel" value="${esc(e.vehicleModel)}"></label>
+  <label class="f full">${t("card")}<input class="input mono" name="card" inputmode="numeric" value="${esc(e.card)}"></label>
+  <label class="f">${t("dailyLimit")}<input class="input" name="dailyLimit" type="number" min="0" step="1" value="${esc(e.dailyLimit ?? 60)}"></label>
+  <label class="f">${t("monthlyLimit")}<input class="input" name="monthlyLimit" type="number" min="0" step="1" value="${esc(e.monthlyLimit ?? 1500)}"></label>`;
+}
+
+/* ───────── Operations ───────── */
+function vOperations(){
+  const doc = state.opsDoc;
+  const rk = Object.fromEntries(ranked(doc).map(r => [r.id, r.rank]));
+  const emps = activeEmps();
+  return `
+  <div class="head"><div><h1>${t("nav_operations")}</h1><p>${t("opsHint")}</p></div>
+    <div class="tools">
+      <input class="input" type="date" id="opsDate" value="${state.opsDate}" style="width:auto">
+      <button class="btn ghost" data-act="csv" data-needs-write>${t("importCsv")}</button>
+      <button class="btn" data-act="save-day" data-needs-write>${t("saveDay")}</button>
+    </div></div>
+  <section class="panel">${emps.length ? `<div class="scroll"><table>
+    <thead><tr><th>${t("rank")}</th><th>${t("name")}</th><th>${t("plate")}</th><th class="r">${t("orders")}</th><th class="r">${t("fuel")}</th><th>${t("dailyLimit")}</th></tr></thead>
+    <tbody>${emps.map(([id,e]) => {
+      const saved = doc?.rows?.[id] ?? {}; const d = state.opsDraft[id] ?? {};
+      const o = d.o ?? saved.o ?? "", f = d.f ?? saved.f ?? "";
+      const lim = +e.dailyLimit || 0, pct = lim ? Math.min(100, (+f||0)/lim*100) : 0;
+      return `<tr>
+        <td>${rk[id]?`<span class="rank ${rk[id]<=3?"r"+rk[id]:""}">${rk[id]}</span>`:`<span class="sub">${t("none")}</span>`}</td>
+        <td><div class="name">${esc(e.fullName)}</div><div class="sub mono">${esc(e.residentId)}</div></td>
+        <td>${plateChip(e.plate)}</td>
+        <td class="r"><input class="input num" type="number" min="0" step="1" data-ops="o" data-id="${id}" value="${o}" aria-label="${t("orders")}"></td>
+        <td class="r"><input class="input num" type="number" min="0" step="0.01" data-ops="f" data-id="${id}" value="${f}" aria-label="${t("fuel")}"></td>
+        <td style="min-width:110px">${lim?`<div class="bar ${(+f||0)>lim?"over":""}"><span style="width:${pct}%"></span></div><div class="sub">${fmt(f||0)} / ${fmt0(lim)}</div>`:`<span class="sub">${t("none")}</span>`}</td>
+      </tr>`;}).join("")}</tbody></table></div>`
+    : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</section>`;
+}
+document.addEventListener("input", e => {
+  const k = e.target.dataset?.ops; if (!k) return;
+  const id = e.target.dataset.id; (state.opsDraft[id] ??= {})[k] = e.target.value;
+});
+document.addEventListener("change", e => {
+  if (e.target.id === "opsDate" && e.target.value) { state.opsDate = e.target.value; state.opsDraft = {}; subOps(); render(); }
+  if (e.target.id === "payMonth" && e.target.value) { state.payMonth = e.target.value; state.adjDraft = {}; subMonth(); render(); }
+});
+
+/* ───────── Fines & advances ───────── */
+function vFines(){
+  const tab = state.finesTab;
+  const coll = tab === "fines" ? state.fines : state.adv;
+  const list = Object.entries(coll).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0));
+  return `
+  <div class="head"><div><h1>${t("nav_fines")}</h1><p>${t("outstanding")}: <b class="neg">${fmt(outstandingOf(state.fines))}</b> · ${t("advancesOut")}: <b>${fmt(outstandingOf(state.adv))}</b> ${t("sar")}</p></div>
+    <div class="tools">
+      <button class="btn ghost" data-act="adv-new" data-needs-write>+ ${t("newAdvance")}</button>
+      <button class="btn" data-act="fine-new" data-needs-write>+ ${t("issueFine")}</button>
+    </div></div>
+  <div class="filters">
+    <button class="btn ${tab==="fines"?"":"ghost"} sm" data-act="tab" data-v="fines">${t("fines")} (${Object.keys(state.fines).length})</button>
+    <button class="btn ${tab==="adv"?"":"ghost"} sm" data-act="tab" data-v="adv">${t("advances")} (${Object.keys(state.adv).length})</button>
+  </div>
+  <section class="panel">${list.length ? `<div class="scroll"><table>
+    <thead><tr><th>${t("date")}</th><th>${t("employee")}</th>${tab==="fines"?`<th>${t("category")}</th>`:""}<th>${t("reason")}</th><th class="r">${t("amount")}</th><th class="r">${t("perMonth")}</th><th class="r">${t("remaining")}</th><th>${t("history")}</th><th></th></tr></thead>
+    <tbody>${list.map(([id,x]) => `<tr>
+      <td class="nowrap">${esc(x.date)}</td>
+      <td class="name">${esc(empName(x.employeeId))}</td>
+      ${tab==="fines"?`<td><span class="pill p-info">${t(x.category)}</span></td>`:""}
+      <td style="max-width:260px">${esc(x.reason)}</td>
+      <td class="r nowrap">${fmt(x.amount)}</td>
+      <td class="r nowrap">${fmt(x.monthly)}<div class="sub">${esc(x.startMonth)}</div></td>
+      <td class="r nowrap">${x.waived?`<span class="pill p-mute">${t("waived")}</span>`:(+x.remaining||0)<=0?`<span class="pill p-good">${t("paid")}</span>`:`<b class="neg">${fmt(x.remaining)}</b>`}</td>
+      <td class="sub">${(x.history??[]).map(h=>`${esc(h.month)}: −${fmt(h.amount)}`).join("<br>")||t("none")}</td>
+      <td>${tab==="fines"&&!x.waived&&(+x.remaining||0)>0?`<button class="btn ghost sm" data-act="fine-waive" data-id="${id}" data-needs-write>${t("waive")}</button>`:""}</td>
+    </tr>`).join("")}</tbody></table></div>`
+    : `<div class="empty"><b>${tab==="fines"?t("noFines"):t("noAdv")}</b></div>`}</section>`;
+}
+
+function empOptions(sel){ return `<option value="">${t("selectEmp")}</option>` + activeEmps().map(([id,e])=>`<option value="${id}" ${sel===id?"selected":""}>${esc(e.fullName)} — ${esc(e.residentId)}</option>`).join(""); }
+
+/* ───────── Payroll ───────── */
+function computePayroll(){
+  const R = state.rules, m = state.payMonth;
+  const tot = {};
+  for (const d of state.monthDocs) for (const [id, r] of Object.entries(d.rows ?? {})) {
+    const x = (tot[id] ??= { o: 0, f: 0 }); x.o += +r.o || 0; x.f += +r.f || 0;
+  }
+  const savedAdj = payDoc()?.adj ?? {};
+  const schedules = [
+    ...Object.entries(state.fines).map(([id,x]) => ({ id, kind: "fine", ...x })),
+    ...Object.entries(state.adv).map(([id,x]) => ({ id, kind: "adv", ...x })),
+  ].filter(s => !s.waived && (+s.remaining||0) > 0 && (s.startMonth||"") <= m).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+
+  return activeEmps().map(([id, e]) => {
+    const orders = tot[id]?.o ?? 0, fuelSpent = r2(tot[id]?.f ?? 0);
+    const a = { ...(savedAdj[id] ?? {}), ...(state.adjDraft[id] ?? {}) };
+    let base = 0, bonus = 0, shortfall = 0;
+    if ((e.payType || "TARGET") === "TARGET") {
+      base = +R.baseSalary; const diff = orders - R.targetOrders;
+      if (diff > 0) bonus = diff * R.bonusPer; if (diff < 0) shortfall = -diff * R.penaltyPer;
+    } else base = orders * (orders >= R.perThreshold ? R.rateHigh : R.rateLow);
+    const incent = +a.incent || 0, overtime = +a.overtime || 0, other = +a.other || 0;
+    const overspend = (+e.monthlyLimit || 0) > 0 ? Math.max(0, fuelSpent - e.monthlyLimit) : 0;
+    const fuelAdj = r2((+a.fuel || 0) - overspend);
+    const gross = r2(base + bonus + incent + overtime);
+    let avail = r2(gross - shortfall + fuelAdj + other);
+    const planned = []; let fineDed = 0, advDed = 0;
+    for (const s of schedules.filter(s => s.employeeId === id)) {
+      if (avail <= 0) break;
+      const take = r2(Math.min(+s.monthly || 0, +s.remaining || 0, avail)); if (take <= 0) continue;
+      planned.push({ id: s.id, kind: s.kind, amount: take });
+      if (s.kind === "fine") fineDed += take; else advDed += take;
+      avail = r2(avail - take);
+    }
+    const net = Math.max(0, avail);
+    return { id, name: e.fullName, residentId: e.residentId, payType: e.payType || "TARGET", orders, fuelSpent,
+      base: r2(base), bonus: r2(bonus), incent, overtime, shortfall: r2(shortfall), fuelAdj, other,
+      fineDed: r2(fineDed), advDed: r2(advDed), gross, deductions: r2(gross - net), net: r2(net), planned, adj: a };
+  });
+}
+
+function vPayroll(){
+  const published = payDoc()?.status === "PUBLISHED";
+  const slips = published ? (payDoc().slips ?? []) : computePayroll();
+  const sum = k => slips.reduce((s,x)=>s+(+x[k]||0),0);
+  const adjInput = (s,k) => published ? `<td class="r nowrap">${fmt(s[k])}</td>` :
+    `<td class="r"><input class="input num" type="number" step="0.01" data-adj="${k}" data-id="${s.id}" value="${s.adj?.[k] ?? ""}" placeholder="0"></td>`;
+  return `
+  <div class="head"><div><h1>${t("nav_payroll")}</h1><p>${published?t("lockedNote"):t("payHint")}</p></div>
+    <div class="tools">
+      <input class="input" type="month" id="payMonth" value="${state.payMonth}" style="width:auto">
+      <span class="pill ${published?"p-good":"p-warn"}">${published?t("published"):t("draft")}</span>
+      <button class="btn ghost" data-act="pay-export">${t("exportCsv")}</button>
+      ${published?"":`<button class="btn ghost" data-act="adj-save" data-needs-write>${t("saveAdj")}</button><button class="btn gold" data-act="pay-publish" data-needs-write ${slips.length?"":"disabled"}>${t("publish")}</button>`}
+    </div></div>
+  <div class="kpis">
+    <div class="kpi"><span>${t("totalOrders")}</span><b>${fmt0(sum("orders"))}</b></div>
+    <div class="kpi"><span>${t("gross")}</span><b>${fmt(sum("gross"))}</b><small>${t("sar")}</small></div>
+    <div class="kpi"><span>${t("deductions")}</span><b>${fmt(sum("deductions"))}</b><small>${t("sar")}</small></div>
+    <div class="kpi"><span>${t("net")}</span><b>${fmt(sum("net"))}</b><small>${t("sar")}</small></div>
+  </div>
+  <section class="panel">${slips.length ? `<div class="scroll"><table>
+    <thead><tr><th>${t("name")}</th><th class="r">${t("orders")}</th><th class="r">${t("base")}</th><th class="r">${t("bonus")}</th><th class="r">${t("incent")}</th><th class="r">${t("overtime")}</th><th class="r">${t("shortfall")}</th><th class="r">${t("fuelAdj")}</th><th class="r">${t("other")}</th><th class="r">${t("fineDed")}</th><th class="r">${t("advDed")}</th><th class="r">${t("net")}</th></tr></thead>
+    <tbody>${slips.map(s => `<tr>
+      <td><div class="name">${esc(s.name)}</div><div class="sub">${t(s.payType)} · ${t("fuel")}: ${fmt(s.fuelSpent)}</div></td>
+      <td class="r">${fmt0(s.orders)}</td>
+      <td class="r nowrap">${fmt(s.base)}</td>
+      <td class="r nowrap ${s.bonus?"pos":""}">${fmt(s.bonus)}</td>
+      ${adjInput(s,"incent")}${adjInput(s,"overtime")}
+      <td class="r nowrap ${s.shortfall?"neg":""}">${s.shortfall?"−"+fmt(s.shortfall):fmt(0)}</td>
+      ${published?`<td class="r nowrap ${s.fuelAdj<0?"neg":""}">${fmt(s.fuelAdj)}</td>`:`<td class="r"><input class="input num" type="number" step="0.01" data-adj="fuel" data-id="${s.id}" value="${s.adj?.fuel ?? ""}" placeholder="${fmt(s.fuelAdj)}" title="${fmt(s.fuelAdj)}"></td>`}
+      ${adjInput(s,"other")}
+      <td class="r nowrap ${s.fineDed?"neg":""}">${s.fineDed?"−"+fmt(s.fineDed):fmt(0)}</td>
+      <td class="r nowrap ${s.advDed?"neg":""}">${s.advDed?"−"+fmt(s.advDed):fmt(0)}</td>
+      <td class="r nowrap"><b>${fmt(s.net)}</b></td>
+    </tr>`).join("")}</tbody></table></div>`
+    : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</section>`;
+}
+document.addEventListener("input", e => {
+  const k = e.target.dataset?.adj; if (!k) return;
+  (state.adjDraft[e.target.dataset.id] ??= {})[k] = e.target.value;
+});
+
+/* ───────── Rules ───────── */
+function vRules(){
+  const R = state.rules;
+  const field = (k, step="1") => `<label class="f">${t(k)}<input class="input" type="number" min="0" step="${step}" name="${k}" value="${R[k]}"></label>`;
+  return `
+  <div class="head"><div><h1>${t("rulesTitle")}</h1><p>${t("rulesHint")}</p></div></div>
+  <form class="panel" id="rulesForm">
+    <h2>${t("TARGET")}</h2>
+    <div class="rules">${field("targetOrders")}${field("baseSalary","0.01")}${field("bonusPer","0.01")}${field("penaltyPer","0.01")}</div>
+    <h2 style="border-top:1px solid var(--line)">${t("PER_ORDER")}</h2>
+    <div class="rules">${field("perThreshold")}${field("rateHigh","0.01")}${field("rateLow","0.01")}</div>
+    <div class="dlg-f"><button class="btn" data-needs-write>${t("save")}</button></div>
+  </form>`;
+}
+
+/* ───────── dialogs ───────── */
+const dlg = $("#dlg");
+function openDialog({ title, body, submit, danger, onSubmit, footer }){
+  dlg.innerHTML = `<form method="dialog" id="dlgForm" novalidate>
+    <div class="dlg-h"><h3>${title}</h3><button type="button" class="x" data-close aria-label="${t("close")}">×</button></div>
+    <div class="dlg-b">${body}<p class="err full" id="dlgErr" hidden></p></div>
+    <div class="dlg-f">${footer ?? `<button type="button" class="btn ghost" data-close>${t("cancel")}</button><button class="btn ${danger?"danger":""}" id="dlgOk">${submit ?? t("save")}</button>`}</div></form>`;
+  dlg.querySelectorAll("[data-close]").forEach(b => b.onclick = () => dlg.close());
+  $("#dlgForm").onsubmit = async ev => {
+    ev.preventDefault();
+    if (!onSubmit) return dlg.close();
+    const fd = Object.fromEntries(new FormData(ev.target));
+    const err = $("#dlgErr"); err.hidden = true;
+    const ok = $("#dlgOk"); if (ok) ok.disabled = true;
+    try { const msg = await onSubmit(fd, ev.target); if (msg !== false) dlg.close(); }
+    catch (x) { err.textContent = x?.userMsg ?? t("dbErr"); err.hidden = false; console.error(x); }
+    finally { if (ok) ok.disabled = false; }
+  };
+  dlg.showModal();
+}
+const fail = m => { const e = new Error(m); e.userMsg = m; throw e; };
+function showPin(name, pin){
+  openDialog({ title: t("pinTitle"), body: `<div class="full"><div class="name">${esc(name)}</div><div class="pinbox">${pin}</div><p class="sub">${t("pinText")}</p></div>`,
+    footer: `<button type="button" class="btn" data-close>${t("close")}</button>` });
+}
+
+/* ───────── actions ───────── */
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const act = b.dataset.act, id = b.dataset.id;
+  try {
+    if (act === "tab") { state.finesTab = b.dataset.v; render(); }
+
+    if (act === "emp-new" || act === "emp-edit") {
+      const cur = id ? state.emp[id] : {};
+      openDialog({ title: id ? t("edit") + " · " + esc(cur.fullName) : t("addEmp"), body: empForm(cur), onSubmit: async fd => {
+        if (!fd.fullName.trim() || !/^\d{10}$/.test(fd.residentId) || !fd.mobile.trim()) fail(t("required"));
+        const dup = Object.entries(state.emp).find(([k,v]) => v.residentId === fd.residentId && k !== id);
+        if (dup) fail(t("dupIqama"));
+        const data = { ...fd, fullName: fd.fullName.trim(), plate: fd.plate.trim().toUpperCase(), dailyLimit: +fd.dailyLimit || 0, monthlyLimit: +fd.monthlyLimit || 0, updatedAt: Date.now() };
+
+
+        if (id && fd.residentId !== cur.residentId) data.pinCheck = "";
+        if (id) {
+
+          await db.doc("employees/" + id).update(data); toast(data.pinCheck === "" ? t("pin_needed_reset") : t("empSaved"));
+        }
+        else {
+          const pin = randomPin(), salt = uid();
+          const newId = "e" + uid();
+          await db.doc("employees/" + newId).set({ ...data, status: "PENDING", pinSalt: salt, pinHash: await sha(salt + pin), pinCheck: await pinCheckOf(data.residentId, pin), pinVer: 1, createdAt: Date.now() });
+          setTimeout(() => showPin(data.fullName, pin), 50);
+        }
+      }});
+    }
+
+    if (act === "emp-status") { await db.doc("employees/" + id).update({ status: b.dataset.v, updatedAt: Date.now() }); }
+
+    if (act === "emp-pin") {
+      const e2 = state.emp[id];
+      openDialog({ title: t("resetPin"), body: `<p class="full">${esc(e2.fullName)} · <span class="mono">${esc(e2.residentId)}</span></p>`, submit: t("resetPin"), onSubmit: async () => {
+        const pin = randomPin(), salt = uid();
+        await db.doc("employees/" + id).update({ pinSalt: salt, pinHash: await sha(salt + pin), pinCheck: await pinCheckOf(e2.residentId, pin), pinVer: (+e2.pinVer || 0) + 1, pinResetAt: Date.now() });
+        setTimeout(() => showPin(e2.fullName, pin), 50);
+      }});
+    }
+
+    if (act === "save-day") {
+      const doc = state.opsDoc ?? {}; const rows = { ...(doc.rows ?? {}) };
+      for (const [eid, d] of Object.entries(state.opsDraft)) {
+        const o = d.o ?? rows[eid]?.o ?? 0, f = d.f ?? rows[eid]?.f ?? 0;
+        if ((o === "" || +o === 0) && (f === "" || +f === 0)) delete rows[eid];
+        else rows[eid] = { o: Math.max(0, Math.round(+o || 0)), f: r2(Math.max(0, +f || 0)) };
+      }
+      b.disabled = true;
+      await db.doc("daily/" + state.opsDate).set({ date: state.opsDate, month: state.opsDate.slice(0,7), rows, updatedAt: Date.now() });
+      state.opsDraft = {}; toast(t("daySaved")); render();
+    }
+
+    if (act === "csv") {
+      openDialog({ title: t("importCsv"), submit: t("csvImport"),
+        body: `<p class="full sub">${t("csvHelp")}</p>
+          <label class="f full">CSV<input class="input" type="file" accept=".csv,text/csv" id="csvFile"></label>
+          <label class="f full">${t("csvPaste")}<textarea class="input mono" name="csv" rows="6" placeholder="residentId,date,orders,fuel&#10;2000000001,${todayKey()},22,45.5"></textarea></label>`,
+        onSubmit: async fd => {
+          let text = fd.csv || "";
+          const file = $("#csvFile").files?.[0]; if (file) text = await file.text();
+          const byIqama = Object.fromEntries(Object.entries(state.emp).map(([k,v]) => [v.residentId, k]));
+          const lines = text.replace(/^﻿/, "").split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+          if (lines[0] && /resident/i.test(lines[0])) lines.shift();
+          const byDate = {}; let ok = 0, bad = 0;
+          for (const l of lines) {
+            const [rid, date, o, f] = l.split(/[,;\t]/).map(s => s.trim());
+            const eid = byIqama[rid];
+            if (!eid || !/^\d{4}-\d{2}-\d{2}$/.test(date || "") || isNaN(+o)) { bad++; continue; }
+            (byDate[date] ??= {})[eid] = { o: Math.max(0, Math.round(+o)), f: r2(Math.max(0, +f || 0)) }; ok++;
+          }
+          for (const [date, rows] of Object.entries(byDate)) {
+            const ref = db.doc("daily/" + date); const snap = await ref.get();
+            const prev = snap.exists ? snap.data().rows ?? {} : {};
+            await ref.set({ date, month: date.slice(0,7), rows: { ...prev, ...rows }, updatedAt: Date.now() });
+          }
+          toast(`${t("imported")}: ${ok} · ${t("skipped")}: ${bad}`);
+        }});
+    }
+
+    if (act === "fine-new" || act === "adv-new") {
+      const isFine = act === "fine-new";
+      openDialog({ title: isFine ? t("issueFine") : t("newAdvance"), submit: isFine ? t("issueFine") : t("save"),
+        body: `<label class="f full">${t("employee")} *<select class="input" name="employeeId" required>${empOptions()}</select></label>
+          <label class="f">${t("amount")} *<input class="input" name="amount" type="number" min="0.01" step="0.01" required></label>
+          <label class="f">${t("date")} *<input class="input" name="date" type="date" value="${todayKey()}" required></label>
+          ${isFine ? `<label class="f full">${t("category")}<select class="input" name="category">${CATS.map(c=>`<option value="${c}">${t(c)}</option>`).join("")}</select></label>` : ""}
+          <label class="f full">${t("reason")}${isFine?" *":""}<textarea class="input" name="reason" rows="2" ${isFine?"required":""}></textarea></label>
+          <label class="f">${t("instalments")}<input class="input" name="inst" type="number" min="1" max="24" step="1" value="1"></label>
+          <label class="f">${t("startMonth")}<input class="input" name="startMonth" type="month" value="${monthKey()}"></label>`,
+        onSubmit: async fd => {
+          const amount = r2(fd.amount);
+          if (!fd.employeeId || amount <= 0 || !fd.date || (isFine && !fd.reason.trim())) fail(t("required"));
+          const inst = Math.min(24, Math.max(1, Math.round(+fd.inst || 1)));
+          const rec = { employeeId: fd.employeeId, amount, date: fd.date, reason: fd.reason.trim(), monthly: r2(Math.ceil(amount / inst * 100) / 100),
+            remaining: amount, startMonth: fd.startMonth || monthKey(), waived: false, history: [], createdAt: Date.now() };
+          if (isFine) rec.category = fd.category;
+          await db.doc((isFine ? "fines/f" : "advances/a") + uid()).set(rec);
+          toast(isFine ? t("fineSaved") : t("advSaved"));
+        }});
+    }
+
+    if (act === "fine-waive") {
+      openDialog({ title: t("waive"), body: `<p class="full">${t("waiveQ")}</p>`, submit: t("waive"), danger: true, onSubmit: async () => {
+        await db.doc("fines/" + id).update({ waived: true, waivedAt: Date.now() });
+      }});
+    }
+
+    if (act === "adj-save") {
+      const adj = { ...(payDoc()?.adj ?? {}) };
+      for (const [eid, a] of Object.entries(state.adjDraft)) adj[eid] = { ...(adj[eid] ?? {}), ...Object.fromEntries(Object.entries(a).map(([k,v]) => [k, v === "" ? 0 : r2(v)])) };
+      await db.doc("payroll/" + state.payMonth).set({ ...(payDoc() ?? {}), month: state.payMonth, status: "DRAFT", adj, updatedAt: Date.now() });
+      state.adjDraft = {}; toast(t("adjSaved"));
+    }
+
+    if (act === "pay-publish") {
+      const m = state.payMonth;
+      openDialog({ title: t("publish"), body: `<p class="full">${t("publishQ", { m })}</p>`, submit: t("publish"), onSubmit: async () => {
+        const slips = computePayroll();
+        // one write per fine/advance doc
+        const per = {};
+        for (const s of slips) for (const p of s.planned) (per[(p.kind === "fine" ? "fines/" : "advances/") + p.id] ??= 0), per[(p.kind === "fine" ? "fines/" : "advances/") + p.id] += p.amount;
+        for (const [path, amt] of Object.entries(per)) {
+          const [coll, did] = path.split("/"); const cur = (coll === "fines" ? state.fines : state.adv)[did];
+          const remaining = r2(Math.max(0, (+cur.remaining || 0) - amt));
+          await db.doc(path).update({ remaining, history: [...(cur.history ?? []), { month: m, amount: r2(amt), remaining }] });
+        }
+        const adj = { ...(payDoc()?.adj ?? {}) };
+        for (const s of slips) adj[s.id] = s.adj;
+        await db.doc("payroll/" + m).set({ month: m, status: "PUBLISHED", publishedAt: Date.now(), adj, rules: state.rules,
+          slips: slips.map(({ adj, planned, ...rest }) => ({ ...rest, adj, planned })) });
+        state.adjDraft = {}; toast(t("publishedOk"));
+      }});
+    }
+
+    if (act === "pay-export") {
+      const published = payDoc()?.status === "PUBLISHED";
+      const slips = published ? payDoc().slips : computePayroll();
+      const cols = ["name","residentId","payType","orders","fuelSpent","base","bonus","incent","overtime","shortfall","fuelAdj","other","fineDed","advDed","gross","deductions","net"];
+      const csv = "﻿" + cols.join(",") + "\n" + slips.map(s => cols.map(c => `"${String(s[c] ?? "").replace(/"/g,'""')}"`).join(",")).join("\n");
+      if (!downloads) { toast(t("dbErr")); return; }
+      try { await downloads.save({ filename: `ASB-payroll-${state.payMonth}${published?"":"-draft"}.csv`, data: csv }); } catch (x) { if (x?.code !== "declined") console.warn(x); }
+    }
+  } catch (x) { console.error(x); toast(t("dbErr")); }
+});
+
+document.addEventListener("submit", async e => {
+  if (e.target.id !== "rulesForm") return;
+  e.preventDefault();
+  const fd = Object.fromEntries(new FormData(e.target));
+  const rules = Object.fromEntries(Object.keys(DEFAULT_RULES).map(k => [k, Math.max(0, +fd[k] || 0)]));
+  try { await db.doc("config/rules").set(rules); toast(t("rulesSaved")); } catch (x) { console.error(x); toast(t("dbErr")); }
+});
+
+/* ───────── Employee app: strings ───────── */
+Object.assign(I18N.en, {
+ nav_app:"Employee app", app_title:"My ASB",
+ signin_needed:"Sign in to open your app", signin_needed_hint:"Open this link while signed in to claude.ai with the email your company invited.",
+ login_title:"Employee sign in", login_sub:"Use your Resident ID (Iqama) and 4-digit PIN", login_btn:"Sign in", remember:"Remember me on this phone", forgot:"Forgot PIN?",
+ forgot_sent:"Request sent. Your supervisor will give you a new PIN.", forgot_call:"Contact your supervisor for a new PIN.",
+ verifying:"Checking your details…", verifying_hint:"This is confirmed automatically when the office admin panel is open. Keep this page open or come back later.",
+ wrong_pin:"Resident ID or PIN is wrong.", locked_out:"Too many wrong attempts. Ask your supervisor to reset your PIN.",
+ code_title:"Your app code", code_hint:"If sign-in is not confirmed, give this code to your supervisor.", copy:"Copy", copied:"Copied",
+ unlock:"Unlock", deactivated:"Your account is deactivated", deactivated_hint:"Contact your supervisor.",
+ tab_home:"Home", tab_fines:"Fines", tab_salary:"Salary", tab_profile:"Profile",
+ duty_ACTIVE:"Active", duty_ON_DUTY:"On duty", duty_OFFLINE:"Offline",
+ rank_today:"Today's rank", no_rank:"No orders yet today", orders_today:"Orders today", orders_month:"This month",
+ fuel_left:"Remaining today", fuel_month:"This month", fuel_nocard:"No petrol card assigned",
+ fines_out:"Outstanding", fines_deducted:"Already deducted", monthly_deductions:"Monthly deductions", no_slips:"No payslips published yet",
+ download_pdf:"Download PDF", earnings:"Earnings", signout:"Sign out", change_pin_hint:"To change your PIN, ask your supervisor.",
+ last_sync:"Updated", app_cantwrite:"Your access can't sign in by itself. Give your app code below to your supervisor.",
+ pdf_na:"PDF download isn't available here.", back:"Back",
+ app_col:"App", linked:"Linked", not_linked:"Not signed in yet", pin_req:"PIN reset requested", appUser:"App account code", appUser_hint:"Filled automatically when the driver signs in. Paste a code only if the driver gives you one.",
+ preview_title:"Employee app", preview_sub:"What each driver sees on their phone. Pick a driver to preview.", pick_emp:"Preview as",
+ steps_title:"Give drivers the app",
+ step1:"Add the driver in Employees and approve them. Write down the 4-digit PIN that is shown once.",
+ step2:"Send the driver the ASB-Driver.apk file on WhatsApp (Android). iPhone users open the driver web link and tap Add to Home Screen.",
+ step3:"The driver opens the app and signs in with Iqama + PIN. No other account or email is needed.",
+ step4:"Everything you change here shows in the driver's app within a few seconds.",
+ linked_n:"{n} drivers used the app", sync_note:"Driver apps refresh by themselves every few seconds while open.",
+ pin_needed_reset:"Iqama changed: reset this driver's PIN so the app sign-in works.", wait:"Please wait {n}s",
+});
+Object.assign(I18N.bn, {
+ nav_app:"কর্মচারী অ্যাপ", app_title:"আমার ASB",
+ signin_needed:"অ্যাপ খুলতে সাইন ইন করুন", signin_needed_hint:"কোম্পানি যে ইমেইলে আমন্ত্রণ পাঠিয়েছে সেই ইমেইলে claude.ai-তে সাইন ইন করে এই লিংক খুলুন।",
+ login_title:"কর্মচারী লগইন", login_sub:"রেসিডেন্ট আইডি (ইকামা) ও ৪ সংখ্যার পিন দিন", login_btn:"লগইন", remember:"এই ফোনে মনে রাখুন", forgot:"পিন ভুলে গেছেন?",
+ forgot_sent:"অনুরোধ পাঠানো হয়েছে। সুপারভাইজার নতুন পিন দেবেন।", forgot_call:"নতুন পিনের জন্য সুপারভাইজারের সাথে যোগাযোগ করুন।",
+ verifying:"আপনার তথ্য যাচাই হচ্ছে…", verifying_hint:"অফিসের এডমিন প্যানেল খোলা থাকলে এটি নিজে থেকেই নিশ্চিত হয়। পাতাটি খোলা রাখুন বা পরে আবার আসুন।",
+ wrong_pin:"রেসিডেন্ট আইডি বা পিন ভুল।", locked_out:"অনেকবার ভুল হয়েছে। সুপারভাইজারকে পিন রিসেট করতে বলুন।",
+ code_title:"আপনার অ্যাপ কোড", code_hint:"লগইন নিশ্চিত না হলে এই কোডটি সুপারভাইজারকে দিন।", copy:"কপি", copied:"কপি হয়েছে",
+ unlock:"খুলুন", deactivated:"আপনার অ্যাকাউন্ট নিষ্ক্রিয়", deactivated_hint:"সুপারভাইজারের সাথে যোগাযোগ করুন।",
+ tab_home:"হোম", tab_fines:"জরিমানা", tab_salary:"বেতন", tab_profile:"প্রোফাইল",
+ duty_ACTIVE:"সক্রিয়", duty_ON_DUTY:"ডিউটিতে", duty_OFFLINE:"অফলাইন",
+ rank_today:"আজকের র‍্যাংক", no_rank:"আজ এখনো অর্ডার নেই", orders_today:"আজকের অর্ডার", orders_month:"এই মাসে",
+ fuel_left:"আজ বাকি", fuel_month:"এই মাসে", fuel_nocard:"পেট্রোল কার্ড দেওয়া হয়নি",
+ fines_out:"বকেয়া", fines_deducted:"কাটা হয়েছে", monthly_deductions:"মাসিক কর্তন", no_slips:"এখনো কোনো পে-স্লিপ প্রকাশ হয়নি",
+ download_pdf:"PDF ডাউনলোড", earnings:"আয়", signout:"লগআউট", change_pin_hint:"পিন বদলাতে সুপারভাইজারকে বলুন।",
+ last_sync:"হালনাগাদ", app_cantwrite:"আপনার অনুমতিতে নিজে লগইন করা যাচ্ছে না। নিচের অ্যাপ কোডটি সুপারভাইজারকে দিন।",
+ pdf_na:"এখানে PDF ডাউনলোড করা যাচ্ছে না।", back:"পেছনে",
+ app_col:"অ্যাপ", linked:"যুক্ত", not_linked:"এখনো লগইন করেনি", pin_req:"পিন রিসেটের অনুরোধ", appUser:"অ্যাপ অ্যাকাউন্ট কোড", appUser_hint:"ড্রাইভার লগইন করলে নিজে থেকেই পূরণ হয়। ড্রাইভার কোড দিলে শুধু তখন পেস্ট করুন।",
+ preview_title:"কর্মচারী অ্যাপ", preview_sub:"প্রত্যেক ড্রাইভার ফোনে যা দেখবে। দেখতে একজন ড্রাইভার বাছুন।", pick_emp:"যার হিসেবে দেখবেন",
+ steps_title:"ড্রাইভারদের অ্যাপ দেওয়ার নিয়ম",
+ step1:"কর্মচারী পাতায় ড্রাইভার যোগ করে অনুমোদন দিন। একবার দেখানো ৪ সংখ্যার পিনটি লিখে রাখুন।",
+ step2:"ড্রাইভারকে WhatsApp-এ ASB-Driver.apk ফাইল পাঠান (Android)। iPhone হলে ড্রাইভার ওয়েব লিংক খুলে Add to Home Screen করবে।",
+ step3:"ড্রাইভার অ্যাপ খুলে ইকামা + পিন দিয়ে লগইন করবে। আর কোনো অ্যাকাউন্ট বা ইমেইল লাগবে না।",
+ step4:"এখানে যা বদলাবেন তা কয়েক সেকেন্ডের মধ্যে ড্রাইভারের অ্যাপে দেখাবে।",
+ linked_n:"{n} জন ড্রাইভার অ্যাপ ব্যবহার করেছে", sync_note:"অ্যাপ খোলা থাকলে কয়েক সেকেন্ড পরপর নিজে থেকেই হালনাগাদ হয়।",
+ pin_needed_reset:"ইকামা বদলেছে: অ্যাপ লগইনের জন্য এই ড্রাইভারের পিন রিসেট করুন।", wait:"{n} সেকেন্ড অপেক্ষা করুন",
+});
+Object.assign(I18N.ar, {
+ nav_app:"تطبيق الموظف", app_title:"ASB الخاص بي",
+ signin_needed:"سجّل الدخول لفتح تطبيقك", signin_needed_hint:"افتح هذا الرابط وأنت مسجل في claude.ai بالبريد الذي دعتك به الشركة.",
+ login_title:"دخول الموظف", login_sub:"أدخل رقم الإقامة والرقم السري المكون من 4 أرقام", login_btn:"دخول", remember:"تذكرني على هذا الجوال", forgot:"نسيت الرقم السري؟",
+ forgot_sent:"تم إرسال الطلب. سيعطيك المشرف رقماً سرياً جديداً.", forgot_call:"تواصل مع المشرف للحصول على رقم سري جديد.",
+ verifying:"جارٍ التحقق من بياناتك…", verifying_hint:"يتم التأكيد تلقائياً عندما تكون لوحة الإدارة مفتوحة. أبقِ الصفحة مفتوحة أو عد لاحقاً.",
+ wrong_pin:"رقم الإقامة أو الرقم السري غير صحيح.", locked_out:"محاولات خاطئة كثيرة. اطلب من المشرف إعادة الرقم السري.",
+ code_title:"رمز تطبيقك", code_hint:"إذا لم يتأكد الدخول، أعطِ هذا الرمز للمشرف.", copy:"نسخ", copied:"تم النسخ",
+ unlock:"فتح", deactivated:"حسابك موقوف", deactivated_hint:"تواصل مع المشرف.",
+ tab_home:"الرئيسية", tab_fines:"المخالفات", tab_salary:"الراتب", tab_profile:"ملفي",
+ duty_ACTIVE:"نشط", duty_ON_DUTY:"في العمل", duty_OFFLINE:"غير متصل",
+ rank_today:"ترتيبك اليوم", no_rank:"لا طلبات اليوم بعد", orders_today:"طلبات اليوم", orders_month:"هذا الشهر",
+ fuel_left:"المتبقي اليوم", fuel_month:"هذا الشهر", fuel_nocard:"لا توجد بطاقة وقود",
+ fines_out:"مستحق", fines_deducted:"تم خصمه", monthly_deductions:"الخصومات الشهرية", no_slips:"لم تُنشر قسائم رواتب بعد",
+ download_pdf:"تحميل PDF", earnings:"المستحقات", signout:"تسجيل الخروج", change_pin_hint:"لتغيير الرقم السري، اطلب من المشرف.",
+ last_sync:"آخر تحديث", app_cantwrite:"صلاحيتك لا تسمح بالدخول الذاتي. أعطِ رمز التطبيق أدناه للمشرف.",
+ pdf_na:"تحميل PDF غير متاح هنا.", back:"رجوع",
+ app_col:"التطبيق", linked:"مرتبط", not_linked:"لم يسجل دخوله بعد", pin_req:"طلب إعادة الرقم السري", appUser:"رمز حساب التطبيق", appUser_hint:"يُملأ تلقائياً عند دخول السائق. الصق رمزاً فقط إذا أعطاك السائق واحداً.",
+ preview_title:"تطبيق الموظف", preview_sub:"ما يراه كل سائق على جواله. اختر سائقاً للمعاينة.", pick_emp:"معاينة باسم",
+ steps_title:"تسليم التطبيق للسائقين",
+ step1:"أضف السائق من صفحة الموظفين ووافق عليه. دوّن الرقم السري المكون من 4 أرقام الذي يظهر مرة واحدة.",
+ step2:"أرسل ملف ASB-Driver.apk للسائق عبر واتساب (أندرويد). مستخدمو آيفون يفتحون رابط تطبيق السائق ويضيفونه للشاشة الرئيسية.",
+ step3:"يفتح السائق التطبيق ويدخل برقم الإقامة والرقم السري. لا حاجة لأي حساب أو بريد.",
+ step4:"كل ما تغيّره هنا يظهر في تطبيق السائق خلال ثوانٍ.",
+ linked_n:"{n} سائق استخدم التطبيق", sync_note:"يتحدث التطبيق تلقائياً كل بضع ثوانٍ أثناء فتحه.",
+ pin_needed_reset:"تغير رقم الإقامة: أعد الرقم السري لهذا السائق ليعمل الدخول للتطبيق.", wait:"انتظر {n} ث",
+});
+
+/* ───────── Employee app: data mirror (written from an admin's browser) ───────── */
+const cyrb = s => { let h1 = 0xdeadbeef, h2 = 0x41c6ce57; for (let i = 0; i < s.length; i++) { const c = s.charCodeAt(i); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909); h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36); };
+const pinCheckOf = (rid, pin) => sha("asb|" + rid + "|" + pin);
+const SEG_RE = /^[A-Za-z0-9_\-.~:@+]{3,200}$/;
+const pickX = x => ({ date: x.date, category: x.category || "", reason: x.reason || "", amount: +x.amount || 0, remaining: x.waived ? 0 : (+x.remaining || 0),
+  monthly: +x.monthly || 0, waived: !!x.waived, history: (x.history || []).map(h => ({ month: h.month, amount: h.amount, remaining: h.remaining })) });
+
+function buildMirror(id){
+  const e = state.emp[id];
+  const rk = ranked(state.todayDoc), mine = rk.find(r => r.id === id), row = state.todayDoc?.rows?.[id] ?? {};
+  let mo = 0, mf = 0; for (const d of state.curMonthDocs) { const r = d.rows?.[id]; if (r) { mo += +r.o || 0; mf += +r.f || 0; } }
+  const byDate = (a, b) => String(b.date).localeCompare(String(a.date));
+  return {
+    v: 1, employeeId: id, pinCheck: e.pinCheck || "", pinVer: e.pinVer || 0,
+    profile: { fullName: e.fullName, fullNameAr: e.fullNameAr || "", residentId: e.residentId, mobile: e.mobile, city: e.city || "", plate: e.plate || "",
+      vehicleModel: e.vehicleModel || "", card: e.card ? String(e.card).slice(-4) : "", dailyLimit: +e.dailyLimit || 0, monthlyLimit: +e.monthlyLimit || 0, payType: e.payType || "TARGET" },
+    today: { date: todayKey(), rank: mine?.rank ?? null, of: rk.length, o: +row.o || 0, f: +row.f || 0 },
+    month: { key: monthKey(), o: mo, f: r2(mf) },
+    board: rk.slice(0, 10).map(r => ({ r: r.rank, n: (state.emp[r.id]?.fullName || "").split(" ")[0], o: r.o, me: r.id === id })),
+    fines: Object.values(state.fines).filter(x => x.employeeId === id).sort(byDate).map(pickX),
+    advances: Object.values(state.adv).filter(x => x.employeeId === id).sort(byDate).map(pickX),
+    payslips: Object.values(state.payroll).filter(p => p.status === "PUBLISHED").sort((a, b) => b.month.localeCompare(a.month)).slice(0, 12)
+      .map(p => { const s = (p.slips || []).find(x => x.id === id); if (!s) return null; const { adj, planned, ...rest } = s; return { ...rest, month: p.month }; }).filter(Boolean),
+  };
+}
+
+let syncTimer = null, syncing = false, syncAgain = false;
+const processedClaims = new Set();
+function scheduleSync(){ return;
+  if (state.mode === "employee" || !state.ready || !state.canWrite || !db) return;
+  clearTimeout(syncTimer); syncTimer = setTimeout(runSync, 1200);
+}
+async function runSync(){
+  if (syncing) { syncAgain = true; return; }
+  syncing = true;
+  try { await processClaims(); await syncMirrors(); } catch (x) { console.warn("sync", x); }
+  finally { syncing = false; if (syncAgain) { syncAgain = false; scheduleSync(); } }
+}
+async function processClaims(){
+  for (const [u, s] of Object.entries(state.staff)) {
+    const c = s.claim;
+    if (!c || c.result || !c.at || processedClaims.has(u + c.at)) continue;
+    processedClaims.add(u + c.at);
+    const fails = +state.claimlog[u]?.fails || 0;
+    if (fails >= 5) { await db.doc("staff/" + u).update({ claim: { residentId: c.residentId, at: c.at, result: "locked" } }); continue; }
+    const hit = Object.entries(state.emp).find(([, e]) => e.residentId === c.residentId && e.status === "ACTIVE");
+    if (hit && hit[1].pinCheck && hit[1].pinCheck === c.hash) {
+      for (const [oid, oe] of Object.entries(state.emp)) if (oe.appUser === u && oid !== hit[0]) await db.doc("employees/" + oid).update({ appUser: "" });
+      const prev = hit[1].appUser;
+      await db.doc("employees/" + hit[0]).update({ appUser: u });
+      if (prev && prev !== u) await revokeStaff(prev);
+      await db.doc("staff/" + u).update({ claim: { residentId: c.residentId, at: c.at, result: "ok" } });
+      await db.doc("claimlog/" + u).set({ fails: 0, at: Date.now() });
+    } else {
+      await db.doc("claimlog/" + u).set({ fails: fails + 1, at: Date.now() });
+      await db.doc("staff/" + u).update({ claim: { residentId: c.residentId, at: c.at, result: fails + 1 >= 5 ? "locked" : "wrong" } });
+    }
+  }
+}
+async function syncMirrors(){
+  for (const [id, e] of Object.entries(state.emp)) {
+    const u = e.appUser; if (!u || !SEG_RE.test(u)) continue;
+    const m = e.status === "ACTIVE" ? buildMirror(id) : { revoked: true, employeeId: id };
+    const str = JSON.stringify(m), sig = cyrb(str), cur = state.staff[u];
+    if (cur?.sig === sig) continue;
+    const payload = { m: str, sig, syncedAt: Date.now() };
+    if (cur) await db.doc("staff/" + u).update(payload); else await db.doc("staff/" + u).set(payload);
+  }
+}
+async function revokeStaff(u){
+  if (!u || !SEG_RE.test(u)) return;
+  const str = JSON.stringify({ revoked: true }), p = { m: str, sig: cyrb(str), syncedAt: Date.now() };
+  if (state.staff[u]) await db.doc("staff/" + u).update(p); else await db.doc("staff/" + u).set(p);
+}
+
+/* ───────── Employee app: screens (shared by the real app and the admin preview) ───────── */
+const ICONS = {
+  home: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9.5h13V10"/><path d="M10 19.5v-5h4v5"/>',
+  fines: '<path d="M12 3 2.5 19.5h19L12 3Z"/><path d="M12 9.5v4.5"/><circle cx="12" cy="16.8" r=".6"/>',
+  salary: '<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18"/><path d="M15.5 14.5h2.5"/>',
+  profile: '<circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.3-3.7 4.2-5.5 7.5-5.5s6.2 1.8 7.5 5.5"/>',
+};
+const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONS[k]}</svg>`;
+const langMini = () => [["en","EN"],["bn","বাং"],["ar","ع"]].map(([k,l]) => `<button data-lang="${k}" aria-pressed="${k===lang}">${l}</button>`).join("");
+const dutyColor = s => s === "ACTIVE" ? "var(--good)" : s === "ON_DUTY" ? "var(--info)" : "var(--muted)";
+
+function appScreens(m, opt = {}){
+  const p = m.profile, tab = state.appTab;
+  const first = (p.fullName || "").split(" ")[0];
+  const top = `<header class="p-top"><div class="p-av">${esc((p.fullName || "?")[0].toUpperCase())}</div>
+    <div style="min-width:0"><b>${esc(first)}</b><small>${esc(m.today.date)} · ${plateChipLight(p.plate)}</small></div>
+    <div class="p-lang">${langMini()}</div></header>`;
+  let body = "";
+  if (tab === "home") body = appHome(m, opt);
+  else if (tab === "fines") body = appFines(m);
+  else if (tab === "salary") body = state.appSlip ? appSlip(m, state.appSlip, opt) : appSalary(m);
+  else body = appProfile(m, opt);
+  const nav = `<nav class="p-nav">${["home","fines","salary","profile"].map(k => {
+    const badge = k === "fines" && m.fines.some(f => f.remaining > 0) ? `<span class="p-badge"></span>` : "";
+    return `<button data-tab="${k}" ${tab===k?'aria-current="page"':""}>${icon(k)}${badge}<span>${t("tab_"+k)}</span></button>`; }).join("")}</nav>`;
+  return top + `<div class="p-body">${body}</div>` + nav;
+}
+const plateChipLight = pl => pl ? `<span class="mono">${esc(pl)}</span>` : "";
+
+function appHome(m, opt){
+  const p = m.profile, d = m.today, duty = opt.duty || "OFFLINE";
+  const out = m.fines.reduce((s, f) => s + f.remaining, 0);
+  const lim = p.dailyLimit, pct = lim ? Math.min(100, d.f / lim * 100) : 0;
+  const mpct = p.monthlyLimit ? Math.min(100, m.month.f / p.monthlyLimit * 100) : 0;
+  return `
+  ${opt.canDuty ? `<div class="p-seg" role="group">${["ACTIVE","ON_DUTY","OFFLINE"].map(s => `<button data-duty="${s}" aria-pressed="${duty===s}"><span class="dot" style="color:${dutyColor(s)}"></span>${t("duty_"+s)}</button>`).join("")}</div>` : ""}
+  <div class="p-card p-rank">
+    <div class="big">${d.rank ? "#" + d.rank : "—"}</div>
+    <div><div class="p-lbl">${t("rank_today")}</div><div>${d.rank ? t("ofDrivers", { n: d.of }) : t("no_rank")}</div></div>
+  </div>
+  <div class="p-two">
+    <div class="p-card"><div class="p-lbl">${t("orders_today")}</div><div class="p-num">${fmt0(d.o)}</div></div>
+    <div class="p-card"><div class="p-lbl">${t("orders_month")}</div><div class="p-num">${fmt0(m.month.o)}</div></div>
+  </div>
+  <div class="p-card"><h3>${t("fuelToday")}</h3>
+    ${lim ? `<div class="p-row" style="border:0;padding:0 0 8px"><span class="p-num" style="font-size:22px">${fmt(d.f)}</span><span class="sub">/ ${fmt0(lim)} ${t("sar")}</span></div>
+      <div class="bar ${d.f > lim ? "over" : ""}"><span style="width:${pct}%"></span></div>
+      <div class="sub" style="margin-top:6px">${t("fuel_left")}: <b>${fmt(Math.max(0, lim - d.f))}</b> ${t("sar")}</div>
+      <div class="sub" style="margin-top:10px">${t("fuel_month")}: ${fmt(m.month.f)} / ${fmt0(p.monthlyLimit)} ${t("sar")}</div>
+      <div class="bar ${m.month.f > p.monthlyLimit ? "over" : ""}" style="margin-top:4px"><span style="width:${mpct}%"></span></div>`
+    : `<div class="sub">${t("fuel_nocard")}</div>`}
+  </div>
+  ${out > 0 ? `<button class="p-alert" data-tab="fines"><span>${t("outstanding")}</span><span class="neg">${fmt(out)} ${t("sar")}</span></button>` : ""}
+  <div class="p-card"><h3>${t("leaderboard")}</h3>
+    ${m.board.length ? `<div class="p-list">${m.board.map(r => `<div class="p-row ${r.me ? "me" : ""}"><span style="display:flex;gap:10px;align-items:center"><span class="rank ${r.r<=3?"r"+r.r:""}">${r.r}</span>${esc(r.n)}${r.me ? ` <span class="pill p-info">${t("you")}</span>` : ""}</span><b>${r.o}</b></div>`).join("")}</div>`
+    : `<div class="sub">${t("noOrders")}</div>`}
+  </div>`;
+}
+
+function appFines(m){
+  const fined = m.fines.filter(f => !f.waived).reduce((s, f) => s + f.amount, 0);
+  const out = m.fines.reduce((s, f) => s + f.remaining, 0);
+  const hist = [...m.fines.flatMap(f => f.history.map(h => ({ ...h, k: t("fines") }))), ...m.advances.flatMap(a => a.history.map(h => ({ ...h, k: t("advances") })))]
+    .sort((a, b) => b.month.localeCompare(a.month));
+  const advOut = m.advances.reduce((s, a) => s + a.remaining, 0);
+  return `
+  <div class="p-two">
+    <div class="p-card"><div class="p-lbl">${t("fines_out")}</div><div class="p-num neg">${fmt(out)}</div><div class="sub">${t("sar")}</div></div>
+    <div class="p-card"><div class="p-lbl">${t("fines_deducted")}</div><div class="p-num pos">${fmt(fined - out)}</div><div class="sub">${t("sar")}</div></div>
+  </div>
+  <div class="p-card"><h3>${t("fines")}</h3>
+    ${m.fines.length ? `<div class="p-list">${m.fines.map(f => `<div class="p-row" style="align-items:flex-start">
+      <div style="min-width:0"><div class="name">${t(f.category || "OTHER")}</div><div class="sub">${esc(f.date)} · ${esc(f.reason)}</div></div>
+      <div style="text-align:end;white-space:nowrap"><b style="${f.waived ? "text-decoration:line-through" : ""}">${fmt(f.amount)}</b>
+        <div class="sub">${f.waived ? t("waived") : f.remaining <= 0 ? t("paid") : t("remaining") + " " + fmt(f.remaining)}</div></div></div>`).join("")}</div>`
+    : `<div class="sub">${t("noFines")}</div>`}
+  </div>
+  ${m.advances.length ? `<div class="p-card"><h3>${t("advances")}</h3><div class="p-list">${m.advances.map(a => `<div class="p-row"><div><div class="name">${esc(a.date)}</div><div class="sub">${esc(a.reason)}</div></div><div style="text-align:end"><b>${fmt(a.amount)}</b><div class="sub">${a.remaining <= 0 ? t("paid") : t("remaining") + " " + fmt(a.remaining)}</div></div></div>`).join("")}</div>
+    <div class="sub" style="margin-top:6px">${t("advancesOut")}: <b>${fmt(advOut)}</b> ${t("sar")}</div></div>` : ""}
+  <div class="p-card"><h3>${t("monthly_deductions")}</h3>
+    ${hist.length ? `<div class="p-list">${hist.map(h => `<div class="p-row"><span>${esc(h.month)} · <span class="sub">${esc(h.k)}</span></span><span style="text-align:end"><b class="neg">−${fmt(h.amount)}</b><div class="sub">${t("remaining")} ${fmt(h.remaining)}</div></span></div>`).join("")}</div>`
+    : `<div class="sub">${t("none")}</div>`}
+  </div>`;
+}
+
+function appSalary(m){
+  return `<div class="p-card"><h3>${t("tab_salary")}</h3>
+    ${m.payslips.length ? `<div class="p-list">${m.payslips.map(s => `<button class="p-row slip-row" data-slip="${esc(s.month)}">
+      <span><span class="name">${esc(s.month)}</span><div class="sub">${t("gross")} ${fmt(s.gross)} · ${t("deductions")} ${fmt(s.deductions)}</div></span>
+      <b>${fmt(s.net)}</b></button>`).join("")}</div>`
+    : `<div class="empty" style="padding:20px 0">${t("no_slips")}</div>`}</div>`;
+}
+
+function appSlip(m, month, opt){
+  const s = m.payslips.find(x => x.month === month);
+  if (!s) return appSalary(m);
+  const line = (k, v, neg) => `<div class="p-row"><span>${k}</span><span class="${neg && v ? "neg" : ""}">${neg && v ? "−" : ""}${fmt(v)}</span></div>`;
+  return `
+  <button class="btn ghost sm" data-back style="align-self:flex-start">← ${t("back")}</button>
+  <div class="p-net"><div class="p-lbl" style="color:inherit;opacity:.8">${t("net")} · ${esc(s.month)}</div><div class="p-num">${fmt(s.net)} ${t("sar")}</div><div style="opacity:.8">${t("orders_n", { n: fmt0(s.orders) })}</div></div>
+  <div class="p-card"><h3>${t("earnings")}</h3>${line(t("base"), s.base)}${line(t("bonus"), s.bonus)}${line(t("incent"), s.incent)}${line(t("overtime"), s.overtime)}
+    <div class="p-row"><b>${t("gross")}</b><b>${fmt(s.gross)}</b></div></div>
+  <div class="p-card"><h3>${t("deductions")}</h3>${line(t("shortfall"), s.shortfall, true)}${line(t("fineDed"), s.fineDed, true)}${line(t("advDed"), s.advDed, true)}
+    <div class="p-row"><span>${t("fuelAdj")}</span><span class="${s.fuelAdj < 0 ? "neg" : ""}">${fmt(s.fuelAdj)}</span></div>
+    <div class="p-row"><span>${t("other")}</span><span class="${s.other < 0 ? "neg" : ""}">${fmt(s.other)}</span></div>
+    <div class="p-row"><b>${t("deductions")}</b><b class="neg">−${fmt(s.deductions)}</b></div></div>
+  ${opt.preview ? "" : `<button class="btn p-btn" data-pdf="${esc(s.month)}">${t("download_pdf")}</button>`}`;
+}
+
+function appProfile(m, opt){
+  const p = m.profile;
+  const row = (k, v) => `<div class="p-row"><span class="sub">${k}</span><span style="text-align:end">${v}</span></div>`;
+  return `
+  <div class="p-card" style="text-align:center"><div class="p-av" style="margin:0 auto 8px;width:64px;height:64px;font-size:26px">${esc((p.fullName || "?")[0].toUpperCase())}</div>
+    <div class="name" style="font-size:18px">${esc(p.fullName)}</div>${p.fullNameAr ? `<div dir="rtl">${esc(p.fullNameAr)}</div>` : ""}</div>
+  <div class="p-card"><div class="p-list">
+    ${row(t("iqama"), `<span class="mono">${esc(p.residentId)}</span>`)}${row(t("mobile"), esc(p.mobile))}${p.city ? row(t("city"), esc(p.city)) : ""}${row(t("payType"), t(p.payType))}
+  </div></div>
+  <div class="p-card"><div class="p-list">
+    ${row(t("plate"), plateChip(p.plate))}${p.vehicleModel ? row(t("model"), esc(p.vehicleModel)) : ""}
+    ${row(t("card"), p.card ? `<span class="mono">•••• ${esc(p.card)}</span>` : t("none"))}
+    ${p.card ? row(t("dailyLimit"), fmt0(p.dailyLimit) + " " + t("sar")) + row(t("monthlyLimit"), fmt0(p.monthlyLimit) + " " + t("sar")) : ""}
+  </div></div>
+  <p class="sub" style="text-align:center;margin:0">${t("change_pin_hint")}</p>
+  ${opt.preview ? "" : `<button class="btn ghost p-btn" data-signout>${t("signout")}</button>`}`;
+}
+
+/* ───────── Admin: app preview page ───────── */
+function vAppPreview(){
+  const emps = activeEmps();
+  if (!state.previewId || !state.emp[state.previewId]) state.previewId = emps[0]?.[0] || "";
+  const m = state.previewId ? buildMirror(state.previewId) : null;
+  const linkedN = Object.keys(state.duty).filter(id => state.emp[id]?.status === "ACTIVE").length;
+  return `
+  <div class="head"><div><h1>${t("preview_title")}</h1><p>${t("preview_sub")}</p></div>
+    <div class="tools"><label class="f" style="min-width:220px">${t("pick_emp")}<select class="input" id="previewId">${emps.map(([id, e]) => `<option value="${id}" ${id===state.previewId?"selected":""}>${esc(e.fullName)}</option>`).join("")}</select></label></div></div>
+  <div class="preview-wrap">
+    <div class="phone-frame"><div class="phone" id="previewPhone">${m ? appScreens(m, { preview: true, canDuty: true, duty: state.duty[state.previewId]?.s }) : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</div></div>
+    <section class="panel"><h2>${t("steps_title")}<span class="pill p-good">${t("linked_n", { n: linkedN })}</span></h2>
+      <div style="padding:16px"><ol class="steps"><li>${t("step1")}</li><li>${t("step2")}</li><li>${t("step3")}</li><li>${t("step4")}</li></ol>
+      <p class="sub" style="margin:14px 0 0">${t("sync_note")}</p>
+      <a class="btn" href="${DRIVER_WEB}" target="_blank" rel="noopener" style="margin-top:14px">${t("drv_web")} ↗</a></div></section>
+  </div>`;
+}
+document.addEventListener("change", e => { if (e.target.id === "previewId") { state.previewId = e.target.value; state.appSlip = null; render(); } });
+
+/* ───────── Employee mode (what drivers see) ───────── */
+const appState = { doc: null, exists: false, loaded: false, err: "", info: "", canWriteOwn: true, justClaimed: false, remember: true, tries: 0, waitUntil: 0 };
+const lockKey = () => "asb-unlock-" + state.myId;
+function readUnlock(){ for (const st of ["localStorage", "sessionStorage"]) { try { const v = JSON.parse(window[st].getItem(lockKey()) || "null"); if (v) return v; } catch {} } return null; }
+function writeUnlock(pinVer, remember){ try { (remember ? localStorage : sessionStorage).setItem(lockKey(), JSON.stringify({ pinVer })); } catch {} }
+function clearUnlock(){ try { localStorage.removeItem(lockKey()); } catch {} try { sessionStorage.removeItem(lockKey()); } catch {} }
+const myMirror = () => { try { return appState.doc?.m ? JSON.parse(appState.doc.m) : null; } catch { return null; } };
+
+function loginScreen(kind, m){
+  const claim = appState.doc?.claim;
+  let msg = appState.err;
+  if (!msg && kind === "login" && claim?.result === "wrong") msg = t("wrong_pin");
+  if (!msg && kind === "login" && claim?.result === "locked") msg = t("locked_out");
+  const waiting = kind === "login" && claim && (!claim.result || claim.result === "ok");
+  return `<div class="p-top" style="justify-content:flex-end"><div class="p-lang">${langMini()}</div></div>
+  <div class="p-login">
+    <div class="mark">ASB</div>
+    <div><h1>${t("login_title")}</h1><p class="sub" style="margin:4px 0 0">${t("login_sub")}</p></div>
+    ${waiting ? `<div class="p-card"><b>${t("verifying")}</b><p class="sub" style="margin:6px 0 0">${t("verifying_hint")}</p></div>` : `
+    <form id="${kind === "login" ? "loginForm" : "unlockForm"}" class="p-login-form" novalidate style="display:flex;flex-direction:column;gap:12px">
+      <label class="f">${t("iqama")}<input class="input p-big-input mono" id="liIqama" name="rid" inputmode="numeric" autocomplete="username" maxlength="10" value="${esc(m?.profile?.residentId ?? "")}" ${m ? "readonly" : ""}></label>
+      <label class="f">PIN<input class="input p-big-input mono" id="liPin" name="pin" type="password" inputmode="numeric" autocomplete="current-password" maxlength="4"></label>
+      <label class="f check"><input type="checkbox" id="liRemember" name="remember" ${appState.remember ? "checked" : ""}> ${t("remember")}</label>
+      ${msg ? `<p class="err" style="margin:0">${esc(msg)}</p>` : ""}
+      ${appState.info ? `<p class="sub" style="margin:0">${esc(appState.info)}</p>` : ""}
+      <button class="btn p-btn">${kind === "login" ? t("login_btn") : t("unlock")}</button>
+      <button type="button" class="btn ghost sm" data-forgot style="align-self:center">${t("forgot")}</button>
+    </form>`}
+    ${kind === "login" ? `<div class="p-card"><div class="p-lbl">${t("code_title")}</div><p class="sub" style="margin:4px 0 8px">${t("code_hint")}</p>
+      <div style="display:flex;gap:8px;align-items:center"><div class="p-code" id="myCode" style="flex:1">${esc(state.myId)}</div><button class="btn ghost sm" data-copycode>${t("copy")}</button></div></div>` : ""}
+  </div>`;
+}
+
+function renderEmployee(){
+  document.documentElement.lang = lang;
+  document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  $("#app").hidden = true;
+  const root = $("#emp"); root.hidden = false;
+  let html;
+  if (state.mode === "driverTest") { root.innerHTML = `<div class="phone full">${driverTestHtml()}</div>`; return; }
+  const m = myMirror();
+  if (state.offline) html = `<div class="p-login"><div class="mark">ASB</div><b>${t("offline")}</b></div>`;
+  else if (!state.myId) html = `<div class="p-top" style="justify-content:flex-end"><div class="p-lang">${langMini()}</div></div><div class="p-login"><div class="mark">ASB</div><h1>${t("signin_needed")}</h1><p class="sub">${t("signin_needed_hint")}</p></div>`;
+  else if (!appState.loaded) html = `<div class="p-login"><div class="mark">ASB</div><b>${t("loading")}</b></div>`;
+  else if (m?.revoked) html = `<div class="p-top" style="justify-content:flex-end"><div class="p-lang">${langMini()}</div></div><div class="p-login"><div class="mark">ASB</div><h1>${t("deactivated")}</h1><p class="sub">${t("deactivated_hint")}</p></div>`;
+  else if (!m) html = loginScreen("login");
+  else {
+    const u = readUnlock();
+    if (!u || u.pinVer !== m.pinVer) html = loginScreen("unlock", m);
+    else html = appScreens(m, { canDuty: appState.canWriteOwn, duty: appState.doc?.duty?.s });
+  }
+  root.innerHTML = `<div class="phone full">${html}</div>`;
+}
+
+function afterDoc(){
+  const m = myMirror();
+  if (m && !m.revoked && appState.justClaimed && appState.doc?.claim?.result === "ok") {
+    writeUnlock(m.pinVer, appState.remember); appState.justClaimed = false; appState.err = "";
+  }
+}
+
+async function writeOwn(data){
+  const ref = db.doc("staff/" + state.myId);
+  if (appState.exists) await ref.update(data); else await ref.set(data);
+}
+
+document.addEventListener("submit", async e => {
+  if (e.target.id === "testForm") {
+    e.preventDefault();
+    const rid = $("#liIqama").value.trim(), pin = $("#liPin").value.trim();
+    const hit = Object.entries(state.emp).find(([, x]) => x.residentId === rid && x.status === "ACTIVE");
+    const ok = hit && hit[1].pinCheck && hit[1].pinCheck === await pinCheckOf(rid, pin);
+    testState.err = ok ? "" : t("wrong_pin"); if (ok) { testState.id = hit[0]; state.appTab = "home"; state.appSlip = null; }
+    return renderEmployee();
+  }
+  if (e.target.id !== "loginForm" && e.target.id !== "unlockForm") return;
+  e.preventDefault();
+  const rid = $("#liIqama").value.trim(), pin = $("#liPin").value.trim();
+  appState.remember = $("#liRemember").checked; appState.err = ""; appState.info = "";
+  if (!/^\d{10}$/.test(rid) || !/^\d{4}$/.test(pin)) { appState.err = t("required"); return renderEmployee(); }
+  if (Date.now() < appState.waitUntil) { appState.err = t("wait", { n: Math.ceil((appState.waitUntil - Date.now()) / 1000) }); return renderEmployee(); }
+  const hash = await pinCheckOf(rid, pin);
+  if (e.target.id === "unlockForm") {
+    const m = myMirror();
+    if (m && hash === m.pinCheck) { appState.tries = 0; writeUnlock(m.pinVer, appState.remember); }
+    else { appState.tries++; appState.err = t("wrong_pin"); if (appState.tries >= 5) { appState.waitUntil = Date.now() + 60000; appState.tries = 0; } }
+    return renderEmployee();
+  }
+  try { appState.justClaimed = true; await writeOwn({ claim: { residentId: rid, hash, at: Date.now() } }); }
+  catch (x) { console.warn(x); appState.canWriteOwn = false; appState.justClaimed = false; appState.err = t("app_cantwrite"); }
+  renderEmployee();
+});
+
+async function payslipPdf(m, month){
+  const s = m.payslips.find(x => x.month === month);
+  const J = window.jspdf?.jsPDF;
+  if (!s || !J || !downloads) { toast(t("pdf_na")); return; }
+  const d = new J({ unit: "pt", format: "a4" }); let y = 60;
+  const money = v => fmt(v) + " SAR";
+  d.setFillColor(11, 59, 96); d.rect(0, 0, 595, 8, "F");
+  d.setFont("helvetica", "bold"); d.setFontSize(18); d.text("ASB LOGISTICS Services", 48, y); y += 16;
+  d.setFont("helvetica", "normal"); d.setFontSize(9); d.setTextColor(90); d.text("ABDULRAHMAN SAAD ALBAQAMI Company For Logistics", 48, y); y += 30;
+  d.setTextColor(0); d.setFont("helvetica", "bold"); d.setFontSize(14); d.text("Payslip  " + s.month, 48, y); y += 22;
+  d.setFont("helvetica", "normal"); d.setFontSize(10);
+  const p = m.profile;
+  for (const [a, b] of [["Employee", p.fullName], ["Resident ID", p.residentId], ["Vehicle plate", p.plate || "-"], ["Orders this month", fmt0(s.orders)]]) { d.setTextColor(90); d.text(a, 48, y); d.setTextColor(0); d.text(String(b), 190, y); y += 15; }
+  y += 12;
+  const row = (a, v, bold) => { d.setFont("helvetica", bold ? "bold" : "normal"); d.text(a, 48, y); d.text(v, 547, y, { align: "right" }); y += 17; };
+  const rule = () => { d.setDrawColor(210); d.line(48, y - 11, 547, y - 11); };
+  d.setFont("helvetica", "bold"); d.setFontSize(11); d.text("Earnings", 48, y); y += 18; d.setFontSize(10);
+  row("Base pay", money(s.base)); row("Order bonus", money(s.bonus)); row("Bonus / incentives", money(s.incent)); row("Overtime", money(s.overtime)); rule(); row("Gross earnings", money(s.gross), true);
+  y += 10; d.setFont("helvetica", "bold"); d.setFontSize(11); d.text("Deductions & adjustments", 48, y); y += 18; d.setFontSize(10);
+  row("Order shortfall", "-" + money(s.shortfall)); row("Fine deductions", "-" + money(s.fineDed)); row("Advance deductions", "-" + money(s.advDed)); row("Fuel adjustment", money(s.fuelAdj)); row("Other", money(s.other)); rule(); row("Total deductions", "-" + money(s.deductions), true);
+  y += 16; d.setFillColor(238, 242, 245); d.rect(40, y - 18, 515, 30, "F"); d.setFontSize(13); row("NET PAYABLE", money(s.net), true);
+  d.setFontSize(8); d.setTextColor(130); d.text("Generated " + new Date().toISOString().slice(0, 16).replace("T", " "), 48, 800);
+  try { await downloads.save({ filename: `ASB-payslip-${s.month}.pdf`, data: d.output("arraybuffer") }); }
+  catch (x) { if (x?.code && x.code !== "declined") toast(t("pdf_na")); }
+}
+
+/* clicks inside the app (real or preview) */
+document.addEventListener("click", async e => {
+  const inEmp = e.target.closest("#emp"), inPrev = e.target.closest("#previewPhone");
+  if (!inEmp && !inPrev) return;
+  const rerender = () => inEmp ? renderEmployee() : render();
+  const tb = e.target.closest("[data-tab]");
+  if (tb) { state.appTab = tb.dataset.tab; state.appSlip = null; rerender(); (inEmp ? window : $("#previewPhone"))?.scrollTo?.(0, 0); return; }
+  const sl = e.target.closest("[data-slip]"); if (sl) { state.appSlip = sl.dataset.slip; rerender(); return; }
+  if (e.target.closest("[data-back]")) { state.appSlip = null; rerender(); return; }
+  if (inPrev) return; // preview is read-only beyond navigation
+  const du = e.target.closest("[data-duty]");
+  if (du) { try { await writeOwn({ duty: { s: du.dataset.duty, at: Date.now() } }); } catch { appState.canWriteOwn = false; renderEmployee(); } return; }
+  const pd = e.target.closest("[data-pdf]"); if (pd) { const m = state.mode === "driverTest" ? (testState.id && buildMirror(testState.id)) : myMirror(); if (m) await payslipPdf(m, pd.dataset.pdf); return; }
+  if (e.target.closest("[data-signout]")) { if (state.mode === "driverTest") { testState.id = null; state.appTab = "home"; renderEmployee(); return; } clearUnlock(); state.appTab = "home"; renderEmployee(); return; }
+  if (e.target.closest("[data-copycode]")) {
+    try { await navigator.clipboard.writeText(state.myId); toast(t("copied")); }
+    catch { const r = document.createRange(); r.selectNodeContents($("#myCode")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); }
+    return;
+  }
+  if (e.target.closest("[data-forgot]")) {
+    try { await writeOwn({ pinReset: { at: Date.now(), residentId: ($("#liIqama")?.value || "").trim() } }); appState.info = t("forgot_sent"); }
+    catch { appState.info = t("forgot_call"); }
+    appState.err = ""; renderEmployee();
+  }
+});
+
+function bootEmployee(){
+  state.mode = "employee";
+  renderEmployee();
+  if (!state.myId) return;
+  db.doc("staff/" + state.myId).onSnapshot(s => {
+    appState.doc = s.exists ? s.data() : null; appState.exists = s.exists; appState.loaded = true;
+    afterDoc();
+    if (document.activeElement && $("#emp").contains(document.activeElement) && document.activeElement.tagName === "INPUT") return;
+    renderEmployee();
+  }, x => { console.warn(x); appState.loaded = true; renderEmployee(); });
+}
+
+
+/* ───────── Admin opening the driver app (#driver, used by the APK): test with any driver's Iqama + PIN ───────── */
+const testState = { id: null, err: "" };
+Object.assign(I18N.en, { open_driver: "Driver app (PIN login)", test_note: "You are an admin. Sign in with any driver's Iqama + PIN to see their app. Drivers see only their own.", to_admin: "Back to admin panel" });
+Object.assign(I18N.bn, { open_driver: "ড্রাইভার অ্যাপ (পিন লগইন)", test_note: "আপনি এডমিন। যেকোনো ড্রাইভারের ইকামা + পিন দিয়ে তার অ্যাপ দেখুন। ড্রাইভাররা শুধু নিজেরটা দেখে।", to_admin: "এডমিন প্যানেলে ফিরুন" });
+Object.assign(I18N.ar, { open_driver: "تطبيق السائق (دخول بالرقم السري)", test_note: "أنت مشرف. ادخل برقم إقامة ورقم سري أي سائق لترى تطبيقه. السائق يرى تطبيقه فقط.", to_admin: "العودة للوحة الإدارة" });
+function driverTestHtml(){
+  if (!state.ready) return `<div class="p-login"><div class="mark">ASB</div><b>${t("loading")}</b></div>`;
+  if (testState.id && state.emp[testState.id]?.status === "ACTIVE") return appScreens(buildMirror(testState.id), {});
+  const inApk = /ASBDriverApp/.test(navigator.userAgent || "");
+  return `<div class="p-top">${inApk ? "" : `<a class="btn ghost sm" href="#dashboard" style="background:none;color:inherit;border-color:currentColor">← ${t("to_admin")}</a>`}<div class="p-lang">${langMini()}</div></div>
+  <div class="p-login"><div class="mark">ASB</div>
+    <div><h1>${t("login_title")}</h1><p class="sub" style="margin:4px 0 0">${t("login_sub")}</p></div>
+    <form id="testForm" novalidate style="display:flex;flex-direction:column;gap:12px">
+      <label class="f">${t("iqama")}<input class="input p-big-input mono" id="liIqama" inputmode="numeric" maxlength="10"></label>
+      <label class="f">PIN<input class="input p-big-input mono" id="liPin" type="password" inputmode="numeric" maxlength="4"></label>
+      ${testState.err ? `<p class="err" style="margin:0">${esc(testState.err)}</p>` : ""}
+      <button class="btn p-btn">${t("login_btn")}</button>
+    </form>
+    <div class="note" style="margin:0">${t("test_note")}</div>
+  </div>`;
+}
+
+/* ───────── data subscriptions ───────── */
+const docsMap = snap => Object.fromEntries(snap.docs.map(d => [d.id, d.data()]));
+function subOps(){
+  unsubOps?.();
+  unsubOps = db.doc("daily/" + state.opsDate).onSnapshot(s => { state.opsDoc = s.exists ? s.data() : null; soon(); }, console.warn);
+}
+function subMonth(){
+  unsubMonth?.();
+  unsubMonth = db.collection("daily").where("month", "==", state.payMonth).onSnapshot(s => { state.monthDocs = s.docs.map(d => d.data()); soon(); }, console.warn);
+}
+
+/* ───────── Supabase connection ───────── */
+const SB_URL = "https://hpkfwmlauxjompovpuvq.supabase.co";
+const SB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhwa2Z3bWxhdXhqb21wb3ZwdXZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMyODQyODcsImV4cCI6MjEwODg2MDI4N30.nsUUw52Bpdi7GUTQt4T4z9GbZOXjVw7ookHc168PIJs";
+const DRIVER_WEB = "driver/";
+const sb = window.supabase.createClient(SB_URL, SB_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
+
+/* A small document store over the `docs` table, same calls the panel already uses:
+   db.doc("coll/id").get/set/update/delete/onSnapshot, db.collection("coll")[.where(f,"==",v)].onSnapshot */
+function makeDb(){
+  const cache = {};          // coll -> Map(id -> data)
+  const loading = {};        // coll -> Promise
+  const listeners = new Set();
+  const snapDoc = (id, data) => ({ id, exists: data !== undefined, data: () => data });
+  const deliver = coll => { for (const l of listeners) if (l.coll === coll) l.fire(); };
+
+  async function load(coll){
+    if (cache[coll]) return;
+    loading[coll] ??= (async () => {
+      const m = new Map(); let from = 0;
+      for (;;) {
+        const { data, error } = await sb.from("docs").select("id,data").eq("coll", coll).range(from, from + 999);
+        if (error) throw error;
+        data.forEach(r => m.set(r.id, r.data));
+        if (data.length < 1000) break; from += 1000;
+      }
+      cache[coll] = m;
+    })();
+    await loading[coll];
+  }
+
+  let channel = null;
+  function startRealtime(){
+    if (channel) return;
+    channel = sb.channel("asb-docs")
+      .on("postgres_changes", { event: "*", schema: "public", table: "docs" }, p => {
+        const row = p.eventType === "DELETE" ? p.old : p.new;
+        if (!row?.coll || !cache[row.coll]) return;
+        if (p.eventType === "DELETE") cache[row.coll].delete(row.id); else cache[row.coll].set(row.id, row.data);
+        deliver(row.coll);
+      })
+      .subscribe(status => {
+        // after a reconnect, reload what we hold so nothing is missed
+        if (status === "SUBSCRIBED" && channel._asbWasDown) {
+          channel._asbWasDown = false;
+          for (const c of Object.keys(cache)) { delete cache[c]; delete loading[c]; load(c).then(() => deliver(c)).catch(console.warn); }
+        }
+        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT" || status === "CLOSED") channel._asbWasDown = true;
+      });
+  }
+
+  const split = path => { const i = path.indexOf("/"); return [path.slice(0, i), path.slice(i + 1)]; };
+  const local = (coll, id, data) => { if (cache[coll]) { if (data === undefined) cache[coll].delete(id); else cache[coll].set(id, data); deliver(coll); } };
+
+  function doc(path){
+    const [coll, id] = split(path);
+    return {
+      id, path,
+      async get(){ await load(coll); return snapDoc(id, cache[coll].get(id)); },
+      async set(data){
+        const { error } = await sb.from("docs").upsert({ coll, id, data, updated_at: new Date().toISOString() });
+        if (error) throw error; local(coll, id, data);
+      },
+      async update(patch){
+        const { data, error } = await sb.rpc("docs_merge", { p_coll: coll, p_id: id, p_patch: patch });
+        if (error) throw error; local(coll, id, data);
+      },
+      async delete(){
+        const { error } = await sb.from("docs").delete().eq("coll", coll).eq("id", id);
+        if (error) throw error; local(coll, id, undefined);
+      },
+      onSnapshot(next, err){
+        const l = { coll, fire: () => next(snapDoc(id, cache[coll]?.get(id))) };
+        listeners.add(l); startRealtime();
+        load(coll).then(l.fire).catch(e => err?.(e));
+        return () => listeners.delete(l);
+      },
+    };
+  }
+  function query(coll, filters){
+    const match = d => filters.every(([f, , v]) => d?.[f] === v);
+    return {
+      where(f, op, v){ return query(coll, [...filters, [f, op, v]]); },
+      onSnapshot(next, err){
+        const l = { coll, fire: () => {
+          const docs = [...(cache[coll] ?? new Map())].filter(([, d]) => match(d)).sort((a, b) => a[0] < b[0] ? -1 : 1).map(([i, d]) => snapDoc(i, d));
+          next({ docs, size: docs.length, empty: !docs.length });
+        } };
+        listeners.add(l); startRealtime();
+        load(coll).then(l.fire).catch(e => err?.(e));
+        return () => listeners.delete(l);
+      },
+      doc: id => doc(coll + "/" + id),
+    };
+  }
+  return { doc, collection: c => query(c, []) };
+}
+
+/* Browser file download (replaces the claude.ai downloads capability) */
+downloads = {
+  async save({ filename, data }){
+    const blob = data instanceof Blob ? data : new Blob([data], { type: filename.endsWith(".pdf") ? "application/pdf" : "text/csv;charset=utf-8" });
+    const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = filename;
+    document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  }
+};
+
+/* ───────── Admin sign-in ───────── */
+Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · employee management", au_email: "Email", au_pass: "Password",
+  au_signin: "Sign in", au_signup: "Create admin account", au_forgot: "Forgot password?", au_have: "Already have an account? Sign in", au_new: "First time? Create your admin account",
+  au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
+  au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
+  admins_title: "Admins", admins_add: "Add admin email", admins_hint: "The person then creates an account on this page with that email.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
+  drv_web: "Driver app (web)" });
+Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB LOGISTICS · কর্মচারী ব্যবস্থাপনা", au_email: "ইমেইল", au_pass: "পাসওয়ার্ড",
+  au_signin: "লগইন", au_signup: "এডমিন অ্যাকাউন্ট খুলুন", au_forgot: "পাসওয়ার্ড ভুলে গেছেন?", au_have: "অ্যাকাউন্ট আছে? লগইন করুন", au_new: "প্রথমবার? এডমিন অ্যাকাউন্ট খুলুন",
+  au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
+  au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
+  admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "তারপর ওই ব্যক্তি এই পাতায় সেই ইমেইল দিয়ে অ্যাকাউন্ট খুলবেন।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)" });
+Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTICS · إدارة الموظفين", au_email: "البريد الإلكتروني", au_pass: "كلمة المرور",
+  au_signin: "دخول", au_signup: "إنشاء حساب مشرف", au_forgot: "نسيت كلمة المرور؟", au_have: "لديك حساب؟ سجّل الدخول", au_new: "أول مرة؟ أنشئ حساب المشرف",
+  au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
+  au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
+  admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "ثم ينشئ الشخص حساباً من هذه الصفحة بنفس البريد.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
+  drv_web: "تطبيق السائق (ويب)" });
+
+const auth = { mode: "signin", msg: "", err: "", busy: false, session: null, role: null, admins: [] };
+function renderAuth(){
+  document.documentElement.lang = lang; document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
+  $("#app").hidden = true; const root = $("#emp"); root.hidden = false;
+  const up = auth.mode === "signup";
+  root.innerHTML = `<div class="phone full"><div class="p-top" style="justify-content:flex-end"><div class="p-lang">${langMini()}</div></div>
+  <div class="p-login">
+    <div class="mark">ASB</div>
+    <div><h1>${t("au_title")}</h1><p class="sub" style="margin:4px 0 0">${t("au_sub")}</p></div>
+    <form id="authForm" novalidate style="display:flex;flex-direction:column;gap:12px">
+      <label class="f">${t("au_email")}<input class="input" id="auEmail" type="email" autocomplete="username" required></label>
+      <label class="f">${t("au_pass")}<input class="input" id="auPass" type="password" autocomplete="${up ? "new-password" : "current-password"}" minlength="8" required></label>
+      ${auth.err ? `<p class="err" style="margin:0">${esc(auth.err)}</p>` : ""}${auth.msg ? `<div class="note" style="margin:0">${esc(auth.msg)}</div>` : ""}
+      <button class="btn p-btn" ${auth.busy ? "disabled" : ""}>${up ? t("au_signup") : t("au_signin")}</button>
+      ${up ? "" : `<button type="button" class="btn ghost sm" data-au="forgot" style="align-self:center">${t("au_forgot")}</button>`}
+      <button type="button" class="btn ghost sm" data-au="${up ? "signin" : "signup"}" style="align-self:center">${up ? t("au_have") : t("au_new")}</button>
+    </form>
+  </div></div>`;
+  try { const em = localStorage.getItem("asb-admin-email"); if (em) $("#auEmail").value = em; } catch {}
+}
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-au]"); if (!b) return;
+  const em = $("#auEmail")?.value.trim();
+  auth.err = ""; auth.msg = "";
+  if (b.dataset.au === "forgot") {
+    if (!em) { auth.err = t("required"); return renderAuth(); }
+    const { error } = await sb.auth.resetPasswordForEmail(em, { redirectTo: location.origin + location.pathname });
+    auth.msg = error ? error.message : t("au_reset_sent"); return renderAuth();
+  }
+  auth.mode = b.dataset.au; renderAuth(); if (em) $("#auEmail").value = em;
+});
+document.addEventListener("submit", async e => {
+  if (e.target.id !== "authForm") return;
+  e.preventDefault();
+  const email = $("#auEmail").value.trim(), password = $("#auPass").value;
+  auth.err = ""; auth.msg = "";
+  if (!email || password.length < 8) { auth.err = password.length < 8 ? t("au_short") : t("required"); return renderAuth(); }
+  try { localStorage.setItem("asb-admin-email", email); } catch {}
+  auth.busy = true; renderAuth(); $("#auEmail").value = email;
+  if (auth.mode === "signup") {
+    const { data, error } = await sb.auth.signUp({ email, password, options: { emailRedirectTo: location.origin + location.pathname } });
+    auth.busy = false;
+    if (error) auth.err = error.message;
+    else if (!data.session) { auth.msg = t("au_check"); auth.mode = "signin"; }
+  } else {
+    const { error } = await sb.auth.signInWithPassword({ email, password });
+    auth.busy = false;
+    if (error) auth.err = /confirm/i.test(error.message) ? t("au_unconfirmed") : t("au_err");
+  }
+  if (auth.err || auth.msg) { renderAuth(); $("#auEmail").value = email; }
+});
+
+/* Admins page (super admin adds other admin emails) */
+async function loadAdmins(){
+  const { data } = await sb.from("admins").select("email,role").order("created_at");
+  auth.admins = data ?? []; if (view() === "admins") render();
+}
+function vAdmins(){
+  const sup = auth.role === "SUPER_ADMIN";
+  return `<div class="head"><div><h1>${t("admins_title")}</h1><p>${t("admins_hint")}</p></div></div>
+  ${sup ? `<form class="filters" id="adminAdd"><input class="input" id="newAdmin" type="email" placeholder="${t("au_email")}" required>
+     <select class="input" id="newRole"><option value="SUB_ADMIN">${t("role_SUB_ADMIN")}</option><option value="SUPER_ADMIN">${t("role_SUPER_ADMIN")}</option></select>
+     <button class="btn">+ ${t("admins_add")}</button></form>` : ""}
+  <section class="panel"><div class="scroll"><table><thead><tr><th>${t("au_email")}</th><th>${t("status")}</th><th></th></tr></thead><tbody>
+  ${auth.admins.map(a => `<tr><td>${esc(a.email)}</td><td><span class="pill ${a.role === "SUPER_ADMIN" ? "p-info" : "p-mute"}">${t("role_" + a.role)}</span></td>
+    <td class="r">${sup && a.email !== auth.session?.user?.email ? `<button class="btn ghost sm" data-deladmin="${esc(a.email)}">${t("remove")}</button>` : ""}</td></tr>`).join("")}
+  </tbody></table></div></section>`;
+}
+document.addEventListener("submit", async e => {
+  if (e.target.id !== "adminAdd") return; e.preventDefault();
+  const email = $("#newAdmin").value.trim().toLowerCase(), role = $("#newRole").value;
+  if (!email) return;
+  const { error } = await sb.from("admins").upsert({ email, role });
+  if (error) toast(t("dbErr")); else { toast(t("empSaved")); loadAdmins(); }
+});
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-deladmin]"); if (!b) return;
+  const { error } = await sb.from("admins").delete().eq("email", b.dataset.deladmin);
+  if (error) toast(t("dbErr")); else loadAdmins();
+});
+document.addEventListener("click", async e => { if (e.target.closest("[data-signout-admin]")) { await sb.auth.signOut(); location.hash = ""; } });
+
+let started = false;
+async function startAdmin(session){
+  auth.session = session;
+  const { data: role, error } = await sb.rpc("my_admin_role");
+  if (error || !role) { auth.err = t("au_notadmin"); await sb.auth.signOut(); return renderAuth(); }
+  auth.role = role;
+  if (started) return; started = true;
+  state.mode = "admin"; state.canWrite = true;
+  $("#emp").hidden = true; $("#app").hidden = false;
+  db = makeDb();
+  let loaded = 0; const done = () => { if (++loaded >= 3 && !state.ready) { state.ready = true; render(); } };
+  db.collection("employees").onSnapshot(s => { state.emp = docsMap(s); done(); soon(); }, console.warn);
+  db.collection("fines").onSnapshot(s => { state.fines = docsMap(s); done(); soon(); }, console.warn);
+  db.collection("advances").onSnapshot(s => { state.adv = docsMap(s); done(); soon(); }, console.warn);
+  db.doc("config/rules").onSnapshot(s => { state.rules = { ...DEFAULT_RULES, ...(s.exists ? s.data() : {}) }; soon(); }, console.warn);
+  db.doc("daily/" + todayKey()).onSnapshot(s => { state.todayDoc = s.exists ? s.data() : null; soon(); }, console.warn);
+  db.collection("duty").onSnapshot(s => { state.duty = docsMap(s); soon(); }, console.warn);
+  db.collection("pinreq").onSnapshot(s => { state.pinreq = docsMap(s); soon(); }, console.warn);
+  db.collection("payroll").onSnapshot(s => { state.payroll = docsMap(s); soon(); }, console.warn);
+  db.collection("daily").where("month", "==", monthKey()).onSnapshot(s => { state.curMonthDocs = s.docs.map(d => d.data()); soon(); }, console.warn);
+  subOps(); subMonth(); loadAdmins();
+  render();
+}
+
+async function boot(){
+  const { data } = await sb.auth.getSession();
+  sb.auth.onAuthStateChange((ev, session) => {
+    if (ev === "SIGNED_OUT") { started = false; location.reload(); return; }
+    if (session && (ev === "SIGNED_IN" || ev === "INITIAL_SESSION")) startAdmin(session);
+  });
+  if (data.session) startAdmin(data.session); else renderAuth();
+}
+boot();
+</script>
+
+</body></html>
