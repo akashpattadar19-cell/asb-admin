@@ -122,6 +122,14 @@ table.tgt .input.num{width:84px}
 .input.num.sm{width:76px}
 .tgt-legend{display:flex;flex-wrap:wrap;gap:8px 20px;font-size:13.5px;color:var(--muted);margin-bottom:12px}
 .tgt-legend b{color:var(--ink)}
+.grade{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:8px;font:700 16px var(--f-display);color:#fff}
+.g-a{background:#1D8358} .g-b{background:#2F6FB5} .g-c{background:#C98C14} .g-d{background:#C0392B} .g-x{background:var(--muted)}
+.pc{display:flex;align-items:center;gap:4px;font-weight:600;white-space:nowrap}
+.chg{font-size:12px;font-weight:600} .chg.up{color:var(--good)} .chg.down{color:var(--bad)}
+.grade-sum{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:12px}
+.gs{display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:6px 12px 6px 6px;cursor:pointer;font:inherit;color:inherit}
+.gs.on{border-color:var(--brand);box-shadow:0 0 0 2px color-mix(in srgb,var(--brand) 25%,transparent)}
+.gs b{font:600 18px var(--f-display)}
 table.perf th.grp{text-align:center;border-bottom:1px solid var(--line)}
 table.perf th.today{background:color-mix(in srgb,var(--gold) 14%,var(--sunk))}
 .filters{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
@@ -363,7 +371,7 @@ const state = {
   todayDoc: null, opsDoc: null, monthDocs: [], payDoc: null, dailyAll: {}, totals: {},
   opsDate: todayKey(), opsMonth: monthKey(), payMonth: monthKey(),
   opsDraft: {}, adjDraft: {}, q: "", qStatus: "", finesTab: "fines",
-  ready: false, canWrite: true, offline: false, qType: "", tDraft: {}, pDraft: {}, perf: {},
+  ready: false, canWrite: true, offline: false, qType: "", qGrade: "", tDraft: {}, pDraft: {}, perf: {},
 };
 let db = null, downloads = null, unsubOps = null, unsubMonth = null;
 const payDoc = () => state.payroll[state.payMonth] ?? null;
@@ -473,7 +481,7 @@ function vEmployees(){
   const list = Object.entries(state.emp).filter(([,e]) =>
     (!state.qStatus || e.status === state.qStatus) &&
     (!state.qType || (e.payType || "TARGET") === state.qType) &&
-    (!q || [e.fullName,e.fullNameAr,e.residentId,e.mobile,e.plate,e.card,e.cardSerial,e.city,e.vehicleName,e.vehicleModel].some(v => String(v??"").toLowerCase().includes(q)))
+    (!q || [e.fullName,e.fullNameAr,e.residentId,e.jahezId,e.mobile,e.plate,e.card,e.cardSerial,e.city,e.vehicleName,e.vehicleModel].some(v => String(v??"").toLowerCase().includes(q)))
   ).sort((a,b) => (a[1].status==="PENDING"?-1:0)-(b[1].status==="PENDING"?-1:0) || a[1].fullName.localeCompare(b[1].fullName));
   return `
   <div class="head"><div><h1>${t("nav_employees")}</h1><p>${Object.keys(state.emp).length} · ${activeEmps().length} ${t("ACTIVE")}</p></div>
@@ -488,7 +496,7 @@ function vEmployees(){
     <thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("mobile")}</th><th>${t("card")}</th><th>${t("city")}</th><th>${t("plate")}</th><th>${t("vehicle")}</th><th>${t("payType")}</th><th>${t("status")}</th><th>${t("app_col")}</th><th class="r">${t("outstanding")}</th><th></th></tr></thead>
     <tbody>${list.map(([id,e]) => `<tr>
       <td style="min-width:190px"><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 38)}<div><div class="name">${esc(e.fullName)}</div>${e.fullNameAr?`<div class="sub" dir="rtl">${esc(e.fullNameAr)}</div>`:""}</div></div></td>
-      <td class="mono">${esc(e.residentId)}</td>
+      <td class="mono">${esc(e.residentId)}${e.jahezId ? `<div class="sub">J: ${esc(e.jahezId)}</div>` : ""}</td>
       <td class="nowrap">${esc(e.mobile)}</td>
       <td class="nowrap">${e.card?`<span class="mono">${esc(e.card)}</span>${e.cardSerial?`<div class="sub">${t("serial_short")}: <span class="mono">${esc(e.cardSerial)}</span></div>`:""}<div class="sub">${fmt0(e.dailyLimit)}/${fmt0(e.monthlyLimit)} ${t("sar")}</div>`:`<span class="sub">${t("none")}</span>`}</td>
       <td class="nowrap">${esc(e.city) || `<span class="sub">${t("none")}</span>`}</td>
@@ -544,6 +552,7 @@ function empForm(e = {}){
   <label class="f full">${t("name")} *<input class="input" name="fullName" value="${esc(e.fullName)}" required></label>
   <label class="f full">${t("nameAr")}<input class="input" name="fullNameAr" dir="rtl" value="${esc(e.fullNameAr)}"></label>
   <label class="f">${t("iqama")} *<input class="input mono" name="residentId" inputmode="numeric" maxlength="10" pattern="\\d{10}" value="${esc(e.residentId)}" required></label>
+  <label class="f full">${t("jahezId")} <input class="input mono" name="jahezId" inputmode="numeric" value="${esc(e.jahezId)}" placeholder="1788197599088722"></label>
   <label class="f">${t("mobile")} *<input class="input" name="mobile" inputmode="tel" value="${esc(e.mobile)}" placeholder="05XXXXXXXX" required></label>
   <div class="full sec">2 · ${t("sec_card")}</div>
   <label class="f">${t("card")}<input class="input mono" name="card" inputmode="numeric" value="${esc(e.card)}"></label>
@@ -696,36 +705,75 @@ document.addEventListener("change", e => { if (e.target.dataset?.tgt) render(); 
 
 /* ───────── Performance: yesterday vs today, older days are removed ───────── */
 const yesterdayKey = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh" }).format(new Date(Date.now() - 864e5));
-const PERF_F = [["o", "perf_orders", "1"], ["h", "perf_hours", "0.5"], ["a", "perf_accept", "1"]];
+/* Jahez daily driver report: g grade (A best … D, "-" not graded), rp ranking % (lower is better),
+   fa forced-assignment score, ot on-time, cr completion (not delivery related), ne "Delivered" not pressed too early. */
+const PERF_F = [["g", "pf_grade"], ["rp", "pf_rank"], ["fa", "pf_forced"], ["ot", "pf_ontime"], ["cr", "pf_complete"], ["ne", "pf_early"]];
+const GRADES = ["A", "B", "C", "D", "-"];
+const gradeCls = g => ({ A: "g-a", B: "g-b", C: "g-c", D: "g-d" }[g] || "g-x");
+function perfDelta(k, y, v){
+  if (y === undefined || y === null || v === undefined || v === null || y === "" || v === "") return 0;
+  if (k === "g") return GRADES.indexOf(y) - GRADES.indexOf(v);            // A after B = better
+  if (k === "rp") { if (+v === 0 || +y === 0) return 0; return +y - +v; }   // lower % is better
+  return +v - +y;
+}
+function perfCell(k, y, v){
+  if (v === undefined || v === null || v === "") return `<span class="sub">${t("none")}</span>`;
+  const d = perfDelta(k, y, v), arrow = d > 0 ? `<span class="chg up">▲</span>` : d < 0 ? `<span class="chg down">▼</span>` : "";
+  const main = k === "g" ? `<span class="grade ${gradeCls(v)}">${esc(v)}</span>` : `${(+v).toFixed(2)}%`;
+  const prev = y === undefined || y === null || y === "" ? "" : `<div class="sub">${t("perf_yest")}: ${k === "g" ? esc(y) : (+y).toFixed(2) + "%"}</div>`;
+  return `<div class="pc">${main} ${arrow}</div>${prev}`;
+}
 function vPerf(){
   const td = todayKey(), yd = yesterdayKey(), T = state.perf[td]?.rows ?? {}, Y = state.perf[yd]?.rows ?? {};
-  const emps = activeEmps().filter(([, e]) => !state.qType || (e.payType || "TARGET") === state.qType);
-  const inp = (day, id, k, step) => { const v = state.pDraft[day]?.[id]?.[k] ?? ((day === td ? T : Y)[id]?.[k] ?? "");
-    return `<td class="r"><input class="input num sm" type="number" min="0" ${k === "a" ? 'max="100"' : ""} step="${step}" data-perf="${k}" data-day="${day}" data-id="${id}" value="${v}"></td>`; };
-  const val = (day, id, k) => { const v = state.pDraft[day]?.[id]?.[k] ?? ((day === td ? T : Y)[id]?.[k]); return v === "" || v == null ? null : +v; };
+  const q = state.q.trim().toLowerCase();
+  const emps = activeEmps().filter(([id, e]) => (!state.qType || (e.payType || "TARGET") === state.qType) && (!state.qGrade || (T[id]?.g ?? "") === state.qGrade)
+    && (!q || [e.fullName, e.jahezId, e.residentId].some(v => String(v ?? "").toLowerCase().includes(q))))
+    .sort((a, b) => { const ra = +(T[a[0]]?.rp ?? 0) || 999, rb = +(T[b[0]]?.rp ?? 0) || 999; return ra - rb; });
+  const counts = GRADES.map(g => [g, Object.values(T).filter(r => r.g === g).length]);
   return `
   <div class="head"><div><h1>${t("nav_perf")}</h1><p>${t("perf_hint")}</p></div>
     <div class="tools">
-      <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
-      <button class="btn" data-act="perf-save" data-needs-write>${t("save")}</button>
+      <button class="btn" data-act="perf-import" data-needs-write>${t("perf_import")}</button>
     </div></div>
+  <div class="grade-sum">${counts.map(([g, n]) => `<button class="gs ${state.qGrade === g ? "on" : ""}" data-act="grade-filter" data-v="${g}"><span class="grade ${gradeCls(g)}">${g}</span><b>${n}</b></button>`).join("")}
+    <span class="sub">${t("perf_today")} · ${shortDate(Date.now())}</span></div>
+  <div class="filters">
+    <input class="input" id="q" placeholder="${t("search")}" value="${esc(state.q)}">
+    <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
+  </div>
   <section class="panel">${emps.length ? `<div class="scroll"><table class="perf">
-    <thead><tr><th rowspan="2">${t("name")}</th><th colspan="3" class="grp">${t("perf_yest")} · ${shortDate(Date.parse(yd + "T12:00:00Z"))}</th><th colspan="3" class="grp today">${t("perf_today")} · ${shortDate(Date.now())}</th><th rowspan="2">${t("perf_change")}</th></tr>
-      <tr>${[0, 1].map(() => PERF_F.map(([, l]) => `<th class="r">${t(l)}</th>`).join("")).join("")}</tr></thead>
-    <tbody>${emps.map(([id, e]) => {
-      const yo = val(yd, id, "o"), to = val(td, id, "o");
-      let ch = `<span class="sub">${t("none")}</span>`;
-      if (yo !== null && to !== null) { const d = to - yo, pc = yo ? Math.round(d / yo * 100) : null;
-        ch = `<span class="pill nodot ${d > 0 ? "p-good" : d < 0 ? "p-bad" : "p-mute"}">${d > 0 ? "▲" : d < 0 ? "▼" : "="} ${d > 0 ? "+" : ""}${d}${pc !== null ? ` (${pc > 0 ? "+" : ""}${pc}%)` : ""}</span>`; }
-      return `<tr><td><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 32)}<div><div class="name">${esc(e.fullName)}</div>${rkPill(e.payType)}</div></div></td>
-        ${PERF_F.map(([k, , st]) => inp(yd, id, k, st)).join("")}${PERF_F.map(([k, , st]) => inp(td, id, k, st)).join("")}<td>${ch}</td></tr>`; }).join("")}</tbody></table></div>`
-    : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</section>
+    <thead><tr><th>${t("name")}</th>${PERF_F.map(([, l]) => `<th>${t(l)}</th>`).join("")}<th></th></tr></thead>
+    <tbody>${emps.map(([id, e]) => `<tr>
+      <td><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 32)}<div><div class="name">${esc(e.fullName)}</div><div class="sub mono">${esc(e.jahezId || e.residentId)}</div></div></div></td>
+      ${PERF_F.map(([k]) => `<td>${perfCell(k, Y[id]?.[k], T[id]?.[k])}</td>`).join("")}
+      <td><button class="btn ghost sm" data-act="perf-edit" data-id="${id}" data-needs-write>${t("edit")}</button></td></tr>`).join("")}</tbody></table></div>`
+    : `<div class="empty"><b>${t("perf_empty")}</b>${t("perf_empty_hint")}</div>`}</section>
   <p class="sub" style="margin-top:10px">${t("perf_note")}</p>`;
 }
-document.addEventListener("input", e => {
-  const k = e.target.dataset?.perf; if (!k) return;
-  ((state.pDraft[e.target.dataset.day] ??= {})[e.target.dataset.id] ??= {})[k] = e.target.value;
+document.addEventListener("click", e => {
+  const b = e.target.closest('[data-act="grade-filter"]'); if (!b) return;
+  state.qGrade = state.qGrade === b.dataset.v ? "" : b.dataset.v; render();
 });
+/* Parse rows copied from the Jahez report (Excel, Sheets or CSV). Columns:
+   driver ID, name, grade, ranking %, forced assignment %, on-time %, completion %, not-early %. */
+function parseJahez(text){
+  const out = [];
+  for (const line of text.replace(/^﻿/, "").split(/\r?\n/)) {
+    let cells = line.split(/\t|,|;/).map(c => c.trim().replace(/^"|"$/g, "")).filter(c => c !== "");
+    if (cells.length < 4) continue;
+    if (/^\d{12,20}$/.test(cells[cells.length - 1]) && !/^\d{12,20}$/.test(cells[0])) cells.reverse(); // copied right-to-left
+    const id = cells.find(c => /^\d{12,20}$/.test(c)) || "";
+    const grade = (cells.find(c => /^[A-Da-d]$|^[-–—]$/.test(c)) || "").toUpperCase().replace(/[–—]/, "-");
+    const nums = cells.filter(c => c !== id && /^-?\d+(\.\d+)?\s*%?$/.test(c)).map(c => parseFloat(c));
+    const name = cells.find(c => c !== id && c.toUpperCase() !== grade && !/^-?\d+(\.\d+)?\s*%?$/.test(c) && !/^[-–—]$/.test(c)) || "";
+    if (!id && !name) continue;
+    if (nums.length < 5) continue;
+    const [rp, fa, ot, cr, ne] = nums.slice(-5);
+    out.push({ id, name, row: { g: grade || "-", rp, fa, ot, cr, ne } });
+  }
+  return out;
+}
+const normName = n => String(n || "").toLowerCase().replace(/\s+/g, " ").trim();
 async function cleanupPerf(){
   const yd = yesterdayKey();
   for (const id of Object.keys(state.perf)) if (id < yd) { try { await db.doc("perf/" + id).delete(); } catch {} }
@@ -860,7 +908,7 @@ document.addEventListener("click", async e => {
         if (!fd.fullName.trim() || !/^\d{10}$/.test(fd.residentId) || !fd.mobile.trim()) fail(t("required"));
         const dup = Object.entries(state.emp).find(([k,v]) => v.residentId === fd.residentId && k !== id);
         if (dup) fail(t("dupIqama"));
-        const data = { ...fd, fullName: fd.fullName.trim(), plate: fd.plate.trim().toUpperCase(), card: fd.card.trim(), cardSerial: fd.cardSerial.trim(), vehicleName: fd.vehicleName.trim(), vehicleModel: fd.vehicleModel.trim(), city: fd.city.trim(), dailyLimit: +fd.dailyLimit || 0, monthlyLimit: +fd.monthlyLimit || 0, updatedAt: Date.now() };
+        const data = { ...fd, fullName: fd.fullName.trim(), plate: fd.plate.trim().toUpperCase(), jahezId: (fd.jahezId || "").replace(/\D/g, ""), card: fd.card.trim(), cardSerial: fd.cardSerial.trim(), vehicleName: fd.vehicleName.trim(), vehicleModel: fd.vehicleModel.trim(), city: fd.city.trim(), dailyLimit: +fd.dailyLimit || 0, monthlyLimit: +fd.monthlyLimit || 0, updatedAt: Date.now() };
 
 
         if (id && fd.residentId !== cur.residentId) data.pinCheck = "";
@@ -902,18 +950,49 @@ document.addEventListener("click", async e => {
       state.tDraft = {}; toast(n ? t("empSaved") : t("nothing_changed")); render();
     }
 
-    if (act === "perf-save") {
-      let n = 0;
-      for (const [day, byEmp] of Object.entries(state.pDraft)) {
-        const rows = { ...(state.perf[day]?.rows ?? {}) };
-        for (const [id, d] of Object.entries(byEmp)) {
-          const cur = { ...(rows[id] ?? {}) };
-          for (const [k, v] of Object.entries(d)) { if (v === "" || v == null) delete cur[k]; else cur[k] = k === "o" ? Math.max(0, Math.round(+v)) : Math.max(0, +v); }
-          if (Object.keys(cur).length) rows[id] = { ...cur, at: Date.now() }; else delete rows[id];
-        }
-        await db.doc("perf/" + day).set({ date: day, rows, updatedAt: Date.now() }); n++;
-      }
-      state.pDraft = {}; await cleanupPerf(); toast(n ? t("daySaved") : t("nothing_changed")); render();
+    if (act === "perf-import") {
+      openDialog({ title: t("perf_import"), submit: t("csvImport"),
+        body: `<p class="full sub">${t("perf_import_help")}</p>
+          <label class="f full">${t("perf_day")}<select class="input" name="day"><option value="${todayKey()}">${t("perf_today")} · ${todayKey()}</option><option value="${yesterdayKey()}">${t("perf_yest")} · ${yesterdayKey()}</option></select></label>
+          <label class="f full">CSV / Excel<input class="input" type="file" accept=".csv,.txt,text/csv" id="csvFile"></label>
+          <label class="f full">${t("perf_paste")}<textarea class="input mono" name="csv" rows="8" placeholder="1788197599088722\tShehab Alshehab\tA\t2.08%\t100.00%\t100.00%\t100.00%\t100.00%"></textarea></label>`,
+        onSubmit: async fd => {
+          let text = fd.csv || ""; const file = $("#csvFile").files?.[0]; if (file) text = await file.text();
+          const rowsIn = parseJahez(text);
+          if (!rowsIn.length) fail(t("perf_nothing"));
+          const byJ = {}, byN = {};
+          for (const [id, e] of Object.entries(state.emp)) { if (e.jahezId) byJ[e.jahezId] = id; byN[normName(e.fullName)] = id; }
+          const day = fd.day, rows = { ...(state.perf[day]?.rows ?? {}) }, missing = [];
+          for (const r of rowsIn) {
+            const eid = (r.id && byJ[r.id]) || byN[normName(r.name)];
+            if (!eid) { missing.push(r.name || r.id); continue; }
+            rows[eid] = { ...r.row, at: Date.now() };
+            if (r.id && !state.emp[eid].jahezId) await db.doc("employees/" + eid).update({ jahezId: r.id });
+          }
+          if (Object.keys(rows).length) await db.doc("perf/" + day).set({ date: day, rows, updatedAt: Date.now() });
+          await cleanupPerf();
+          toast(`${t("imported")}: ${rowsIn.length - missing.length} · ${t("perf_unmatched")}: ${missing.length}`);
+          if (missing.length) setTimeout(() => openDialog({ title: t("perf_unmatched"), body: `<p class="full">${t("perf_unmatched_help")}</p><p class="full mono sub">${missing.map(esc).join("<br>")}</p>`, footer: `<button type="button" class="btn" data-close>${t("close")}</button>` }), 60);
+        }});
+    }
+
+    if (act === "perf-edit") {
+      const e2 = state.emp[id], td = todayKey(), yd = yesterdayKey();
+      const field = (day, k, label) => { const v = state.perf[day]?.rows?.[id]?.[k] ?? "";
+        return k === "g" ? `<label class="f">${label}<select class="input" name="${day}|g"><option value=""></option>${GRADES.map(g => `<option ${v === g ? "selected" : ""}>${g}</option>`).join("")}</select></label>`
+          : `<label class="f">${label}<input class="input" type="number" step="0.01" min="0" max="100" name="${day}|${k}" value="${v}"></label>`; };
+      openDialog({ title: `${t("nav_perf")} · ${esc(e2.fullName)}`,
+        body: [yd, td].map(day => `<div class="full sec">${day === td ? t("perf_today") : t("perf_yest")} · ${day}</div>${PERF_F.map(([k, l]) => field(day, k, t(l))).join("")}`).join(""),
+        onSubmit: async fd => {
+          for (const day of [yd, td]) {
+            const cur = {}; let any = false;
+            for (const [k] of PERF_F) { const v = fd[day + "|" + k]; if (v !== undefined && v !== "") { cur[k] = k === "g" ? v : +v; any = true; } }
+            const rows = { ...(state.perf[day]?.rows ?? {}) };
+            if (any) rows[id] = { ...cur, at: Date.now() }; else delete rows[id];
+            await db.doc("perf/" + day).set({ date: day, rows, updatedAt: Date.now() });
+          }
+          await cleanupPerf(); toast(t("empSaved"));
+        }});
     }
 
     if (act === "save-day") {
@@ -1638,31 +1717,40 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "The person then creates an account on this page with that email.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", nav_target: "Target", nav_perf: "Performance",
+  drv_web: "Driver app (web)", jahezId: "Jahez driver ID", pf_grade: "Grade", pf_rank: "Ranking %", pf_forced: "Forced assignment", pf_ontime: "On-time delivery", pf_complete: "Order completion", pf_early: "Not marked delivered early",
+  perf_import: "Import Jahez report", perf_day: "Report day", perf_paste: "Paste the report rows (copy them from Excel)", perf_import_help: "Copy the rows of the Jahez driver report from Excel (driver ID, name, grade, ranking % and the four rates) and paste them here, or upload a CSV. Drivers are matched by Jahez ID, then by name.",
+  perf_nothing: "No report rows found. Copy the rows including the driver ID and the percentages.", perf_unmatched: "Not matched", perf_unmatched_help: "These drivers are not in Employees yet. Add them (with their Jahez ID) and import again.",
+  perf_empty: "No performance yet", perf_empty_hint: "Use Import Jahez report to add today's numbers.", nav_target: "Target", nav_perf: "Performance",
   tgt_hint: "Each driver's own monthly target and pay. Leave a box empty to use the default from Pay rules (shown in grey).",
   tgt_defaults: "Default pay rules", tgt_target: "Target orders", tgt_base: "Base salary", tgt_short: "Deduction / missing order", tgt_rlow: "Rate below target", tgt_rhigh: "Rate at target", tgt_extra: "Extra order rate", tgt_sofar: "This month", tgt_est: "Pay so far",
   tgt_rank_rule: "base salary + extra rate for each order above target − deduction for each order short.", tgt_unrank_rule: "orders up to target × rate (higher rate once the target is reached) + extra rate for each order above target.",
   tgt_note: "Pay so far uses this month's total orders and excludes fines, advances and fuel. Payroll uses these same settings.",
-  perf_hint: "Daily performance for each driver. Drivers see yesterday and today side by side in their app.", perf_yest: "Yesterday", perf_today: "Today", perf_change: "Orders change",
+  perf_hint: "Daily Jahez performance for each driver. Drivers see yesterday and today side by side in their app.", perf_yest: "Yesterday", perf_today: "Today", perf_change: "Orders change",
   perf_orders: "Orders", perf_hours: "Hours", perf_accept: "Accept %", perf_note: "Only yesterday and today are kept. Older days are deleted automatically.", totalOrders: "Total orders", fuel_month_k: "Fuel this month", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
 Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB LOGISTICS · কর্মচারী ব্যবস্থাপনা", au_email: "ইমেইল", au_pass: "পাসওয়ার্ড",
   au_signin: "লগইন", au_signup: "এডমিন অ্যাকাউন্ট খুলুন", au_forgot: "পাসওয়ার্ড ভুলে গেছেন?", au_have: "অ্যাকাউন্ট আছে? লগইন করুন", au_new: "প্রথমবার? এডমিন অ্যাকাউন্ট খুলুন",
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "তারপর ওই ব্যক্তি এই পাতায় সেই ইমেইল দিয়ে অ্যাকাউন্ট খুলবেন।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", nav_target: "টার্গেট", nav_perf: "পারফরমেন্স",
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", jahezId: "Jahez ড্রাইভার আইডি", pf_grade: "গ্রেড", pf_rank: "র‍্যাংকিং %", pf_forced: "বাধ্যতামূলক অ্যাসাইনমেন্ট", pf_ontime: "সময়মতো ডেলিভারি", pf_complete: "অর্ডার সম্পূর্ণ", pf_early: "আগেভাগে ডেলিভারড চাপেনি",
+  perf_import: "Jahez রিপোর্ট আমদানি", perf_day: "রিপোর্টের দিন", perf_paste: "রিপোর্টের সারিগুলো পেস্ট করুন (Excel থেকে কপি করে)", perf_import_help: "Excel থেকে Jahez ড্রাইভার রিপোর্টের সারিগুলো (ড্রাইভার আইডি, নাম, গ্রেড, র‍্যাংকিং % আর চারটি হার) কপি করে এখানে পেস্ট করুন, অথবা CSV ফাইল দিন। প্রথমে Jahez আইডি, না মিললে নাম দিয়ে কর্মী মেলানো হয়।",
+  perf_nothing: "রিপোর্টের কোনো সারি পাওয়া যায়নি। ড্রাইভার আইডি আর শতাংশগুলোসহ সারি কপি করুন।", perf_unmatched: "মেলেনি", perf_unmatched_help: "এই ড্রাইভাররা এখনো কর্মচারী তালিকায় নেই। তাদের Jahez আইডিসহ যোগ করে আবার আমদানি করুন।",
+  perf_empty: "এখনো পারফরমেন্স নেই", perf_empty_hint: "আজকের সংখ্যা যোগ করতে \"Jahez রিপোর্ট আমদানি\" ব্যবহার করুন।", nav_target: "টার্গেট", nav_perf: "পারফরমেন্স",
   tgt_hint: "প্রত্যেক কর্মীর নিজের মাসিক টার্গেট ও বেতন। ঘর খালি রাখলে বেতনের নিয়মের সাধারণ মান (ধূসর) ধরা হবে।",
   tgt_defaults: "সাধারণ বেতনের নিয়ম", tgt_target: "টার্গেট অর্ডার", tgt_base: "বেসিক বেতন", tgt_short: "প্রতি কম অর্ডারে কর্তন", tgt_rlow: "টার্গেটের নিচে রেট", tgt_rhigh: "টার্গেট পূরণে রেট", tgt_extra: "অতিরিক্ত অর্ডার রেট", tgt_sofar: "এই মাসে", tgt_est: "এখন পর্যন্ত বেতন",
   tgt_rank_rule: "বেসিক বেতন + টার্গেটের বেশি প্রতি অর্ডারে অতিরিক্ত রেট − টার্গেটের কম প্রতি অর্ডারে কর্তন।", tgt_unrank_rule: "টার্গেট পর্যন্ত অর্ডার × রেট (টার্গেট পূরণ হলে বেশি রেট) + টার্গেটের বেশি প্রতি অর্ডারে অতিরিক্ত রেট।",
   tgt_note: "এখন পর্যন্ত বেতন এই মাসের মোট অর্ডার থেকে হিসাব, জরিমানা, অগ্রিম ও পেট্রোল বাদে। বেতন হিসাবেও এই একই নিয়ম ব্যবহার হয়।",
-  perf_hint: "প্রত্যেক কর্মীর দৈনিক পারফরমেন্স। কর্মীরা অ্যাপে গতকাল আর আজ পাশাপাশি দেখবে।", perf_yest: "গতকাল", perf_today: "আজ", perf_change: "অর্ডারের পরিবর্তন",
+  perf_hint: "প্রত্যেক কর্মীর দৈনিক Jahez পারফরমেন্স। কর্মীরা অ্যাপে গতকাল আর আজ পাশাপাশি দেখবে।", perf_yest: "গতকাল", perf_today: "আজ", perf_change: "অর্ডারের পরিবর্তন",
   perf_orders: "অর্ডার", perf_hours: "ঘণ্টা", perf_accept: "গ্রহণ %", perf_note: "শুধু গতকাল আর আজকের তথ্য থাকে। পুরনো দিনের তথ্য নিজে থেকেই মুছে যায়।", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
 Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTICS · إدارة الموظفين", au_email: "البريد الإلكتروني", au_pass: "كلمة المرور",
   au_signin: "دخول", au_signup: "إنشاء حساب مشرف", au_forgot: "نسيت كلمة المرور؟", au_have: "لديك حساب؟ سجّل الدخول", au_new: "أول مرة؟ أنشئ حساب المشرف",
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "ثم ينشئ الشخص حساباً من هذه الصفحة بنفس البريد.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", nav_target: "الهدف", nav_perf: "الأداء",
+  drv_web: "تطبيق السائق (ويب)", jahezId: "معرف سائق جاهز", pf_grade: "المستوى", pf_rank: "نسبة التصنيف", pf_forced: "التعيين الإجباري", pf_ontime: "التوصيل في الموعد", pf_complete: "اكتمال الطلبات", pf_early: "لم يضغط تم التسليم مبكراً",
+  perf_import: "استيراد تقرير جاهز", perf_day: "يوم التقرير", perf_paste: "الصق صفوف التقرير (انسخها من Excel)", perf_import_help: "انسخ صفوف تقرير سائقي جاهز من Excel (المعرف، الاسم، المستوى، نسبة التصنيف والنسب الأربع) والصقها هنا أو ارفع ملف CSV. تتم المطابقة بمعرف جاهز ثم بالاسم.",
+  perf_nothing: "لم يتم العثور على صفوف. انسخ الصفوف مع المعرف والنسب.", perf_unmatched: "غير مطابق", perf_unmatched_help: "هؤلاء السائقون غير موجودين في الموظفين. أضفهم بمعرف جاهز ثم أعد الاستيراد.",
+  perf_empty: "لا يوجد أداء بعد", perf_empty_hint: "استخدم استيراد تقرير جاهز لإضافة أرقام اليوم.", nav_target: "الهدف", nav_perf: "الأداء",
   tgt_hint: "هدف وراتب كل سائق الشهري. اترك الخانة فارغة لاستخدام القيمة العامة من قواعد الراتب (بالرمادي).",
   tgt_defaults: "قواعد الراتب العامة", tgt_target: "الطلبات المستهدفة", tgt_base: "الراتب الأساسي", tgt_short: "خصم لكل طلب ناقص", tgt_rlow: "السعر تحت الهدف", tgt_rhigh: "السعر عند الهدف", tgt_extra: "سعر الطلب الإضافي", tgt_sofar: "هذا الشهر", tgt_est: "الراتب حتى الآن",
   tgt_rank_rule: "الراتب الأساسي + سعر إضافي لكل طلب فوق الهدف − خصم لكل طلب ناقص.", tgt_unrank_rule: "الطلبات حتى الهدف × السعر (سعر أعلى عند بلوغ الهدف) + سعر إضافي لكل طلب فوق الهدف.",

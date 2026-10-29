@@ -139,6 +139,12 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .pod1 .step{height:46px;background:color-mix(in srgb,var(--gold) 28%,var(--sunk))}
 .pod2 .step{height:30px}
 .pod3 .step{height:20px}
+.pf-top{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;padding:4px 0 12px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.pf-grade{display:flex;gap:10px;align-items:center}
+.bigg{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;font:700 34px var(--f-display);color:#fff}
+.g-a{background:#1D8358} .g-b{background:#2F6FB5} .g-c{background:#C98C14} .g-d{background:#C0392B} .g-x{background:#7A8794}
+.pf-rank{min-width:0;border-inline-start:1px solid var(--line);padding-inline-start:16px}
+.warnv{color:#B26A00}
 .perf-head{border-radius:12px;padding:10px 12px;font-weight:600;margin-bottom:10px;font-size:14.5px}
 .perf-head.up{background:var(--good-soft);color:var(--good)} .perf-head.down{background:var(--bad-soft);color:var(--bad)} .perf-head.same{background:var(--sunk);color:var(--muted)}
 .pr{display:grid;grid-template-columns:1.2fr 1fr 1.3fr;gap:8px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line)}
@@ -180,7 +186,7 @@ const REFRESH_MS = 15000;
 
 /* ── strings ── */
 const T = {
-en:{perf:"Performance",yest:"Yesterday",today:"Today",p_orders:"Orders",p_hours:"Hours",p_accept:"Acceptance",perf_up:"▲ {n} more orders than yesterday (+{p}%). Great work!",perf_down:"▼ {n} fewer orders than yesterday (−{p}%). You can do better today.",perf_same:"Same number of orders as yesterday.",rank:"This month's rank",orders_month:"Total orders this month",target_r:"Monthly target",target_u:"Higher rate from",upd_on:"Updated {d}",fuel_m:"Fuel this month",norank:"No orders entered yet",board:"Top 5 this month",noboard:"The ranking appears once orders are entered.",brand_sub:"Driver app",signin:"Sign in",signin_sub:"Enter your Iqama number and 4-digit PIN",iqama:"Iqama number",pin:"PIN",remember:"Keep me signed in",forgot:"Forgot PIN?",
+en:{pf_grade:"Grade",pf_rank:"Ranking",pf_top:"{p}%",pf_rank_hint:"Lower is better",pf_ungraded:"Not graded yet",pf_forced:"Forced assignment",pf_ontime:"On-time delivery",pf_complete:"Order completion",pf_early:"Not marked delivered early",pf_better:"▲ Better than yesterday in {n} areas. Keep it up!",pf_worse:"▼ Lower than yesterday in {n} areas. Let's improve today.",perf_same2:"Same as yesterday.",perf:"Performance",yest:"Yesterday",today:"Today",p_orders:"Orders",p_hours:"Hours",p_accept:"Acceptance",perf_up:"▲ {n} more orders than yesterday (+{p}%). Great work!",perf_down:"▼ {n} fewer orders than yesterday (−{p}%). You can do better today.",perf_same:"Same number of orders as yesterday.",rank:"This month's rank",orders_month:"Total orders this month",target_r:"Monthly target",target_u:"Higher rate from",upd_on:"Updated {d}",fuel_m:"Fuel this month",norank:"No orders entered yet",board:"Top 5 this month",noboard:"The ranking appears once orders are entered.",brand_sub:"Driver app",signin:"Sign in",signin_sub:"Enter your Iqama number and 4-digit PIN",iqama:"Iqama number",pin:"PIN",remember:"Keep me signed in",forgot:"Forgot PIN?",
  forgot_sent:"Request sent. Your supervisor will give you a new PIN.",need_iqama:"Enter your 10-digit Iqama number first.",wrong:"Wrong Iqama or PIN. {n} tries left.",wrong0:"Wrong Iqama or PIN.",
  locked:"Too many wrong tries. Try again in {n} minutes or ask your supervisor.",offline:"No internet connection. Check your data or Wi-Fi.",expired:"Please sign in again.",deactivated:"Your account is not active. Contact your supervisor.",
  home:"Home",fines:"Fines",salary:"Salary",profile:"Profile",duty_ACTIVE:"Active",duty_ON_DUTY:"On duty",duty_OFFLINE:"Offline",
@@ -195,7 +201,7 @@ en:{perf:"Performance",yest:"Yesterday",today:"Today",p_orders:"Orders",p_hours:
  pdf:"Download PDF",pdf_ok:"Saved to Downloads",pdf_fail:"Could not create the PDF.",back:"Back",
  resident:"Iqama",mobile:"Mobile",city:"City",paytype:"Pay type",TARGET:"Rank · target + bonus",PER_ORDER:"Unrank · per order",plate:"Vehicle plate",model:"Vehicle",card:"Petrol card",dlimit:"Daily fuel limit",mlimit:"Monthly fuel limit",
  language:"Language",signout:"Sign out",pin_hint:"To change your PIN, ask your supervisor.",updated:"Updated {t}",new_fine:"New fine: {a} SAR",new_slip:"New payslip: {m}",see:"See"},
-bn:{perf:"পারফরমেন্স",yest:"গতকাল",today:"আজ",p_orders:"অর্ডার",p_hours:"ঘণ্টা",p_accept:"গ্রহণ",perf_up:"▲ গতকালের চেয়ে {n}টি অর্ডার বেশি (+{p}%)। দারুণ!",perf_down:"▼ গতকালের চেয়ে {n}টি অর্ডার কম (−{p}%)। আজ আরও ভালো করা যায়।",perf_same:"গতকালের সমান অর্ডার।",rank:"এই মাসের র‍্যাংক",orders_month:"এই মাসের মোট অর্ডার",target_r:"মাসিক টার্গেট",target_u:"বেশি রেট শুরু",upd_on:"হালনাগাদ {d}",fuel_m:"এই মাসের পেট্রোল",norank:"এখনো অর্ডার দেওয়া হয়নি",board:"এই মাসের সেরা ৫",noboard:"অর্ডার দেওয়া হলে র‍্যাংকিং দেখাবে।",brand_sub:"ড্রাইভার অ্যাপ",signin:"লগইন",signin_sub:"ইকামা নম্বর ও ৪ সংখ্যার পিন দিন",iqama:"ইকামা নম্বর",pin:"পিন",remember:"লগইন থাকুক",forgot:"পিন ভুলে গেছেন?",
+bn:{pf_grade:"গ্রেড",pf_rank:"র‍্যাংকিং",pf_top:"{p}%",pf_rank_hint:"যত কম, তত ভালো",pf_ungraded:"এখনো গ্রেড দেওয়া হয়নি",pf_forced:"বাধ্যতামূলক অ্যাসাইনমেন্ট",pf_ontime:"সময়মতো ডেলিভারি",pf_complete:"অর্ডার সম্পূর্ণ",pf_early:"আগেভাগে ডেলিভারড চাপেনি",pf_better:"▲ গতকালের চেয়ে {n}টি বিষয়ে উন্নতি। এভাবেই চালিয়ে যান!",pf_worse:"▼ গতকালের চেয়ে {n}টি বিষয়ে কমেছে। আজ আরও ভালো করুন।",perf_same2:"গতকালের মতোই।",perf:"পারফরমেন্স",yest:"গতকাল",today:"আজ",p_orders:"অর্ডার",p_hours:"ঘণ্টা",p_accept:"গ্রহণ",perf_up:"▲ গতকালের চেয়ে {n}টি অর্ডার বেশি (+{p}%)। দারুণ!",perf_down:"▼ গতকালের চেয়ে {n}টি অর্ডার কম (−{p}%)। আজ আরও ভালো করা যায়।",perf_same:"গতকালের সমান অর্ডার।",rank:"এই মাসের র‍্যাংক",orders_month:"এই মাসের মোট অর্ডার",target_r:"মাসিক টার্গেট",target_u:"বেশি রেট শুরু",upd_on:"হালনাগাদ {d}",fuel_m:"এই মাসের পেট্রোল",norank:"এখনো অর্ডার দেওয়া হয়নি",board:"এই মাসের সেরা ৫",noboard:"অর্ডার দেওয়া হলে র‍্যাংকিং দেখাবে।",brand_sub:"ড্রাইভার অ্যাপ",signin:"লগইন",signin_sub:"ইকামা নম্বর ও ৪ সংখ্যার পিন দিন",iqama:"ইকামা নম্বর",pin:"পিন",remember:"লগইন থাকুক",forgot:"পিন ভুলে গেছেন?",
  forgot_sent:"অনুরোধ পাঠানো হয়েছে। সুপারভাইজার নতুন পিন দেবেন।",need_iqama:"আগে ১০ সংখ্যার ইকামা নম্বর লিখুন।",wrong:"ইকামা বা পিন ভুল। আর {n} বার চেষ্টা করা যাবে।",wrong0:"ইকামা বা পিন ভুল।",
  locked:"অনেকবার ভুল হয়েছে। {n} মিনিট পরে চেষ্টা করুন বা সুপারভাইজারকে বলুন।",offline:"ইন্টারনেট সংযোগ নেই। ডাটা বা Wi-Fi দেখুন।",expired:"আবার লগইন করুন।",deactivated:"আপনার অ্যাকাউন্ট চালু নেই। সুপারভাইজারের সাথে যোগাযোগ করুন।",
  home:"হোম",fines:"জরিমানা",salary:"বেতন",profile:"প্রোফাইল",duty_ACTIVE:"সক্রিয়",duty_ON_DUTY:"ডিউটিতে",duty_OFFLINE:"অফলাইন",
@@ -210,7 +216,7 @@ bn:{perf:"পারফরমেন্স",yest:"গতকাল",today:"আজ",
  pdf:"PDF ডাউনলোড",pdf_ok:"Downloads ফোল্ডারে সেভ হয়েছে",pdf_fail:"PDF তৈরি করা যায়নি।",back:"পেছনে",
  resident:"ইকামা",mobile:"মোবাইল",city:"শহর",paytype:"বেতনের ধরন",TARGET:"Rank · টার্গেট + বোনাস",PER_ORDER:"Unrank · প্রতি অর্ডার",plate:"গাড়ির প্লেট",model:"গাড়ি",card:"পেট্রোল কার্ড",dlimit:"দৈনিক পেট্রোল সীমা",mlimit:"মাসিক পেট্রোল সীমা",
  language:"ভাষা",signout:"লগআউট",pin_hint:"পিন বদলাতে সুপারভাইজারকে বলুন।",updated:"হালনাগাদ {t}",new_fine:"নতুন জরিমানা: {a} রিয়াল",new_slip:"নতুন পে-স্লিপ: {m}",see:"দেখুন"},
-ar:{perf:"الأداء",yest:"أمس",today:"اليوم",p_orders:"الطلبات",p_hours:"الساعات",p_accept:"القبول",perf_up:"▲ {n} طلبات أكثر من أمس (+{p}%). عمل رائع!",perf_down:"▼ {n} طلبات أقل من أمس (−{p}%). يمكنك الأفضل اليوم.",perf_same:"نفس عدد طلبات أمس.",rank:"ترتيبك هذا الشهر",orders_month:"إجمالي طلبات الشهر",target_r:"الهدف الشهري",target_u:"السعر الأعلى من",upd_on:"آخر تحديث {d}",fuel_m:"وقود هذا الشهر",norank:"لم تُدخل طلبات بعد",board:"أفضل 5 هذا الشهر",noboard:"يظهر الترتيب بعد إدخال الطلبات.",brand_sub:"تطبيق السائق",signin:"تسجيل الدخول",signin_sub:"أدخل رقم الإقامة والرقم السري المكون من 4 أرقام",iqama:"رقم الإقامة",pin:"الرقم السري",remember:"إبقائي مسجلاً",forgot:"نسيت الرقم السري؟",
+ar:{pf_grade:"المستوى",pf_rank:"التصنيف",pf_top:"{p}%",pf_rank_hint:"كلما قل كان أفضل",pf_ungraded:"لم يُصنف بعد",pf_forced:"التعيين الإجباري",pf_ontime:"التوصيل في الموعد",pf_complete:"اكتمال الطلبات",pf_early:"لم يضغط تم التسليم مبكراً",pf_better:"▲ أفضل من أمس في {n} مجالات. استمر!",pf_worse:"▼ أقل من أمس في {n} مجالات. لنتحسن اليوم.",perf_same2:"مثل أمس.",perf:"الأداء",yest:"أمس",today:"اليوم",p_orders:"الطلبات",p_hours:"الساعات",p_accept:"القبول",perf_up:"▲ {n} طلبات أكثر من أمس (+{p}%). عمل رائع!",perf_down:"▼ {n} طلبات أقل من أمس (−{p}%). يمكنك الأفضل اليوم.",perf_same:"نفس عدد طلبات أمس.",rank:"ترتيبك هذا الشهر",orders_month:"إجمالي طلبات الشهر",target_r:"الهدف الشهري",target_u:"السعر الأعلى من",upd_on:"آخر تحديث {d}",fuel_m:"وقود هذا الشهر",norank:"لم تُدخل طلبات بعد",board:"أفضل 5 هذا الشهر",noboard:"يظهر الترتيب بعد إدخال الطلبات.",brand_sub:"تطبيق السائق",signin:"تسجيل الدخول",signin_sub:"أدخل رقم الإقامة والرقم السري المكون من 4 أرقام",iqama:"رقم الإقامة",pin:"الرقم السري",remember:"إبقائي مسجلاً",forgot:"نسيت الرقم السري؟",
  forgot_sent:"تم إرسال الطلب. سيعطيك المشرف رقماً جديداً.",need_iqama:"أدخل رقم الإقامة المكون من 10 أرقام أولاً.",wrong:"رقم الإقامة أو الرقم السري غير صحيح. متبقي {n} محاولات.",wrong0:"رقم الإقامة أو الرقم السري غير صحيح.",
  locked:"محاولات خاطئة كثيرة. حاول بعد {n} دقيقة أو راجع المشرف.",offline:"لا يوجد اتصال بالإنترنت.",expired:"سجّل الدخول مرة أخرى.",deactivated:"حسابك غير مفعل. راجع المشرف.",
  home:"الرئيسية",fines:"المخالفات",salary:"الراتب",profile:"ملفي",duty_ACTIVE:"نشط",duty_ON_DUTY:"في العمل",duty_OFFLINE:"غير متصل",
@@ -364,23 +370,41 @@ function vHome(m){
   ${out > 0 ? `<button class="alert" data-tab="fines"><span>${t("outstanding")}</span><span class="neg num" style="font-size:18px">${fmt(out)} ${t("sar")}</span></button>` : ""}
   <section class="card"><h3>${t("board")}</h3>${board(m.board)}</section>`;
 }
+const GR = ["A", "B", "C", "D", "-"];
+const grCls = g => ({ A: "g-a", B: "g-b", C: "g-c", D: "g-d" }[g] || "g-x");
+function pDelta(k, y, v){
+  if (y === undefined || y === null || v === undefined || v === null) return 0;
+  if (k === "g") return GR.indexOf(y) - GR.indexOf(v);
+  if (k === "rp") return (+v === 0 || +y === 0) ? 0 : +y - +v;
+  return +v - +y;
+}
 function perfCard(pf){
   if (!pf) return "";
-  const Y = pf.yest || {}, D = pf.today || {}, has = o => ["o","h","a"].some(k => o[k] !== undefined && o[k] !== null);
+  const Y = pf.yest || {}, D = pf.today || {};
+  const has = o => ["g","rp","fa","ot","cr","ne"].some(k => o[k] !== undefined && o[k] !== null);
   if (!has(Y) && !has(D)) return "";
-  const dd = iso => new Date(iso + "T12:00:00Z").toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { day: "numeric", month: "short" });
-  const v = (o, k, suf = "") => o[k] === undefined || o[k] === null ? `<span class="muted">—</span>` : `${fmt0(o[k])}${suf}`;
-  const diff = k => { if (Y[k] == null || D[k] == null) return ""; const d = +D[k] - +Y[k]; return d === 0 ? `<span class="chg same">=</span>` : `<span class="chg ${d > 0 ? "up" : "down"}">${d > 0 ? "▲" : "▼"} ${fmt0(Math.abs(d))}</span>`; };
-  let head = "";
-  if (Y.o != null && D.o != null) {
-    const d = +D.o - +Y.o, pc = +Y.o ? Math.round(Math.abs(d) / +Y.o * 100) : null;
-    head = `<div class="perf-head ${d > 0 ? "up" : d < 0 ? "down" : "same"}">${d > 0 ? t("perf_up", { n: fmt0(d), p: pc ?? "—" }) : d < 0 ? t("perf_down", { n: fmt0(-d), p: pc ?? "—" }) : t("perf_same")}</div>`;
-  }
-  const row = (k, label, suf) => `<div class="pr"><span class="muted">${label}</span><span>${v(Y, k, suf)}</span><span class="num today">${v(D, k, suf)} ${diff(k)}</span></div>`;
-  return `<section class="card"><h3>${t("perf")}</h3>${head}
-    <div class="pr phd"><span></span><span>${t("yest")}<small>${dd(Y.date)}</small></span><span class="today">${t("today")}<small>${dd(D.date)}</small></span></div>
-    ${row("o", t("p_orders"), "")}${row("h", t("p_hours"), "")}${row("a", t("p_accept"), "%")}</section>`;
+  const cur = has(D) ? D : Y, prev = has(D) ? Y : {}, curLabel = has(D) ? t("today") : t("yest");
+  const keys = ["rp", "fa", "ot", "cr", "ne"], up = keys.filter(k => pDelta(k, prev[k], cur[k]) > 0).length + (pDelta("g", prev.g, cur.g) > 0 ? 1 : 0);
+  const down = keys.filter(k => pDelta(k, prev[k], cur[k]) < 0).length + (pDelta("g", prev.g, cur.g) < 0 ? 1 : 0);
+  const head = !has(prev) ? "" : up > down ? `<div class="perf-head up">${t("pf_better", { n: up })}</div>` : down > up ? `<div class="perf-head down">${t("pf_worse", { n: down })}</div>` : `<div class="perf-head same">${t("perf_same2")}</div>`;
+  const arrow = k => { const d = pDelta(k, prev[k], cur[k]); return d > 0 ? `<span class="chg up">▲</span>` : d < 0 ? `<span class="chg down">▼</span>` : ""; };
+  const pct = v => v === undefined || v === null ? "—" : `${(+v).toFixed(2)}%`;
+  const graded = cur.g && cur.g !== "-";
+  const gDelta = pDelta("g", prev.g, cur.g);
+  const rateRow = (k, label) => `<div class="pr"><span class="muted">${label}</span><span>${pct(prev[k])}</span><span class="num today ${cur[k] != null && +cur[k] < 100 ? "warnv" : ""}">${pct(cur[k])} ${arrow(k)}</span></div>`;
+  return `<section class="card"><h3>${t("perf")} · ${curLabel}</h3>${head}
+    <div class="pf-top">
+      <div class="pf-grade"><span class="bigg ${grCls(cur.g)}">${esc(cur.g || "-")}</span>
+        <div><div class="lbl">${t("pf_grade")}</div><div class="muted" style="font-size:13px">${prev.g ? `${t("yest")}: <b>${esc(prev.g)}</b> ${gDelta > 0 ? `<span class="chg up">▲</span>` : gDelta < 0 ? `<span class="chg down">▼</span>` : ""}` : ""}</div></div></div>
+      <div class="pf-rank"><div class="lbl">${t("pf_rank")}</div>
+        ${graded && +cur.rp > 0 ? `<div class="big" style="font-size:26px">${t("pf_top", { p: (+cur.rp).toFixed(2) })} ${arrow("rp")}</div><div class="muted" style="font-size:12.5px">${t("pf_rank_hint")}${prev.rp ? ` · ${t("yest")}: ${(+prev.rp).toFixed(2)}%` : ""}</div>`
+          : `<div class="muted" style="font-size:14px;margin-top:4px">${t("pf_ungraded")}</div>`}</div>
+    </div>
+    <div class="pr phd"><span></span><span>${t("yest")}${Y.date ? `<small>${ddate(Y.date)}</small>` : ""}</span><span class="today">${curLabel}${cur.date ? `<small>${ddate(cur.date)}</small>` : ""}</span></div>
+    ${rateRow("fa", t("pf_forced"))}${rateRow("ot", t("pf_ontime"))}${rateRow("cr", t("pf_complete"))}${rateRow("ne", t("pf_early"))}
+  </section>`;
 }
+const ddate = iso => new Date(iso + "T12:00:00Z").toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { day: "numeric", month: "short" });
 function board(list){
   if (!list.length) return `<div class="muted">${t("noboard")}</div>`;
   const top = list.slice(0, 5), mine = list.slice(5).find(r => r.me);
