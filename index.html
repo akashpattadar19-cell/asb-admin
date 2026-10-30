@@ -41,7 +41,8 @@ button,input,select,textarea{font:inherit;color:inherit}
 .rail{background:var(--brand);color:var(--brand-ink);display:flex;flex-direction:column;padding-block:20px;position:sticky;top:0;height:100vh}
 :root[data-theme="dark"] .rail,.rail{border-inline-end:1px solid var(--line)}
 .brand{padding:0 20px 18px;display:flex;gap:10px;align-items:center}
-.mark{width:36px;height:36px;border-radius:8px;background:var(--gold);color:#1a1205;display:grid;place-items:center;font:700 15px var(--f-display);letter-spacing:.04em;flex:none}
+.mark{width:46px;height:46px;border-radius:12px;background:#fff;display:grid;place-items:center;flex:none;box-shadow:0 2px 10px rgba(0,0,0,.18);overflow:hidden}
+.mark img{width:92%;height:92%;object-fit:contain}
 .brand b{font:700 19px/1.1 var(--f-display);letter-spacing:.03em;display:block}
 .brand small{opacity:.75;font-size:12px}
 .nav{display:flex;flex-direction:column;gap:2px;padding:0 10px}
@@ -137,7 +138,7 @@ table.dues .chev{width:14px;color:var(--muted);font-size:12px}
 table.dues tr.due-items>td{padding:0 0 12px 40px;background:var(--sunk,rgba(0,0,0,.04))}
 table.inner{width:100%;background:var(--card,#fff);border:1px solid var(--line);border-radius:10px}
 table.inner th{font-size:11px}
-.danger-t{color:var(--bad)}
+.danger-t,.btn.ghost.danger-t{color:var(--bad)}
 .hrow{display:grid;grid-template-columns:1.1fr .9fr .9fr auto auto;gap:8px;align-items:center;margin-bottom:8px}
 .chk{display:inline-flex;gap:6px;align-items:center;font-size:13px;white-space:nowrap}
 .chk-f .chk{margin-top:10px}
@@ -241,7 +242,7 @@ dialog::backdrop{background:rgba(5,15,25,.5)}
 .p-net{background:var(--brand);color:var(--brand-ink);border-radius:14px;padding:18px;text-align:center}
 .p-net .p-num{font-size:34px}
 .p-login{flex:1;display:flex;flex-direction:column;justify-content:center;gap:16px;padding-block:28px;padding-left:max(20px,env(safe-area-inset-left,0px));padding-right:max(20px,env(safe-area-inset-right,0px));max-width:440px;margin:0 auto;width:100%}
-.p-login .mark{width:58px;height:58px;font-size:20px;border-radius:14px}
+.p-login .mark{width:96px;height:96px;border-radius:24px}
 .p-login h1{font:700 27px/1.1 var(--f-display);margin:0}
 .p-btn{width:100%;padding:13px;font-size:16px;justify-content:center}
 .p-big-input{font-size:20px;letter-spacing:.1em;padding:12px}
@@ -267,7 +268,7 @@ dialog::backdrop{background:rgba(5,15,25,.5)}
 <div class="app" id="app">
   <aside class="rail">
     <div class="brand">
-      <div class="mark">ASB</div>
+      <div class="mark"><img src="logo.png" alt="ASB"></div>
       <div><b>ASB LOGISTICS</b><small data-t="brandSub">Admin panel</small></div>
       <div class="mobile-tools"><div class="lang" id="langM"></div></div>
     </div>
@@ -1022,8 +1023,11 @@ function vPayroll(){
       <span class="pill ${published?"p-good":"p-warn"}">${published?t("published"):t("draft")}</span>
       <button class="btn ghost" data-act="pay-export">${t("exportCsv")}</button>
       ${published?`<button class="btn ghost" data-act="pay-reopen" data-needs-write>${t("pay_reopen")}</button>`:""}
+      ${payDoc()?`<button class="btn ghost danger-t" data-act="pay-delete" data-needs-write>${t("pay_del")}</button>`:""}
       ${published?"":`<button class="btn ghost" data-act="adj-save" data-needs-write>${t("saveAdj")}</button><button class="btn gold" data-act="pay-publish" data-needs-write ${slips.length?"":"disabled"}>${t("publish")}</button>`}
     </div></div>
+  ${(() => { const ms = Object.values(state.payroll).filter(p => p.month).sort((a, b) => b.month.localeCompare(a.month));
+    return ms.length ? `<div class="chips"><span class="sub" style="margin-inline-end:4px">${t("pay_saved")}:</span>${ms.map(p => `<button class="chip ${p.month === state.payMonth ? "on" : ""}" data-act="pay-month" data-v="${esc(p.month)}"><b>${esc(p.month)}</b> ${p.status === "PUBLISHED" ? t("published") : t("draft")}</button>`).join("")}</div>` : ""; })()}
   <div class="kpis">
     <div class="kpi"><span>${t("totalOrders")}</span><b>${fmt0(sum("orders"))}</b></div>
     <div class="kpi"><span>${t("gross")}</span><b>${fmt(sum("gross"))}</b><small>${t("sar")}</small></div>
@@ -1031,9 +1035,9 @@ function vPayroll(){
     <div class="kpi"><span>${t("net")}</span><b>${fmt(sum("net"))}</b><small>${t("sar")}</small></div>
   </div>
   <section class="panel">${slips.length ? `<div class="scroll"><table>
-    <thead><tr><th>${t("name")}</th><th class="r">${t("orders")}</th><th class="r">${t("base")}</th><th class="r">${t("bonus")}</th><th class="r">${t("incent")}</th><th class="r">${t("overtime")}</th><th class="r">${t("shortfall")}</th><th class="r">${t("abs_col")}</th><th class="r">${t("fuelAdj")}</th><th class="r">${t("other")}</th><th class="r">${t("fineDed")}</th><th class="r">${t("advDed")}</th><th class="r">${t("net")}</th></tr></thead>
+    <thead><tr><th>${t("name")}</th><th class="r">${t("orders")}</th><th class="r">${t("base")}</th><th class="r">${t("bonus")}</th><th class="r">${t("incent")}</th><th class="r">${t("overtime")}</th><th class="r">${t("shortfall")}</th><th class="r">${t("abs_col")}</th><th class="r">${t("fuelAdj")}</th><th class="r">${t("other")}</th><th class="r">${t("fineDed")}</th><th class="r">${t("advDed")}</th><th class="r">${t("net")}</th>${published ? "<th></th>" : ""}</tr></thead>
     <tbody>${slips.map(s => `<tr>
-      <td><div class="name">${esc(s.name)}</div><div class="sub">${rkPill(s.payType)}${s.grade ? ` <span class="grade sm ${gradeCls(s.grade)}" title="${t("pg_col")}">${s.grade}</span>${s.gradeSrc === "default" ? ` <span class="sub">(${t("pg_default")})</span>` : ""}` : ""}</div>
+      <td><div class="name">${esc(state.emp[s.id]?.fullName || s.name)}${!state.emp[s.id] ? ` <span class="pill p-mute nodot">${t("pay_gone")}</span>` : ""}</div><div class="sub">${rkPill(s.payType)}${s.grade ? ` <span class="grade sm ${gradeCls(s.grade)}" title="${t("pg_col")}">${s.grade}</span>${s.gradeSrc === "default" ? ` <span class="sub">(${t("pg_default")})</span>` : ""}` : ""}</div>
         <div class="sub">${t("fuel")}: ${fmt(s.fuelSpent)} · ${t("fuel_allow")}: ${fmt(s.allowance)}</div>${s.manual ? `<span class="pill p-warn nodot" style="margin-top:4px">${t(s.manual === "gradeD" ? "pay_manual_d" : "pay_manual_low")}</span>` : ""}</td>
       <td class="r">${fmt0(s.orders)}</td>
       ${s.manual && !published ? `<td class="r"><input class="input num" type="number" step="0.01" data-adj="man" data-id="${s.id}" value="${s.adj?.man ?? ""}" placeholder="${t("pay_manual")}" title="${t("pay_manual")}"></td>` : `<td class="r nowrap">${fmt(s.base)}</td>`}
@@ -1046,6 +1050,7 @@ function vPayroll(){
       <td class="r nowrap ${s.fineDed?"neg":""}">${s.fineDed?"−"+fmt(s.fineDed):fmt(0)}</td>
       <td class="r nowrap ${s.advDed?"neg":""}">${s.advDed?"−"+fmt(s.advDed):fmt(0)}</td>
       <td class="r nowrap"><b>${fmt(s.net)}</b></td>
+      ${published ? `<td><button class="btn ghost sm danger-t" data-act="slip-del" data-id="${esc(s.id)}" data-needs-write title="${t("slip_del")}">${t("delete")}</button></td>` : ""}
     </tr>`).join("")}</tbody></table></div>`
     : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</section>`;
 }
@@ -1303,6 +1308,28 @@ document.addEventListener("click", async e => {
     }
     if (act === "due-del") {
       openDialog({ title: t("delete"), body: `<p class="full">${t("du_del_q")}</p>`, submit: t("delete"), danger: true, onSubmit: async () => { await db.doc(id).delete(); toast(t("du_deleted")); } });
+      return;
+    }
+    if (act === "pay-month") { state.payMonth = b.dataset.v; state.adjDraft = {}; subMonth(); render(); return; }
+    if (act === "pay-delete" || act === "slip-del") {
+      const m = state.payMonth, d = payDoc(), one = act === "slip-del" ? id : null;
+      const who = one ? (state.emp[one]?.fullName || d?.slips?.find(x => x.id === one)?.name || one) : "";
+      openDialog({ title: one ? t("slip_del") : t("pay_del"), danger: true, submit: t("delete"),
+        body: `<p class="full">${one ? t("slip_del_q", { n: esc(who), m }) : t("pay_del_q", { m })}</p>`,
+        onSubmit: async () => {
+          // give back dues instalments that this payroll took
+          for (const [coll, map] of [["fines", state.fines], ["advances", state.adv]]) for (const [did, x] of Object.entries(map)) {
+            if (one && x.employeeId !== one) continue;
+            const h = x.history ?? []; if (!h.some(z => z.month === m && isPayrollEntry(z))) continue;
+            await db.doc(coll + "/" + did).update(withHistory(+x.amount || 0, h.filter(z => !(z.month === m && isPayrollEntry(z)))));
+          }
+          if (one) {
+            const slips = (d.slips ?? []).filter(x => x.id !== one), adj = { ...(d.adj ?? {}) }; delete adj[one];
+            if (slips.length) await db.doc("payroll/" + m).set({ ...d, slips, adj, updatedAt: Date.now() });
+            else await db.doc("payroll/" + m).delete();
+          } else await db.doc("payroll/" + m).delete();
+          state.adjDraft = {}; toast(t("du_deleted"));
+        }});
       return;
     }
     if (act === "pay-reopen") {
@@ -1716,7 +1743,7 @@ function loginScreen(kind, m){
   const waiting = kind === "login" && claim && (!claim.result || claim.result === "ok");
   return `<div class="p-top" style="justify-content:flex-end"><div class="p-lang">${langMini()}</div></div>
   <div class="p-login">
-    <div class="mark">ASB</div>
+    <div class="mark"><img src="logo.png" alt="ASB"></div>
     <div><h1>${t("login_title")}</h1><p class="sub" style="margin:4px 0 0">${t("login_sub")}</p></div>
     ${waiting ? `<div class="p-card"><b>${t("verifying")}</b><p class="sub" style="margin:6px 0 0">${t("verifying_hint")}</p></div>` : `
     <form id="${kind === "login" ? "loginForm" : "unlockForm"}" class="p-login-form" novalidate style="display:flex;flex-direction:column;gap:12px">
@@ -1741,10 +1768,10 @@ function renderEmployee(){
   let html;
   if (state.mode === "driverTest") { root.innerHTML = `<div class="phone full">${driverTestHtml()}</div>`; return; }
   const m = myMirror();
-  if (state.offline) html = `<div class="p-login"><div class="mark">ASB</div><b>${t("offline")}</b></div>`;
-  else if (!state.myId) html = `<div class="p-top" style="justify-content:flex-end"><div class="p-lang">${langMini()}</div></div><div class="p-login"><div class="mark">ASB</div><h1>${t("signin_needed")}</h1><p class="sub">${t("signin_needed_hint")}</p></div>`;
-  else if (!appState.loaded) html = `<div class="p-login"><div class="mark">ASB</div><b>${t("loading")}</b></div>`;
-  else if (m?.revoked) html = `<div class="p-top" style="justify-content:flex-end"><div class="p-lang">${langMini()}</div></div><div class="p-login"><div class="mark">ASB</div><h1>${t("deactivated")}</h1><p class="sub">${t("deactivated_hint")}</p></div>`;
+  if (state.offline) html = `<div class="p-login"><div class="mark"><img src="logo.png" alt="ASB"></div><b>${t("offline")}</b></div>`;
+  else if (!state.myId) html = `<div class="p-top" style="justify-content:flex-end"><div class="p-lang">${langMini()}</div></div><div class="p-login"><div class="mark"><img src="logo.png" alt="ASB"></div><h1>${t("signin_needed")}</h1><p class="sub">${t("signin_needed_hint")}</p></div>`;
+  else if (!appState.loaded) html = `<div class="p-login"><div class="mark"><img src="logo.png" alt="ASB"></div><b>${t("loading")}</b></div>`;
+  else if (m?.revoked) html = `<div class="p-top" style="justify-content:flex-end"><div class="p-lang">${langMini()}</div></div><div class="p-login"><div class="mark"><img src="logo.png" alt="ASB"></div><h1>${t("deactivated")}</h1><p class="sub">${t("deactivated_hint")}</p></div>`;
   else if (!m) html = loginScreen("login");
   else {
     const u = readUnlock();
@@ -1864,11 +1891,11 @@ Object.assign(I18N.en, { open_driver: "Driver app (PIN login)", test_note: "You 
 Object.assign(I18N.bn, { open_driver: "ড্রাইভার অ্যাপ (পিন লগইন)", test_note: "আপনি এডমিন। যেকোনো ড্রাইভারের ইকামা + পিন দিয়ে তার অ্যাপ দেখুন। ড্রাইভাররা শুধু নিজেরটা দেখে।", to_admin: "এডমিন প্যানেলে ফিরুন" });
 Object.assign(I18N.ar, { open_driver: "تطبيق السائق (دخول بالرقم السري)", test_note: "أنت مشرف. ادخل برقم إقامة ورقم سري أي سائق لترى تطبيقه. السائق يرى تطبيقه فقط.", to_admin: "العودة للوحة الإدارة" });
 function driverTestHtml(){
-  if (!state.ready) return `<div class="p-login"><div class="mark">ASB</div><b>${t("loading")}</b></div>`;
+  if (!state.ready) return `<div class="p-login"><div class="mark"><img src="logo.png" alt="ASB"></div><b>${t("loading")}</b></div>`;
   if (testState.id && state.emp[testState.id]?.status === "ACTIVE") return appScreens(buildMirror(testState.id), {});
   const inApk = /ASBDriverApp/.test(navigator.userAgent || "");
   return `<div class="p-top">${inApk ? "" : `<a class="btn ghost sm" href="#dashboard" style="background:none;color:inherit;border-color:currentColor">← ${t("to_admin")}</a>`}<div class="p-lang">${langMini()}</div></div>
-  <div class="p-login"><div class="mark">ASB</div>
+  <div class="p-login"><div class="mark"><img src="logo.png" alt="ASB"></div>
     <div><h1>${t("login_title")}</h1><p class="sub" style="margin:4px 0 0">${t("login_sub")}</p></div>
     <form id="testForm" novalidate style="display:flex;flex-direction:column;gap:12px">
       <label class="f">${t("iqama")}<input class="input p-big-input mono" id="liIqama" inputmode="numeric" maxlength="10"></label>
@@ -2003,7 +2030,7 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "The person then creates an account on this page with that email.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", nt_send: "Send notice", nt_send_btn: "Send", nt_help: "Drivers see it in the app and as a phone notification. Daily updates (performance, orders, salary, dues) send a notice by themselves.", nt_to: "To", nt_all: "All drivers", nt_title: "Title", nt_title_ph: "e.g. Today's orders are updated", nt_body: "Message (optional)", nt_sent: "Notice sent", du_nodate: "No date", du_manual: "by hand", du_manual_t: "No automatic monthly instalment — record deductions yourself or set a monthly amount.", app_never: "App not opened yet", app_online: "Online now", app_offline: "Offline", app_open_for: "open for {d}", app_last: "last seen {t}", app_today: "Today", app_week_s: "7 days", app_week: "Last 7 days",
+  drv_web: "Driver app (web)", pay_del: "Delete month", pay_del_q: "Delete the whole payroll for {m}? Payslips leave the driver app and any dues instalments taken in {m} are put back. This cannot be undone.", slip_del: "Delete payslip", slip_del_q: "Delete the {m} payslip of {n}? Their dues instalments for {m} are put back.", pay_gone: "deleted employee", pay_saved: "Saved months", nt_send: "Send notice", nt_send_btn: "Send", nt_help: "Drivers see it in the app and as a phone notification. Daily updates (performance, orders, salary, dues) send a notice by themselves.", nt_to: "To", nt_all: "All drivers", nt_title: "Title", nt_title_ph: "e.g. Today's orders are updated", nt_body: "Message (optional)", nt_sent: "Notice sent", du_nodate: "No date", du_manual: "by hand", du_manual_t: "No automatic monthly instalment — record deductions yourself or set a monthly amount.", app_never: "App not opened yet", app_online: "Online now", app_offline: "Offline", app_open_for: "open for {d}", app_last: "last seen {t}", app_today: "Today", app_week_s: "7 days", app_week: "Last 7 days",
   app_online_n: "online", dur_m: "{m} min", dur_hm: "{h} h {m} min", ago_m: "{n} min ago", ago_h: "{n} h ago",
   emp_del_t: "Delete employee", emp_del_q: "This removes the employee from the panel and the app. Their sign-in stops working. This cannot be undone.", emp_del_dues: "Their {n} dues records will be deleted too.", emp_deleted: "Employee deleted", platform: "Works on", pin_set: "Set PIN", pin_change: "Change PIN", pin_missing: "without PIN", pin_manual: "PIN (4 digits)", pin_4: "The PIN must be exactly 4 digits",
   pin_manual_help: "Type the PIN you want to give the driver, or leave it empty to create one automatically.", pin_title_new: "App sign-in PIN", no_city: "No city", emp_n: "drivers", all: "All", nav_dues: "Dues overview", du_hint: "Everything each driver owes — fines, advances, damage and more. Click a driver to see and edit each item.",
@@ -2037,7 +2064,7 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "তারপর ওই ব্যক্তি এই পাতায় সেই ইমেইল দিয়ে অ্যাকাউন্ট খুলবেন।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", nt_send: "নোটিশ পাঠান", nt_send_btn: "পাঠান", nt_help: "কর্মীরা অ্যাপে আর ফোনের নোটিফিকেশনে দেখবে। পারফরমেন্স, অর্ডার, বেতন বা বকেয়া আপডেট করলে নোটিশ নিজে থেকেই চলে যায়।", nt_to: "কাকে", nt_all: "সব কর্মী", nt_title: "শিরোনাম", nt_title_ph: "যেমন: আজকের অর্ডার আপডেট হয়েছে", nt_body: "বার্তা (ইচ্ছা হলে)", nt_sent: "নোটিশ পাঠানো হয়েছে", du_nodate: "তারিখ নেই", du_manual: "হাতে কাটা", du_manual_t: "মাসিক কিস্তি নিজে থেকে কাটা হবে না — কাটার হিসাব নিজে লিখুন অথবা মাসিক পরিমাণ দিন।", app_never: "এখনো অ্যাপ খোলেনি", app_online: "এখন অনলাইন", app_offline: "অফলাইন", app_open_for: "{d} ধরে খোলা", app_last: "শেষ দেখা {t}", app_today: "আজ", app_week_s: "৭ দিনে", app_week: "গত ৭ দিন",
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", pay_del: "মাস মুছুন", pay_del_q: "{m} মাসের পুরো বেতন হিসাব মুছে ফেলবেন? কর্মীদের অ্যাপ থেকে পে-স্লিপ সরে যাবে, আর {m} মাসে কাটা বকেয়ার কিস্তি ফেরত যাবে। ফেরানো যাবে না।", slip_del: "পে-স্লিপ মুছুন", slip_del_q: "{n}-এর {m} মাসের পে-স্লিপ মুছবেন? তার {m} মাসে কাটা বকেয়ার কিস্তি ফেরত যাবে।", pay_gone: "মুছে ফেলা কর্মী", pay_saved: "সংরক্ষিত মাস", nt_send: "নোটিশ পাঠান", nt_send_btn: "পাঠান", nt_help: "কর্মীরা অ্যাপে আর ফোনের নোটিফিকেশনে দেখবে। পারফরমেন্স, অর্ডার, বেতন বা বকেয়া আপডেট করলে নোটিশ নিজে থেকেই চলে যায়।", nt_to: "কাকে", nt_all: "সব কর্মী", nt_title: "শিরোনাম", nt_title_ph: "যেমন: আজকের অর্ডার আপডেট হয়েছে", nt_body: "বার্তা (ইচ্ছা হলে)", nt_sent: "নোটিশ পাঠানো হয়েছে", du_nodate: "তারিখ নেই", du_manual: "হাতে কাটা", du_manual_t: "মাসিক কিস্তি নিজে থেকে কাটা হবে না — কাটার হিসাব নিজে লিখুন অথবা মাসিক পরিমাণ দিন।", app_never: "এখনো অ্যাপ খোলেনি", app_online: "এখন অনলাইন", app_offline: "অফলাইন", app_open_for: "{d} ধরে খোলা", app_last: "শেষ দেখা {t}", app_today: "আজ", app_week_s: "৭ দিনে", app_week: "গত ৭ দিন",
   app_online_n: "জন অনলাইন", dur_m: "{m} মিনিট", dur_hm: "{h} ঘণ্টা {m} মিনিট", ago_m: "{n} মিনিট আগে", ago_h: "{n} ঘণ্টা আগে",
   emp_del_t: "কর্মী মুছুন", emp_del_q: "কর্মীকে প্যানেল ও অ্যাপ থেকে সরিয়ে দেওয়া হবে, তার লগইন আর কাজ করবে না। এটা ফেরানো যাবে না।", emp_del_dues: "তার {n}টি বকেয়ার হিসাবও মুছে যাবে।", emp_deleted: "কর্মী মুছে ফেলা হয়েছে", platform: "কোথায় কাজ করে", pin_set: "পিন দিন", pin_change: "পিন বদলান", pin_missing: "জনের পিন নেই", pin_manual: "পিন (৪ সংখ্যা)", pin_4: "পিন ঠিক ৪ সংখ্যার হতে হবে",
   pin_manual_help: "কর্মীকে যে পিন দিতে চান সেটা লিখুন, অথবা খালি রাখলে নিজে থেকে একটা পিন তৈরি হবে।", pin_title_new: "অ্যাপ লগইনের পিন", no_city: "শহর দেওয়া নেই", emp_n: "জন", all: "সবাই", nav_dues: "বকেয়ার হিসাব", du_hint: "প্রত্যেক কর্মীর সব বকেয়া — জরিমানা, অগ্রিম, গাড়ির ক্ষতি ইত্যাদি। কর্মীর নামে চাপলে প্রতিটি হিসাব দেখা ও বদলানো যাবে।",
@@ -2071,7 +2098,7 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "ثم ينشئ الشخص حساباً من هذه الصفحة بنفس البريد.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", nt_send: "إرسال إشعار", nt_send_btn: "إرسال", nt_help: "يراه السائقون في التطبيق وكإشعار على الهاتف. تحديثات الأداء والطلبات والرواتب والمستحقات ترسل إشعاراً تلقائياً.", nt_to: "إلى", nt_all: "كل السائقين", nt_title: "العنوان", nt_title_ph: "مثال: تم تحديث طلبات اليوم", nt_body: "الرسالة (اختياري)", nt_sent: "تم إرسال الإشعار", du_nodate: "بدون تاريخ", du_manual: "يدوي", du_manual_t: "لا يوجد قسط شهري تلقائي — سجّل الخصومات بنفسك أو حدد مبلغاً شهرياً.", app_never: "لم يفتح التطبيق بعد", app_online: "متصل الآن", app_offline: "غير متصل", app_open_for: "مفتوح منذ {d}", app_last: "آخر ظهور {t}", app_today: "اليوم", app_week_s: "7 أيام", app_week: "آخر 7 أيام",
+  drv_web: "تطبيق السائق (ويب)", pay_del: "حذف الشهر", pay_del_q: "حذف رواتب {m} بالكامل؟ تختفي القسائم من التطبيق وتُعاد أقساط المستحقات المخصومة في {m}. لا يمكن التراجع.", slip_del: "حذف القسيمة", slip_del_q: "حذف قسيمة {m} لـ {n}؟ تُعاد أقساط مستحقاته في {m}.", pay_gone: "موظف محذوف", pay_saved: "الأشهر المحفوظة", nt_send: "إرسال إشعار", nt_send_btn: "إرسال", nt_help: "يراه السائقون في التطبيق وكإشعار على الهاتف. تحديثات الأداء والطلبات والرواتب والمستحقات ترسل إشعاراً تلقائياً.", nt_to: "إلى", nt_all: "كل السائقين", nt_title: "العنوان", nt_title_ph: "مثال: تم تحديث طلبات اليوم", nt_body: "الرسالة (اختياري)", nt_sent: "تم إرسال الإشعار", du_nodate: "بدون تاريخ", du_manual: "يدوي", du_manual_t: "لا يوجد قسط شهري تلقائي — سجّل الخصومات بنفسك أو حدد مبلغاً شهرياً.", app_never: "لم يفتح التطبيق بعد", app_online: "متصل الآن", app_offline: "غير متصل", app_open_for: "مفتوح منذ {d}", app_last: "آخر ظهور {t}", app_today: "اليوم", app_week_s: "7 أيام", app_week: "آخر 7 أيام",
   app_online_n: "متصل", dur_m: "{m} دقيقة", dur_hm: "{h} س {m} د", ago_m: "قبل {n} دقيقة", ago_h: "قبل {n} ساعة",
   emp_del_t: "حذف الموظف", emp_del_q: "سيُحذف الموظف من اللوحة والتطبيق ويتوقف دخوله. لا يمكن التراجع.", emp_del_dues: "ستُحذف أيضاً {n} من مستحقاته.", emp_deleted: "تم حذف الموظف", platform: "يعمل في", pin_set: "تعيين الرقم السري", pin_change: "تغيير الرقم السري", pin_missing: "بدون رقم سري", pin_manual: "الرقم السري (4 أرقام)", pin_4: "يجب أن يكون الرقم السري 4 أرقام",
   pin_manual_help: "اكتب الرقم السري الذي تريده للسائق، أو اتركه فارغاً لإنشائه تلقائياً.", pin_title_new: "رقم الدخول للتطبيق", no_city: "بدون مدينة", emp_n: "سائق", all: "الكل", nav_dues: "المستحقات", du_hint: "كل ما على السائق — مخالفات وسلف وأضرار وغيرها. اضغط على السائق لعرض وتعديل كل بند.",
@@ -2108,7 +2135,7 @@ function renderAuth(){
   const up = auth.mode === "signup";
   root.innerHTML = `<div class="phone full"><div class="p-top" style="justify-content:flex-end"><div class="p-lang">${langMini()}</div></div>
   <div class="p-login">
-    <div class="mark">ASB</div>
+    <div class="mark"><img src="logo.png" alt="ASB"></div>
     <div><h1>${t("au_title")}</h1><p class="sub" style="margin:4px 0 0">${t("au_sub")}</p></div>
     <form id="authForm" novalidate style="display:flex;flex-direction:column;gap:12px">
       <label class="f">${t("au_email")}<input class="input" id="auEmail" type="email" autocomplete="username" required></label>

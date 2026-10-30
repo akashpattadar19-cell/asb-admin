@@ -38,7 +38,8 @@ button{cursor:pointer}
 .login{min-height:100%;display:flex;flex-direction:column;background:var(--cab);color:var(--cab-ink)}
 .login-top{padding:calc(env(safe-area-inset-top,0px) + 14px) max(18px,env(safe-area-inset-right,0px)) 0 max(18px,env(safe-area-inset-left,0px));display:flex;justify-content:flex-end}
 .brand{display:flex;flex-direction:column;align-items:center;gap:10px;padding:26px 20px 30px;position:relative}
-.brand svg{width:86px;height:96px;filter:drop-shadow(0 8px 18px rgba(0,0,0,.35))}
+.logo-badge{width:132px;height:132px;border-radius:34px;background:linear-gradient(160deg,#fff,#EAF1FB);display:grid;place-items:center;box-shadow:0 14px 34px rgba(0,0,0,.35),inset 0 0 0 1px rgba(255,255,255,.6)}
+.logo-badge img{width:90%;height:90%;object-fit:contain}
 .brand h1{margin:0;font:700 30px/1 var(--f-display);letter-spacing:.08em}
 .brand p{margin:0;opacity:.75;font-size:13.5px;letter-spacing:.04em}
 .road{position:absolute;left:0;right:0;bottom:0;height:6px;background:repeating-linear-gradient(90deg,var(--gold) 0 26px,transparent 26px 46px);opacity:.55}
@@ -90,7 +91,9 @@ button{cursor:pointer}
 .ntc{display:flex;gap:12px;align-items:center;width:100%;text-align:start;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:12px;color:inherit;font:inherit}
 .ntc.unread{border-color:var(--gold);background:linear-gradient(0deg,rgba(242,189,69,.10),rgba(242,189,69,.10)),var(--card)}
 .ntc-ic{width:38px;height:38px;border-radius:11px;background:var(--sunk);display:grid;place-items:center;flex:none;color:var(--ink)}
-.ntc.unread .ntc-ic{background:var(--gold);color:#0A2A47}
+.ntc-ic{color:#fff}
+.ntc-ic.k-perf{background:linear-gradient(135deg,#8B6CF0,#2F6FD6)} .ntc-ic.k-orders{background:linear-gradient(135deg,#F7B531,#EE6A1F)}
+.ntc-ic.k-salary{background:linear-gradient(135deg,#2BC48A,#13895A)} .ntc-ic.k-due{background:linear-gradient(135deg,#F59E5B,#E5484D)} .ntc-ic.k-msg{background:linear-gradient(135deg,#3B82F6,#1E4FA8)}
 .ntc-ic svg{width:20px;height:20px}
 .ntc-t{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
 .ntc-t b{font-weight:700} .ntc-t small{color:var(--muted);font-size:13px} .ntc-t em{font-style:normal;color:var(--muted);font-size:12px}
@@ -166,7 +169,9 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .tile{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:14px;text-align:start;color:var(--ink);display:flex;flex-direction:column;gap:4px;min-width:0}
 .tile:active{transform:scale(.98)}
 .tile-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.tile-ic{width:44px;height:44px;border-radius:12px;background:var(--sunk);display:grid;place-items:center;color:var(--gold)}
+.tile-ic{width:44px;height:44px;border-radius:13px;background:var(--sunk);display:grid;place-items:center;color:#fff}
+.tile[data-sub="perf"] .tile-ic{background:linear-gradient(135deg,#8B6CF0,#2F6FD6);box-shadow:0 6px 14px rgba(76,90,220,.35)}
+.tile[data-sub="target"] .tile-ic{background:linear-gradient(135deg,#F7B531,#EE6A1F);box-shadow:0 6px 14px rgba(238,106,31,.3)}
 .tile-ic svg{width:24px;height:24px}
 .tile-go{font-size:22px;color:var(--muted)}
 .tile b{font:600 18px var(--f-display);letter-spacing:.02em}
@@ -199,9 +204,10 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .empty{text-align:center;color:var(--muted);padding:26px 10px}
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px))}
 .nav button{position:relative;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;font-size:11.5px;font-weight:600;color:var(--muted)}
-.nav button svg{width:24px;height:24px}
+.nav button svg{width:46px;height:30px;padding:4px 11px;border-radius:12px;color:var(--c);transition:background .15s,color .15s}
+.nav button[data-tab="home"]{--c:#2F6FD6} .nav button[data-tab="fines"]{--c:#EA7A1B} .nav button[data-tab="salary"]{--c:#16A06A} .nav button[data-tab="profile"]{--c:#7C5CE0}
 .nav button[aria-current="page"]{color:var(--ink)}
-.nav button[aria-current="page"] svg{color:var(--gold)}
+.nav button[aria-current="page"] svg{color:#fff;background:var(--c);box-shadow:0 4px 12px color-mix(in srgb,var(--c) 45%,transparent)}
 .nav .badge{position:absolute;top:3px;inset-inline-start:calc(50% + 7px);min-width:9px;height:9px;border-radius:9px;background:var(--bad)}
 .updated{text-align:center;font-size:12px;color:var(--muted)}
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--card);padding:10px 16px;border-radius:12px;font-size:14px;z-index:30;max-width:calc(100vw - 32px)}
@@ -301,11 +307,7 @@ const I = {
   target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/>',
 };
 const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
-const SHIELD = `<svg viewBox="0 0 86 96" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F2BD45"/><stop offset="1" stop-color="#C98C14"/></linearGradient></defs>
-<path d="M43 3 79 15v28c0 24-15.5 40-36 50C22.5 83 7 67 7 43V15L43 3Z" fill="url(#g)"/>
-<path d="M43 11 72 21v22c0 19.5-12.3 33-29 41.5C26.3 76 14 62.5 14 43V21L43 11Z" fill="#0A2A47"/>
-<text x="43" y="54" text-anchor="middle" font-family="Barlow Semi Condensed,Arial Narrow,sans-serif" font-weight="700" font-size="25" fill="#F2BD45" letter-spacing="1.5">ASB</text>
-<path d="M24 64h38" stroke="#F2BD45" stroke-width="3" stroke-linecap="round" stroke-dasharray="7 5"/></svg>`;
+const SHIELD = `<span class="logo-badge"><img src="logo.png" alt="ASB"></span>`;
 const langBtns = () => [["en","EN"],["bn","বাংলা"],["ar","عربي"]].map(([k,l]) => `<button data-lang="${k}" aria-pressed="${k===lang}">${l}</button>`).join("");
 const ava = (url, name, size, extra = "") => url
   ? `<img class="ph" src="${esc(url)}" alt="" style="width:${size}px;height:${size}px;${extra}" onerror="this.onerror=null;this.removeAttribute('src')">`
@@ -411,7 +413,7 @@ const noticeGo = n => ({ perf: 'data-sub="perf"', orders: 'data-sub="target"', s
 const whenTxt = at => new Date(+at).toLocaleString(lang === "ar" ? "ar-SA" : "en-GB", { timeZone: "Asia/Riyadh", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 function noticeRow(n, unread){
   const [ti, bo] = noticeText(n), go = noticeGo(n);
-  return `<${go ? "button" : "div"} class="ntc ${unread ? "unread" : ""}" ${go}><span class="ntc-ic">${icon(n.kind === "perf" ? "chart" : n.kind === "orders" ? "target" : n.kind === "salary" ? "salary" : n.kind?.startsWith("due") ? "fines" : "bell")}</span>
+  return `<${go ? "button" : "div"} class="ntc ${unread ? "unread" : ""}" ${go}><span class="ntc-ic k-${esc(String(n.kind || "msg").split("_")[0])}">${icon(n.kind === "perf" ? "chart" : n.kind === "orders" ? "target" : n.kind === "salary" ? "salary" : n.kind?.startsWith("due") ? "fines" : "bell")}</span>
     <span class="ntc-t"><b>${ti}</b>${bo ? `<small>${bo}</small>` : ""}<em>${whenTxt(n.at)}</em></span>${go ? `<span class="tile-go">›</span>` : ""}</${go ? "button" : "div"}>`;
 }
 function vNotices(m){
