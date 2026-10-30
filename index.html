@@ -269,6 +269,21 @@ dialog::backdrop{background:rgba(5,15,25,.5)}
 .rk-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap} .rk-sw.dim{opacity:.4}
 .po-btn{border:1.5px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:4px 10px;font:600 12.5px var(--f-body,inherit);cursor:pointer;white-space:nowrap}
 .po-btn.on{background:#0E7C66;border-color:#0E7C66;color:#fff}
+.map-wrap{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:14px;align-items:stretch}
+.map-slot,.map-canvas{min-height:560px;height:calc(100vh - 230px);border-radius:16px;overflow:hidden;background:#E8EEF3}
+.map-canvas{width:100%;height:100%}
+.map-side{padding:12px;max-height:calc(100vh - 230px);min-height:560px;overflow:auto;display:flex;flex-direction:column}
+@media (max-width:900px){.map-wrap{grid-template-columns:1fr}.map-slot,.map-canvas{height:60vh;min-height:360px}.map-side{max-height:none;min-height:0}}
+.map-chips{display:flex;flex-wrap:wrap;gap:6px}.mc{display:inline-flex;align-items:center;gap:5px;font-size:12.5px;font-weight:600;padding:4px 8px;border-radius:999px;background:var(--sunk,#F1F4F7)}
+.mc i,.dot{width:9px;height:9px;border-radius:50%;display:inline-block;flex:none}
+.live i,.dot.live{background:#16A34A;box-shadow:0 0 0 3px rgba(22,163,74,.2)} .idle i,.dot.idle{background:#F59E0B} .off i,.dot.off{background:#DC2626} .none i,.dot.none,.dot.wait{background:#A3AEBB}
+.map-list{display:flex;flex-direction:column;gap:2px;overflow:auto}
+.ml-row{display:flex;align-items:center;gap:8px;padding:7px 4px;border-bottom:1px solid var(--line)}
+.ml-main{flex:1;display:flex;align-items:center;gap:10px;background:none;border:0;padding:0;text-align:start;cursor:pointer;color:inherit;font:inherit;min-width:0}
+.ml-t{display:flex;flex-direction:column;min-width:0;flex:1}.ml-t b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ml-t small{font-size:12px;color:var(--muted)}
+.mk{display:flex!important;align-items:center;justify-content:center;border-radius:50%;border:2.5px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.35);color:#fff;font:700 11.5px/1 system-ui,sans-serif}
+.mk-live{background:#16A34A}.mk-idle{background:#F59E0B}.mk-off{background:#DC2626}.mk-wait,.mk-none{background:#7A8796}.mk-start{background:#16A34A;font-size:10px}.mk-end{background:#DC2626;font-size:10px}
+.rt-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}.rt-stats div{background:var(--sunk,#F1F4F7);border-radius:10px;padding:8px 10px}.rt-stats span{display:block;font-size:11.5px;color:var(--muted)}.rt-stats b{font-size:18px}
 .iban{font-family:ui-monospace,Menlo,monospace;letter-spacing:.04em;white-space:nowrap}
 .seg2-o{position:relative;display:flex;flex-direction:column;gap:2px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}
 .seg2-o input{position:absolute;opacity:0;pointer-events:none}
@@ -439,7 +454,7 @@ let db = null, downloads = null, unsubOps = null, unsubMonth = null;
 const payDoc = () => state.payroll[state.payMonth] ?? null;
 
 /* ───────── routing ───────── */
-const VIEWS = ["dashboard","employees","target","perf","operations","fuel","dues","payroll","bank","activity","bin","app","rules","admins"];
+const VIEWS = ["dashboard","map","employees","target","perf","operations","fuel","dues","payroll","bank","activity","bin","app","rules","admins"];
 const SUB_VIEWS = ["target","perf"];
 const view = () => { const h = location.hash.slice(1); return VIEWS.includes(h) ? h : "dashboard"; };
 window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
@@ -482,9 +497,10 @@ function render(){
   if (state.offline) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("offline")}</b></div>`; return; }
   if (!state.ready) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("loading")}</b></div>`; return; }
   const ro = state.canWrite ? "" : `<div class="note warn">${t("readOnly")}</div>`;
-  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, dues: vDues, fuel: vFuel, activity: vActivity, bin: vBinAll, bank: vBank, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
+  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, dues: vDues, fuel: vFuel, activity: vActivity, bin: vBinAll, bank: vBank, map: vMap, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
   main.querySelectorAll("[data-needs-write]").forEach(el => { if (!state.canWrite) el.disabled = true; });
   if (!state.canWrite) main.querySelectorAll("input:not([id]),select:not([id]),textarea:not([id]),#rulesForm button,#rulesForm input,[data-roleof]").forEach(el => el.disabled = true);
+  if (view() === "map") mountMap();
 }
 
 /* ───────── derived ───────── */
@@ -721,6 +737,135 @@ document.addEventListener("change", e => {
   if (e.target.id === "opsMonth" && e.target.value) { state.opsMonth = e.target.value; state.opsDraft = {}; render(); }
   if (e.target.id === "payMonth" && e.target.value) { state.payMonth = e.target.value; state.adjDraft = {}; subMonth(); render(); }
 });
+
+/* ───────── Map: where company vehicles are (phone location while the driver's screen is on) ───────── */
+const MAP = { el: null, map: null, live: null, routeL: null, last: [], loaded: false, loading: false, timer: 0, sel: "", day: "", pts: null, fitted: false };
+function leaflet(){
+  if (window.L) return Promise.resolve();
+  return MAP.lp ??= new Promise((res, rej) => {
+    const CDN = ["https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/", "https://unpkg.com/leaflet@1.9.4/dist/"];
+    const go = i => {
+      if (i >= CDN.length) { MAP.lp = null; return rej(new Error("leaflet")); }
+      const c = document.createElement("link"); c.rel = "stylesheet"; c.href = CDN[i] + "leaflet.css"; document.head.append(c);
+      const sc = document.createElement("script"); sc.src = CDN[i] + "leaflet.js"; sc.onload = res; sc.onerror = () => { c.remove(); sc.remove(); go(i + 1); }; document.head.append(sc);
+    };
+    go(0);
+  });
+}
+const lastOf = id => MAP.last.find(r => r.emp_id === id);
+function locSt(r){
+  if (!r) return "none";
+  if (["denied", "gps_off", "signed_out"].includes(r.state)) return r.state === "signed_out" ? "none" : "off";
+  const age = r.at ? Date.now() - new Date(r.at).getTime() : Infinity;
+  if (age < 6 * 60e3 && r.state !== "screen_off") return "live";
+  return r.at ? "idle" : "wait";
+}
+const mAgo = at => { if (!at) return "—"; const m = Math.round((Date.now() - new Date(at).getTime()) / 60e3); return m < 1 ? t("map_now") : m < 60 ? t("map_min", { n: m }) : m < 1440 ? t("map_hr", { n: Math.floor(m / 60) }) : new Date(at).toLocaleDateString("en-GB", { timeZone: "Asia/Riyadh", day: "2-digit", month: "short" }); };
+const hhmm = at => new Date(at).toLocaleTimeString("en-GB", { timeZone: "Asia/Riyadh", hour: "2-digit", minute: "2-digit" });
+const initials = n => String(n || "?").split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+async function loadLocs(){
+  if (MAP.loading) return; MAP.loading = true;
+  try { const { data } = await sb.from("loc_last").select("*"); MAP.last = data ?? []; MAP.loaded = true; } catch {} finally { MAP.loading = false; }
+  if (view() === "map") { const sd = $("#mapSide"); if (sd) sd.innerHTML = mapSide(); drawLive(); }
+}
+function vMap(){
+  if (!MAP.day) MAP.day = todayKey();
+  return `
+  <div class="head"><div><h1>📍 ${t("nav_map")}</h1><p>${t("map_hint")}</p></div>
+    <div class="tools"><button class="btn ghost" data-act="map-reload">↻ ${t("act_reload")}</button></div></div>
+  <div class="map-wrap"><div id="mapSlot" class="map-slot"></div><aside id="mapSide" class="map-side panel">${mapSide()}</aside></div>
+  <p class="sub" style="margin-top:10px">${t("map_note")}</p>`;
+}
+function mapSide(){
+  if (!MAP.loaded) return `<div class="empty">${t("loading")}</div>`;
+  if (MAP.sel) return routeSide();
+  const emps = activeEmps().map(([id, e]) => ({ id, e, r: lastOf(id), st: locSt(lastOf(id)) }));
+  const q = (state.mq || "").trim().toLowerCase();
+  const order = { live: 0, idle: 1, off: 2, wait: 3, none: 4 };
+  const list = emps.filter(x => !q || [x.e.fullName, x.e.plate, x.e.residentId].some(v => String(v || "").toLowerCase().includes(q)))
+    .sort((a, b) => order[a.st] - order[b.st] || (b.r?.at ? new Date(b.r.at) : 0) - (a.r?.at ? new Date(a.r.at) : 0));
+  const n = k => emps.filter(x => x.st === k).length;
+  return `<div class="map-chips"><span class="mc live"><i></i>${n("live")} ${t("map_live")}</span><span class="mc idle"><i></i>${n("idle")} ${t("map_idle")}</span><span class="mc off"><i></i>${n("off")} ${t("map_off")}</span><span class="mc none"><i></i>${n("none") + n("wait")} ${t("map_none")}</span></div>
+  <input class="input" id="mq" placeholder="${t("search")}" value="${esc(state.mq || "")}" style="margin:8px 0">
+  <div class="map-list">${list.map(x => `<div class="ml-row">
+    <button class="ml-main" data-act="map-pan" data-id="${x.id}"><span class="dot ${x.st}"></span><span class="ml-t"><b>${esc(x.e.fullName)}</b><small>${x.e.plate ? esc(x.e.plate) + " · " : ""}${x.st === "live" ? t("map_live") : x.st === "idle" ? `${t("map_last")} ${mAgo(x.r.at)}` : x.st === "off" ? t(x.r.state === "gps_off" ? "map_gps_off" : "map_denied") : x.st === "wait" ? t("map_wait") : t("map_never")}</small></span></button>
+    <button class="btn ghost sm" data-act="map-route" data-id="${x.id}">${t("map_route")}</button></div>`).join("")}</div>`;
+}
+function routeSide(){
+  const e = state.emp[MAP.sel] || {}, P = MAP.pts;
+  let body = `<div class="empty">${t("loading")}</div>`;
+  if (P) {
+    const segs = splitSegs(P); let km = 0, mins = 0;
+    for (const sg of segs) { for (let i = 1; i < sg.length; i++) km += hav(sg[i - 1], sg[i]); if (sg.length > 1) mins += (new Date(sg[sg.length - 1].at) - new Date(sg[0].at)) / 60e3; }
+    body = P.length ? `<div class="rt-stats"><div><span>${t("map_km")}</span><b>${km.toFixed(1)}</b></div><div><span>${t("map_from")}</span><b>${hhmm(P[0].at)}</b></div><div><span>${t("map_to")}</span><b>${hhmm(P[P.length - 1].at)}</b></div><div><span>${t("map_on_h")}</span><b>${Math.floor(mins / 60)}:${String(Math.round(mins % 60)).padStart(2, "0")}</b></div></div>
+      <div class="map-list">${segs.map((sg, i) => `<div class="ml-row"><span class="ml-t"><b>${hhmm(sg[0].at)} – ${hhmm(sg[sg.length - 1].at)}</b><small>${sg.length} ${t("map_pts")}${sg.length > 1 ? ` · ${sg.slice(1).reduce((a, p, j) => a + hav(sg[j], p), 0).toFixed(1)} km` : ""}</small></span><button class="btn ghost sm" data-act="map-seg" data-id="${i}">${t("map_show")}</button></div>`).join("")}</div>`
+      : `<div class="empty"><b>${t("map_no_pts")}</b></div>`;
+  }
+  return `<button class="btn ghost sm" data-act="map-back">← ${t("map_back")}</button>
+    <h3 style="margin:10px 0 2px">${esc(e.fullName || MAP.sel)}</h3><div class="sub">${e.plate ? esc(e.plate) + " · " : ""}${esc(vehicleText(e))}</div>
+    <input class="input" type="date" id="mapDay" value="${esc(MAP.day)}" max="${todayKey()}" min="${new Date(Date.now() - 31 * 864e5).toISOString().slice(0, 10)}" style="margin:10px 0">
+    ${body}`;
+}
+function hav(a, b){ const R = 6371, r = x => x * Math.PI / 180, dl = r(b.lat - a.lat), dn = r(b.lng - a.lng); const h = Math.sin(dl / 2) ** 2 + Math.cos(r(a.lat)) * Math.cos(r(b.lat)) * Math.sin(dn / 2) ** 2; return 2 * R * Math.asin(Math.sqrt(h)); }
+/* a gap of more than 10 minutes (screen off) starts a new part of the route */
+function splitSegs(P){ const out = []; let cur = []; for (const p of P) { if (cur.length && new Date(p.at) - new Date(cur[cur.length - 1].at) > 10 * 60e3) { out.push(cur); cur = []; } cur.push(p); } if (cur.length) out.push(cur); return out; }
+function mountMap(){
+  const slot = $("#mapSlot"); if (!slot) return;
+  if (!MAP.el) { MAP.el = document.createElement("div"); MAP.el.className = "map-canvas"; }
+  slot.append(MAP.el);
+  leaflet().then(() => {
+    if (!MAP.map) {
+      MAP.map = L.map(MAP.el, { zoomControl: true }).setView([24.7136, 46.6753], 11);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", { maxZoom: 19, subdomains: "abcd", attribution: "© OpenStreetMap contributors © CARTO" }).addTo(MAP.map);
+      MAP.live = L.layerGroup().addTo(MAP.map); MAP.routeL = L.layerGroup().addTo(MAP.map);
+    }
+    setTimeout(() => MAP.map.invalidateSize(), 60);
+    MAP.sel ? drawRoute() : drawLive();
+  }).catch(() => { slot.innerHTML = `<div class="empty">${t("map_fail")}</div>`; });
+  if (!MAP.loaded) loadLocs();
+  clearInterval(MAP.timer);
+  MAP.timer = setInterval(() => { if (view() !== "map") return clearInterval(MAP.timer); loadLocs(); if (MAP.sel && MAP.day === todayKey()) loadRoute(); }, 60000);
+}
+function drawLive(){
+  if (!MAP.map || MAP.sel) return;
+  MAP.live.clearLayers(); MAP.routeL.clearLayers();
+  const ll = [];
+  for (const [id, e] of activeEmps()) {
+    const r = lastOf(id); if (!r?.lat) continue;
+    const st = locSt(r); ll.push([r.lat, r.lng]);
+    L.marker([r.lat, r.lng], { icon: L.divIcon({ className: "mk mk-" + st, html: `<b>${esc(initials(e.fullName))}</b>`, iconSize: [34, 34], iconAnchor: [17, 17] }) })
+      .bindTooltip(esc(e.fullName.split(" ").slice(0, 2).join(" ")), { direction: "top", offset: [0, -16] })
+      .bindPopup(`<b>${esc(e.fullName)}</b><br>${e.plate ? esc(e.plate) + " · " : ""}${esc(vehicleText(e))}<br>${hhmm(r.at)} (${mAgo(r.at)})${r.spd != null ? ` · ${Math.round(r.spd)} km/h` : ""}<br><a href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" rel="noopener">Google Maps ↗</a> · <a href="#" data-act="map-route" data-id="${id}">${t("map_route")}</a>`)
+      .addTo(MAP.live);
+  }
+  if (ll.length && !MAP.fitted) { MAP.fitted = true; MAP.map.fitBounds(ll, { padding: [40, 40], maxZoom: 14 }); }
+}
+async function loadRoute(){
+  const id = MAP.sel, day = MAP.day;
+  const { data } = await sb.from("loc_points").select("at,lat,lng,spd,acc").eq("emp_id", id).gte("at", day + "T00:00:00+03:00").lte("at", day + "T23:59:59.999+03:00").order("at", { ascending: true }).limit(5000);
+  if (MAP.sel !== id || MAP.day !== day) return;
+  MAP.pts = data ?? [];
+  const sd = $("#mapSide"); if (sd) sd.innerHTML = mapSide();
+  drawRoute(true);
+}
+function drawRoute(fit){
+  if (!MAP.map) return;
+  MAP.live.clearLayers(); MAP.routeL.clearLayers();
+  const P = MAP.pts; if (!P?.length) return;
+  const segs = splitSegs(P), all = [];
+  segs.forEach(sg => {
+    const ll = sg.map(p => [p.lat, p.lng]); all.push(...ll);
+    if (ll.length > 1) L.polyline(ll, { color: "#1F6FEB", weight: 4, opacity: .85 }).addTo(MAP.routeL);
+    sg.forEach(p => L.circleMarker([p.lat, p.lng], { radius: 3, color: "#1F6FEB", weight: 1, fillOpacity: .9 }).bindTooltip(`${hhmm(p.at)}${p.spd != null ? ` · ${Math.round(p.spd)} km/h` : ""}`).addTo(MAP.routeL));
+  });
+  for (let i = 1; i < segs.length; i++) { const a = segs[i - 1][segs[i - 1].length - 1], b = segs[i][0]; L.polyline([[a.lat, a.lng], [b.lat, b.lng]], { color: "#8B98A9", weight: 2, dashArray: "4 6" }).bindTooltip(`${t("map_gap")} ${hhmm(a.at)} – ${hhmm(b.at)}`).addTo(MAP.routeL); }
+  const f = P[0], l = P[P.length - 1];
+  L.marker([f.lat, f.lng], { icon: L.divIcon({ className: "mk mk-start", html: "<b>▶</b>", iconSize: [28, 28], iconAnchor: [14, 14] }) }).bindTooltip(`${t("map_from")} ${hhmm(f.at)}`).addTo(MAP.routeL);
+  L.marker([l.lat, l.lng], { icon: L.divIcon({ className: "mk mk-end", html: "<b>■</b>", iconSize: [28, 28], iconAnchor: [14, 14] }) }).bindTooltip(`${t("map_to")} ${hhmm(l.at)}`).addTo(MAP.routeL);
+  if (fit) MAP.map.fitBounds(all, { padding: [40, 40], maxZoom: 16 });
+}
+document.addEventListener("input", e => { if (e.target.id === "mq") { state.mq = e.target.value; const sd = $("#mapSide"); if (sd) { sd.innerHTML = mapSide(); const el = $("#mq"); el.focus(); el.setSelectionRange(el.value.length, el.value.length); } } });
+document.addEventListener("change", e => { if (e.target.id === "mapDay" && e.target.value) { MAP.day = e.target.value; MAP.pts = null; const sd = $("#mapSide"); if (sd) sd.innerHTML = mapSide(); loadRoute(); } });
 
 /* ───────── Per Order: paid for every order at the driver's own rate ───────── */
 function poDialog(id){
@@ -1494,6 +1639,11 @@ document.addEventListener("click", async e => {
       return;
     }
     if (act === "emp-flat") { poDialog(id); return; }
+    if (act === "map-reload") { MAP.loaded = false; loadLocs(); if (MAP.sel) loadRoute(); return; }
+    if (act === "map-route") { e.preventDefault?.(); MAP.sel = id; MAP.pts = null; if (!MAP.day) MAP.day = todayKey(); const sd = $("#mapSide"); if (sd) sd.innerHTML = mapSide(); MAP.map?.closePopup(); loadRoute(); return; }
+    if (act === "map-back") { MAP.sel = ""; MAP.pts = null; const sd = $("#mapSide"); if (sd) sd.innerHTML = mapSide(); drawLive(); return; }
+    if (act === "map-pan") { const r = lastOf(id); if (r?.lat && MAP.map) { MAP.map.setView([r.lat, r.lng], 15); MAP.live.eachLayer(m => { const p = m.getLatLng(); if (p.lat === r.lat && p.lng === r.lng) m.openPopup(); }); } else toast(t("map_no_loc")); return; }
+    if (act === "map-seg") { const sg = splitSegs(MAP.pts || [])[+id]; if (sg && MAP.map) MAP.map.fitBounds(sg.map(p => [p.lat, p.lng]), { padding: [40, 40], maxZoom: 17 }); return; }
     if (act === "bank-copy") { const v = (state.emp[id]?.iban || ""); try { await navigator.clipboard.writeText(v); toast(t("copied")); } catch { toast(v); } return; }
     if (act === "bank-csv") {
       const rows = [["Name", "Iqama", "Bank", "IBAN", "Account holder", "Mobile"], ...activeEmps().map(([, e]) => [e.fullName, e.residentId, e.bankName || "", e.iban || "", e.accountName || "", e.mobile || ""])];
@@ -2454,7 +2604,7 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "Give each person an email, a role and a password. They can sign in right away with them.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", perf_report_of: "Report for", perf_vs: "compared with", perf_pick: "Day:", pf_latest_s: "latest", perf_monthend: "month end", perf_day_help: "The day the numbers are for (usually yesterday). Totals in the app show “up to” this day.", nav_bin: "Recycle bin", du_cut: "Deduct", du_cut_t: "Deduct from dues", du_cut_help: "Take money off a driver's dues at any time. From salary: it is cut on that pay month's payslip. Cash: the driver paid it back himself.", du_cut_which: "From which due", du_cut_auto: "Automatic — oldest due first", du_cut_how: "How", du_cut_salary: "Cut from salary (this pay month's payslip)", du_cut_cash: "Paid in cash / transfer", du_cut_salary_s: "from salary", du_cut_note_ph: "e.g. Taken at the office on 30 Oct", du_cut_much: "More than what is owed ({a})", du_cut_done: "{a} SAR deducted", bin_hint2: "Everything deleted stays here with who deleted it and when. It is removed automatically after 12 months. Only the super admin can delete it for good.", bin_records: "Deleted dues and payroll", bin_emps: "Deleted employees", bin_by: "Deleted by", bin_slips: "payslips", bin_purge_all: "Empty the bin", bin_purge_all_q: "Delete all {n} records in the bin for good? This cannot be undone.", bin_purge_one_q: "Delete this record for good? This cannot be undone.", bin_super_only: "Only the super admin can do this", bin_exists: "Already exists — not restored", bin_no_restore: "Payroll cannot be restored — run payroll for that month again", act_del_t: "Delete from activity", act_del_q: "Delete {n} activity record(s) for good? Drivers will no longer see them. This cannot be undone.", act_del_shown: "Delete shown ({n})", nav_bank: "Bank details", bank_hint: "Every driver's bank account. Drivers can add or change their own in the app — you see it here at once, and in Activity.", bank_t: "Bank account", bank_name: "Bank", iban: "IBAN", acc_name: "Account holder", bank_csv: "Download (Excel/CSV)", bank_with: "With IBAN", bank_missing: "No IBAN yet", bank_missing_s: "drivers", bank_search: "Search name, Iqama or IBAN…", bank_upd: "Driver updated", bank_note: "IBAN must be Saudi: SA + 22 digits. Changes by drivers show in Activity with their name.", iban_bad: "IBAN must be SA followed by 22 digits", copied: "Copied", copy: "Copy", by_driver: "driver", po_t: "Per Order: paid for every order at his own rate", po_rate: "Rate per order (SAR)", po_rate_help: "Only for Per Order. Each driver can have his own rate.", po_need: "Set the rate per order", po_help: "The driver is paid orders × this rate. No target ladder, no fuel allowance — petrol is paid by the company.", po_off: "Turn Per Order off (back to {p})", nav_activity: "Activity", act_hint: "Every change made by an admin: who, when, what, and why. Drivers see the changes about them and can ask a question.", act_reload: "Refresh", act_search: "Search employee…", act_all_admins: "All admins", act_all_kinds: "All kinds",
+  drv_web: "Driver app (web)", perf_report_of: "Report for", perf_vs: "compared with", perf_pick: "Day:", pf_latest_s: "latest", perf_monthend: "month end", perf_day_help: "The day the numbers are for (usually yesterday). Totals in the app show “up to” this day.", nav_bin: "Recycle bin", du_cut: "Deduct", du_cut_t: "Deduct from dues", du_cut_help: "Take money off a driver's dues at any time. From salary: it is cut on that pay month's payslip. Cash: the driver paid it back himself.", du_cut_which: "From which due", du_cut_auto: "Automatic — oldest due first", du_cut_how: "How", du_cut_salary: "Cut from salary (this pay month's payslip)", du_cut_cash: "Paid in cash / transfer", du_cut_salary_s: "from salary", du_cut_note_ph: "e.g. Taken at the office on 30 Oct", du_cut_much: "More than what is owed ({a})", du_cut_done: "{a} SAR deducted", bin_hint2: "Everything deleted stays here with who deleted it and when. It is removed automatically after 12 months. Only the super admin can delete it for good.", bin_records: "Deleted dues and payroll", bin_emps: "Deleted employees", bin_by: "Deleted by", bin_slips: "payslips", bin_purge_all: "Empty the bin", bin_purge_all_q: "Delete all {n} records in the bin for good? This cannot be undone.", bin_purge_one_q: "Delete this record for good? This cannot be undone.", bin_super_only: "Only the super admin can do this", bin_exists: "Already exists — not restored", bin_no_restore: "Payroll cannot be restored — run payroll for that month again", act_del_t: "Delete from activity", act_del_q: "Delete {n} activity record(s) for good? Drivers will no longer see them. This cannot be undone.", act_del_shown: "Delete shown ({n})", nav_bank: "Bank details", bank_hint: "Every driver's bank account. Drivers can add or change their own in the app — you see it here at once, and in Activity.", bank_t: "Bank account", bank_name: "Bank", iban: "IBAN", acc_name: "Account holder", bank_csv: "Download (Excel/CSV)", bank_with: "With IBAN", bank_missing: "No IBAN yet", bank_missing_s: "drivers", bank_search: "Search name, Iqama or IBAN…", bank_upd: "Driver updated", bank_note: "IBAN must be Saudi: SA + 22 digits. Changes by drivers show in Activity with their name.", iban_bad: "IBAN must be SA followed by 22 digits", copied: "Copied", copy: "Copy", by_driver: "driver", po_t: "Per Order: paid for every order at his own rate", po_rate: "Rate per order (SAR)", po_rate_help: "Only for Per Order. Each driver can have his own rate.", po_need: "Set the rate per order", po_help: "The driver is paid orders × this rate. No target ladder, no fuel allowance — petrol is paid by the company.", po_off: "Turn Per Order off (back to {p})", nav_map: "Live map", map_hint: "Where company vehicles are. A driver's phone sends its location every 2 minutes while the screen is on and unlocked.", map_live: "live now", map_idle: "screen off", map_off: "location off", map_none: "not on yet", map_last: "last seen", map_now: "just now", map_min: "{n} min ago", map_hr: "{n} h ago", map_gps_off: "phone GPS is off", map_denied: "location permission denied", map_wait: "accepted · no point yet", map_never: "app update / notice not accepted yet", map_route: "Route", map_back: "All drivers", map_km: "Distance (km)", map_from: "First", map_to: "Last", map_on_h: "Screen-on time", map_pts: "points", map_show: "Show", map_no_pts: "No location for this day", map_gap: "Screen off", map_no_loc: "No location yet", map_fail: "The map could not load. Check the internet and refresh.", map_note: "History is kept for 1 month, then deleted automatically. Drivers saw a notice in the app before location was turned on.", nav_activity: "Activity", act_hint: "Every change made by an admin: who, when, what, and why. Drivers see the changes about them and can ask a question.", act_reload: "Refresh", act_search: "Search employee…", act_all_admins: "All admins", act_all_kinds: "All kinds",
   act_open_q: "unanswered questions", act_admin: "Admin", act_what: "What", act_changes: "Changes", act_reason: "Reason / questions", act_add_reason: "Add reason", act_answer: "Answer", act_none: "No changes yet",
   act_create: "Added", act_update: "Changed", act_delete: "Deleted", act_deleted: "removed", act_emp: "Employee", act_reason_help: "Write why this was changed. The driver sees it in the app.",
   act_note: "Changes are kept for 12 months. New entries appear when admins save something.",
@@ -2497,7 +2647,7 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "প্রত্যেককে একটি ইমেইল, পদ আর পাসওয়ার্ড দিন। সেগুলো দিয়ে সঙ্গে সঙ্গে লগইন করতে পারবে।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", perf_report_of: "রিপোর্টের তারিখ", perf_vs: "তুলনা", perf_pick: "দিন:", pf_latest_s: "সর্বশেষ", perf_monthend: "মাস শেষ", perf_day_help: "সংখ্যাগুলো কোন দিনের (সাধারণত গতকালের)। অ্যাপে মোট অর্ডার এই তারিখ “পর্যন্ত” দেখাবে।", nav_bin: "মুছে ফেলা তথ্য", du_cut: "কর্তন", du_cut_t: "বকেয়া থেকে কর্তন", du_cut_help: "যেকোনো সময় কর্মীর বকেয়া থেকে টাকা কাটুন। বেতন থেকে: ওই বেতন-মাসের পে-স্লিপে কাটা হবে। নগদ: কর্মী নিজে টাকা ফেরত দিয়েছে।", du_cut_which: "কোন বকেয়া থেকে", du_cut_auto: "স্বয়ংক্রিয় — পুরনো বকেয়া আগে", du_cut_how: "কীভাবে", du_cut_salary: "বেতন থেকে কাটা (এই বেতন-মাসের পে-স্লিপে)", du_cut_cash: "নগদ / ট্রান্সফারে জমা", du_cut_salary_s: "বেতন থেকে", du_cut_note_ph: "যেমন: ৩০ অক্টোবর অফিসে কাটা হয়েছে", du_cut_much: "বাকির চেয়ে বেশি ({a})", du_cut_done: "{a} রিয়াল কর্তন হয়েছে", bin_hint2: "যা কিছু মুছে ফেলা হয় সব এখানে থাকে — কে, কখন মুছেছে সহ। ১২ মাস পর নিজে থেকে মুছে যায়। স্থায়ীভাবে মুছতে পারে শুধু সুপার এডমিন।", bin_records: "মুছে ফেলা বকেয়া ও বেতন", bin_emps: "মুছে ফেলা কর্মী", bin_by: "মুছেছেন", bin_slips: "পে-স্লিপ", bin_purge_all: "সব স্থায়ীভাবে মুছুন", bin_purge_all_q: "বিনের {n}টি তথ্য স্থায়ীভাবে মুছবেন? আর ফেরত আনা যাবে না।", bin_purge_one_q: "এই তথ্য স্থায়ীভাবে মুছবেন? আর ফেরত আনা যাবে না।", bin_super_only: "এটি শুধু সুপার এডমিন করতে পারে", bin_exists: "আগে থেকেই আছে — ফেরত আনা হয়নি", bin_no_restore: "বেতন ফেরত আনা যায় না — ওই মাসের Payroll আবার চালান", act_del_t: "কার্যক্রম থেকে মুছুন", act_del_q: "{n}টি কার্যক্রম রেকর্ড স্থায়ীভাবে মুছবেন? কর্মীরাও আর দেখবে না। ফেরত আনা যাবে না।", act_del_shown: "দেখানো সব মুছুন ({n})", nav_bank: "ব্যাংক তথ্য", bank_hint: "সব কর্মীর ব্যাংক একাউন্ট। কর্মীরা অ্যাপ থেকে নিজের তথ্য যোগ বা বদলাতে পারে — সাথে সাথে এখানে আর কার্যক্রমে দেখাবে।", bank_t: "ব্যাংক একাউন্ট", bank_name: "ব্যাংক", iban: "IBAN", acc_name: "একাউন্টধারীর নাম", bank_csv: "ডাউনলোড (Excel/CSV)", bank_with: "IBAN আছে", bank_missing: "IBAN নেই", bank_missing_s: "জন কর্মী", bank_search: "নাম, ইকামা বা IBAN খুঁজুন…", bank_upd: "কর্মী আপডেট করেছে", bank_note: "IBAN সৌদি হতে হবে: SA + ২২টি সংখ্যা। কর্মীরা বদলালে কার্যক্রমে তাদের নামসহ দেখাবে।", iban_bad: "IBAN হবে SA এবং তারপর ২২টি সংখ্যা", copied: "কপি হয়েছে", copy: "কপি", by_driver: "কর্মী", po_t: "Per Order: প্রতি অর্ডারে নিজের রেটে বেতন", po_rate: "প্রতি অর্ডারের রেট (রিয়াল)", po_rate_help: "শুধু Per Order-এর জন্য। প্রতিটি কর্মীর আলাদা রেট দেওয়া যায়।", po_need: "প্রতি অর্ডারের রেট দিন", po_help: "কর্মী পাবে অর্ডার × এই রেট। কোনো টার্গেট ধাপ বা পেট্রোল ভাতা নেই — পেট্রোলের খরচ কোম্পানির।", po_off: "Per Order বন্ধ করুন ({p}-এ ফিরে যাবে)", nav_activity: "কার্যক্রম", act_hint: "প্রতিটি পরিবর্তন: কোন এডমিন, কখন, কী বদলেছে আর কেন। কর্মীরা নিজের বিষয়ের পরিবর্তন অ্যাপে দেখে আর প্রশ্ন করতে পারে।", act_reload: "রিফ্রেশ", act_search: "কর্মী খুঁজুন…", act_all_admins: "সব এডমিন", act_all_kinds: "সব ধরন",
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", perf_report_of: "রিপোর্টের তারিখ", perf_vs: "তুলনা", perf_pick: "দিন:", pf_latest_s: "সর্বশেষ", perf_monthend: "মাস শেষ", perf_day_help: "সংখ্যাগুলো কোন দিনের (সাধারণত গতকালের)। অ্যাপে মোট অর্ডার এই তারিখ “পর্যন্ত” দেখাবে।", nav_bin: "মুছে ফেলা তথ্য", du_cut: "কর্তন", du_cut_t: "বকেয়া থেকে কর্তন", du_cut_help: "যেকোনো সময় কর্মীর বকেয়া থেকে টাকা কাটুন। বেতন থেকে: ওই বেতন-মাসের পে-স্লিপে কাটা হবে। নগদ: কর্মী নিজে টাকা ফেরত দিয়েছে।", du_cut_which: "কোন বকেয়া থেকে", du_cut_auto: "স্বয়ংক্রিয় — পুরনো বকেয়া আগে", du_cut_how: "কীভাবে", du_cut_salary: "বেতন থেকে কাটা (এই বেতন-মাসের পে-স্লিপে)", du_cut_cash: "নগদ / ট্রান্সফারে জমা", du_cut_salary_s: "বেতন থেকে", du_cut_note_ph: "যেমন: ৩০ অক্টোবর অফিসে কাটা হয়েছে", du_cut_much: "বাকির চেয়ে বেশি ({a})", du_cut_done: "{a} রিয়াল কর্তন হয়েছে", bin_hint2: "যা কিছু মুছে ফেলা হয় সব এখানে থাকে — কে, কখন মুছেছে সহ। ১২ মাস পর নিজে থেকে মুছে যায়। স্থায়ীভাবে মুছতে পারে শুধু সুপার এডমিন।", bin_records: "মুছে ফেলা বকেয়া ও বেতন", bin_emps: "মুছে ফেলা কর্মী", bin_by: "মুছেছেন", bin_slips: "পে-স্লিপ", bin_purge_all: "সব স্থায়ীভাবে মুছুন", bin_purge_all_q: "বিনের {n}টি তথ্য স্থায়ীভাবে মুছবেন? আর ফেরত আনা যাবে না।", bin_purge_one_q: "এই তথ্য স্থায়ীভাবে মুছবেন? আর ফেরত আনা যাবে না।", bin_super_only: "এটি শুধু সুপার এডমিন করতে পারে", bin_exists: "আগে থেকেই আছে — ফেরত আনা হয়নি", bin_no_restore: "বেতন ফেরত আনা যায় না — ওই মাসের Payroll আবার চালান", act_del_t: "কার্যক্রম থেকে মুছুন", act_del_q: "{n}টি কার্যক্রম রেকর্ড স্থায়ীভাবে মুছবেন? কর্মীরাও আর দেখবে না। ফেরত আনা যাবে না।", act_del_shown: "দেখানো সব মুছুন ({n})", nav_bank: "ব্যাংক তথ্য", bank_hint: "সব কর্মীর ব্যাংক একাউন্ট। কর্মীরা অ্যাপ থেকে নিজের তথ্য যোগ বা বদলাতে পারে — সাথে সাথে এখানে আর কার্যক্রমে দেখাবে।", bank_t: "ব্যাংক একাউন্ট", bank_name: "ব্যাংক", iban: "IBAN", acc_name: "একাউন্টধারীর নাম", bank_csv: "ডাউনলোড (Excel/CSV)", bank_with: "IBAN আছে", bank_missing: "IBAN নেই", bank_missing_s: "জন কর্মী", bank_search: "নাম, ইকামা বা IBAN খুঁজুন…", bank_upd: "কর্মী আপডেট করেছে", bank_note: "IBAN সৌদি হতে হবে: SA + ২২টি সংখ্যা। কর্মীরা বদলালে কার্যক্রমে তাদের নামসহ দেখাবে।", iban_bad: "IBAN হবে SA এবং তারপর ২২টি সংখ্যা", copied: "কপি হয়েছে", copy: "কপি", by_driver: "কর্মী", po_t: "Per Order: প্রতি অর্ডারে নিজের রেটে বেতন", po_rate: "প্রতি অর্ডারের রেট (রিয়াল)", po_rate_help: "শুধু Per Order-এর জন্য। প্রতিটি কর্মীর আলাদা রেট দেওয়া যায়।", po_need: "প্রতি অর্ডারের রেট দিন", po_help: "কর্মী পাবে অর্ডার × এই রেট। কোনো টার্গেট ধাপ বা পেট্রোল ভাতা নেই — পেট্রোলের খরচ কোম্পানির।", po_off: "Per Order বন্ধ করুন ({p}-এ ফিরে যাবে)", nav_map: "লাইভ ম্যাপ", map_hint: "কোম্পানির গাড়ি কোথায় আছে। কর্মীর ফোনের স্ক্রিন চালু ও আনলক থাকলে প্রতি ২ মিনিটে লোকেশন আসে।", map_live: "এখন চালু", map_idle: "স্ক্রিন বন্ধ", map_off: "লোকেশন বন্ধ", map_none: "এখনো চালু হয়নি", map_last: "শেষ দেখা", map_now: "এইমাত্র", map_min: "{n} মিনিট আগে", map_hr: "{n} ঘণ্টা আগে", map_gps_off: "ফোনের GPS বন্ধ", map_denied: "লোকেশনের অনুমতি দেয়নি", map_wait: "সম্মতি দিয়েছে · লোকেশন আসেনি", map_never: "অ্যাপ আপডেট / সম্মতি বাকি", map_route: "রুট", map_back: "সব কর্মী", map_km: "দূরত্ব (কিমি)", map_from: "শুরু", map_to: "শেষ", map_on_h: "স্ক্রিন চালু সময়", map_pts: "পয়েন্ট", map_show: "দেখুন", map_no_pts: "এই দিনে কোনো লোকেশন নেই", map_gap: "স্ক্রিন বন্ধ ছিল", map_no_loc: "এখনো লোকেশন আসেনি", map_fail: "ম্যাপ লোড হয়নি। ইন্টারনেট দেখে রিফ্রেশ করুন।", map_note: "ইতিহাস ১ মাস রাখা হয়, তারপর নিজে থেকে মুছে যায়। লোকেশন চালুর আগে কর্মীরা অ্যাপে নোটিশ দেখে সম্মতি দিয়েছে।", nav_activity: "কার্যক্রম", act_hint: "প্রতিটি পরিবর্তন: কোন এডমিন, কখন, কী বদলেছে আর কেন। কর্মীরা নিজের বিষয়ের পরিবর্তন অ্যাপে দেখে আর প্রশ্ন করতে পারে।", act_reload: "রিফ্রেশ", act_search: "কর্মী খুঁজুন…", act_all_admins: "সব এডমিন", act_all_kinds: "সব ধরন",
   act_open_q: "উত্তর বাকি প্রশ্ন", act_admin: "এডমিন", act_what: "কী", act_changes: "পরিবর্তন", act_reason: "কারণ / প্রশ্ন", act_add_reason: "কারণ লিখুন", act_answer: "উত্তর দিন", act_none: "এখনো কোনো পরিবর্তন নেই",
   act_create: "যোগ", act_update: "পরিবর্তন", act_delete: "মুছে ফেলা", act_deleted: "মুছে ফেলা হয়েছে", act_emp: "কর্মীর তথ্য", act_reason_help: "কেন বদলানো হলো লিখুন। কর্মী অ্যাপে এটা দেখবে।",
   act_note: "পরিবর্তনের হিসাব ১২ মাস থাকে। এডমিন কিছু সংরক্ষণ করলে নতুন সারি যোগ হয়।",
@@ -2540,7 +2690,7 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "أعطِ كل شخص بريداً وصلاحية وكلمة مرور، ويمكنه الدخول بها فوراً.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", perf_report_of: "تقرير يوم", perf_vs: "مقارنة بـ", perf_pick: "اليوم:", pf_latest_s: "الأحدث", perf_monthend: "نهاية الشهر", perf_day_help: "اليوم الذي تخصه الأرقام (عادة أمس). يظهر إجمالي الطلبات في التطبيق «حتى» هذا اليوم.", nav_bin: "المحذوفات", du_cut: "خصم", du_cut_t: "خصم من المستحقات", du_cut_help: "اخصم من مستحقات السائق في أي وقت. من الراتب: يُخصم في قسيمة شهر الراتب. نقداً: السائق سدد بنفسه.", du_cut_which: "من أي مستحق", du_cut_auto: "تلقائي — الأقدم أولاً", du_cut_how: "الطريقة", du_cut_salary: "خصم من الراتب (قسيمة هذا الشهر)", du_cut_cash: "سداد نقدي / تحويل", du_cut_salary_s: "من الراتب", du_cut_note_ph: "مثال: خُصم في المكتب يوم 30 أكتوبر", du_cut_much: "أكثر من المتبقي ({a})", du_cut_done: "تم خصم {a} ريال", bin_hint2: "كل ما يُحذف يبقى هنا مع من حذفه ومتى. يُزال تلقائياً بعد 12 شهراً. الحذف النهائي للمسؤول الأعلى فقط.", bin_records: "المستحقات والرواتب المحذوفة", bin_emps: "الموظفون المحذوفون", bin_by: "حذفه", bin_slips: "قسائم", bin_purge_all: "إفراغ المحذوفات", bin_purge_all_q: "حذف {n} سجل نهائياً؟ لا يمكن التراجع.", bin_purge_one_q: "حذف هذا السجل نهائياً؟ لا يمكن التراجع.", bin_super_only: "للمسؤول الأعلى فقط", bin_exists: "موجود مسبقاً — لم تتم الاستعادة", bin_no_restore: "لا يمكن استعادة الرواتب — أعد تشغيل رواتب ذلك الشهر", act_del_t: "حذف من السجل", act_del_q: "حذف {n} سجل نهائياً؟ لن يراها السائقون. لا يمكن التراجع.", act_del_shown: "حذف المعروض ({n})", nav_bank: "البيانات البنكية", bank_hint: "الحساب البنكي لكل سائق. يمكن للسائق إضافة أو تعديل بياناته من التطبيق — تظهر هنا فوراً وفي سجل التغييرات.", bank_t: "الحساب البنكي", bank_name: "البنك", iban: "الآيبان", acc_name: "صاحب الحساب", bank_csv: "تنزيل (Excel/CSV)", bank_with: "لديه آيبان", bank_missing: "بدون آيبان", bank_missing_s: "سائق", bank_search: "ابحث بالاسم أو الإقامة أو الآيبان…", bank_upd: "حدّثه السائق", bank_note: "الآيبان سعودي: SA + 22 رقماً. تعديلات السائقين تظهر في السجل بأسمائهم.", iban_bad: "الآيبان يبدأ بـ SA ثم 22 رقماً", copied: "تم النسخ", copy: "نسخ", by_driver: "سائق", po_t: "Per Order: أجر لكل طلب بسعره الخاص", po_rate: "سعر الطلب (ريال)", po_rate_help: "لـ Per Order فقط. لكل سائق سعره.", po_need: "حدد سعر الطلب", po_help: "يحصل السائق على الطلبات × هذا السعر. بلا سلم أهداف وبلا بدل وقود — الوقود على الشركة.", po_off: "إيقاف Per Order (العودة إلى {p})", nav_activity: "سجل التغييرات", act_hint: "كل تغيير: أي مسؤول ومتى وماذا ولماذا. يرى السائقون التغييرات الخاصة بهم ويمكنهم السؤال.", act_reload: "تحديث", act_search: "ابحث عن موظف…", act_all_admins: "كل المسؤولين", act_all_kinds: "كل الأنواع",
+  drv_web: "تطبيق السائق (ويب)", perf_report_of: "تقرير يوم", perf_vs: "مقارنة بـ", perf_pick: "اليوم:", pf_latest_s: "الأحدث", perf_monthend: "نهاية الشهر", perf_day_help: "اليوم الذي تخصه الأرقام (عادة أمس). يظهر إجمالي الطلبات في التطبيق «حتى» هذا اليوم.", nav_bin: "المحذوفات", du_cut: "خصم", du_cut_t: "خصم من المستحقات", du_cut_help: "اخصم من مستحقات السائق في أي وقت. من الراتب: يُخصم في قسيمة شهر الراتب. نقداً: السائق سدد بنفسه.", du_cut_which: "من أي مستحق", du_cut_auto: "تلقائي — الأقدم أولاً", du_cut_how: "الطريقة", du_cut_salary: "خصم من الراتب (قسيمة هذا الشهر)", du_cut_cash: "سداد نقدي / تحويل", du_cut_salary_s: "من الراتب", du_cut_note_ph: "مثال: خُصم في المكتب يوم 30 أكتوبر", du_cut_much: "أكثر من المتبقي ({a})", du_cut_done: "تم خصم {a} ريال", bin_hint2: "كل ما يُحذف يبقى هنا مع من حذفه ومتى. يُزال تلقائياً بعد 12 شهراً. الحذف النهائي للمسؤول الأعلى فقط.", bin_records: "المستحقات والرواتب المحذوفة", bin_emps: "الموظفون المحذوفون", bin_by: "حذفه", bin_slips: "قسائم", bin_purge_all: "إفراغ المحذوفات", bin_purge_all_q: "حذف {n} سجل نهائياً؟ لا يمكن التراجع.", bin_purge_one_q: "حذف هذا السجل نهائياً؟ لا يمكن التراجع.", bin_super_only: "للمسؤول الأعلى فقط", bin_exists: "موجود مسبقاً — لم تتم الاستعادة", bin_no_restore: "لا يمكن استعادة الرواتب — أعد تشغيل رواتب ذلك الشهر", act_del_t: "حذف من السجل", act_del_q: "حذف {n} سجل نهائياً؟ لن يراها السائقون. لا يمكن التراجع.", act_del_shown: "حذف المعروض ({n})", nav_bank: "البيانات البنكية", bank_hint: "الحساب البنكي لكل سائق. يمكن للسائق إضافة أو تعديل بياناته من التطبيق — تظهر هنا فوراً وفي سجل التغييرات.", bank_t: "الحساب البنكي", bank_name: "البنك", iban: "الآيبان", acc_name: "صاحب الحساب", bank_csv: "تنزيل (Excel/CSV)", bank_with: "لديه آيبان", bank_missing: "بدون آيبان", bank_missing_s: "سائق", bank_search: "ابحث بالاسم أو الإقامة أو الآيبان…", bank_upd: "حدّثه السائق", bank_note: "الآيبان سعودي: SA + 22 رقماً. تعديلات السائقين تظهر في السجل بأسمائهم.", iban_bad: "الآيبان يبدأ بـ SA ثم 22 رقماً", copied: "تم النسخ", copy: "نسخ", by_driver: "سائق", po_t: "Per Order: أجر لكل طلب بسعره الخاص", po_rate: "سعر الطلب (ريال)", po_rate_help: "لـ Per Order فقط. لكل سائق سعره.", po_need: "حدد سعر الطلب", po_help: "يحصل السائق على الطلبات × هذا السعر. بلا سلم أهداف وبلا بدل وقود — الوقود على الشركة.", po_off: "إيقاف Per Order (العودة إلى {p})", nav_map: "الخريطة المباشرة", map_hint: "أين مركبات الشركة. يرسل هاتف السائق موقعه كل دقيقتين عندما تكون الشاشة مضاءة وغير مقفلة.", map_live: "مباشر الآن", map_idle: "الشاشة مطفأة", map_off: "الموقع مغلق", map_none: "لم يُفعّل بعد", map_last: "آخر ظهور", map_now: "الآن", map_min: "قبل {n} د", map_hr: "قبل {n} س", map_gps_off: "GPS الهاتف مغلق", map_denied: "رفض إذن الموقع", map_wait: "وافق · لا نقاط بعد", map_never: "تحديث التطبيق / الموافقة مطلوبة", map_route: "المسار", map_back: "كل السائقين", map_km: "المسافة (كم)", map_from: "البداية", map_to: "النهاية", map_on_h: "وقت تشغيل الشاشة", map_pts: "نقطة", map_show: "عرض", map_no_pts: "لا يوجد موقع لهذا اليوم", map_gap: "الشاشة مطفأة", map_no_loc: "لا يوجد موقع بعد", map_fail: "تعذر تحميل الخريطة. تحقق من الإنترنت وحدّث.", map_note: "يُحفظ السجل شهراً ثم يُحذف تلقائياً. شاهد السائقون إشعاراً في التطبيق قبل التفعيل.", nav_activity: "سجل التغييرات", act_hint: "كل تغيير: أي مسؤول ومتى وماذا ولماذا. يرى السائقون التغييرات الخاصة بهم ويمكنهم السؤال.", act_reload: "تحديث", act_search: "ابحث عن موظف…", act_all_admins: "كل المسؤولين", act_all_kinds: "كل الأنواع",
   act_open_q: "أسئلة بلا رد", act_admin: "المسؤول", act_what: "ماذا", act_changes: "التغييرات", act_reason: "السبب / الأسئلة", act_add_reason: "إضافة سبب", act_answer: "رد", act_none: "لا توجد تغييرات بعد",
   act_create: "إضافة", act_update: "تعديل", act_delete: "حذف", act_deleted: "محذوف", act_emp: "بيانات الموظف", act_reason_help: "اكتب سبب التغيير. يراه السائق في التطبيق.",
   act_note: "تُحفظ التغييرات 12 شهراً.",
