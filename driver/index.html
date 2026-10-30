@@ -412,7 +412,7 @@ function vLocConsent(){
     </section></div>`;
 }
 function locBanner(m){
-  const A = window.ASBAndroid; if (!A?.locState || !m.profile.locConsent) return "";
+  const A = window.ASBAndroid; if (!A?.locState || !m.profile.locOn || !m.profile.locConsent) return "";
   let st = "on"; try { st = A.locState(); } catch {}
   if (st === "on") return "";
   return `<button class="alert loc-alert" data-locfix="${st}"><span>📍 ${t(st === "gps_off" ? "loc_gps_off" : "loc_denied")}</span><span class="tile-go">›</span></button>`;
@@ -426,8 +426,11 @@ function vApp(){
   const outstanding = duesOf(m).filter(x => !x.waived).reduce((s, f) => s + (+f.remaining || 0), 0);
   let body = S.sub === "notices" ? vNotices(m) : S.sub === "fuel" ? vFuelPage(m) : S.sub === "changes" ? vChanges() : S.sub === "editp" ? vEditProfile(m) : S.sub === "reports" ? vReports() : S.tab === "home" ? (S.sub === "perf" ? vPerfPage(m) : S.sub === "target" ? vTargetPage(m) : vHome(m)) : S.tab === "fines" ? vDues(m) : S.tab === "salary" ? (S.slip ? vSlip(m, S.slip) : vSalary(m)) : vProfile(m);
   const last = S.lastAt ? new Date(S.lastAt).toLocaleTimeString(lang === "ar" ? "ar-SA" : "en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
-  if (window.ASBAndroid?.locStart && !p.locConsent) return vLocConsent();
-  if (window.ASBAndroid?.locStart && !S.locStarted) { S.locStarted = true; try { window.ASBAndroid.locStart(); } catch {} }
+  if (window.ASBAndroid?.locStart) {
+    if (!p.locOn) { if (!S.locStopped) { S.locStopped = true; try { window.ASBAndroid.locStop && window.ASBAndroid.locStop(); } catch {} } }
+    else if (!p.locConsent) return vLocConsent();
+    else if (!S.locStarted) { S.locStarted = true; try { window.ASBAndroid.locStart(); } catch {} }
+  }
   return `<div class="app">
     <header class="top">${ava(p.photo, p.fullName, 44, "border-radius:14px;border:2px solid var(--gold)")}
       <div class="who"><b>${esc(p.fullName)}</b><small>${plate(p.plate)}<span>${esc(m.today.date)}</span></small></div>

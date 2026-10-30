@@ -469,7 +469,7 @@ let db = null, downloads = null, unsubOps = null, unsubMonth = null;
 const payDoc = () => state.payroll[state.payMonth] ?? null;
 
 /* ───────── routing ───────── */
-const VIEWS = ["dashboard","map","employees","target","perf","operations","fuel","dues","payroll","bank","reports","activity","bin","app","rules","admins"];
+const VIEWS = ["dashboard","employees","target","perf","operations","fuel","dues","payroll","bank","reports","activity","bin","app","rules","admins"]; /* "map" hidden for now — add it back to re-enable location monitoring */
 const SUB_VIEWS = ["target","perf"];
 const view = () => { const h = location.hash.slice(1); return VIEWS.includes(h) ? h : "dashboard"; };
 window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
