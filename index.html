@@ -861,6 +861,7 @@ const DUE_TYPES = ["ADVANCE", ...CATS];
 async function sendNotice(kind, to, extra = {}){
   try { await db.doc("notices/n" + uid()).set({ kind, to: to && to.length ? [...new Set(to)] : null, at: Date.now(), ...extra }); } catch (e) { console.warn(e); }
 }
+const perfDays = () => Object.keys(state.perf).filter(k => /^\d{4}-\d{2}-\d{2}$/.test(k)).sort().reverse();
 const dmy = d => d ? String(d).slice(0, 10).split("-").reverse().join("/") : "";
 const isPayrollEntry = z => z.src === "payroll" || (!z.src && !z.date && !z.cash);
 /* every due as one list; advances live in "advances", everything else in "fines" */
@@ -1002,7 +1003,7 @@ function planOf(e){
 /* Pay rating: the one set on the Target page, else the latest Keeta grade, else C. */
 function payGrade(id, e){
   if (e.tGrade) return { g: e.tGrade, src: "set" };
-  const j = [state.perf[todayKey()]?.rows?.[id]?.g, state.perf[yesterdayKey()]?.rows?.[id]?.g].find(g => ["A", "B", "C", "D"].includes(g));
+  const j = perfDays().slice(0, 3).map(d => state.perf[d]?.rows?.[id]?.g).find(g => ["A", "B", "C", "D"].includes(g));
   if (j) return { g: j, src: "jahez" };
   return { g: "C", src: "default" };
 }
@@ -1082,9 +1083,8 @@ function perfCell(k, y, v){
   return `<div class="pc">${main} ${arrow}</div>${prev}`;
 }
 function vPerf(){
-  const arcs = Object.keys(state.perf).filter(k => k.endsWith("-02")).sort().reverse();
-  const arc = arcs.includes(state.perfArc) ? state.perfArc : "";
-  const td = arc || todayKey(), yd = yesterdayKey(), T = state.perf[td]?.rows ?? {}, Y = arc ? {} : (state.perf[yd]?.rows ?? {});
+  const days = perfDays(), arc = days.includes(state.perfArc) ? state.perfArc : "";
+  const td = arc || days[0] || "", yd = days[days.indexOf(td) + 1] || "", T = state.perf[td]?.rows ?? {}, Y = state.perf[yd]?.rows ?? {};
   const q = state.q.trim().toLowerCase();
   const emps = activeEmps().filter(([id, e]) => (!state.qType || (e.payType || "TARGET") === state.qType) && (!state.qGrade || (T[id]?.g ?? "") === state.qGrade)
     && (!q || [e.fullName, e.jahezId, e.residentId].some(v => String(v ?? "").toLowerCase().includes(q))))
@@ -1096,8 +1096,8 @@ function vPerf(){
       <button class="btn" data-act="perf-import" data-needs-write>${t("perf_import")}</button>
     </div></div>
   <div class="grade-sum">${counts.map(([g, n]) => `<button class="gs ${state.qGrade === g ? "on" : ""}" data-act="grade-filter" data-v="${g}"><span class="grade ${gradeCls(g)}">${g}</span><b>${n}</b></button>`).join("")}
-    <span class="sub">${arc ? `${t("perf_arc")} · ${esc(arc)}` : `${t("perf_today")} · ${shortDate(Date.now())}`}</span></div>
-  ${arcs.length ? `<div class="chips"><span class="sub" style="margin-inline-end:4px">${t("perf_arc_list")}:</span><button class="chip ${!arc ? "on" : ""}" data-act="perf-arc" data-v="">${t("perf_today")}</button>${arcs.map(k => `<button class="chip ${arc === k ? "on" : ""}" data-act="perf-arc" data-v="${k}"><b>${cycleOf(dayBefore(k))}</b> · ${cycleRange(cycleOf(dayBefore(k)))}</button>`).join("")}</div>` : ""}
+    <span class="sub">📅 ${td ? `${t("perf_report_of")} <b>${esc(dmy(td))}</b>${yd ? ` · ${t("perf_vs")} ${esc(dmy(yd))}` : ""}` : t("perf_empty")}</span>
+    ${days.length ? `<label class="sub" style="margin-inline-start:auto;display:flex;gap:6px;align-items:center">${t("perf_pick")} <select class="input sm" id="perfArc" style="width:auto">${days.map((k, i) => `<option value="${i ? k : ""}" ${(arc || days[0]) === k ? "selected" : ""}>${dmy(k)}${i === 0 ? " · " + t("pf_latest_s") : k.endsWith("-01") ? " · " + t("perf_monthend") : ""}</option>`).join("")}</select></label>` : ""}</div>
   <div class="filters">
     <input class="input" id="q" placeholder="${t("search")}" value="${esc(state.q)}">
     <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
@@ -1111,6 +1111,7 @@ function vPerf(){
     : `<div class="empty"><b>${t("perf_empty")}</b>${t("perf_empty_hint")}</div>`}</section>
   <p class="sub" style="margin-top:10px">${t("perf_note")}</p>`;
 }
+document.addEventListener("change", e => { if (e.target.id === "perfArc") { state.perfArc = e.target.value; render(); } });
 document.addEventListener("click", e => {
   const b = e.target.closest('[data-act="grade-filter"]'); if (!b) return;
   state.qGrade = state.qGrade === b.dataset.v ? "" : b.dataset.v; render();
@@ -1142,7 +1143,8 @@ const normName = n => String(n || "").toLowerCase().replace(/\s+/g, " ").trim();
 /* keep yesterday and today, plus every report taken on the 2nd (it closes a pay month and stays for good) */
 async function cleanupPerf(){
   const yd = yesterdayKey();
-  for (const id of Object.keys(state.perf)) if (id < yd && !id.endsWith("-02")) { try { await db.doc("perf/" + id).delete(); } catch {} }
+  const cut = new Date(Date.now() - 395 * 864e5).toISOString().slice(0, 10);
+  for (const id of Object.keys(state.perf)) if (id < cut) { try { await db.doc("perf/" + id).delete(); } catch {} }
 }
 
 function computePayroll(){
@@ -1368,7 +1370,7 @@ document.addEventListener("click", async e => {
     if (act === "perf-import") {
       openDialog({ title: t("perf_import"), submit: t("csvImport"),
         body: `<p class="full sub">${t("perf_import_help")}</p>
-          <label class="f full">${t("perf_day")}<select class="input" name="day"><option value="${todayKey()}">${t("perf_today")} · ${todayKey()}</option><option value="${yesterdayKey()}">${t("perf_yest")} · ${yesterdayKey()}</option></select></label>
+          <label class="f full">${t("perf_day")}<input class="input" type="date" name="day" value="${yesterdayKey()}" max="${todayKey()}" required><span class="sub">${t("perf_day_help")}</span></label>
           <label class="f full">CSV / Excel<input class="input" type="file" accept=".csv,.txt,text/csv" id="csvFile"></label>
           <label class="f full">${t("perf_paste")}<textarea class="input mono" name="csv" rows="8" placeholder="1788197599088722\tShehab Alshehab\tA\t0.0145\t1\t1.0\t1\t1.0\t584.0"></textarea></label>`,
         onSubmit: async fd => {
@@ -1379,7 +1381,8 @@ document.addEventListener("click", async e => {
           for (const [id, e] of Object.entries(state.emp)) { if (e.jahezId) byJ[e.jahezId] = id; byN[normName(e.fullName)] = id; }
           const day = fd.day, rows = { ...(state.perf[day]?.rows ?? {}) }, missing = [];
           // order volume = this month's total orders up to the day before the report
-          const volMonth = cycleOf(dayBefore(day));
+          if (!/^\d{4}-\d{2}-\d{2}$/.test(day || "")) fail(t("required"));
+          const volMonth = cycleOf(day);
           const tot = { ...(state.totals[volMonth]?.rows ?? {}) }; let nVol = 0;
           for (const r of rowsIn) {
             const eid = (r.id && byJ[r.id]) || byN[normName(r.name)];
@@ -1391,7 +1394,7 @@ document.addEventListener("click", async e => {
           if (Object.keys(rows).length) await db.doc("perf/" + day).set({ date: day, rows, updatedAt: Date.now() });
           const touched = rowsIn.map(r => (r.id && byJ[r.id]) || byN[normName(r.name)]).filter(Boolean);
           if (touched.length) await sendNotice("perf", touched, { day });
-          if (nVol) await db.doc("totals/" + volMonth).set({ month: volMonth, rows: tot, updatedAt: Date.now() });
+          if (nVol) await db.doc("totals/" + volMonth).set({ ...(state.totals[volMonth] ?? {}), month: volMonth, rows: tot, asOf: day, updatedAt: Date.now() });
           await cleanupPerf();
           toast(`${t("imported")}: ${rowsIn.length - missing.length}${nVol ? ` · ${t("totalOrders")}: ${nVol}` : ""} · ${t("perf_unmatched")}: ${missing.length}`);
           if (missing.length) setTimeout(() => openDialog({ title: t("perf_unmatched"), body: `<p class="full">${t("perf_unmatched_help")}</p><p class="full mono sub">${missing.map(esc).join("<br>")}</p>`, footer: `<button type="button" class="btn" data-close>${t("close")}</button>` }), 60);
@@ -1399,7 +1402,7 @@ document.addEventListener("click", async e => {
     }
 
     if (act === "perf-edit") {
-      const e2 = state.emp[id], td = todayKey(), yd = yesterdayKey();
+      const pd = perfDays(), e2 = state.emp[id], td = pd[0] || yesterdayKey(), yd = pd[1] || dayBefore(td);
       const field = (day, k, label) => { const v = state.perf[day]?.rows?.[id]?.[k] ?? "";
         return k === "g" ? `<label class="f">${label}<select class="input" name="${day}|g"><option value=""></option>${GRADES.map(g => `<option ${v === g ? "selected" : ""}>${g}</option>`).join("")}</select></label>`
           : `<label class="f">${label}<input class="input" type="number" step="0.01" min="0" max="100" name="${day}|${k}" value="${v}"></label>`; };
@@ -1743,7 +1746,7 @@ function buildMirror(id){
     profile: { photo: e.photoUrl || "", fullName: e.fullName, fullNameAr: e.fullNameAr || "", residentId: e.residentId, mobile: e.mobile, city: e.city || "", plate: e.plate || "",
       vehicleModel: e.vehicleModel || "", card: e.card ? String(e.card).slice(-4) : "", dailyLimit: +e.dailyLimit || 0, monthlyLimit: +e.monthlyLimit || 0, payType: e.payType || "TARGET" },
     today: { date: todayKey(), rank: mine?.rank ?? null, of: rk.length, o: +row.o || 0, f: +row.f || 0 },
-    perf: { today: { date: todayKey(), ...(state.perf[todayKey()]?.rows?.[id] ?? {}) }, yest: { date: yesterdayKey(), ...(state.perf[yesterdayKey()]?.rows?.[id] ?? {}) } },
+    perf: { today: { date: perfDays()[0], ...(state.perf[perfDays()[0]]?.rows?.[id] ?? {}) }, yest: { date: perfDays()[1], ...(state.perf[perfDays()[1]]?.rows?.[id] ?? {}) } },
     month: { key: monthKey(), o: mo, f: r2(mf), rank: mine?.rank ?? null, of: rk.length, at: row.at || 0, target: targetFor(e, mo) },
     board: rk.filter((r, i) => i < 5 || r.id === id).map(r => ({ r: r.rank, n: (state.emp[r.id]?.fullName || "").split(" ")[0], p: state.emp[r.id]?.photoUrl || "", o: r.o, me: r.id === id })),
     fines: Object.values(state.fines).filter(x => x.employeeId === id).sort(byDate).map(pickX),
@@ -2251,7 +2254,7 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "Give each person an email, a role and a password. They can sign in right away with them.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", nav_activity: "Activity", act_hint: "Every change made by an admin: who, when, what, and why. Drivers see the changes about them and can ask a question.", act_reload: "Refresh", act_search: "Search employee…", act_all_admins: "All admins", act_all_kinds: "All kinds",
+  drv_web: "Driver app (web)", perf_report_of: "Report for", perf_vs: "compared with", perf_pick: "Day:", pf_latest_s: "latest", perf_monthend: "month end", perf_day_help: "The day the numbers are for (usually yesterday). Totals in the app show “up to” this day.", nav_activity: "Activity", act_hint: "Every change made by an admin: who, when, what, and why. Drivers see the changes about them and can ask a question.", act_reload: "Refresh", act_search: "Search employee…", act_all_admins: "All admins", act_all_kinds: "All kinds",
   act_open_q: "unanswered questions", act_admin: "Admin", act_what: "What", act_changes: "Changes", act_reason: "Reason / questions", act_add_reason: "Add reason", act_answer: "Answer", act_none: "No changes yet",
   act_create: "Added", act_update: "Changed", act_delete: "Deleted", act_deleted: "removed", act_emp: "Employee", act_reason_help: "Write why this was changed. The driver sees it in the app.",
   act_note: "Changes are kept for 12 months. New entries appear when admins save something.",
@@ -2288,13 +2291,13 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   tgt_rank_rule: "380–499 × 3.5 SAR · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C), plus rating price for each extra order.", tgt_unrank_rule: "380–499 orders × 4 SAR · 500+ = 2,500 · 600+ = 3,500, plus A/B/C price for each order above 500 or 600. Fuel allowance is paid separately.",
   tgt_note: "Pay so far uses this month's total orders and excludes fines, advances and fuel. Payroll uses these same settings.",
   perf_hint: "Daily Keeta performance for each driver. Drivers see yesterday and today side by side in their app.", perf_yest: "Yesterday", perf_today: "Today", perf_change: "Orders change",
-  perf_orders: "Orders", perf_hours: "Hours", perf_accept: "Accept %", perf_note: "Yesterday and today are kept for daily comparison. The report imported on the 2nd closes the pay month (2nd to 1st) and is kept for good, so drivers can look back at past months.", totalOrders: "Total orders", fuel_month_k: "Fuel this month", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
+  perf_orders: "Orders", perf_hours: "Hours", perf_accept: "Accept %", perf_note: "Every daily report is kept for 12 months. The app always shows the latest two report days, and drivers can open any older day from the calendar.", totalOrders: "Total orders", fuel_month_k: "Fuel this month", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
 Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB LOGISTICS · কর্মচারী ব্যবস্থাপনা", au_email: "ইমেইল", au_pass: "পাসওয়ার্ড",
   au_signin: "লগইন", au_signup: "এডমিন অ্যাকাউন্ট খুলুন", au_forgot: "পাসওয়ার্ড ভুলে গেছেন?", au_have: "অ্যাকাউন্ট আছে? লগইন করুন", au_new: "প্রথমবার? এডমিন অ্যাকাউন্ট খুলুন",
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "প্রত্যেককে একটি ইমেইল, পদ আর পাসওয়ার্ড দিন। সেগুলো দিয়ে সঙ্গে সঙ্গে লগইন করতে পারবে।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", nav_activity: "কার্যক্রম", act_hint: "প্রতিটি পরিবর্তন: কোন এডমিন, কখন, কী বদলেছে আর কেন। কর্মীরা নিজের বিষয়ের পরিবর্তন অ্যাপে দেখে আর প্রশ্ন করতে পারে।", act_reload: "রিফ্রেশ", act_search: "কর্মী খুঁজুন…", act_all_admins: "সব এডমিন", act_all_kinds: "সব ধরন",
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", perf_report_of: "রিপোর্টের তারিখ", perf_vs: "তুলনা", perf_pick: "দিন:", pf_latest_s: "সর্বশেষ", perf_monthend: "মাস শেষ", perf_day_help: "সংখ্যাগুলো কোন দিনের (সাধারণত গতকালের)। অ্যাপে মোট অর্ডার এই তারিখ “পর্যন্ত” দেখাবে।", nav_activity: "কার্যক্রম", act_hint: "প্রতিটি পরিবর্তন: কোন এডমিন, কখন, কী বদলেছে আর কেন। কর্মীরা নিজের বিষয়ের পরিবর্তন অ্যাপে দেখে আর প্রশ্ন করতে পারে।", act_reload: "রিফ্রেশ", act_search: "কর্মী খুঁজুন…", act_all_admins: "সব এডমিন", act_all_kinds: "সব ধরন",
   act_open_q: "উত্তর বাকি প্রশ্ন", act_admin: "এডমিন", act_what: "কী", act_changes: "পরিবর্তন", act_reason: "কারণ / প্রশ্ন", act_add_reason: "কারণ লিখুন", act_answer: "উত্তর দিন", act_none: "এখনো কোনো পরিবর্তন নেই",
   act_create: "যোগ", act_update: "পরিবর্তন", act_delete: "মুছে ফেলা", act_deleted: "মুছে ফেলা হয়েছে", act_emp: "কর্মীর তথ্য", act_reason_help: "কেন বদলানো হলো লিখুন। কর্মী অ্যাপে এটা দেখবে।",
   act_note: "পরিবর্তনের হিসাব ১২ মাস থাকে। এডমিন কিছু সংরক্ষণ করলে নতুন সারি যোগ হয়।",
@@ -2331,13 +2334,13 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   tgt_rank_rule: "৩৮০–৪৯৯ × ৩.৫ রিয়াল · ৫০০+ = ৩,০০০ / ২,৫০০ / ২,০০০ · ৬০০+ = ৪,২৫০ / ৩,৮০০ / ৩,০০০ (A / B / C), সাথে প্রতি অতিরিক্ত অর্ডারে রেটিং মূল্য।", tgt_unrank_rule: "৩৮০–৪৯৯ অর্ডার × ৪ রিয়াল · ৫০০+ = ২,৫০০ · ৬০০+ = ৩,৫০০, সাথে ৫০০ বা ৬০০-এর বেশি প্রতি অর্ডারে A/B/C মূল্য। জ্বালানি ভাতা আলাদা।",
   tgt_note: "এখন পর্যন্ত বেতন এই মাসের মোট অর্ডার থেকে হিসাব, জরিমানা, অগ্রিম ও পেট্রোল বাদে। বেতন হিসাবেও এই একই নিয়ম ব্যবহার হয়।",
   perf_hint: "প্রত্যেক কর্মীর দৈনিক Keeta পারফরমেন্স। কর্মীরা অ্যাপে গতকাল আর আজ পাশাপাশি দেখবে।", perf_yest: "গতকাল", perf_today: "আজ", perf_change: "অর্ডারের পরিবর্তন",
-  perf_orders: "অর্ডার", perf_hours: "ঘণ্টা", perf_accept: "গ্রহণ %", perf_note: "প্রতিদিনের তুলনার জন্য গতকাল আর আজকের তথ্য থাকে। প্রতি মাসের ২ তারিখে আমদানি করা রিপোর্ট সেই বেতন-মাস (২ তারিখ থেকে পরের মাসের ১ তারিখ) শেষ করে এবং স্থায়ীভাবে থেকে যায়, তাই কর্মীরা পুরোনো মাস দেখতে পারে।", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
+  perf_orders: "অর্ডার", perf_hours: "ঘণ্টা", perf_accept: "গ্রহণ %", perf_note: "প্রতিদিনের রিপোর্ট ১২ মাস রাখা থাকে। অ্যাপে সবসময় সর্বশেষ দুই দিনের রিপোর্ট দেখায়, আর ক্যালেন্ডার থেকে কর্মী আগের যেকোনো দিন দেখতে পারে।", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
 Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTICS · إدارة الموظفين", au_email: "البريد الإلكتروني", au_pass: "كلمة المرور",
   au_signin: "دخول", au_signup: "إنشاء حساب مشرف", au_forgot: "نسيت كلمة المرور؟", au_have: "لديك حساب؟ سجّل الدخول", au_new: "أول مرة؟ أنشئ حساب المشرف",
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "أعطِ كل شخص بريداً وصلاحية وكلمة مرور، ويمكنه الدخول بها فوراً.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", nav_activity: "سجل التغييرات", act_hint: "كل تغيير: أي مسؤول ومتى وماذا ولماذا. يرى السائقون التغييرات الخاصة بهم ويمكنهم السؤال.", act_reload: "تحديث", act_search: "ابحث عن موظف…", act_all_admins: "كل المسؤولين", act_all_kinds: "كل الأنواع",
+  drv_web: "تطبيق السائق (ويب)", perf_report_of: "تقرير يوم", perf_vs: "مقارنة بـ", perf_pick: "اليوم:", pf_latest_s: "الأحدث", perf_monthend: "نهاية الشهر", perf_day_help: "اليوم الذي تخصه الأرقام (عادة أمس). يظهر إجمالي الطلبات في التطبيق «حتى» هذا اليوم.", nav_activity: "سجل التغييرات", act_hint: "كل تغيير: أي مسؤول ومتى وماذا ولماذا. يرى السائقون التغييرات الخاصة بهم ويمكنهم السؤال.", act_reload: "تحديث", act_search: "ابحث عن موظف…", act_all_admins: "كل المسؤولين", act_all_kinds: "كل الأنواع",
   act_open_q: "أسئلة بلا رد", act_admin: "المسؤول", act_what: "ماذا", act_changes: "التغييرات", act_reason: "السبب / الأسئلة", act_add_reason: "إضافة سبب", act_answer: "رد", act_none: "لا توجد تغييرات بعد",
   act_create: "إضافة", act_update: "تعديل", act_delete: "حذف", act_deleted: "محذوف", act_emp: "بيانات الموظف", act_reason_help: "اكتب سبب التغيير. يراه السائق في التطبيق.",
   act_note: "تُحفظ التغييرات 12 شهراً.",
@@ -2374,7 +2377,7 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   tgt_rank_rule: "380–499 × 3.5 ريال · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C)، مع سعر التقييم لكل طلب إضافي.", tgt_unrank_rule: "380–499 طلب × 4 ريال · 500+ = 2,500 · 600+ = 3,500، مع سعر A/B/C لكل طلب فوق 500 أو 600. بدل الوقود منفصل.",
   tgt_note: "الراتب حتى الآن من إجمالي طلبات الشهر بدون المخالفات والسلف والوقود. الرواتب تستخدم نفس الإعدادات.",
   perf_hint: "الأداء اليومي لكل سائق. يرى السائق أمس واليوم جنباً إلى جنب في تطبيقه.", perf_yest: "أمس", perf_today: "اليوم", perf_change: "تغير الطلبات",
-  perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ أمس واليوم للمقارنة اليومية. تقرير يوم 2 من كل شهر يغلق شهر الراتب (من 2 إلى 1 من الشهر التالي) ويبقى محفوظاً ليراجعه السائقون لاحقاً.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
+  perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ كل تقرير يومي 12 شهراً. يعرض التطبيق دائماً آخر يومين، ويمكن للسائق فتح أي يوم سابق من التقويم.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
 
 const auth = { mode: "signin", msg: "", err: "", busy: false, session: null, role: null, admins: [] };
 function renderAuth(){
