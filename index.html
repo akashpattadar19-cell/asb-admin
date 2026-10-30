@@ -190,14 +190,20 @@ dialog::backdrop{background:rgba(5,15,25,.5)}
 .err{color:var(--bad);font-size:13px}
 
 @media (max-width:860px){
-  .app{grid-template-columns:1fr}
+  .app{grid-template-columns:minmax(0,1fr)}
+  .rail{min-width:0;max-width:100vw;overflow:hidden}
+  .nav{min-width:0;max-width:100%}
   .rail{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;height:auto;padding-block:10px 0;flex-direction:column}
   body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:21;background:var(--brand)}
   .brand{padding:0 max(16px,env(safe-area-inset-left,0px)) 8px;padding-right:max(16px,env(safe-area-inset-right,0px))}
   .nav{flex-direction:row;overflow-x:auto;padding:0 max(10px,env(safe-area-inset-left,0px)) 8px;scrollbar-width:none}
   .nav a{white-space:nowrap;padding:7px 11px;font-size:14px}
   .rail-foot{display:none}
-  .mobile-tools{display:flex!important}
+  .mobile-tools{display:flex!important;position:absolute;top:-2px;inset-inline-end:max(12px,env(safe-area-inset-right,0px));flex-direction:column;align-items:flex-end;gap:5px}
+  .brand{position:relative;padding-inline-end:150px;min-height:74px}
+  .brand>div:nth-child(2){min-width:0;overflow:hidden} .brand b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .brand b{font-size:16px}
+  .mobile-tools .out-btn{display:inline-flex;align-items:center;gap:4px;padding:5px 9px;border-radius:8px;border:1px solid rgba(255,255,255,.5);background:rgba(255,255,255,.1);color:#fff;font-size:12px;font-weight:600;cursor:pointer}
   main{padding-block:18px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
   .grid2{grid-template-columns:1fr}
   .head h1{font-size:25px}
@@ -275,7 +281,7 @@ dialog::backdrop{background:rgba(5,15,25,.5)}
     <div class="brand">
       <div class="mark"><img src="logo.png" alt="ASB"></div>
       <div><b>ASB LOGISTICS</b><small data-t="brandSub">Admin panel</small></div>
-      <div class="mobile-tools"><div class="lang" id="langM"></div><button class="btn ghost sm" data-signout-admin style="background:none;color:inherit;border-color:currentColor" aria-label="Sign out">⏻</button></div>
+      <div class="mobile-tools"><div class="lang" id="langM"></div><button class="out-btn" data-signout-admin aria-label="Sign out">⏻ <span data-t="au_signout">Sign out</span></button></div>
     </div>
     <nav class="nav" id="nav"></nav>
     <div class="rail-foot">
@@ -2489,10 +2495,14 @@ document.addEventListener("click", async e => {
   openDialog({ title: t("adm_remove"), danger: true, submit: t("adm_remove"), body: `<p class="full"><b>${esc(email)}</b></p><p class="full">${t("adm_remove_q")}</p>`,
     onSubmit: async () => { const { error } = await sb.rpc("admin_remove", { p_email: email }); if (error) fail(t("dbErr")); toast(t("adm_removed")); loadAdmins(); } });
 });
-async function adminSignOut(){
-  try { await Promise.race([sb.auth.signOut({ scope: "local" }), new Promise(r => setTimeout(r, 2500))]); } catch {}
+let signingOut = false;
+function adminSignOut(){
+  if (signingOut) return; signingOut = true;
+  document.body.style.opacity = ".5";
+  // forget the session on this device right away, then tell the server in the background
   try { for (const k of Object.keys(localStorage)) if (k.startsWith("sb-")) localStorage.removeItem(k); } catch {}
-  location.hash = ""; location.reload();
+  try { sb.auth.signOut({ scope: "local" }).catch(() => {}); } catch {}
+  setTimeout(() => { location.replace(location.pathname); }, 150);
 }
 document.addEventListener("click", e => { if (e.target.closest("[data-signout-admin]")) adminSignOut(); });
 
@@ -2537,7 +2547,7 @@ async function startAdmin(session){
 async function boot(){
   const { data } = await sb.auth.getSession();
   sb.auth.onAuthStateChange((ev, session) => {
-    if (ev === "SIGNED_OUT") { started = false; adminSignOut(); return; }
+    if (ev === "SIGNED_OUT") { if (!signingOut && started) { started = false; adminSignOut(); } return; }
     if (ev === "PASSWORD_RECOVERY") { location.hash = "admins"; setTimeout(() => { toast(t("pw_set")); $("#pwNew")?.focus(); }, 1500); }
     if (session && (ev === "SIGNED_IN" || ev === "INITIAL_SESSION")) startAdmin(session);
   });
