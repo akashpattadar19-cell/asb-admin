@@ -132,6 +132,10 @@ a.tel{color:inherit;text-decoration:none} a.tel:hover{text-decoration:underline}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(29,131,88,.5)}70%{box-shadow:0 0 0 6px rgba(29,131,88,0)}100%{box-shadow:0 0 0 0 rgba(29,131,88,0)}}
 .chip.online{border-color:#9ED6BA;background:#E7F6EE;color:#14623F} .chip.online.on{background:#14623F;color:#fff}
 .pin-in{letter-spacing:.5em;font-size:20px;text-align:center}
+.nav-q{margin-inline-start:auto;background:#E5484D;color:#fff;border-radius:9px;font-size:11px;font-weight:700;padding:1px 7px}
+table.act td{vertical-align:top} .chg-l{white-space:nowrap} .chg-l .old{color:var(--bad);text-decoration:line-through} .chg-l .new{color:var(--good);font-weight:600}
+.q-box{margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--sunk,rgba(0,0,0,.04));font-size:13px} .q-box.open{background:#FFF6E3;border:1px solid #F0CF8A}
+.pill.p-bad{background:#FDE3E3;color:#A1262B}
 table.fuel .input.num{width:96px} table.fuel tfoot td{border-top:2px solid var(--line);background:var(--sunk,rgba(0,0,0,.03))}
 table.dues tr.due-emp{cursor:pointer} table.dues tr.due-emp:hover td{background:var(--sunk,rgba(0,0,0,.03))}
 table.dues tr.due-emp.open td{background:var(--sunk,rgba(0,0,0,.04));border-bottom:0}
@@ -271,7 +275,7 @@ dialog::backdrop{background:rgba(5,15,25,.5)}
     <div class="brand">
       <div class="mark"><img src="logo.png" alt="ASB"></div>
       <div><b>ASB LOGISTICS</b><small data-t="brandSub">Admin panel</small></div>
-      <div class="mobile-tools"><div class="lang" id="langM"></div></div>
+      <div class="mobile-tools"><div class="lang" id="langM"></div><button class="btn ghost sm" data-signout-admin style="background:none;color:inherit;border-color:currentColor" aria-label="Sign out">⏻</button></div>
     </div>
     <nav class="nav" id="nav"></nav>
     <div class="rail-foot">
@@ -420,7 +424,7 @@ let db = null, downloads = null, unsubOps = null, unsubMonth = null;
 const payDoc = () => state.payroll[state.payMonth] ?? null;
 
 /* ───────── routing ───────── */
-const VIEWS = ["dashboard","employees","target","perf","operations","fuel","dues","payroll","app","rules","admins"];
+const VIEWS = ["dashboard","employees","target","perf","operations","fuel","dues","payroll","activity","app","rules","admins"];
 const SUB_VIEWS = ["target","perf"];
 const view = () => { const h = location.hash.slice(1); return VIEWS.includes(h) ? h : "dashboard"; };
 window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
@@ -439,6 +443,7 @@ function renderShell(){
   const v = view();
   const pendingN = Object.values(state.emp).filter(e => e.status === "PENDING").length;
   $("#nav").innerHTML = VIEWS.map(k => `<a href="#${k}" class="${SUB_VIEWS.includes(k) ? "nav-sub" : ""}" ${k===v?'aria-current="page"':""}><span>${t("nav_"+k)}</span>${k==="employees"&&pendingN?`<span class="count">${pendingN}</span>`:""}</a>`).join("") + `<a href="${DRIVER_WEB}" target="_blank" rel="noopener" class="nav-driver"><span>${t("drv_web")} ↗</span></a>`;
+  setTimeout(renderShellBadge, 0);
   const langBtns = [["en","EN"],["bn","বাংলা"],["ar","عربي"]].map(([k,l]) => `<button data-lang="${k}" aria-pressed="${k===lang}">${l}</button>`).join("");
   $("#lang").innerHTML = langBtns; $("#langM").innerHTML = langBtns;
 }
@@ -462,7 +467,7 @@ function render(){
   if (state.offline) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("offline")}</b></div>`; return; }
   if (!state.ready) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("loading")}</b></div>`; return; }
   const ro = state.canWrite ? "" : `<div class="note warn">${t("readOnly")}</div>`;
-  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, dues: vDues, fuel: vFuel, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
+  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, dues: vDues, fuel: vFuel, activity: vActivity, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
   main.querySelectorAll("[data-needs-write]").forEach(el => { if (!state.canWrite) el.disabled = true; });
   if (!state.canWrite) main.querySelectorAll("input:not([id]),select:not([id]),textarea:not([id]),#rulesForm button,#rulesForm input,[data-roleof]").forEach(el => el.disabled = true);
 }
@@ -491,7 +496,7 @@ const outstandingOf = (coll, empId) => Object.values(coll).filter(x => !x.waived
 
 /* ───────── Dashboard ───────── */
 function vDashboard(){
-  const emps = Object.values(state.emp);
+  const emps = Object.values(state.emp).filter(e => e.status !== "DELETED");
   const active = emps.filter(e=>e.status==="ACTIVE").length, pend = emps.filter(e=>e.status==="PENDING").length;
   const rows = monthRanked(monthKey());
   const allRows = Object.values(monthRows(monthKey()));
@@ -539,7 +544,8 @@ function calmRender(){ clearTimeout(calmT); calmT = setTimeout(() => { if (!docu
 setInterval(calmRender, 30000);
 const platPill = p => p ? `<span class="pill nodot plat plat-${esc(String(p).toLowerCase().replace(/[^a-z]/g, ""))}">${esc(p === "HungerStation" ? "Hunger" : p)}</span>` : "";
 function vEmployees(){
-  const q = state.q.trim().toLowerCase(), all = Object.entries(state.emp);
+  const q = state.q.trim().toLowerCase(), bin = Object.entries(state.emp).filter(([, e]) => e.status === "DELETED"), all = Object.entries(state.emp).filter(([, e]) => e.status !== "DELETED");
+  if (state.qBin) return vBin(bin);
   const list = all.filter(([id,e]) =>
     (!state.qStatus || e.status === state.qStatus) &&
     (!state.qType || (e.payType || "TARGET") === state.qType) &&
@@ -581,6 +587,7 @@ function vEmployees(){
     <span class="chip-sep"></span>
     ${PLATFORMS.filter(p => all.some(([,e]) => e.platform === p)).map(p => chip(p === "HungerStation" ? "Hunger" : p, all.filter(([,e]) => e.platform === p).length, "qPlat", p)).join("")}
     <span class="chip-sep"></span><button class="chip online ${state.qOn ? "on" : ""}" data-act="emp-chip" data-k="qOn" data-v="${state.qOn ? "" : "1"}"><b>${act.filter(([id]) => isOnline(id)).length}</b> ${t("app_online_n")}</button>
+    ${bin.length ? `<span class="chip-sep"></span><button class="chip" data-act="emp-chip" data-k="qBin" data-v="1">🗑 <b>${bin.length}</b> ${t("bin_t")}</button>` : ""}
     ${noPin ? `<span class="chip-sep"></span><button class="chip warn ${state.qPin ? "on" : ""}" data-act="emp-chip" data-k="qPin" data-v="${state.qPin ? "" : "1"}"><b>${noPin}</b> ${t("pin_missing")}</button>` : ""}
   </div>
   <div class="filters">
@@ -694,6 +701,94 @@ document.addEventListener("change", e => {
   if (e.target.id === "payMonth" && e.target.value) { state.payMonth = e.target.value; state.adjDraft = {}; subMonth(); render(); }
 });
 
+/* ───────── Activity: every change by every admin, with reasons and drivers' questions ───────── */
+const ACT = { list: [], qs: [], loaded: false, loading: false, openQ: 0 };
+const COLL_L = { employees: "act_emp", fines: "nav_dues", advances: "nav_dues", perf: "nav_perf", totals: "nav_operations", fuel: "nav_fuel", payroll: "nav_payroll", config: "nav_rules" };
+const FIELD_L = { fullName: "name", fullNameAr: "nameAr", residentId: "iqama", mobile: "mobile", city: "city", plate: "plate", card: "card", cardSerial: "cardSerial",
+  vehicleName: "vehicleName", vehicleModel: "model", payType: "payType", status: "status", platform: "platform", jahezId: "jahezId", photoUrl: "photo_choose", tGrade: "pg_col",
+  amount: "amount", remaining: "remaining", monthly: "perMonth", reason: "reason", date: "date", category: "du_type", waived: "waived", history: "du_hist_t", startMonth: "startMonth",
+  o: "orders", f: "fuel", g: "pf_grade", rp: "pf_rank", fa: "pf_forced", ot: "pf_ontime", cr: "pf_complete", ne: "pf_early", p1: "fu_p1", p2: "fu_p2", p3: "fu_p3", pinVer: "resetPin", dailyLimit: "dailyLimit", monthlyLimit: "monthlyLimit" };
+const showVal = v => v === null || v === undefined || v === "" ? "—" : Array.isArray(v) ? `[${v.length}]` : typeof v === "object" ? "…" : esc(String(v)).slice(0, 60);
+const adminName = em => { const a = (auth.admins || []).find(x => x.email.toLowerCase() === String(em || "").toLowerCase()); return a?.name || String(em || "—").split("@")[0]; };
+async function loadActivity(){
+  if (ACT.loading) return; ACT.loading = true;
+  try {
+    const [l, q] = await Promise.all([
+      sb.from("audit_log").select("*").order("at", { ascending: false }).limit(400),
+      sb.from("audit_questions").select("*").order("asked_at", { ascending: false }).limit(300)]);
+    ACT.list = l.data ?? []; ACT.qs = q.data ?? []; ACT.loaded = true;
+    ACT.openQ = ACT.qs.filter(x => !x.answer).length;
+  } finally { ACT.loading = false; }
+  if (view() === "activity") render();
+}
+async function loadActivityCount(){
+  const { count } = await sb.from("audit_questions").select("id", { count: "exact", head: true }).is("answer", null);
+  if (typeof count === "number" && count !== ACT.openQ) { ACT.openQ = count; renderShellBadge(); }
+}
+function renderShellBadge(){ const a = document.querySelector('#nav a[href="#activity"]'); if (a) { a.querySelector(".nav-q")?.remove(); if (ACT.openQ) a.insertAdjacentHTML("beforeend", `<span class="nav-q">${ACT.openQ}</span>`); } }
+function vActivity(){
+  if (!ACT.loaded) { loadActivity(); return `<div class="head"><div><h1>${t("nav_activity")}</h1></div></div><div class="empty">${t("loading")}</div>`; }
+  const fa = state.aAdmin || "", fe = (state.aEmp || "").trim().toLowerCase(), fc = state.aColl || "", onlyQ = !!state.aQ;
+  const qBy = {}; for (const q of ACT.qs) (qBy[q.audit_id] ??= []).push(q);
+  const list = ACT.list.filter(x => (!fa || x.actor === fa) && (!fc || COLL_L[x.coll] === fc) && (!onlyQ || (qBy[x.id] || []).some(q => !q.answer))
+    && (!fe || [state.emp[x.emp_id]?.fullName, state.emp[x.emp_id]?.residentId, x.emp_id].some(v => String(v ?? "").toLowerCase().includes(fe))));
+  const actors = [...new Set(ACT.list.map(x => x.actor).filter(Boolean))];
+  const colls = [...new Set(Object.values(COLL_L))];
+  const chg = x => x.action === "delete" ? `<span class="pill p-mute nodot">${t("act_deleted")}</span>` : Object.entries(x.changes || {}).slice(0, 8).map(([k, [a, b]]) =>
+    `<div class="chg-l"><b>${t(FIELD_L[k] || k)}</b>: <span class="old">${showVal(a)}</span> → <span class="new">${showVal(b)}</span></div>`).join("") || "—";
+  return `
+  <div class="head"><div><h1>${t("nav_activity")}</h1><p>${t("act_hint")}</p></div>
+    <div class="tools"><button class="btn ghost" data-act="act-reload">↻ ${t("act_reload")}</button></div></div>
+  <div class="filters">
+    <input class="input" id="aEmp" placeholder="${t("act_search")}" value="${esc(state.aEmp || "")}">
+    <select class="input" id="aAdmin"><option value="">${t("act_all_admins")}</option>${actors.map(a => `<option value="${esc(a)}" ${fa === a ? "selected" : ""}>${esc(adminName(a))}</option>`).join("")}</select>
+    <select class="input" id="aColl"><option value="">${t("act_all_kinds")}</option>${colls.map(c => `<option value="${c}" ${fc === c ? "selected" : ""}>${t(c)}</option>`).join("")}</select>
+    <button class="chip warn ${onlyQ ? "on" : ""}" data-act="act-onlyq"><b>${ACT.openQ}</b> ${t("act_open_q")}</button>
+  </div>
+  <section class="panel">${list.length ? `<div class="scroll"><table class="act">
+    <thead><tr><th>${t("date")}</th><th>${t("act_admin")}</th><th>${t("employee")}</th><th>${t("act_what")}</th><th>${t("act_changes")}</th><th>${t("act_reason")}</th></tr></thead>
+    <tbody>${list.slice(0, 300).map(x => { const e = state.emp[x.emp_id]; const qs = (qBy[x.id] || []).slice().reverse(); return `<tr>
+      <td class="nowrap sub">${new Date(x.at).toLocaleString("en-GB", { timeZone: "Asia/Riyadh", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
+      <td class="nowrap"><b>${esc(adminName(x.actor))}</b></td>
+      <td>${x.emp_id ? `<div class="name">${esc(e?.fullName || x.before?.fullName || x.emp_id)}</div>${e?.status === "DELETED" ? `<span class="pill p-mute nodot">${t("bin_t")}</span>` : ""}` : `<span class="sub">—</span>`}</td>
+      <td class="nowrap"><span class="pill ${x.action === "create" ? "p-good" : x.action === "delete" ? "p-bad" : "p-info"} nodot">${t("act_" + x.action)}</span><div class="sub">${t(COLL_L[x.coll] || x.coll)}</div></td>
+      <td class="sub">${chg(x)}</td>
+      <td style="min-width:200px">${x.reason ? `<div>${esc(x.reason)}</div><div class="sub">— ${esc(adminName(x.reason_by))}</div>` : ""}
+        <button class="btn ghost sm" data-act="act-reason" data-id="${x.id}" data-needs-write>${x.reason ? t("edit") : "+ " + t("act_add_reason")}</button>
+        ${qs.map(q => `<div class="q-box ${q.answer ? "" : "open"}"><div><b>❓ ${esc(e?.fullName?.split(" ")[0] || "")}:</b> ${esc(q.question)}</div>
+          ${q.answer ? `<div class="sub">↳ ${esc(q.answer)} — ${esc(adminName(q.answered_by))}</div>` : `<button class="btn sm" data-act="act-answer" data-id="${q.id}" data-needs-write>${t("act_answer")}</button>`}</div>`).join("")}</td>
+    </tr>`; }).join("")}</tbody></table></div>` : `<div class="empty"><b>${t("act_none")}</b></div>`}</section>
+  <p class="sub" style="margin-top:10px">${t("act_note")}</p>`;
+}
+document.addEventListener("input", e => { if (e.target.id === "aEmp") { state.aEmp = e.target.value; render(); const el = $("#aEmp"); el.focus(); el.setSelectionRange(el.value.length, el.value.length); } });
+document.addEventListener("change", e => { if (e.target.id === "aAdmin") { state.aAdmin = e.target.value; render(); } if (e.target.id === "aColl") { state.aColl = e.target.value; render(); } });
+
+function vBin(bin){
+  const sup = auth.role === "SUPER_ADMIN";
+  return `<div class="head"><div><h1>🗑 ${t("bin_t")}</h1><p>${t("bin_hint")}</p></div><div class="tools"><button class="btn ghost" data-act="emp-chip" data-k="qBin" data-v="">← ${t("nav_employees")}</button></div></div>
+  <section class="panel">${bin.length ? `<div class="scroll"><table><thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("bin_when")}</th><th>${t("bin_auto")}</th><th></th></tr></thead><tbody>
+  ${bin.sort((a, b) => (+b[1].deletedAt || 0) - (+a[1].deletedAt || 0)).map(([id, e]) => { const days = Math.floor((Date.now() - (+e.deletedAt || 0)) / DAY), canPurge = sup && days >= 30; return `<tr>
+    <td><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 34)}<div><div class="name">${esc(e.fullName)}</div><div class="sub">${esc(adminName(e.deletedBy))}</div></div></div></td>
+    <td class="mono">${esc(e.residentId)}</td>
+    <td class="nowrap">${e.deletedAt ? new Date(+e.deletedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}<div class="sub">${t("bin_days", { n: days })}</div></td>
+    <td class="nowrap sub">${e.deletedAt ? new Date(+e.deletedAt + 365 * DAY).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</td>
+    <td><div class="row-actions"><button class="btn sm" data-act="emp-restore" data-id="${id}" data-needs-write>↺ ${t("bin_restore")}</button>
+      <button class="btn ghost sm danger-t" data-act="emp-purge" data-id="${id}" data-needs-write ${canPurge ? "" : "disabled"} title="${canPurge ? "" : t("bin_wait", { n: Math.max(0, 30 - days) })}">${t("bin_purge")}${canPurge ? "" : ` · ${t("bin_left", { n: Math.max(0, 30 - days) })}`}</button></div></td></tr>`; }).join("")}
+  </tbody></table></div>` : `<div class="empty"><b>${t("bin_empty")}</b></div>`}</section>`;
+}
+/* ───────── Recycle bin: deleted employees stay 12 months; permanent delete after 30 days ───────── */
+const DAY = 864e5;
+async function purgeOldDeleted(){
+  for (const [id, e] of Object.entries(state.emp)) if (e.status === "DELETED" && Date.now() - (+e.deletedAt || 0) > 365 * DAY) await hardDeleteEmp(id);
+}
+async function hardDeleteEmp(id){
+  const e2 = state.emp[id]; if (!e2) return;
+  for (const x of allDues().filter(x => x.employeeId === id)) await db.doc(x.coll + "/" + x.id).delete();
+  for (const c of ["presence", "duty", "pinreq"]) { try { await db.doc(c + "/" + id).delete(); } catch {} }
+  if (e2.photoPath) sb.storage.from("photos").remove([e2.photoPath]).catch(() => {});
+  await db.doc("employees/" + id).delete();
+}
+
 /* ───────── Petrol: three 10-day periods per pay month (2nd → 1st), kept for every month ───────── */
 const FUEL_P = ["p1", "p2", "p3"];
 function fuelPeriods(k){
@@ -765,7 +860,7 @@ function allDues(){
   return [
     ...Object.entries(state.fines).map(([id, x]) => ({ ...x, id, coll: "fines", type: x.category || "OTHER" })),
     ...Object.entries(state.adv).map(([id, x]) => ({ ...x, id, coll: "advances", type: "ADVANCE" })),
-  ];
+  ].filter(x => state.emp[x.employeeId]?.status !== "DELETED");
 }
 const dueRemaining = x => x.waived ? 0 : (+x.remaining || 0);
 const dueStatus = x => x.waived ? "waived" : (+x.remaining || 0) <= 0 ? "cleared" : "open";
@@ -1229,13 +1324,10 @@ document.addEventListener("click", async e => {
     if (act === "emp-del") {
       const e2 = state.emp[id], dues = allDues().filter(x => x.employeeId === id);
       openDialog({ title: t("emp_del_t"), danger: true, submit: t("delete"),
-        body: `<p class="full"><b>${esc(e2.fullName)}</b> · <span class="mono">${esc(e2.residentId)}</span></p><p class="full">${t("emp_del_q")}</p>${dues.length ? `<p class="full note warn">${t("emp_del_dues", { n: dues.length })}</p>` : ""}`,
+        body: `<p class="full"><b>${esc(e2.fullName)}</b> · <span class="mono">${esc(e2.residentId)}</span></p><p class="full">${t("bin_del_q")}</p>`,
         onSubmit: async () => {
-          for (const x of dues) await db.doc(x.coll + "/" + x.id).delete();
-          for (const c of ["presence", "duty", "pinreq"]) { try { await db.doc(c + "/" + id).delete(); } catch {} }
-          if (e2.photoPath) sb.storage.from("photos").remove([e2.photoPath]).catch(() => {});
-          await db.doc("employees/" + id).delete();
-          toast(t("emp_deleted"));
+          await db.doc("employees/" + id).update({ prevStatus: e2.status, status: "DELETED", deletedAt: Date.now(), deletedBy: auth.session?.user?.email || "", updatedAt: Date.now() });
+          toast(t("bin_moved"));
         }});
       return;
     }
@@ -1376,6 +1468,27 @@ document.addEventListener("click", async e => {
     }
     if (act === "due-del") {
       openDialog({ title: t("delete"), body: `<p class="full">${t("du_del_q")}</p>`, submit: t("delete"), danger: true, onSubmit: async () => { await db.doc(id).delete(); toast(t("du_deleted")); } });
+      return;
+    }
+    if (act === "act-reload") { ACT.loaded = false; render(); return; }
+    if (act === "act-onlyq") { state.aQ = !state.aQ; render(); return; }
+    if (act === "act-reason") {
+      const x = ACT.list.find(y => String(y.id) === id);
+      openDialog({ title: t("act_reason"), submit: t("save"), body: `<p class="full sub">${t("act_reason_help")}</p><label class="f full">${t("act_reason")}<textarea class="input" name="r" rows="3" maxlength="400">${esc(x?.reason || "")}</textarea></label>`,
+        onSubmit: async fd => { const { error } = await sb.rpc("audit_set_reason", { p_id: +id, p_reason: fd.r || "" }); if (error) fail(t("dbErr")); ACT.loaded = false; toast(t("empSaved")); } });
+      return;
+    }
+    if (act === "act-answer") {
+      const q = ACT.qs.find(y => String(y.id) === id);
+      openDialog({ title: t("act_answer"), submit: t("nt_send_btn"), body: `<p class="full"><b>❓</b> ${esc(q?.question || "")}</p><label class="f full">${t("act_answer")}<textarea class="input" name="a" rows="3" maxlength="600" required></textarea></label>`,
+        onSubmit: async fd => { if (!(fd.a || "").trim()) fail(t("required")); const { error } = await sb.rpc("audit_answer", { p_qid: +id, p_answer: fd.a }); if (error) fail(t("dbErr")); ACT.loaded = false; toast(t("nt_sent")); loadActivityCount(); } });
+      return;
+    }
+    if (act === "emp-restore") { await db.doc("employees/" + id).update({ status: state.emp[id]?.prevStatus || "ACTIVE", deletedAt: null, deletedBy: null, updatedAt: Date.now() }); toast(t("bin_restored")); return; }
+    if (act === "emp-purge") {
+      const e2 = state.emp[id];
+      openDialog({ title: t("bin_purge"), danger: true, submit: t("bin_purge"), body: `<p class="full"><b>${esc(e2.fullName)}</b></p><p class="full">${t("bin_purge_q")}</p>`,
+        onSubmit: async () => { await hardDeleteEmp(id); toast(t("emp_deleted")); } });
       return;
     }
     if (act === "fuel-month") { state.fuelMonth = b.dataset.v; state.fuelDraft = {}; render(); return; }
@@ -2130,7 +2243,16 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "Give each person an email, a role and a password. They can sign in right away with them.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", nav_fuel: "Petrol", fu_hint: "Petrol used by each driver in three 10-day periods of the pay month (2nd to 1st). Every month stays saved.", fu_months: "Months", fu_p1: "Days 1–10", fu_p2: "Days 11–20", fu_p3: "Days 21–end", fu_total: "Month total", fu_diff: "Saved / over", fu_save: "saved · paid in cash", fu_over: "over · cut from salary", fu_import: "Paste from PetroApp", fu_period: "Period", fu_import_help: "One line per driver: PetroApp account (e.g. logistic 4), Iqama or name, then the amount. Amounts are added to the chosen period.", fu_note: "The month total goes into Payroll automatically and drivers see their periods and past months in the app.", perf_arc: "Month-end report", perf_arc_list: "Month-end reports", du_recent: "Latest dues", adm_role: "Role", adm_pw: "Password (at least 8 characters)", adm_pw_ph: "e.g. Asb-2026-Riyadh", adm_roles_help: "Viewer: can see everything but cannot change anything. Sub admin: can add and change data. Super admin: also manages admins. The person signs in at once with this email and password — no email is sent.", adm_setpw: "Set password", adm_setpw_help: "The new password works at once. Tell it to the person yourself.", adm_pw_done: "Password changed", adm_created: "Login ready for {e}", adm_bad_email: "Check the email address", role_VIEWER: "Viewer (read only)", pay_del: "Delete month", pay_del_q: "Delete the whole payroll for {m}? Payslips leave the driver app and any dues instalments taken in {m} are put back. This cannot be undone.", slip_del: "Delete payslip", slip_del_q: "Delete the {m} payslip of {n}? Their dues instalments for {m} are put back.", pay_gone: "deleted employee", pay_saved: "Saved months", nt_send: "Send notice", nt_send_btn: "Send", nt_help: "Drivers see it in the app and as a phone notification. Daily updates (performance, orders, salary, dues) send a notice by themselves.", nt_to: "To", nt_all: "All drivers", nt_title: "Title", nt_title_ph: "e.g. Today's orders are updated", nt_body: "Message (optional)", nt_sent: "Notice sent", du_nodate: "No date", du_manual: "by hand", du_manual_t: "No automatic monthly instalment — record deductions yourself or set a monthly amount.", app_never: "App not opened yet", app_online: "Online now", app_offline: "Offline", app_open_for: "open for {d}", app_last: "last seen {t}", app_today: "Today", app_week_s: "7 days", app_week: "Last 7 days",
+  drv_web: "Driver app (web)", nav_activity: "Activity", act_hint: "Every change made by an admin: who, when, what, and why. Drivers see the changes about them and can ask a question.", act_reload: "Refresh", act_search: "Search employee…", act_all_admins: "All admins", act_all_kinds: "All kinds",
+  act_open_q: "unanswered questions", act_admin: "Admin", act_what: "What", act_changes: "Changes", act_reason: "Reason / questions", act_add_reason: "Add reason", act_answer: "Answer", act_none: "No changes yet",
+  act_create: "Added", act_update: "Changed", act_delete: "Deleted", act_deleted: "removed", act_emp: "Employee", act_reason_help: "Write why this was changed. The driver sees it in the app.",
+  act_note: "Changes are kept for 12 months. New entries appear when admins save something.",
+  adm_name: "Name", adm_name_ph: "e.g. Rahim (office)", adm_last: "Last sign-in", adm_logins: "Sign-in history", adm_device: "Device", adm_remove: "Remove access", adm_removed: "Access removed — signed out everywhere",
+  adm_remove_q: "This admin is signed out on every device at once and can no longer sign in. You can add them again later.",
+  bin_t: "Recycle bin", bin_hint: "Deleted employees stay here for 12 months and are then removed for good. You can restore them anytime, or delete permanently after 30 days (super admin).",
+  bin_del_q: "The employee moves to the Recycle bin: hidden from lists and the app, sign-in stops. All their data is kept for 12 months and can be restored.", bin_moved: "Moved to Recycle bin",
+  bin_restore: "Restore", bin_restored: "Employee restored", bin_purge: "Delete permanently", bin_purge_q: "Delete this employee and their dues for good? This cannot be undone.",
+  bin_when: "Deleted on", bin_auto: "Removed automatically on", bin_days: "{n} days ago", bin_left: "{n} days left", bin_wait: "Possible {n} days from now", bin_empty: "Recycle bin is empty", nav_fuel: "Petrol", fu_hint: "Petrol used by each driver in three 10-day periods of the pay month (2nd to 1st). Every month stays saved.", fu_months: "Months", fu_p1: "Days 1–10", fu_p2: "Days 11–20", fu_p3: "Days 21–end", fu_total: "Month total", fu_diff: "Saved / over", fu_save: "saved · paid in cash", fu_over: "over · cut from salary", fu_import: "Paste from PetroApp", fu_period: "Period", fu_import_help: "One line per driver: PetroApp account (e.g. logistic 4), Iqama or name, then the amount. Amounts are added to the chosen period.", fu_note: "The month total goes into Payroll automatically and drivers see their periods and past months in the app.", perf_arc: "Month-end report", perf_arc_list: "Month-end reports", du_recent: "Latest dues", adm_role: "Role", adm_pw: "Password (at least 8 characters)", adm_pw_ph: "e.g. Asb-2026-Riyadh", adm_roles_help: "Viewer: can see everything but cannot change anything. Sub admin: can add and change data. Super admin: also manages admins. The person signs in at once with this email and password — no email is sent.", adm_setpw: "Set password", adm_setpw_help: "The new password works at once. Tell it to the person yourself.", adm_pw_done: "Password changed", adm_created: "Login ready for {e}", adm_bad_email: "Check the email address", role_VIEWER: "Viewer (read only)", pay_del: "Delete month", pay_del_q: "Delete the whole payroll for {m}? Payslips leave the driver app and any dues instalments taken in {m} are put back. This cannot be undone.", slip_del: "Delete payslip", slip_del_q: "Delete the {m} payslip of {n}? Their dues instalments for {m} are put back.", pay_gone: "deleted employee", pay_saved: "Saved months", nt_send: "Send notice", nt_send_btn: "Send", nt_help: "Drivers see it in the app and as a phone notification. Daily updates (performance, orders, salary, dues) send a notice by themselves.", nt_to: "To", nt_all: "All drivers", nt_title: "Title", nt_title_ph: "e.g. Today's orders are updated", nt_body: "Message (optional)", nt_sent: "Notice sent", du_nodate: "No date", du_manual: "by hand", du_manual_t: "No automatic monthly instalment — record deductions yourself or set a monthly amount.", app_never: "App not opened yet", app_online: "Online now", app_offline: "Offline", app_open_for: "open for {d}", app_last: "last seen {t}", app_today: "Today", app_week_s: "7 days", app_week: "Last 7 days",
   app_online_n: "online", dur_m: "{m} min", dur_hm: "{h} h {m} min", ago_m: "{n} min ago", ago_h: "{n} h ago",
   emp_del_t: "Delete employee", emp_del_q: "This removes the employee from the panel and the app. Their sign-in stops working. This cannot be undone.", emp_del_dues: "Their {n} dues records will be deleted too.", emp_deleted: "Employee deleted", platform: "Works on", pin_set: "Set PIN", pin_change: "Change PIN", pin_missing: "without PIN", pin_manual: "PIN (4 digits)", pin_4: "The PIN must be exactly 4 digits",
   pin_manual_help: "Type the PIN you want to give the driver, or leave it empty to create one automatically.", pin_title_new: "App sign-in PIN", no_city: "No city", emp_n: "drivers", all: "All", nav_dues: "Dues overview", du_hint: "Everything each driver owes — fines, advances, damage and more. Click a driver to see and edit each item.",
@@ -2164,7 +2286,16 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "প্রত্যেককে একটি ইমেইল, পদ আর পাসওয়ার্ড দিন। সেগুলো দিয়ে সঙ্গে সঙ্গে লগইন করতে পারবে।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", nav_fuel: "পেট্রোল", fu_hint: "বেতন-মাসের (২ তারিখ থেকে পরের মাসের ১ তারিখ) তিনটি ১০ দিনের ভাগে প্রত্যেক কর্মীর পেট্রোল খরচ। প্রতি মাসের হিসাব সংরক্ষিত থাকে।", fu_months: "মাস", fu_p1: "১ম ১০ দিন", fu_p2: "২য় ১০ দিন", fu_p3: "শেষ ১০ দিন", fu_total: "মাসের মোট", fu_diff: "বেঁচেছে / বেশি", fu_save: "বেঁচেছে · নগদ ফেরত", fu_over: "বেশি · বেতন থেকে কাটা", fu_import: "PetroApp থেকে পেস্ট", fu_period: "কোন ভাগ", fu_import_help: "প্রতি লাইনে একজন: PetroApp নম্বর (যেমন logistic 4), ইকামা বা নাম, তারপর টাকা। টাকা বাছাই করা ভাগে যোগ হবে।", fu_note: "মাসের মোট নিজে থেকে বেতনের হিসাবে যায়, আর কর্মীরা অ্যাপে নিজের ভাগগুলো ও আগের মাস দেখতে পারে।", perf_arc: "মাস শেষের রিপোর্ট", perf_arc_list: "মাস শেষের রিপোর্ট", du_recent: "সাম্প্রতিক বকেয়া", adm_role: "পদ", adm_pw: "পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)", adm_pw_ph: "যেমন: Asb-2026-Riyadh", adm_roles_help: "দর্শক: সব দেখতে পারবে, কিছু বদলাতে পারবে না। সাব এডমিন: তথ্য যোগ ও বদল করতে পারবে। সুপার এডমিন: এডমিনও পরিচালনা করতে পারবে। এই ইমেইল ও পাসওয়ার্ড দিয়ে সঙ্গে সঙ্গে লগইন করা যাবে — কোনো ইমেইল যায় না।", adm_setpw: "পাসওয়ার্ড দিন", adm_setpw_help: "নতুন পাসওয়ার্ড সঙ্গে সঙ্গে কাজ করবে। ব্যক্তিকে আপনি নিজে জানিয়ে দিন।", adm_pw_done: "পাসওয়ার্ড বদলানো হয়েছে", adm_created: "{e}-এর লগইন তৈরি হয়েছে", adm_bad_email: "ইমেইল ঠিক আছে কিনা দেখুন", role_VIEWER: "দর্শক (শুধু দেখবে)", pay_del: "মাস মুছুন", pay_del_q: "{m} মাসের পুরো বেতন হিসাব মুছে ফেলবেন? কর্মীদের অ্যাপ থেকে পে-স্লিপ সরে যাবে, আর {m} মাসে কাটা বকেয়ার কিস্তি ফেরত যাবে। ফেরানো যাবে না।", slip_del: "পে-স্লিপ মুছুন", slip_del_q: "{n}-এর {m} মাসের পে-স্লিপ মুছবেন? তার {m} মাসে কাটা বকেয়ার কিস্তি ফেরত যাবে।", pay_gone: "মুছে ফেলা কর্মী", pay_saved: "সংরক্ষিত মাস", nt_send: "নোটিশ পাঠান", nt_send_btn: "পাঠান", nt_help: "কর্মীরা অ্যাপে আর ফোনের নোটিফিকেশনে দেখবে। পারফরমেন্স, অর্ডার, বেতন বা বকেয়া আপডেট করলে নোটিশ নিজে থেকেই চলে যায়।", nt_to: "কাকে", nt_all: "সব কর্মী", nt_title: "শিরোনাম", nt_title_ph: "যেমন: আজকের অর্ডার আপডেট হয়েছে", nt_body: "বার্তা (ইচ্ছা হলে)", nt_sent: "নোটিশ পাঠানো হয়েছে", du_nodate: "তারিখ নেই", du_manual: "হাতে কাটা", du_manual_t: "মাসিক কিস্তি নিজে থেকে কাটা হবে না — কাটার হিসাব নিজে লিখুন অথবা মাসিক পরিমাণ দিন।", app_never: "এখনো অ্যাপ খোলেনি", app_online: "এখন অনলাইন", app_offline: "অফলাইন", app_open_for: "{d} ধরে খোলা", app_last: "শেষ দেখা {t}", app_today: "আজ", app_week_s: "৭ দিনে", app_week: "গত ৭ দিন",
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", nav_activity: "কার্যক্রম", act_hint: "প্রতিটি পরিবর্তন: কোন এডমিন, কখন, কী বদলেছে আর কেন। কর্মীরা নিজের বিষয়ের পরিবর্তন অ্যাপে দেখে আর প্রশ্ন করতে পারে।", act_reload: "রিফ্রেশ", act_search: "কর্মী খুঁজুন…", act_all_admins: "সব এডমিন", act_all_kinds: "সব ধরন",
+  act_open_q: "উত্তর বাকি প্রশ্ন", act_admin: "এডমিন", act_what: "কী", act_changes: "পরিবর্তন", act_reason: "কারণ / প্রশ্ন", act_add_reason: "কারণ লিখুন", act_answer: "উত্তর দিন", act_none: "এখনো কোনো পরিবর্তন নেই",
+  act_create: "যোগ", act_update: "পরিবর্তন", act_delete: "মুছে ফেলা", act_deleted: "মুছে ফেলা হয়েছে", act_emp: "কর্মীর তথ্য", act_reason_help: "কেন বদলানো হলো লিখুন। কর্মী অ্যাপে এটা দেখবে।",
+  act_note: "পরিবর্তনের হিসাব ১২ মাস থাকে। এডমিন কিছু সংরক্ষণ করলে নতুন সারি যোগ হয়।",
+  adm_name: "নাম", adm_name_ph: "যেমন: রহিম (অফিস)", adm_last: "শেষ লগইন", adm_logins: "লগইনের ইতিহাস", adm_device: "ডিভাইস", adm_remove: "বের করে দিন", adm_removed: "এডমিনকে বের করা হয়েছে — সব ডিভাইস থেকে লগআউট",
+  adm_remove_q: "এই এডমিন সঙ্গে সঙ্গে সব ডিভাইস থেকে লগআউট হবে আর আর লগইন করতে পারবে না। পরে চাইলে আবার যোগ করতে পারবেন।",
+  bin_t: "রিসাইকেল বিন", bin_hint: "মুছে ফেলা কর্মী এখানে ১২ মাস থাকে, তারপর নিজে থেকে স্থায়ীভাবে মুছে যায়। যেকোনো সময় ফিরিয়ে আনা যায়, আর ৩০ দিন পর সুপার এডমিন স্থায়ীভাবে মুছতে পারে।",
+  bin_del_q: "কর্মী রিসাইকেল বিনে যাবে: তালিকা ও অ্যাপ থেকে লুকানো থাকবে, লগইন বন্ধ হবে। তার সব তথ্য ১২ মাস রাখা থাকবে, ফিরিয়ে আনা যাবে।", bin_moved: "রিসাইকেল বিনে রাখা হয়েছে",
+  bin_restore: "ফিরিয়ে আনুন", bin_restored: "কর্মীকে ফিরিয়ে আনা হয়েছে", bin_purge: "স্থায়ীভাবে মুছুন", bin_purge_q: "এই কর্মী ও তার বকেয়ার হিসাব স্থায়ীভাবে মুছবেন? ফেরানো যাবে না।",
+  bin_when: "মুছেছেন", bin_auto: "নিজে থেকে মুছবে", bin_days: "{n} দিন আগে", bin_left: "আর {n} দিন", bin_wait: "{n} দিন পর মোছা যাবে", bin_empty: "রিসাইকেল বিন খালি", nav_fuel: "পেট্রোল", fu_hint: "বেতন-মাসের (২ তারিখ থেকে পরের মাসের ১ তারিখ) তিনটি ১০ দিনের ভাগে প্রত্যেক কর্মীর পেট্রোল খরচ। প্রতি মাসের হিসাব সংরক্ষিত থাকে।", fu_months: "মাস", fu_p1: "১ম ১০ দিন", fu_p2: "২য় ১০ দিন", fu_p3: "শেষ ১০ দিন", fu_total: "মাসের মোট", fu_diff: "বেঁচেছে / বেশি", fu_save: "বেঁচেছে · নগদ ফেরত", fu_over: "বেশি · বেতন থেকে কাটা", fu_import: "PetroApp থেকে পেস্ট", fu_period: "কোন ভাগ", fu_import_help: "প্রতি লাইনে একজন: PetroApp নম্বর (যেমন logistic 4), ইকামা বা নাম, তারপর টাকা। টাকা বাছাই করা ভাগে যোগ হবে।", fu_note: "মাসের মোট নিজে থেকে বেতনের হিসাবে যায়, আর কর্মীরা অ্যাপে নিজের ভাগগুলো ও আগের মাস দেখতে পারে।", perf_arc: "মাস শেষের রিপোর্ট", perf_arc_list: "মাস শেষের রিপোর্ট", du_recent: "সাম্প্রতিক বকেয়া", adm_role: "পদ", adm_pw: "পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)", adm_pw_ph: "যেমন: Asb-2026-Riyadh", adm_roles_help: "দর্শক: সব দেখতে পারবে, কিছু বদলাতে পারবে না। সাব এডমিন: তথ্য যোগ ও বদল করতে পারবে। সুপার এডমিন: এডমিনও পরিচালনা করতে পারবে। এই ইমেইল ও পাসওয়ার্ড দিয়ে সঙ্গে সঙ্গে লগইন করা যাবে — কোনো ইমেইল যায় না।", adm_setpw: "পাসওয়ার্ড দিন", adm_setpw_help: "নতুন পাসওয়ার্ড সঙ্গে সঙ্গে কাজ করবে। ব্যক্তিকে আপনি নিজে জানিয়ে দিন।", adm_pw_done: "পাসওয়ার্ড বদলানো হয়েছে", adm_created: "{e}-এর লগইন তৈরি হয়েছে", adm_bad_email: "ইমেইল ঠিক আছে কিনা দেখুন", role_VIEWER: "দর্শক (শুধু দেখবে)", pay_del: "মাস মুছুন", pay_del_q: "{m} মাসের পুরো বেতন হিসাব মুছে ফেলবেন? কর্মীদের অ্যাপ থেকে পে-স্লিপ সরে যাবে, আর {m} মাসে কাটা বকেয়ার কিস্তি ফেরত যাবে। ফেরানো যাবে না।", slip_del: "পে-স্লিপ মুছুন", slip_del_q: "{n}-এর {m} মাসের পে-স্লিপ মুছবেন? তার {m} মাসে কাটা বকেয়ার কিস্তি ফেরত যাবে।", pay_gone: "মুছে ফেলা কর্মী", pay_saved: "সংরক্ষিত মাস", nt_send: "নোটিশ পাঠান", nt_send_btn: "পাঠান", nt_help: "কর্মীরা অ্যাপে আর ফোনের নোটিফিকেশনে দেখবে। পারফরমেন্স, অর্ডার, বেতন বা বকেয়া আপডেট করলে নোটিশ নিজে থেকেই চলে যায়।", nt_to: "কাকে", nt_all: "সব কর্মী", nt_title: "শিরোনাম", nt_title_ph: "যেমন: আজকের অর্ডার আপডেট হয়েছে", nt_body: "বার্তা (ইচ্ছা হলে)", nt_sent: "নোটিশ পাঠানো হয়েছে", du_nodate: "তারিখ নেই", du_manual: "হাতে কাটা", du_manual_t: "মাসিক কিস্তি নিজে থেকে কাটা হবে না — কাটার হিসাব নিজে লিখুন অথবা মাসিক পরিমাণ দিন।", app_never: "এখনো অ্যাপ খোলেনি", app_online: "এখন অনলাইন", app_offline: "অফলাইন", app_open_for: "{d} ধরে খোলা", app_last: "শেষ দেখা {t}", app_today: "আজ", app_week_s: "৭ দিনে", app_week: "গত ৭ দিন",
   app_online_n: "জন অনলাইন", dur_m: "{m} মিনিট", dur_hm: "{h} ঘণ্টা {m} মিনিট", ago_m: "{n} মিনিট আগে", ago_h: "{n} ঘণ্টা আগে",
   emp_del_t: "কর্মী মুছুন", emp_del_q: "কর্মীকে প্যানেল ও অ্যাপ থেকে সরিয়ে দেওয়া হবে, তার লগইন আর কাজ করবে না। এটা ফেরানো যাবে না।", emp_del_dues: "তার {n}টি বকেয়ার হিসাবও মুছে যাবে।", emp_deleted: "কর্মী মুছে ফেলা হয়েছে", platform: "কোথায় কাজ করে", pin_set: "পিন দিন", pin_change: "পিন বদলান", pin_missing: "জনের পিন নেই", pin_manual: "পিন (৪ সংখ্যা)", pin_4: "পিন ঠিক ৪ সংখ্যার হতে হবে",
   pin_manual_help: "কর্মীকে যে পিন দিতে চান সেটা লিখুন, অথবা খালি রাখলে নিজে থেকে একটা পিন তৈরি হবে।", pin_title_new: "অ্যাপ লগইনের পিন", no_city: "শহর দেওয়া নেই", emp_n: "জন", all: "সবাই", nav_dues: "বকেয়ার হিসাব", du_hint: "প্রত্যেক কর্মীর সব বকেয়া — জরিমানা, অগ্রিম, গাড়ির ক্ষতি ইত্যাদি। কর্মীর নামে চাপলে প্রতিটি হিসাব দেখা ও বদলানো যাবে।",
@@ -2198,7 +2329,16 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "أعطِ كل شخص بريداً وصلاحية وكلمة مرور، ويمكنه الدخول بها فوراً.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", nav_fuel: "الوقود", fu_hint: "وقود كل سائق في ثلاث فترات كل منها 10 أيام من شهر الراتب (من 2 إلى 1). يبقى كل شهر محفوظاً.", fu_months: "الأشهر", fu_p1: "الأيام 1–10", fu_p2: "الأيام 11–20", fu_p3: "الأيام 21–النهاية", fu_total: "إجمالي الشهر", fu_diff: "وفر / زيادة", fu_save: "وفر · يُصرف نقداً", fu_over: "زيادة · تُخصم", fu_import: "لصق من PetroApp", fu_period: "الفترة", fu_import_help: "سطر لكل سائق: حساب PetroApp (مثل logistic 4) أو الإقامة أو الاسم ثم المبلغ. يُضاف المبلغ للفترة المختارة.", fu_note: "يذهب إجمالي الشهر إلى الرواتب تلقائياً، ويرى السائقون فتراتهم والأشهر السابقة في التطبيق.", perf_arc: "تقرير نهاية الشهر", perf_arc_list: "تقارير نهاية الشهر", du_recent: "أحدث المستحقات", adm_role: "الصلاحية", adm_pw: "كلمة المرور (8 أحرف على الأقل)", adm_pw_ph: "مثال: Asb-2026-Riyadh", adm_roles_help: "مشاهد: يرى كل شيء ولا يغيّر شيئاً. مدير فرعي: يضيف ويعدّل البيانات. مدير أعلى: يدير المسؤولين أيضاً. يدخل الشخص فوراً بهذا البريد وكلمة المرور دون إرسال بريد.", adm_setpw: "تعيين كلمة المرور", adm_setpw_help: "تعمل كلمة المرور الجديدة فوراً. أخبر الشخص بها بنفسك.", adm_pw_done: "تم تغيير كلمة المرور", adm_created: "تم تجهيز دخول {e}", adm_bad_email: "تحقق من البريد الإلكتروني", role_VIEWER: "مشاهد (قراءة فقط)", pay_del: "حذف الشهر", pay_del_q: "حذف رواتب {m} بالكامل؟ تختفي القسائم من التطبيق وتُعاد أقساط المستحقات المخصومة في {m}. لا يمكن التراجع.", slip_del: "حذف القسيمة", slip_del_q: "حذف قسيمة {m} لـ {n}؟ تُعاد أقساط مستحقاته في {m}.", pay_gone: "موظف محذوف", pay_saved: "الأشهر المحفوظة", nt_send: "إرسال إشعار", nt_send_btn: "إرسال", nt_help: "يراه السائقون في التطبيق وكإشعار على الهاتف. تحديثات الأداء والطلبات والرواتب والمستحقات ترسل إشعاراً تلقائياً.", nt_to: "إلى", nt_all: "كل السائقين", nt_title: "العنوان", nt_title_ph: "مثال: تم تحديث طلبات اليوم", nt_body: "الرسالة (اختياري)", nt_sent: "تم إرسال الإشعار", du_nodate: "بدون تاريخ", du_manual: "يدوي", du_manual_t: "لا يوجد قسط شهري تلقائي — سجّل الخصومات بنفسك أو حدد مبلغاً شهرياً.", app_never: "لم يفتح التطبيق بعد", app_online: "متصل الآن", app_offline: "غير متصل", app_open_for: "مفتوح منذ {d}", app_last: "آخر ظهور {t}", app_today: "اليوم", app_week_s: "7 أيام", app_week: "آخر 7 أيام",
+  drv_web: "تطبيق السائق (ويب)", nav_activity: "سجل التغييرات", act_hint: "كل تغيير: أي مسؤول ومتى وماذا ولماذا. يرى السائقون التغييرات الخاصة بهم ويمكنهم السؤال.", act_reload: "تحديث", act_search: "ابحث عن موظف…", act_all_admins: "كل المسؤولين", act_all_kinds: "كل الأنواع",
+  act_open_q: "أسئلة بلا رد", act_admin: "المسؤول", act_what: "ماذا", act_changes: "التغييرات", act_reason: "السبب / الأسئلة", act_add_reason: "إضافة سبب", act_answer: "رد", act_none: "لا توجد تغييرات بعد",
+  act_create: "إضافة", act_update: "تعديل", act_delete: "حذف", act_deleted: "محذوف", act_emp: "بيانات الموظف", act_reason_help: "اكتب سبب التغيير. يراه السائق في التطبيق.",
+  act_note: "تُحفظ التغييرات 12 شهراً.",
+  adm_name: "الاسم", adm_name_ph: "مثال: رحيم (المكتب)", adm_last: "آخر دخول", adm_logins: "سجل الدخول", adm_device: "الجهاز", adm_remove: "إزالة الصلاحية", adm_removed: "تمت الإزالة وتسجيل الخروج من كل الأجهزة",
+  adm_remove_q: "سيُسجَّل خروج هذا المسؤول من كل الأجهزة فوراً ولن يستطيع الدخول. يمكن إضافته لاحقاً.",
+  bin_t: "سلة المحذوفات", bin_hint: "يبقى الموظفون المحذوفون هنا 12 شهراً ثم يُحذفون نهائياً. يمكن استعادتهم أي وقت، أو حذفهم نهائياً بعد 30 يوماً (مدير أعلى).",
+  bin_del_q: "سينتقل الموظف إلى سلة المحذوفات: يُخفى من القوائم والتطبيق ويتوقف دخوله. تبقى بياناته 12 شهراً ويمكن استعادتها.", bin_moved: "نُقل إلى سلة المحذوفات",
+  bin_restore: "استعادة", bin_restored: "تمت الاستعادة", bin_purge: "حذف نهائي", bin_purge_q: "حذف هذا الموظف ومستحقاته نهائياً؟ لا يمكن التراجع.",
+  bin_when: "تاريخ الحذف", bin_auto: "يُحذف تلقائياً في", bin_days: "قبل {n} يوم", bin_left: "باقي {n} يوم", bin_wait: "ممكن بعد {n} يوم", bin_empty: "السلة فارغة", nav_fuel: "الوقود", fu_hint: "وقود كل سائق في ثلاث فترات كل منها 10 أيام من شهر الراتب (من 2 إلى 1). يبقى كل شهر محفوظاً.", fu_months: "الأشهر", fu_p1: "الأيام 1–10", fu_p2: "الأيام 11–20", fu_p3: "الأيام 21–النهاية", fu_total: "إجمالي الشهر", fu_diff: "وفر / زيادة", fu_save: "وفر · يُصرف نقداً", fu_over: "زيادة · تُخصم", fu_import: "لصق من PetroApp", fu_period: "الفترة", fu_import_help: "سطر لكل سائق: حساب PetroApp (مثل logistic 4) أو الإقامة أو الاسم ثم المبلغ. يُضاف المبلغ للفترة المختارة.", fu_note: "يذهب إجمالي الشهر إلى الرواتب تلقائياً، ويرى السائقون فتراتهم والأشهر السابقة في التطبيق.", perf_arc: "تقرير نهاية الشهر", perf_arc_list: "تقارير نهاية الشهر", du_recent: "أحدث المستحقات", adm_role: "الصلاحية", adm_pw: "كلمة المرور (8 أحرف على الأقل)", adm_pw_ph: "مثال: Asb-2026-Riyadh", adm_roles_help: "مشاهد: يرى كل شيء ولا يغيّر شيئاً. مدير فرعي: يضيف ويعدّل البيانات. مدير أعلى: يدير المسؤولين أيضاً. يدخل الشخص فوراً بهذا البريد وكلمة المرور دون إرسال بريد.", adm_setpw: "تعيين كلمة المرور", adm_setpw_help: "تعمل كلمة المرور الجديدة فوراً. أخبر الشخص بها بنفسك.", adm_pw_done: "تم تغيير كلمة المرور", adm_created: "تم تجهيز دخول {e}", adm_bad_email: "تحقق من البريد الإلكتروني", role_VIEWER: "مشاهد (قراءة فقط)", pay_del: "حذف الشهر", pay_del_q: "حذف رواتب {m} بالكامل؟ تختفي القسائم من التطبيق وتُعاد أقساط المستحقات المخصومة في {m}. لا يمكن التراجع.", slip_del: "حذف القسيمة", slip_del_q: "حذف قسيمة {m} لـ {n}؟ تُعاد أقساط مستحقاته في {m}.", pay_gone: "موظف محذوف", pay_saved: "الأشهر المحفوظة", nt_send: "إرسال إشعار", nt_send_btn: "إرسال", nt_help: "يراه السائقون في التطبيق وكإشعار على الهاتف. تحديثات الأداء والطلبات والرواتب والمستحقات ترسل إشعاراً تلقائياً.", nt_to: "إلى", nt_all: "كل السائقين", nt_title: "العنوان", nt_title_ph: "مثال: تم تحديث طلبات اليوم", nt_body: "الرسالة (اختياري)", nt_sent: "تم إرسال الإشعار", du_nodate: "بدون تاريخ", du_manual: "يدوي", du_manual_t: "لا يوجد قسط شهري تلقائي — سجّل الخصومات بنفسك أو حدد مبلغاً شهرياً.", app_never: "لم يفتح التطبيق بعد", app_online: "متصل الآن", app_offline: "غير متصل", app_open_for: "مفتوح منذ {d}", app_last: "آخر ظهور {t}", app_today: "اليوم", app_week_s: "7 أيام", app_week: "آخر 7 أيام",
   app_online_n: "متصل", dur_m: "{m} دقيقة", dur_hm: "{h} س {m} د", ago_m: "قبل {n} دقيقة", ago_h: "قبل {n} ساعة",
   emp_del_t: "حذف الموظف", emp_del_q: "سيُحذف الموظف من اللوحة والتطبيق ويتوقف دخوله. لا يمكن التراجع.", emp_del_dues: "ستُحذف أيضاً {n} من مستحقاته.", emp_deleted: "تم حذف الموظف", platform: "يعمل في", pin_set: "تعيين الرقم السري", pin_change: "تغيير الرقم السري", pin_missing: "بدون رقم سري", pin_manual: "الرقم السري (4 أرقام)", pin_4: "يجب أن يكون الرقم السري 4 أرقام",
   pin_manual_help: "اكتب الرقم السري الذي تريده للسائق، أو اتركه فارغاً لإنشائه تلقائياً.", pin_title_new: "رقم الدخول للتطبيق", no_city: "بدون مدينة", emp_n: "سائق", all: "الكل", nav_dues: "المستحقات", du_hint: "كل ما على السائق — مخالفات وسلف وأضرار وغيرها. اضغط على السائق لعرض وتعديل كل بند.",
@@ -2282,22 +2422,28 @@ document.addEventListener("submit", async e => {
 
 /* Admins page (super admin adds other admin emails) */
 async function loadAdmins(){
-  const { data } = await sb.from("admins").select("email,role").order("created_at");
-  auth.admins = data ?? []; if (view() === "admins") render();
+  const { data } = await sb.from("admins").select("email,role,name").order("created_at");
+  auth.admins = data ?? [];
+  if (auth.role === "SUPER_ADMIN") { const r = await sb.from("admin_logins").select("email,at,device").order("at", { ascending: false }).limit(100); auth.logins = r.data ?? []; }
+  if (view() === "admins") render();
 }
 function vAdmins(){
   const sup = auth.role === "SUPER_ADMIN";
   return `<div class="head"><div><h1>${t("admins_title")}</h1><p>${t("admins_hint")}</p></div></div>
   ${sup ? `<form class="panel" id="adminAdd" style="margin-bottom:16px"><h2>+ ${t("admins_add")}</h2>
      <div class="rules"><label class="f">${t("au_email")}<input class="input" id="newAdmin" type="email" autocomplete="off" required></label>
+     <label class="f">${t("adm_name")}<input class="input" id="newName" autocomplete="off" placeholder="${t("adm_name_ph")}"></label>
      <label class="f">${t("adm_role")}<select class="input" id="newRole">${["VIEWER","SUB_ADMIN","SUPER_ADMIN"].map(r => `<option value="${r}">${t("role_" + r)}</option>`).join("")}</select></label>
      <label class="f">${t("adm_pw")}<input class="input" id="newPw" type="text" autocomplete="off" minlength="8" required placeholder="${t("adm_pw_ph")}"></label></div>
      <p class="sub" style="padding:0 16px;margin:0">${t("adm_roles_help")}</p>
      <div class="dlg-f"><button class="btn">${t("save")}</button></div></form>` : ""}
   <section class="panel"><div class="scroll"><table><thead><tr><th>${t("au_email")}</th><th>${t("status")}</th><th></th></tr></thead><tbody>
-  ${auth.admins.map(a => `<tr><td>${esc(a.email)}</td><td>${sup && a.email !== auth.session?.user?.email ? `<select class="input sm" data-roleof="${esc(a.email)}" style="width:auto">${["VIEWER","SUB_ADMIN","SUPER_ADMIN"].map(r => `<option value="${r}" ${a.role === r ? "selected" : ""}>${t("role_" + r)}</option>`).join("")}</select>` : `<span class="pill ${a.role === "SUPER_ADMIN" ? "p-info" : "p-mute"}">${t("role_" + a.role)}</span>`}</td>
-    <td class="r"><div class="row-actions">${sup ? `<button class="btn ghost sm" data-adminpw="${esc(a.email)}">🔑 ${t("adm_setpw")}</button>` : ""}${sup && a.email !== auth.session?.user?.email ? `<button class="btn ghost sm danger-t" data-deladmin="${esc(a.email)}">${t("remove")}</button>` : ""}</div></td></tr>`).join("")}
+  ${auth.admins.map(a => { const last = (auth.logins || []).find(l => l.email.toLowerCase() === a.email.toLowerCase()); return `<tr><td><div class="name">${esc(a.name || a.email.split("@")[0])}</div><div class="sub">${esc(a.email)}</div>${sup ? `<div class="sub">${t("adm_last")}: ${last ? new Date(last.at).toLocaleString("en-GB", { timeZone: "Asia/Riyadh", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }) : "—"}</div>` : ""}</td><td>${sup && a.email !== auth.session?.user?.email ? `<select class="input sm" data-roleof="${esc(a.email)}" style="width:auto">${["VIEWER","SUB_ADMIN","SUPER_ADMIN"].map(r => `<option value="${r}" ${a.role === r ? "selected" : ""}>${t("role_" + r)}</option>`).join("")}</select>` : `<span class="pill ${a.role === "SUPER_ADMIN" ? "p-info" : "p-mute"}">${t("role_" + a.role)}</span>`}</td>
+    <td class="r"><div class="row-actions">${sup ? `<button class="btn ghost sm" data-adminpw="${esc(a.email)}">🔑 ${t("adm_setpw")}</button>` : ""}${sup && a.email !== auth.session?.user?.email ? `<button class="btn ghost sm danger-t" data-deladmin="${esc(a.email)}">${t("adm_remove")}</button>` : ""}</div></td></tr>`; }).join("")}
   </tbody></table></div></section>
+  ${sup && auth.logins?.length ? `<section class="panel" style="margin-top:16px"><h2>${t("adm_logins")}</h2><div class="scroll"><table><thead><tr><th>${t("date")}</th><th>${t("adm_name")}</th><th>${t("adm_device")}</th></tr></thead><tbody>
+    ${auth.logins.slice(0, 50).map(l => { const ad = auth.admins.find(a => a.email.toLowerCase() === l.email.toLowerCase()); return `<tr><td class="nowrap">${new Date(l.at).toLocaleString("en-GB", { timeZone: "Asia/Riyadh", day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</td><td>${esc(ad?.name || l.email)}</td><td class="sub">${esc(/Android/i.test(l.device) ? "Android" : /iPhone|iPad/i.test(l.device) ? "iPhone" : /Windows/i.test(l.device) ? "Windows" : /Mac/i.test(l.device) ? "Mac" : "—")} · ${esc(/Chrome/i.test(l.device) ? "Chrome" : /Safari/i.test(l.device) ? "Safari" : /Firefox/i.test(l.device) ? "Firefox" : "")}</td></tr>`; }).join("")}</tbody></table></div></section>` : ""}
+  <div class="dlg-f" style="justify-content:flex-start;margin-top:16px"><button class="btn ghost" data-signout-admin>⏻ ${t("au_signout")}</button></div>
   <form class="panel" id="pwForm" style="margin-top:16px"><h2>${t("pw_title")}</h2>
     <div class="rules"><label class="f">${t("pw_new")}<input class="input" id="pwNew" type="password" autocomplete="new-password" minlength="8" required></label>
     <label class="f">${t("pw_again")}<input class="input" id="pwAgain" type="password" autocomplete="new-password" minlength="8" required></label></div>
@@ -2313,12 +2459,12 @@ document.addEventListener("submit", async e => {
 });
 document.addEventListener("submit", async e => {
   if (e.target.id !== "adminAdd") return; e.preventDefault();
-  const email = $("#newAdmin").value.trim().toLowerCase(), role = $("#newRole").value, pw = $("#newPw").value;
+  const email = $("#newAdmin").value.trim().toLowerCase(), role = $("#newRole").value, pw = $("#newPw").value, name = $("#newName").value.trim();
   if (!email) return;
   if (pw.length < 8) return toast(t("au_short"));
   const { error } = await sb.rpc("admin_set_login", { p_email: email, p_password: pw, p_role: role });
   if (error) toast(error.message.includes("bad_email") ? t("adm_bad_email") : t("dbErr"));
-  else { toast(t("adm_created", { e: email })); e.target.reset(); loadAdmins(); }
+  else { if (name) await sb.from("admins").update({ name }).eq("email", email); toast(t("adm_created", { e: email })); e.target.reset(); loadAdmins(); }
 });
 document.addEventListener("change", async e => {
   const el = e.target.closest("[data-roleof]"); if (!el) return;
@@ -2339,10 +2485,16 @@ document.addEventListener("click", e => {
 });
 document.addEventListener("click", async e => {
   const b = e.target.closest("[data-deladmin]"); if (!b) return;
-  const { error } = await sb.from("admins").delete().eq("email", b.dataset.deladmin);
-  if (error) toast(t("dbErr")); else loadAdmins();
+  const email = b.dataset.deladmin;
+  openDialog({ title: t("adm_remove"), danger: true, submit: t("adm_remove"), body: `<p class="full"><b>${esc(email)}</b></p><p class="full">${t("adm_remove_q")}</p>`,
+    onSubmit: async () => { const { error } = await sb.rpc("admin_remove", { p_email: email }); if (error) fail(t("dbErr")); toast(t("adm_removed")); loadAdmins(); } });
 });
-document.addEventListener("click", async e => { if (e.target.closest("[data-signout-admin]")) { await sb.auth.signOut(); location.hash = ""; } });
+async function adminSignOut(){
+  try { await Promise.race([sb.auth.signOut({ scope: "local" }), new Promise(r => setTimeout(r, 2500))]); } catch {}
+  try { for (const k of Object.keys(localStorage)) if (k.startsWith("sb-")) localStorage.removeItem(k); } catch {}
+  location.hash = ""; location.reload();
+}
+document.addEventListener("click", e => { if (e.target.closest("[data-signout-admin]")) adminSignOut(); });
 
 let started = false;
 async function startAdmin(session){
@@ -2370,13 +2522,22 @@ async function startAdmin(session){
   let perfCleaned = false;
   db.collection("perf").onSnapshot(s => { state.perf = docsMap(s); if (!perfCleaned) { perfCleaned = true; cleanupPerf(); } soon(); }, console.warn);
   loadAdmins();
+  sb.rpc("admin_log_login", { p_device: navigator.userAgent }).then(() => {}, () => {});
+  sb.rpc("audit_cleanup").then(() => {}, () => {});
+  purgeOldDeleted();
+  setInterval(async () => {
+    const { data, error } = await sb.rpc("my_admin_role");
+    if (!error && !data) { toast(t("au_notadmin")); setTimeout(adminSignOut, 1500); }
+    loadActivityCount();
+  }, 60000);
+  loadActivityCount();
   render();
 }
 
 async function boot(){
   const { data } = await sb.auth.getSession();
   sb.auth.onAuthStateChange((ev, session) => {
-    if (ev === "SIGNED_OUT") { started = false; location.reload(); return; }
+    if (ev === "SIGNED_OUT") { started = false; adminSignOut(); return; }
     if (ev === "PASSWORD_RECOVERY") { location.hash = "admins"; setTimeout(() => { toast(t("pw_set")); $("#pwNew")?.focus(); }, 1500); }
     if (session && (ev === "SIGNED_IN" || ev === "INITIAL_SESSION")) startAdmin(session);
   });
