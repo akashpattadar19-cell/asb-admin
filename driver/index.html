@@ -212,6 +212,18 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .rp-cats button[aria-pressed="true"]{background:var(--cab-2);border-color:var(--cab-2);color:#fff}
 .rp-ta{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:12px;font:15px var(--f-body);background:var(--sunk);color:var(--ink)}
 .pill.rp-NEW{background:#E7EEF8;color:#1F4E8C}.pill.rp-PENDING{background:#FFF1D6;color:#8A5A00}.pill.rp-APPROVED{background:#DDF5E6;color:#14703D}.pill.rp-REJECTED{background:#FDE3E3;color:#A1262B}
+.hl-wrap{position:relative;margin:0 0 12px}
+.hl{display:flex;align-items:center;gap:12px;width:100%;text-align:start;border:0;cursor:pointer;color:#3A2A05;
+  background:linear-gradient(100deg,#FFE9A8,#F2BD45 55%,#E0A526);border-radius:16px;padding:13px 40px 13px 14px;
+  box-shadow:0 6px 16px rgba(224,165,38,.33);overflow:hidden;position:relative}
+.hl::after{content:"";position:absolute;top:0;bottom:0;width:40%;left:-60%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);animation:hlsheen 3.6s ease-in-out infinite}
+@keyframes hlsheen{0%{left:-60%}55%,100%{left:130%}}
+.hl-ic{font-size:22px;flex:none;filter:drop-shadow(0 1px 1px rgba(0,0,0,.15))}
+.hl-txt{display:flex;flex-direction:column;min-width:0;z-index:1}
+.hl-txt b{font:700 15px var(--f-display,inherit);line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hl-txt small{font-size:12.5px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hl-x{position:absolute;top:50%;transform:translateY(-50%);inset-inline-end:8px;width:26px;height:26px;border:0;border-radius:50%;
+  background:rgba(58,42,5,.14);color:#3A2A05;font-size:13px;cursor:pointer;display:grid;place-items:center;z-index:2}
 .ch-askbox{margin-top:10px;display:flex;flex-direction:column;gap:8px} .ch-askbox textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px;font:inherit;background:var(--sunk);color:var(--ink)}
 .fuel-card{display:block;width:100%;text-align:start;color:inherit;font:inherit;border:1px solid var(--line)}
 .fp-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
@@ -500,7 +512,7 @@ function markNoticesSeen(m){
   if (top > seenAt()) { store.set("asb-seen-notice", String(top)); try { window.ASBAndroid?.markSeen?.(String(top)); } catch {} }
 }
 function homeNotices(m){
-  const fresh = (m.notices || []).filter(n => +n.at > seenAt()).slice(0, 2);
+  const fresh = (m.notices || []).filter(n => +n.at > seenAt() && !n.headline).slice(0, 2);
   return fresh.length ? `<div class="ntc-home">${fresh.map(n => noticeRow(n, true)).join("")}${unreadN(m) > 2 ? `<button class="link" data-sub="notices">${t("nt_all_n", { n: unreadN(m) })} ›</button>` : ""}</div>` : "";
 }
 function subHead(title){ return `<div class="subhead"><button class="back" data-subback>‹ ${t("back")}</button><h2>${title}</h2></div>`; }
@@ -639,11 +651,22 @@ function vTargetPage(m){
       <div class="v" style="min-width:86px"><div class="num" style="font-size:17px">${fmt0(r.t)}</div><span class="pill ${r.pt === "FLAT" ? "p-good" : r.pt === "PER_ORDER" ? "p-mute" : "p-info"}" style="font-size:11px">${r.pt === "FLAT" ? t("rk_p") : r.pt === "PER_ORDER" ? t("rk_u") : t("rk_r")}</span><div class="muted" style="font-size:12px">${fmt0(r.o)} ${t("tg_done_s")}</div></div></div>`; }).join("")}</div>
   </section>`;
 }
+/* a headline/offer the office pinned to the top of home — stays 14 days or until the driver closes it */
+function headlineNotice(m){
+  const cut = Date.now() - 14 * 864e5, dis = (store.get("asb-hl-x") || "").split(",");
+  return (m.notices || []).filter(n => n.headline && +n.at > cut && !dis.includes(String(n.id))).sort((a, b) => +b.at - +a.at)[0] || null;
+}
+function headlineBanner(m){
+  const n = headlineNotice(m); if (!n) return "";
+  const title = esc(n.title || ""), body = esc(n.body || "");
+  return `<div class="hl-wrap"><button class="hl" data-sub="notices"><span class="hl-ic">📢</span><span class="hl-txt"><b>${title}</b>${body ? `<small>${body}</small>` : ""}</span></button>
+    <button class="hl-x" data-hlx="${esc(String(n.id))}" aria-label="×">✕</button></div>`;
+}
 function vHome(m){
   const p = m.profile, mm = m.month, out = duesOf(m).filter(x => !x.waived).reduce((s, f) => s + (+f.remaining || 0), 0);
   const target = +mm.target || 0, pct = target ? Math.min(100, mm.o / target * 100) : 0, isRank = p.payType !== "PER_ORDER";
   const upd = mm.at ? new Date(mm.at).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { timeZone: "Asia/Riyadh", day: "numeric", month: "short" }) : "";
-  return `${homeNotices(m)}
+  return `${headlineBanner(m)}${homeNotices(m)}
   <section class="card hero">
     <div class="hero-grid">${ava(p.photo, p.fullName, 74, "border-radius:22px;border:3px solid var(--gold)")}
       <div><div class="lbl">${t("rank")}</div><div class="rank">${mm.rank ? "#" + mm.rank : "—"}</div><div style="font-size:15px;font-weight:600">${mm.rank ? t("of", { n: mm.of }) : t("norank")}</div></div></div>
@@ -962,6 +985,7 @@ document.addEventListener("click", async e => {
     S.locStarted = true; try { window.ASBAndroid.locStart(); } catch {}
     return render();
   }
+  if (el.dataset.hlx) { const cur = (store.get("asb-hl-x") || "").split(",").filter(Boolean); cur.push(el.dataset.hlx); store.set("asb-hl-x", [...new Set(cur)].slice(-40).join(",")); return render(); }
   if (el.dataset.locfix) {
     const A = window.ASBAndroid;
     if (el.dataset.locfix === "gps_off") { try { A.locSettings("gps"); } catch {} return; }
