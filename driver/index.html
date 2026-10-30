@@ -285,6 +285,7 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--card);padding:10px 16px;border-radius:12px;font-size:14px;z-index:30;max-width:calc(100vw - 32px)}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 </head><body>
 <div id="root"></div>
 <script>
@@ -923,12 +924,14 @@ async function sendPhoto(file){
   S.photoBusy = true; render();
   try {
     const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = URL.createObjectURL(file); });
-    const side = Math.min(img.naturalWidth, img.naturalHeight), c = document.createElement("canvas"); c.width = c.height = 480;
-    c.getContext("2d").drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, 480, 480);
-    const data = c.toDataURL("image/jpeg", 0.85);
-    const r = await fetch(SB_URL + "/functions/v1/driver-photo", { method: "POST", headers: { "Content-Type": "application/json", apikey: SB_KEY, Authorization: "Bearer " + SB_KEY }, body: JSON.stringify({ token: S.token, image: data }) }).then(x => x.json());
-    if (r.ok) { if (S.data?.m?.profile) S.data.m.profile.photo = r.url; toast(t("ph_saved")); refresh(true); }
-    else toast(t("ph_fail"));
+    const side = Math.min(img.naturalWidth, img.naturalHeight), SZ = 400, c = document.createElement("canvas"); c.width = c.height = SZ;
+    c.getContext("2d").drawImage(img, (img.naturalWidth - side) / 2, (img.naturalHeight - side) / 2, side, side, 0, 0, SZ, SZ);
+    // shrink quality until the data URL fits the server limit
+    let data = c.toDataURL("image/jpeg", 0.82);
+    for (let q = 0.72; data.length > 150000 && q >= 0.4; q -= 0.12) data = c.toDataURL("image/jpeg", q);
+    const r = await rpc("driver_set_my_photo", { p_token: S.token, p_dataurl: data });
+    if (r.ok) { if (S.data?.m?.profile) S.data.m.profile.photo = data; toast(t("ph_saved")); refresh(true); }
+    else toast(r.error === "expired" ? t("expired") : t("ph_fail"));
   } catch { toast(t("ph_fail")); }
   S.photoBusy = false; render();
 }
