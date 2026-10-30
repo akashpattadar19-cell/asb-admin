@@ -117,6 +117,17 @@ td.nowrap{white-space:nowrap}
 .bar.over span{background:var(--bad)}
 .bar.done span{background:var(--good)}
 .pill.nodot::before{display:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 12px}
+.chip{border:1px solid var(--line);background:var(--card,#fff);border-radius:999px;padding:6px 12px;font:inherit;font-size:13px;cursor:pointer;color:var(--ink)}
+.chip b{font-weight:700;margin-inline-end:2px} .chip.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.chip.warn{border-color:#E7B65A;background:#FFF6E3;color:#8A5A00} .chip.warn.on{background:#8A5A00;color:#fff}
+.chip-sep{width:1px;height:22px;background:var(--line);margin:0 4px}
+table.emps tr.grp td{background:var(--sunk,rgba(0,0,0,.04));font-size:13px;padding-block:8px;position:sticky;top:0}
+table.emps tr.dim td{opacity:.55}
+table.emps td{padding-block:10px} table.emps .row-actions{flex-wrap:nowrap;white-space:nowrap}
+a.tel{color:inherit;text-decoration:none} a.tel:hover{text-decoration:underline}
+.plat{font-size:11px;padding:1px 8px} .plat-keeta{background:#FFF3C4;color:#7A5B00} .plat-hungerstation{background:#FDE3E3;color:#A1262B} .plat-other{background:var(--sunk);color:var(--muted)}
+.pin-in{letter-spacing:.5em;font-size:20px;text-align:center}
 table.dues tr.due-emp{cursor:pointer} table.dues tr.due-emp:hover td{background:var(--sunk,rgba(0,0,0,.03))}
 table.dues tr.due-emp.open td{background:var(--sunk,rgba(0,0,0,.04));border-bottom:0}
 table.dues .chev{width:14px;color:var(--muted);font-size:12px}
@@ -497,42 +508,60 @@ function vDashboard(){
 }
 
 /* ───────── Employees ───────── */
+const PLATFORMS = ["Keeta", "HungerStation", "Other"];
+const platPill = p => p ? `<span class="pill nodot plat plat-${esc(String(p).toLowerCase().replace(/[^a-z]/g, ""))}">${esc(p === "HungerStation" ? "Hunger" : p)}</span>` : "";
 function vEmployees(){
-  const q = state.q.trim().toLowerCase();
-  const list = Object.entries(state.emp).filter(([,e]) =>
+  const q = state.q.trim().toLowerCase(), all = Object.entries(state.emp);
+  const list = all.filter(([,e]) =>
     (!state.qStatus || e.status === state.qStatus) &&
     (!state.qType || (e.payType || "TARGET") === state.qType) &&
-    (!q || [e.fullName,e.fullNameAr,e.residentId,e.jahezId,e.mobile,e.plate,e.card,e.cardSerial,e.city,e.vehicleName,e.vehicleModel].some(v => String(v??"").toLowerCase().includes(q)))
-  ).sort((a,b) => (a[1].status==="PENDING"?-1:0)-(b[1].status==="PENDING"?-1:0) || a[1].fullName.localeCompare(b[1].fullName));
+    (!state.qCity || (e.city || "") === state.qCity) &&
+    (!state.qPlat || (e.platform || "") === state.qPlat) &&
+    (!state.qPin || !e.pinCheck) &&
+    (!q || [e.fullName,e.fullNameAr,e.residentId,e.jahezId,e.mobile,e.plate,e.card,e.cardSerial,e.city,e.vehicleName,e.vehicleModel,e.platform].some(v => String(v??"").toLowerCase().includes(q)))
+  ).sort((a,b) => (a[1].status==="PENDING"?-1:0)-(b[1].status==="PENDING"?-1:0) || String(a[1].fullName).localeCompare(String(b[1].fullName)));
+  const cityN = c => all.filter(([,e]) => (e.city || "") === c).length;
+  const cities = [...new Set(all.map(([,e]) => e.city || ""))].sort((a, b) => (a ? 0 : 1) - (b ? 0 : 1) || cityN(b) - cityN(a) || a.localeCompare(b));
+  const groups = cities.map(c => [c, list.filter(([,e]) => (e.city || "") === c)]).filter(([, l]) => l.length);
+  const act = all.filter(([,e]) => e.status === "ACTIVE"), noPin = act.filter(([,e]) => !e.pinCheck).length;
+  const chip = (label, n, key, val) => `<button class="chip ${state[key] === val ? "on" : ""}" data-act="emp-chip" data-k="${key}" data-v="${esc(val)}"><b>${n}</b> ${label}</button>`;
+  const row = ([id, e]) => `<tr class="${e.status === "INACTIVE" ? "dim" : ""}">
+      <td style="min-width:220px"><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 40)}<div style="min-width:0"><div class="name">${esc(e.fullName)}</div>
+        <div class="sub" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${platPill(e.platform)}${e.fullNameAr ? `<span dir="rtl">${esc(e.fullNameAr)}</span>` : ""}</div></div></div></td>
+      <td class="mono nowrap">${esc(e.residentId)}${e.jahezId ? `<div class="sub" title="${t("jahezId")}">K: ${esc(e.jahezId)}</div>` : ""}</td>
+      <td class="nowrap mono">${e.mobile ? `<a class="tel" href="tel:${esc(e.mobile)}">${esc(e.mobile)}</a>` : `<span class="sub">${t("none")}</span>`}</td>
+      <td class="nowrap">${plateChip(e.plate)}<div class="sub" style="margin-top:3px">${esc(vehicleText(e)) || ""}</div></td>
+      <td class="nowrap">${e.card ? `<span class="mono">${esc(e.card)}</span>${e.cardSerial ? `<div class="sub">${t("serial_short")}: <span class="mono">${esc(e.cardSerial)}</span></div>` : ""}${(+e.monthlyLimit || 0) ? `<div class="sub">${fmt0(e.dailyLimit)}/${fmt0(e.monthlyLimit)} ${t("sar")}</div>` : ""}` : `<span class="sub">${t("none")}</span>`}</td>
+      <td>${rkSwitch(id, e.payType)}</td>
+      <td>${statusPill(e.status)}</td>
+      <td class="nowrap">${!e.pinCheck ? `<button class="btn gold sm" data-act="emp-pin" data-id="${id}" data-needs-write>🔑 ${t("pin_set")}</button>` : (()=>{const d=state.duty[id];return d?`<span class="pill ${d.s==="OFFLINE"?"p-mute":"p-good"}">${t("duty_"+d.s)}</span><div class="sub" style="margin-top:3px">${new Date(d.at).toLocaleString("en-GB",{timeZone:"Asia/Riyadh",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</div>`:`<span class="pill p-mute">${t("not_linked")}</span>`})()}</td>
+      <td class="r nowrap">${(()=>{const o=outstandingOf(state.fines,id)+outstandingOf(state.adv,id);return o?`<span class="neg">${fmt(o)}</span>`:`<span class="sub">0.00</span>`})()}</td>
+      <td><div class="row-actions">
+        ${e.status==="PENDING"?`<button class="btn sm" data-act="emp-status" data-id="${id}" data-v="ACTIVE" data-needs-write>${t("approve")}</button>`:""}
+        <button class="btn ghost sm" data-act="emp-edit" data-id="${id}" data-needs-write>${t("edit")}</button>
+        ${e.pinCheck ? `<button class="btn ghost sm" data-act="emp-pin" data-id="${id}" data-needs-write>${t("pin_change")}</button>` : ""}
+        ${e.status==="ACTIVE"?`<button class="btn ghost sm" data-act="emp-status" data-id="${id}" data-v="INACTIVE" data-needs-write>${t("deactivate")}</button>`:e.status==="INACTIVE"?`<button class="btn ghost sm" data-act="emp-status" data-id="${id}" data-v="ACTIVE" data-needs-write>${t("activate")}</button>`:""}
+      </div></td></tr>`;
   return `
-  <div class="head"><div><h1>${t("nav_employees")}</h1><p>${Object.keys(state.emp).length} · ${activeEmps().length} ${t("ACTIVE")}</p></div>
+  <div class="head"><div><h1>${t("nav_employees")}</h1><p>${all.length} · ${act.length} ${t("ACTIVE")}</p></div>
     <div class="tools"><button class="btn" data-act="emp-new" data-needs-write>+ ${t("addEmp")}</button></div></div>
-  ${(()=>{const req=Object.entries(state.emp).filter(([id,e])=>(state.pinreq[id]?.at||0)>(e.pinResetAt||0));return req.length?`<div class="note warn"><b>${t("pin_req")}:</b> ${req.map(([id,e])=>`<button class="btn ghost sm" data-act="emp-pin" data-id="${id}" data-needs-write style="margin:4px 4px 0 0">${esc(e.fullName)} · ${t("resetPin")}</button>`).join("")}</div>`:""})()}
+  ${(()=>{const req=all.filter(([id,e])=>(state.pinreq[id]?.at||0)>(e.pinResetAt||0));return req.length?`<div class="note warn"><b>${t("pin_req")}:</b> ${req.map(([id,e])=>`<button class="btn ghost sm" data-act="emp-pin" data-id="${id}" data-needs-write style="margin:4px 4px 0 0">${esc(e.fullName)} · ${t("pin_change")}</button>`).join("")}</div>`:""})()}
+  <div class="chips">
+    ${chip(t("all"), all.length, "qCity", "")}
+    ${cities.filter(Boolean).map(c => chip(esc(c), all.filter(([,e]) => e.city === c).length, "qCity", c)).join("")}
+    <span class="chip-sep"></span>
+    ${PLATFORMS.filter(p => all.some(([,e]) => e.platform === p)).map(p => chip(p === "HungerStation" ? "Hunger" : p, all.filter(([,e]) => e.platform === p).length, "qPlat", p)).join("")}
+    ${noPin ? `<span class="chip-sep"></span><button class="chip warn ${state.qPin ? "on" : ""}" data-act="emp-chip" data-k="qPin" data-v="${state.qPin ? "" : "1"}"><b>${noPin}</b> ${t("pin_missing")}</button>` : ""}
+  </div>
   <div class="filters">
     <input class="input" id="q" placeholder="${t("search")}" value="${esc(state.q)}">
     <select class="input" id="qStatus"><option value="">${t("allStatus")}</option>${["ACTIVE","PENDING","INACTIVE"].map(s=>`<option value="${s}" ${state.qStatus===s?"selected":""}>${t(s)}</option>`).join("")}</select>
     <select class="input" id="qType"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
   </div>
-  <section class="panel">${list.length ? `<div class="scroll"><table>
-    <thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("mobile")}</th><th>${t("card")}</th><th>${t("city")}</th><th>${t("plate")}</th><th>${t("vehicle")}</th><th>${t("payType")}</th><th>${t("status")}</th><th>${t("app_col")}</th><th class="r">${t("outstanding")}</th><th></th></tr></thead>
-    <tbody>${list.map(([id,e]) => `<tr>
-      <td style="min-width:190px"><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 38)}<div><div class="name">${esc(e.fullName)}</div>${e.fullNameAr?`<div class="sub" dir="rtl">${esc(e.fullNameAr)}</div>`:""}</div></div></td>
-      <td class="mono">${esc(e.residentId)}${e.jahezId ? `<div class="sub">K: ${esc(e.jahezId)}</div>` : ""}</td>
-      <td class="nowrap">${esc(e.mobile)}</td>
-      <td class="nowrap">${e.card?`<span class="mono">${esc(e.card)}</span>${e.cardSerial?`<div class="sub">${t("serial_short")}: <span class="mono">${esc(e.cardSerial)}</span></div>`:""}<div class="sub">${fmt0(e.dailyLimit)}/${fmt0(e.monthlyLimit)} ${t("sar")}</div>`:`<span class="sub">${t("none")}</span>`}</td>
-      <td class="nowrap">${esc(e.city) || `<span class="sub">${t("none")}</span>`}</td>
-      <td>${plateChip(e.plate)}</td>
-      <td class="nowrap">${esc(vehicleText(e)) || `<span class="sub">${t("none")}</span>`}</td>
-      <td>${rkSwitch(id, e.payType)}</td>
-      <td>${statusPill(e.status)}</td>
-      <td class="nowrap">${(()=>{const d=state.duty[id];return d?`<span class="pill ${d.s==="OFFLINE"?"p-mute":"p-good"}">${t("duty_"+d.s)}</span><div class="sub" style="margin-top:3px">${new Date(d.at).toLocaleString("en-GB",{timeZone:"Asia/Riyadh",day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"})}</div>`:`<span class="pill p-mute">${t("not_linked")}</span>`})()}</td>
-      <td class="r nowrap">${(()=>{const o=outstandingOf(state.fines,id)+outstandingOf(state.adv,id);return o?`<span class="neg">${fmt(o)}</span>`:`<span class="sub">0.00</span>`})()}</td>
-      <td><div class="row-actions">
-        ${e.status==="PENDING"?`<button class="btn sm" data-act="emp-status" data-id="${id}" data-v="ACTIVE" data-needs-write>${t("approve")}</button>`:""}
-        <button class="btn ghost sm" data-act="emp-edit" data-id="${id}" data-needs-write>${t("edit")}</button>
-        <button class="btn ghost sm" data-act="emp-pin" data-id="${id}" data-needs-write>${t("resetPin")}</button>
-        ${e.status==="ACTIVE"?`<button class="btn ghost sm" data-act="emp-status" data-id="${id}" data-v="INACTIVE" data-needs-write>${t("deactivate")}</button>`:e.status==="INACTIVE"?`<button class="btn ghost sm" data-act="emp-status" data-id="${id}" data-v="ACTIVE" data-needs-write>${t("activate")}</button>`:""}
-      </div></td></tr>`).join("")}</tbody></table></div>`
+  <section class="panel">${list.length ? `<div class="scroll"><table class="emps">
+    <thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("mobile")}</th><th>${t("vehicle")}</th><th>${t("card")}</th><th>Rank</th><th>${t("status")}</th><th>${t("app_col")}</th><th class="r">${t("outstanding")}</th><th></th></tr></thead>
+    ${groups.map(([c, l]) => `<tbody><tr class="grp"><td colspan="10"><b>${esc(c || t("no_city"))}</b> <span class="sub">· ${l.length} ${t("emp_n")}</span></td></tr>${l.map(row).join("")}</tbody>`).join("")}
+    </table></div>`
     : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</section>`;
 }
 document.addEventListener("input", e => {
@@ -573,10 +602,11 @@ function empForm(e = {}){
   <label class="f full">${t("name")} *<input class="input" name="fullName" value="${esc(e.fullName)}" required></label>
   <label class="f full">${t("nameAr")}<input class="input" name="fullNameAr" dir="rtl" value="${esc(e.fullNameAr)}"></label>
   <label class="f">${t("iqama")} *<input class="input mono" name="residentId" inputmode="numeric" maxlength="10" pattern="\\d{10}" value="${esc(e.residentId)}" required></label>
+  <label class="f">${t("platform")}<select class="input" name="platform">${["", ...PLATFORMS].map(p => `<option value="${p}" ${(e.platform || "") === p ? "selected" : ""}>${p || "—"}</option>`).join("")}</select></label>
   <label class="f full">${t("jahezId")} <input class="input mono" name="jahezId" inputmode="numeric" value="${esc(e.jahezId)}" placeholder="1788197599088722"></label>
   <label class="f">${t("mobile")} *<input class="input" name="mobile" inputmode="tel" value="${esc(e.mobile)}" placeholder="05XXXXXXXX" required></label>
   <div class="full sec">2 · ${t("sec_card")}</div>
-  <label class="f">${t("card")}<input class="input mono" name="card" inputmode="numeric" value="${esc(e.card)}"></label>
+  <label class="f">${t("card")}<input class="input mono" name="card" value="${esc(e.card)}" placeholder="logistic 4"></label>
   <label class="f"><span>${t("cardSerial")} <span class="opt">· ${t("optional")}</span></span><input class="input mono" name="cardSerial" value="${esc(e.cardSerial)}"></label>
   <label class="f">${t("dailyLimit")}<input class="input" name="dailyLimit" type="number" min="0" step="1" value="${esc(e.dailyLimit ?? 60)}"></label>
   <label class="f">${t("monthlyLimit")}<input class="input" name="monthlyLimit" type="number" min="0" step="1" value="${esc(e.monthlyLimit ?? 1500)}"></label>
@@ -586,7 +616,10 @@ function empForm(e = {}){
   <label class="f">${t("vehicleName")}<input class="input" name="vehicleName" list="vnList" value="${esc(e.vehicleName)}" placeholder="Hyundai"><datalist id="vnList">${["Toyota","Hyundai","Nissan","Kia","Isuzu","Suzuki","Changan","MG"].map(c => `<option value="${c}">`).join("")}</datalist></label>
   <label class="f">${t("model")}<input class="input" name="vehicleModel" value="${esc(e.vehicleModel)}" placeholder="H1 2023"></label>
   <div class="full sec">4 · ${t("payType")}</div>
-  <div class="full seg2" role="radiogroup">${["TARGET","PER_ORDER"].map(p => `<label class="seg2-o"><input type="radio" name="payType" value="${p}" ${(e.payType || "TARGET") === p ? "checked" : ""}><b>${t("rk_" + p)}</b><span>${t(p)}</span></label>`).join("")}</div>`;
+  <div class="full seg2" role="radiogroup">${["TARGET","PER_ORDER"].map(p => `<label class="seg2-o"><input type="radio" name="payType" value="${p}" ${(e.payType || "TARGET") === p ? "checked" : ""}><b>${t("rk_" + p)}</b><span>${t(p)}</span></label>`).join("")}</div>
+  ${e.residentId ? "" : `<div class="full sec">5 · ${t("pin_title_new")}</div>
+  <label class="f">${t("pin_manual")}<input class="input mono pin-in" name="pin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="• • • •"></label>
+  <p class="sub" style="align-self:end;margin:0 0 10px">${t("pin_manual_help")}</p>`}`;
 }
 
 /* ───────── Operations ───────── */
@@ -1051,6 +1084,8 @@ document.addEventListener("click", async e => {
       const cur = id ? state.emp[id] : {};
       openDialog({ title: id ? t("edit") + " · " + esc(cur.fullName) : t("addEmp"), body: empForm(cur), onSubmit: async fd => {
         if (!fd.fullName.trim() || !/^\d{10}$/.test(fd.residentId) || !fd.mobile.trim()) fail(t("required"));
+        const typedPin = (fd.pin || "").trim(); delete fd.pin;
+        if (typedPin && !/^\d{4}$/.test(typedPin)) fail(t("pin_4"));
         const dup = Object.entries(state.emp).find(([k,v]) => v.residentId === fd.residentId && k !== id);
         if (dup) fail(t("dupIqama"));
         const data = { ...fd, fullName: fd.fullName.trim(), plate: fd.plate.trim().toUpperCase(), jahezId: (fd.jahezId || "").replace(/\D/g, ""), card: fd.card.trim(), cardSerial: fd.cardSerial.trim(), vehicleName: fd.vehicleName.trim(), vehicleModel: fd.vehicleModel.trim(), city: fd.city.trim(), dailyLimit: +fd.dailyLimit || 0, monthlyLimit: +fd.monthlyLimit || 0, updatedAt: Date.now() };
@@ -1066,7 +1101,7 @@ document.addEventListener("click", async e => {
           await db.doc("employees/" + id).update(data); toast(data.pinCheck === "" ? t("pin_needed_reset") : t("empSaved"));
         }
         else {
-          const pin = randomPin(), salt = uid();
+          const pin = typedPin || randomPin(), salt = uid();
           const newId = empKey;
           await db.doc("employees/" + newId).set({ ...data, status: "PENDING", pinSalt: salt, pinHash: await sha(salt + pin), pinCheck: await pinCheckOf(data.residentId, pin), pinVer: 1, createdAt: Date.now() });
           setTimeout(() => showPin(data.fullName, pin), 50);
@@ -1074,13 +1109,18 @@ document.addEventListener("click", async e => {
       }});
     }
 
+    if (act === "emp-chip") { state[b.dataset.k] = state[b.dataset.k] === b.dataset.v && b.dataset.v !== "" ? "" : b.dataset.v; render(); return; }
     if (act === "emp-rank") { const cur = (state.emp[id]?.payType || "TARGET") === "TARGET"; await db.doc("employees/" + id).update({ payType: cur ? "PER_ORDER" : "TARGET", updatedAt: Date.now() }); toast(t(cur ? "rk_set_off" : "rk_set_on", { n: state.emp[id]?.fullName ?? "" })); return; }
     if (act === "emp-status") { await db.doc("employees/" + id).update({ status: b.dataset.v, updatedAt: Date.now() }); }
 
     if (act === "emp-pin") {
       const e2 = state.emp[id];
-      openDialog({ title: t("resetPin"), body: `<p class="full">${esc(e2.fullName)} · <span class="mono">${esc(e2.residentId)}</span></p>`, submit: t("resetPin"), onSubmit: async () => {
-        const pin = randomPin(), salt = uid();
+      openDialog({ title: e2.pinCheck ? t("pin_change") : t("pin_set"), body: `<p class="full">${esc(e2.fullName)} · <span class="mono">${esc(e2.residentId)}</span></p>
+        <label class="f full">${t("pin_manual")}<input class="input mono pin-in" name="pin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="• • • •"></label>
+        <p class="full sub" style="margin:0">${t("pin_manual_help")}</p>`, submit: t("save"), onSubmit: async fd => {
+        const typed = (fd.pin || "").trim();
+        if (typed && !/^\d{4}$/.test(typed)) fail(t("pin_4"));
+        const pin = typed || randomPin(), salt = uid();
         await db.doc("employees/" + id).update({ pinSalt: salt, pinHash: await sha(salt + pin), pinCheck: await pinCheckOf(e2.residentId, pin), pinVer: (+e2.pinVer || 0) + 1, pinResetAt: Date.now() });
         setTimeout(() => showPin(e2.fullName, pin), 50);
       }});
@@ -1902,7 +1942,8 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "The person then creates an account on this page with that email.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", nav_dues: "Dues overview", du_hint: "Everything each driver owes — fines, advances, damage and more. Click a driver to see and edit each item.",
+  drv_web: "Driver app (web)", platform: "Works on", pin_set: "Set PIN", pin_change: "Change PIN", pin_missing: "without PIN", pin_manual: "PIN (4 digits)", pin_4: "The PIN must be exactly 4 digits",
+  pin_manual_help: "Type the PIN you want to give the driver, or leave it empty to create one automatically.", pin_title_new: "App sign-in PIN", no_city: "No city", emp_n: "drivers", all: "All", nav_dues: "Dues overview", du_hint: "Everything each driver owes — fines, advances, damage and more. Click a driver to see and edit each item.",
   du_new: "Add due", du_add: "Add", du_edit: "Edit due", du_total: "Total dues", du_recovered: "Recovered", du_left: "Still owed", du_monthly: "Deducted per month", du_monthly_s: "SAR from salary",
   du_all_types: "All types", du_all_status: "All", du_st_open: "Still owed", du_st_cleared: "Cleared", du_st_waived: "Waived", du_items: "Items", du_type: "Type", du_from: "from",
   du_cleared: "Cleared", du_cash: "cash", du_pay: "Record payment", du_pay_help: "Money the driver paid back outside payroll (cash or transfer).", du_saved: "Saved", du_deleted: "Deleted",
@@ -1933,7 +1974,8 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "তারপর ওই ব্যক্তি এই পাতায় সেই ইমেইল দিয়ে অ্যাকাউন্ট খুলবেন।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", nav_dues: "বকেয়ার হিসাব", du_hint: "প্রত্যেক কর্মীর সব বকেয়া — জরিমানা, অগ্রিম, গাড়ির ক্ষতি ইত্যাদি। কর্মীর নামে চাপলে প্রতিটি হিসাব দেখা ও বদলানো যাবে।",
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", platform: "কোথায় কাজ করে", pin_set: "পিন দিন", pin_change: "পিন বদলান", pin_missing: "জনের পিন নেই", pin_manual: "পিন (৪ সংখ্যা)", pin_4: "পিন ঠিক ৪ সংখ্যার হতে হবে",
+  pin_manual_help: "কর্মীকে যে পিন দিতে চান সেটা লিখুন, অথবা খালি রাখলে নিজে থেকে একটা পিন তৈরি হবে।", pin_title_new: "অ্যাপ লগইনের পিন", no_city: "শহর দেওয়া নেই", emp_n: "জন", all: "সবাই", nav_dues: "বকেয়ার হিসাব", du_hint: "প্রত্যেক কর্মীর সব বকেয়া — জরিমানা, অগ্রিম, গাড়ির ক্ষতি ইত্যাদি। কর্মীর নামে চাপলে প্রতিটি হিসাব দেখা ও বদলানো যাবে।",
   du_new: "নতুন বকেয়া", du_add: "যোগ", du_edit: "বকেয়া সম্পাদনা", du_total: "মোট বকেয়া", du_recovered: "আদায় হয়েছে", du_left: "এখনো বাকি", du_monthly: "প্রতি মাসে কাটা", du_monthly_s: "রিয়াল বেতন থেকে",
   du_all_types: "সব ধরন", du_all_status: "সব", du_st_open: "বাকি আছে", du_st_cleared: "পরিশোধ হয়েছে", du_st_waived: "মাফ", du_items: "হিসাব", du_type: "ধরন", du_from: "শুরু",
   du_cleared: "পরিশোধ", du_cash: "নগদ", du_pay: "টাকা জমা", du_pay_help: "বেতনের বাইরে কর্মী যে টাকা ফেরত দিয়েছে (নগদ বা ট্রান্সফার)।", du_saved: "সংরক্ষিত", du_deleted: "মুছে ফেলা হয়েছে",
@@ -1964,7 +2006,8 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "ثم ينشئ الشخص حساباً من هذه الصفحة بنفس البريد.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", nav_dues: "المستحقات", du_hint: "كل ما على السائق — مخالفات وسلف وأضرار وغيرها. اضغط على السائق لعرض وتعديل كل بند.",
+  drv_web: "تطبيق السائق (ويب)", platform: "يعمل في", pin_set: "تعيين الرقم السري", pin_change: "تغيير الرقم السري", pin_missing: "بدون رقم سري", pin_manual: "الرقم السري (4 أرقام)", pin_4: "يجب أن يكون الرقم السري 4 أرقام",
+  pin_manual_help: "اكتب الرقم السري الذي تريده للسائق، أو اتركه فارغاً لإنشائه تلقائياً.", pin_title_new: "رقم الدخول للتطبيق", no_city: "بدون مدينة", emp_n: "سائق", all: "الكل", nav_dues: "المستحقات", du_hint: "كل ما على السائق — مخالفات وسلف وأضرار وغيرها. اضغط على السائق لعرض وتعديل كل بند.",
   du_new: "إضافة مستحق", du_add: "إضافة", du_edit: "تعديل المستحق", du_total: "إجمالي المستحقات", du_recovered: "المسدد", du_left: "المتبقي", du_monthly: "الخصم الشهري", du_monthly_s: "ريال من الراتب",
   du_all_types: "كل الأنواع", du_all_status: "الكل", du_st_open: "متبقي", du_st_cleared: "مسدد", du_st_waived: "معفى", du_items: "البنود", du_type: "النوع", du_from: "من",
   du_cleared: "مسدد", du_cash: "نقداً", du_pay: "تسجيل دفعة", du_pay_help: "مبلغ سدده السائق خارج الراتب (نقداً أو تحويل).", du_saved: "تم الحفظ", du_deleted: "تم الحذف",
