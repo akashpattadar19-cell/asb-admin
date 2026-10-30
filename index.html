@@ -135,6 +135,7 @@ a.tel{color:inherit;text-decoration:none} a.tel:hover{text-decoration:underline}
 .nav-q{margin-inline-start:auto;background:#E5484D;color:#fff;border-radius:9px;font-size:11px;font-weight:700;padding:1px 7px}
 table.act td{vertical-align:top} .chg-l{white-space:nowrap} .chg-l .old{color:var(--bad);text-decoration:line-through} .chg-l .new{color:var(--good);font-weight:600}
 .q-box{margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--sunk,rgba(0,0,0,.04));font-size:13px} .q-box.open{background:#FFF6E3;border:1px solid #F0CF8A}
+.sec-h{font-size:15px;margin:18px 2px 8px;font-weight:700;opacity:.85} .cut-btn{color:#B42318;border-color:#F3B4AE} .cut-btn:hover{background:#FEF3F2}
 .pill.p-bad{background:#FDE3E3;color:#A1262B}
 table.fuel .input.num{width:96px} table.fuel tfoot td{border-top:2px solid var(--line);background:var(--sunk,rgba(0,0,0,.03))}
 table.dues tr.due-emp{cursor:pointer} table.dues tr.due-emp:hover td{background:var(--sunk,rgba(0,0,0,.03))}
@@ -432,7 +433,7 @@ let db = null, downloads = null, unsubOps = null, unsubMonth = null;
 const payDoc = () => state.payroll[state.payMonth] ?? null;
 
 /* ───────── routing ───────── */
-const VIEWS = ["dashboard","employees","target","perf","operations","fuel","dues","payroll","activity","app","rules","admins"];
+const VIEWS = ["dashboard","employees","target","perf","operations","fuel","dues","payroll","activity","bin","app","rules","admins"];
 const SUB_VIEWS = ["target","perf"];
 const view = () => { const h = location.hash.slice(1); return VIEWS.includes(h) ? h : "dashboard"; };
 window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
@@ -475,7 +476,7 @@ function render(){
   if (state.offline) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("offline")}</b></div>`; return; }
   if (!state.ready) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("loading")}</b></div>`; return; }
   const ro = state.canWrite ? "" : `<div class="note warn">${t("readOnly")}</div>`;
-  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, dues: vDues, fuel: vFuel, activity: vActivity, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
+  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, dues: vDues, fuel: vFuel, activity: vActivity, bin: vBinAll, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
   main.querySelectorAll("[data-needs-write]").forEach(el => { if (!state.canWrite) el.disabled = true; });
   if (!state.canWrite) main.querySelectorAll("input:not([id]),select:not([id]),textarea:not([id]),#rulesForm button,#rulesForm input,[data-roleof]").forEach(el => el.disabled = true);
 }
@@ -740,13 +741,14 @@ function vActivity(){
   const qBy = {}; for (const q of ACT.qs) (qBy[q.audit_id] ??= []).push(q);
   const list = ACT.list.filter(x => (!fa || x.actor === fa) && (!fc || COLL_L[x.coll] === fc) && (!onlyQ || (qBy[x.id] || []).some(q => !q.answer))
     && (!fe || [state.emp[x.emp_id]?.fullName, state.emp[x.emp_id]?.residentId, x.emp_id].some(v => String(v ?? "").toLowerCase().includes(fe))));
-  const actors = [...new Set(ACT.list.map(x => x.actor).filter(Boolean))];
+  const actors = [...new Set(ACT.list.map(x => x.actor).filter(Boolean))], sup = auth.role === "SUPER_ADMIN";
+  ACT.shown = list.slice(0, 300);
   const colls = [...new Set(Object.values(COLL_L))];
-  const chg = x => x.action === "delete" ? `<span class="pill p-mute nodot">${t("act_deleted")}</span>` : Object.entries(x.changes || {}).slice(0, 8).map(([k, [a, b]]) =>
+  const chg = x => x.action === "delete" ? `<span class="pill p-mute nodot">${t("act_deleted")}</span>${x.before?.amount != null ? `<div class="chg-l"><span class="old">${fmt(x.before.amount)}${x.before.reason ? " · " + esc(String(x.before.reason).slice(0, 50)) : ""}</span></div>` : ""}${["fines", "advances", "payroll"].includes(x.coll) ? `<div class="sub">→ 🗑 ${t("bin_t")}</div>` : ""}` : Object.entries(x.changes || {}).slice(0, 8).map(([k, [a, b]]) =>
     `<div class="chg-l"><b>${t(FIELD_L[k] || k)}</b>: <span class="old">${showVal(a)}</span> → <span class="new">${showVal(b)}</span></div>`).join("") || "—";
   return `
   <div class="head"><div><h1>${t("nav_activity")}</h1><p>${t("act_hint")}</p></div>
-    <div class="tools"><button class="btn ghost" data-act="act-reload">↻ ${t("act_reload")}</button></div></div>
+    <div class="tools">${sup && list.length ? `<button class="btn ghost danger-t" data-act="act-del-shown">${t("act_del_shown", { n: Math.min(300, list.length) })}</button>` : ""}<button class="btn ghost" data-act="act-reload">↻ ${t("act_reload")}</button></div></div>
   <div class="filters">
     <input class="input" id="aEmp" placeholder="${t("act_search")}" value="${esc(state.aEmp || "")}">
     <select class="input" id="aAdmin"><option value="">${t("act_all_admins")}</option>${actors.map(a => `<option value="${esc(a)}" ${fa === a ? "selected" : ""}>${esc(adminName(a))}</option>`).join("")}</select>
@@ -756,7 +758,7 @@ function vActivity(){
   <section class="panel">${list.length ? `<div class="scroll"><table class="act">
     <thead><tr><th>${t("date")}</th><th>${t("act_admin")}</th><th>${t("employee")}</th><th>${t("act_what")}</th><th>${t("act_changes")}</th><th>${t("act_reason")}</th></tr></thead>
     <tbody>${list.slice(0, 300).map(x => { const e = state.emp[x.emp_id]; const qs = (qBy[x.id] || []).slice().reverse(); return `<tr>
-      <td class="nowrap sub">${new Date(x.at).toLocaleString("en-GB", { timeZone: "Asia/Riyadh", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}</td>
+      <td class="nowrap sub">${new Date(x.at).toLocaleString("en-GB", { timeZone: "Asia/Riyadh", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}${sup ? `<div><button class="btn ghost sm danger-t" data-act="act-del" data-id="${x.id}" title="${t("act_del_t")}">🗑</button></div>` : ""}</td>
       <td class="nowrap"><b>${esc(adminName(x.actor))}</b></td>
       <td>${x.emp_id ? `<div class="name">${esc(e?.fullName || x.before?.fullName || x.emp_id)}</div>${e?.status === "DELETED" ? `<span class="pill p-mute nodot">${t("bin_t")}</span>` : ""}` : `<span class="sub">—</span>`}</td>
       <td class="nowrap"><span class="pill ${x.action === "create" ? "p-good" : x.action === "delete" ? "p-bad" : "p-info"} nodot">${t("act_" + x.action)}</span><div class="sub">${t(COLL_L[x.coll] || x.coll)}</div></td>
@@ -771,17 +773,50 @@ function vActivity(){
 document.addEventListener("input", e => { if (e.target.id === "aEmp") { state.aEmp = e.target.value; render(); const el = $("#aEmp"); el.focus(); el.setSelectionRange(el.value.length, el.value.length); } });
 document.addEventListener("change", e => { if (e.target.id === "aAdmin") { state.aAdmin = e.target.value; render(); } if (e.target.id === "aColl") { state.aColl = e.target.value; render(); } });
 
-function vBin(bin){
+const TR = { list: [], loaded: false, loading: false };
+async function loadTrash(){
+  if (TR.loading) return; TR.loading = true;
+  try { const { data } = await sb.from("trash").select("*").order("at", { ascending: false }).limit(500); TR.list = data ?? []; TR.loaded = true; }
+  finally { TR.loading = false; }
+  if (view() === "bin") render();
+}
+function vBinAll(){
+  const sup = auth.role === "SUPER_ADMIN", bin = Object.entries(state.emp).filter(([, e]) => e.status === "DELETED");
+  if (!TR.loaded) loadTrash();
+  const d = ms => new Date(ms).toLocaleString("en-GB", { timeZone: "Asia/Riyadh", day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const who = r => { const eid = r.emp_id || r.data?.employeeId; return eid ? (state.emp[eid]?.fullName || r.data?.slip?.name || eid) : ""; };
+  const what = r => r.coll === "payroll" ? `${t("nav_payroll")} · ${esc(r.doc_id)} <span class="sub">(${(r.data?.slips || []).length} ${t("bin_slips")})</span>`
+    : r.coll === "payroll_slip" ? `${t("slip_del")} · ${esc(r.data?.month || r.doc_id)}` : t(r.coll === "advances" ? "ADVANCE" : (r.data?.category || "OTHER"));
+  const amt = r => r.coll === "payroll" ? (r.data?.slips || []).reduce((s, x) => s + (+x.net || 0), 0) : r.coll === "payroll_slip" ? +r.data?.slip?.net || 0 : +r.data?.amount || 0;
+  const canRestore = r => r.coll === "fines" || r.coll === "advances";
+  return `<div class="head"><div><h1>🗑 ${t("bin_t")}</h1><p>${t("bin_hint2")}</p></div>
+    <div class="tools">${sup && TR.list.length ? `<button class="btn ghost danger-t" data-act="trash-purge" data-id="all">${t("bin_purge_all")}</button>` : ""}</div></div>
+  <h2 class="sec-h">${t("bin_records")}</h2>
+  <section class="panel">${!TR.loaded ? `<div class="empty">${t("loading")}</div>` : TR.list.length ? `<div class="scroll"><table><thead><tr><th>${t("bin_when")}</th><th>${t("bin_by")}</th><th>${t("employee")}</th><th>${t("du_type")}</th><th class="r">${t("amount")}</th><th>${t("reason")}</th><th></th></tr></thead><tbody>
+    ${TR.list.map(r => `<tr>
+      <td class="nowrap sub">${d(r.at)}<div>${t("bin_auto")}: ${new Date(new Date(r.at).getTime() + 365 * DAY).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}</div></td>
+      <td class="nowrap"><b>${esc(adminName(r.actor))}</b></td>
+      <td>${esc(who(r)) || `<span class="sub">—</span>`}</td>
+      <td>${what(r)}</td>
+      <td class="r nowrap">${fmt(amt(r))}</td>
+      <td class="sub" style="max-width:240px">${esc(r.data?.reason || r.note || "")}${r.data?.date ? `<div>${esc(dmy(r.data.date))}</div>` : ""}</td>
+      <td><div class="row-actions">${canRestore(r) ? `<button class="btn sm" data-act="trash-restore" data-id="${r.id}" data-needs-write>↺ ${t("bin_restore")}</button>` : ""}
+        <button class="btn ghost sm danger-t" data-act="trash-purge" data-id="${r.id}" ${sup ? "" : "disabled"} title="${sup ? "" : t("bin_super_only")}">${t("bin_purge")}</button></div></td></tr>`).join("")}
+  </tbody></table></div>` : `<div class="empty"><b>${t("bin_empty")}</b></div>`}</section>
+  <h2 class="sec-h">${t("bin_emps")}</h2>
+  ${vBin(bin, true)}`;
+}
+function vBin(bin, inner){
   const sup = auth.role === "SUPER_ADMIN";
-  return `<div class="head"><div><h1>🗑 ${t("bin_t")}</h1><p>${t("bin_hint")}</p></div><div class="tools"><button class="btn ghost" data-act="emp-chip" data-k="qBin" data-v="">← ${t("nav_employees")}</button></div></div>
+  return `${inner ? "" : `<div class="head"><div><h1>🗑 ${t("bin_t")}</h1><p>${t("bin_hint")}</p></div><div class="tools"><button class="btn ghost" data-act="emp-chip" data-k="qBin" data-v="">← ${t("nav_employees")}</button></div></div>`}
   <section class="panel">${bin.length ? `<div class="scroll"><table><thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("bin_when")}</th><th>${t("bin_auto")}</th><th></th></tr></thead><tbody>
-  ${bin.sort((a, b) => (+b[1].deletedAt || 0) - (+a[1].deletedAt || 0)).map(([id, e]) => { const days = Math.floor((Date.now() - (+e.deletedAt || 0)) / DAY), canPurge = sup && days >= 30; return `<tr>
+  ${bin.sort((a, b) => (+b[1].deletedAt || 0) - (+a[1].deletedAt || 0)).map(([id, e]) => { const days = Math.floor((Date.now() - (+e.deletedAt || 0)) / DAY), canPurge = sup; return `<tr>
     <td><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 34)}<div><div class="name">${esc(e.fullName)}</div><div class="sub">${esc(adminName(e.deletedBy))}</div></div></div></td>
     <td class="mono">${esc(e.residentId)}</td>
     <td class="nowrap">${e.deletedAt ? new Date(+e.deletedAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}<div class="sub">${t("bin_days", { n: days })}</div></td>
     <td class="nowrap sub">${e.deletedAt ? new Date(+e.deletedAt + 365 * DAY).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }) : "—"}</td>
     <td><div class="row-actions"><button class="btn sm" data-act="emp-restore" data-id="${id}" data-needs-write>↺ ${t("bin_restore")}</button>
-      <button class="btn ghost sm danger-t" data-act="emp-purge" data-id="${id}" data-needs-write ${canPurge ? "" : "disabled"} title="${canPurge ? "" : t("bin_wait", { n: Math.max(0, 30 - days) })}">${t("bin_purge")}${canPurge ? "" : ` · ${t("bin_left", { n: Math.max(0, 30 - days) })}`}</button></div></td></tr>`; }).join("")}
+      <button class="btn ghost sm danger-t" data-act="emp-purge" data-id="${id}" data-needs-write ${canPurge ? "" : "disabled"} title="${canPurge ? "" : t("bin_super_only")}">${t("bin_purge")}</button></div></td></tr>`; }).join("")}
   </tbody></table></div>` : `<div class="empty"><b>${t("bin_empty")}</b></div>`}</section>`;
 }
 /* ───────── Recycle bin: deleted employees stay 12 months; permanent delete after 30 days ───────── */
@@ -791,10 +826,10 @@ async function purgeOldDeleted(){
 }
 async function hardDeleteEmp(id){
   const e2 = state.emp[id]; if (!e2) return;
-  for (const x of allDues().filter(x => x.employeeId === id)) await db.doc(x.coll + "/" + x.id).delete();
+  for (const x of allDues().filter(x => x.employeeId === id)) await db.doc(x.coll + "/" + x.id).purge();
   for (const c of ["presence", "duty", "pinreq"]) { try { await db.doc(c + "/" + id).delete(); } catch {} }
   if (e2.photoPath) sb.storage.from("photos").remove([e2.photoPath]).catch(() => {});
-  await db.doc("employees/" + id).delete();
+  await db.doc("employees/" + id).purge();
 }
 
 /* ───────── Petrol: three 10-day periods per pay month (2nd → 1st), kept for every month ───────── */
@@ -896,7 +931,7 @@ function vDues(){
   const stPill = x => { const st = dueStatus(x); return st === "waived" ? `<span class="pill p-mute nodot">${t("waived")}</span>` : st === "cleared" ? `<span class="pill p-good nodot">${t("du_cleared")}</span>` : `<b class="neg">${fmt(x.remaining)}</b>`; };
   return `
   <div class="head"><div><h1>${t("nav_dues")}</h1><p>${t("du_hint")}</p></div>
-    <div class="tools"><button class="btn" data-act="due-new" data-needs-write>+ ${t("du_new")}</button></div></div>
+    <div class="tools"><button class="btn ghost cut-btn" data-act="due-cut" data-needs-write>− ${t("du_cut")}</button><button class="btn" data-act="due-new" data-needs-write>+ ${t("du_new")}</button></div></div>
   <div class="kpis">
     <div class="kpi"><span>${t("du_total")}</span><b>${fmt(total)}</b><small>${t("sar")}</small></div>
     <div class="kpi"><span>${t("du_recovered")}</span><b class="pos">${fmt(total - left)}</b><small>${t("sar")}</small></div>
@@ -916,7 +951,7 @@ function vDues(){
         <td class="r">${g.list.length}</td><td class="r nowrap">${fmt(g.total)}</td><td class="r nowrap pos">${fmt(g.total - g.left)}</td>
         <td class="r nowrap">${g.left > 0 ? `<b class="neg">${fmt(g.left)}</b>` : `<span class="pill p-good nodot">${t("du_cleared")}</span>`}</td>
         <td class="r nowrap">${fmt(g.monthly)}</td>
-        <td class="r"><button class="btn ghost sm" data-act="due-new" data-emp="${g.eid}" data-needs-write>+ ${t("du_add")}</button></td></tr>
+        <td class="r"><div class="row-actions" style="justify-content:flex-end">${g.left > 0 ? `<button class="btn ghost sm cut-btn" data-act="due-cut" data-emp="${g.eid}" data-needs-write>− ${t("du_cut")}</button>` : ""}<button class="btn ghost sm" data-act="due-new" data-emp="${g.eid}" data-needs-write>+ ${t("du_add")}</button></div></td></tr>
       ${isOpen ? `<tr class="due-items"><td colspan="7"><table class="inner"><thead><tr><th>${t("date")}</th><th>${t("du_type")}</th><th>${t("reason")}</th><th class="r">${t("amount")}</th><th class="r">${t("perMonth")}</th><th class="r">${t("remaining")}</th><th>${t("history")}</th><th></th></tr></thead><tbody>
         ${g.list.map(x => `<tr>
           <td class="nowrap">${x.date ? esc(dmy(x.date)) : `<span class="pill p-warn nodot">${t("du_nodate")}</span>`}</td>
@@ -925,10 +960,10 @@ function vDues(){
           <td class="r nowrap">${fmt(x.amount)}</td>
           <td class="r nowrap">${+x.monthly ? `${fmt(x.monthly)}<div class="sub">${t("du_from")} ${esc(x.startMonth || "")}</div>` : `<span class="sub" title="${t("du_manual_t")}">${t("du_manual")}</span>`}</td>
           <td class="r nowrap">${stPill(x)}</td>
-          <td class="sub">${(x.history ?? []).map(h => `${esc(h.date ? dmy(h.date) : h.month)}: −${fmt(h.amount)}${h.cash ? ` · ${t("du_cash")}` : ""}`).join("<br>") || t("none")}</td>
+          <td class="sub">${(x.history ?? []).map(h => `${esc(h.date ? dmy(h.date) : h.month)}: −${fmt(h.amount)}${h.cash ? ` · ${t("du_cash")}` : h.src === "manual" ? ` · ${t("du_cut_salary_s")}` : ""}${h.note ? ` · <i>${esc(h.note)}</i>` : ""}${h.by ? ` · ${esc(adminName(h.by))}` : ""}`).join("<br>") || t("none")}</td>
           <td><div class="row-actions">
             <button class="btn ghost sm" data-act="due-edit" data-id="${x.coll}/${x.id}" data-needs-write>${t("edit")}</button>
-            ${dueStatus(x) === "open" ? `<button class="btn ghost sm" data-act="due-pay" data-id="${x.coll}/${x.id}" data-needs-write>${t("du_pay")}</button>` : ""}
+            ${dueStatus(x) === "open" ? `<button class="btn ghost sm cut-btn" data-act="due-cut" data-emp="${x.employeeId}" data-due="${x.coll}/${x.id}" data-needs-write>− ${t("du_cut")}</button>` : ""}
             <button class="btn ghost sm danger-t" data-act="due-del" data-id="${x.coll}/${x.id}" data-needs-write>${t("delete")}</button>
           </div></td></tr>`).join("")}
       </tbody></table></td></tr>` : ""}`; }).join("")}</tbody></table></div>`
@@ -941,6 +976,48 @@ document.addEventListener("change", e => {
   if (e.target.id === "dType") { state.dType = e.target.value; render(); }
   if (e.target.id === "dStat") { state.dStat = e.target.value; render(); }
 });
+/* take money off a driver's dues at any time — from salary (shows on that month's payslip) or paid in cash */
+const dueAt = path => { const [c, i] = path.split("/"); const x = (c === "fines" ? state.fines : state.adv)[i]; return x ? { ...x, coll: c, id: i, type: c === "advances" ? "ADVANCE" : (x.category || "OTHER") } : null; };
+const openDuesOf = eid => allDues().filter(x => x.employeeId === eid && dueStatus(x) === "open")
+  .sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")) || (+a.createdAt || 0) - (+b.createdAt || 0));
+function cutDialog(empId, duePath){
+  const owing = [...Object.entries(state.emp).filter(([id, e]) => e.status !== "DELETED" && (openDuesOf(id).length || id === empId)), ...(empId && !state.emp[empId] ? [[empId, { fullName: empId, residentId: "" }]] : [])];
+  const dueOpts = (eid, sel) => `<option value="">${t("du_cut_auto")}</option>` + openDuesOf(eid).map(x => `<option value="${x.coll}/${x.id}" ${sel === x.coll + "/" + x.id ? "selected" : ""}>${esc(t(x.type))} · ${esc(dmy(x.date) || "—")} · ${t("remaining")} ${fmt(dueRemaining(x))}${x.reason ? " · " + esc(String(x.reason).slice(0, 30)) : ""}</option>`).join("");
+  openDialog({ title: t("du_cut_t"), submit: t("du_cut"),
+    body: `<p class="full sub">${t("du_cut_help")}</p>
+      <label class="f full">${t("employee")} *<select class="input" name="employeeId" id="cutEmp" required><option value="">${t("selectEmp")}</option>${owing.map(([id, e]) => `<option value="${id}" ${id === empId ? "selected" : ""}>${esc(e.fullName)} — ${esc(e.residentId)}</option>`).join("")}</select></label>
+      <label class="f full">${t("du_cut_which")}<select class="input" name="due" id="cutDue">${dueOpts(empId || "", duePath || "")}</select></label>
+      <label class="f">${t("amount")} * <span class="sub" id="cutOwed"></span><input class="input" name="amount" id="cutAmt" type="number" min="0.01" step="0.01" required></label>
+      <label class="f">${t("date")}<input class="input" name="date" type="date" value="${todayKey()}"></label>
+      <label class="f full">${t("du_cut_how")}<select class="input" name="how"><option value="salary">${t("du_cut_salary")}</option><option value="cash">${t("du_cut_cash")}</option></select></label>
+      <label class="f full">${t("reason")}<textarea class="input" name="note" rows="2" maxlength="300" placeholder="${t("du_cut_note_ph")}"></textarea></label>`,
+    onSubmit: async fd => {
+      const eid = fd.employeeId, amt = r2(fd.amount);
+      if (!eid || !(amt > 0)) fail(t("required"));
+      const targets = fd.due ? [dueAt(fd.due)].filter(Boolean) : openDuesOf(eid);
+      const max = r2(targets.reduce((s, x) => s + dueRemaining(x), 0));
+      if (amt > max + 0.001) fail(t("du_cut_much", { a: fmt(max) }));
+      const date = fd.date || todayKey(), cash = fd.how === "cash", note = (fd.note || "").trim(), by = auth.session?.user?.email || "";
+      let left = amt;
+      for (const x of targets) {
+        if (left <= 0) break;
+        const take = r2(Math.min(left, dueRemaining(x))); if (take <= 0) continue;
+        const h = [...(x.history ?? []), { month: cash ? date.slice(0, 7) : cycleOf(date), date, amount: take, src: "manual", ...(cash ? { cash: true } : {}), ...(note ? { note } : {}), by }];
+        await db.doc(x.coll + "/" + x.id).update({ ...withHistory(+x.amount || 0, h), updatedAt: Date.now() });
+        left = r2(left - take);
+      }
+      state.dOpen = { ...(state.dOpen ?? {}), [eid]: true };
+      await sendNotice("due_cut", [eid], { amount: amt });
+      toast(t("du_cut_done", { a: fmt(amt) }));
+    }});
+  const sync = () => {
+    const eid = $("#cutEmp").value, sel = $("#cutDue").value;
+    const max = sel ? dueRemaining(dueAt(sel) ?? {}) : r2(openDuesOf(eid).reduce((s, x) => s + dueRemaining(x), 0));
+    $("#cutOwed").textContent = eid ? `(${t("du_left")}: ${fmt(max)})` : ""; $("#cutAmt").max = eid ? max : "";
+  };
+  $("#cutEmp").addEventListener("change", () => { $("#cutDue").innerHTML = dueOpts($("#cutEmp").value, ""); sync(); });
+  $("#cutDue").addEventListener("change", sync); sync();
+}
 /* one dialog to add or edit a due — every field, including past deductions, can be changed */
 function dueDialog(path, empId){
   const [coll, did] = path ? path.split("/") : [];
@@ -977,7 +1054,7 @@ function dueDialog(path, empId){
       else {
         const nid = (toColl === "fines" ? "f" : "a") + uid();
         await db.doc(toColl + "/" + nid).set({ ...(x ?? {}), ...rec, createdAt: x?.createdAt ?? Date.now(), ...(toColl === "advances" ? { category: null } : {}) });
-        if (x) await db.doc(path).delete();
+        if (x) { await db.doc(path).update({ movedTo: toColl + "/" + nid }); await db.doc(path).purge(); }
       }
       state.dOpen = { ...(state.dOpen ?? {}), [fd.employeeId]: true };
       await sendNotice(x ? "due_edit" : "due_new", [fd.employeeId], { amount });
@@ -1156,6 +1233,9 @@ function computePayroll(){
     ...Object.entries(state.adv).map(([id,x]) => ({ id, kind: "adv", ...x })),
   ].filter(s => !s.waived && (+s.remaining||0) > 0 && (s.startMonth||"") <= m).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
 
+  const manual = {};
+  for (const [kind, map] of [["fine", state.fines], ["adv", state.adv]]) for (const x of Object.values(map)) for (const h of x.history ?? [])
+    if (h.src === "manual" && !h.cash && h.month === m) { const k = (manual[x.employeeId] ??= { fine: 0, adv: 0 }); k[kind] = r2(k[kind] + (+h.amount || 0)); }
   return activeEmps().map(([id, e]) => {
     const orders = tot[id]?.o ?? 0, fuelSpent = r2(tot[id]?.f ?? 0);
     const a = { ...(savedAdj[id] ?? {}), ...(state.adjDraft[id] ?? {}) };
@@ -1168,7 +1248,8 @@ function computePayroll(){
     const absDed = r2((+a.abs || 0) * (+R.absence || 0));
     const gross = r2(base + bonus + incent + overtime + Math.max(0, fuelAdj) + Math.max(0, other));
     let avail = r2(gross - shortfall - absDed + Math.min(0, fuelAdj) + Math.min(0, other));
-    const planned = []; let fineDed = 0, advDed = 0;
+    const planned = []; let fineDed = manual[id]?.fine || 0, advDed = manual[id]?.adv || 0;
+    avail = r2(avail - fineDed - advDed);
     for (const s of schedules.filter(s => s.employeeId === id)) {
       if (avail <= 0) break;
       const take = r2(Math.min(+s.monthly || 0, +s.remaining || 0, avail)); if (take <= 0) continue;
@@ -1461,6 +1542,25 @@ document.addEventListener("click", async e => {
 
     if (act === "due-toggle") { if (e.target.closest("button")) return; const o = state.dOpen ?? (state.dOpen = {}); o[id] = !o[id]; render(); return; }
     if (act === "due-new") { dueDialog(null, b.dataset.emp); return; }
+    if (act === "due-cut") { cutDialog(b.dataset.emp || "", b.dataset.due || ""); return; }
+    if (act === "trash-restore") {
+      const { data, error } = await sb.rpc("trash_restore", { p_id: +id });
+      if (error) { toast(t("dbErr")); return; }
+      toast(t(data === "ok" ? "bin_restored" : data === "exists" ? "bin_exists" : "bin_no_restore")); TR.loaded = false; render(); return;
+    }
+    if (act === "trash-purge") {
+      const ids = id === "all" ? TR.list.map(r => r.id) : [+id];
+      openDialog({ title: t("bin_purge"), danger: true, submit: t("bin_purge"), body: `<p class="full">${id === "all" ? t("bin_purge_all_q", { n: ids.length }) : t("bin_purge_one_q")}</p>`,
+        onSubmit: async () => { const { error } = await sb.rpc("trash_purge", { p_ids: ids }); if (error) fail(t("bin_super_only")); TR.loaded = false; toast(t("emp_deleted")); } });
+      return;
+    }
+    if (act === "act-del" || act === "act-del-shown") {
+      const ids = act === "act-del" ? [+id] : ACT.shown.map(x => x.id);
+      if (!ids.length) return;
+      openDialog({ title: t("act_del_t"), danger: true, submit: t("delete"), body: `<p class="full">${t("act_del_q", { n: ids.length })}</p>`,
+        onSubmit: async () => { const { error } = await sb.rpc("audit_delete", { p_ids: ids }); if (error) fail(t("bin_super_only")); ACT.loaded = false; toast(t("du_deleted")); loadActivityCount(); } });
+      return;
+    }
     if (act === "due-edit") { dueDialog(id); return; }
     if (act === "due-pay") {
       const [coll, did] = id.split("/"), x = (coll === "fines" ? state.fines : state.adv)[did];
@@ -1478,7 +1578,7 @@ document.addEventListener("click", async e => {
       return;
     }
     if (act === "due-del") {
-      openDialog({ title: t("delete"), body: `<p class="full">${t("du_del_q")}</p>`, submit: t("delete"), danger: true, onSubmit: async () => { await db.doc(id).delete(); toast(t("du_deleted")); } });
+      openDialog({ title: t("delete"), body: `<p class="full">${t("du_del_q")}</p>`, submit: t("delete"), danger: true, onSubmit: async () => { await db.doc(id).delete(); toast(t("bin_moved")); } });
       return;
     }
     if (act === "act-reload") { ACT.loaded = false; render(); return; }
@@ -1549,7 +1649,10 @@ document.addEventListener("click", async e => {
           }
           if (one) {
             const slips = (d.slips ?? []).filter(x => x.id !== one), adj = { ...(d.adj ?? {}) }; delete adj[one];
-            if (slips.length) await db.doc("payroll/" + m).set({ ...d, slips, adj, updatedAt: Date.now() });
+            if (slips.length) {
+              await sb.rpc("trash_add", { p_coll: "payroll_slip", p_doc: m, p_emp: one, p_data: { month: m, slip: (d.slips ?? []).find(x => x.id === one) ?? null, adj: d.adj?.[one] ?? null }, p_note: null });
+              await db.doc("payroll/" + m).set({ ...d, slips, adj, updatedAt: Date.now() });
+            }
             else await db.doc("payroll/" + m).delete();
           } else await db.doc("payroll/" + m).delete();
           state.adjDraft = {}; toast(t("du_deleted"));
@@ -2212,6 +2315,11 @@ function makeDb(){
         const { error } = await sb.from("docs").delete().eq("coll", coll).eq("id", id);
         if (error) throw error; local(coll, id, undefined);
       },
+      /* gone for good, not to the recycle bin (super admin, moves, 12-month clean-up) */
+      async purge(){
+        const { error } = await sb.rpc("docs_purge", { p_coll: coll, p_id: id });
+        if (error) throw error; local(coll, id, undefined);
+      },
       onSnapshot(next, err){
         const l = { coll, fire: () => next(snapDoc(id, cache[coll]?.get(id))) };
         listeners.add(l); startRealtime();
@@ -2254,7 +2362,7 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "Give each person an email, a role and a password. They can sign in right away with them.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", perf_report_of: "Report for", perf_vs: "compared with", perf_pick: "Day:", pf_latest_s: "latest", perf_monthend: "month end", perf_day_help: "The day the numbers are for (usually yesterday). Totals in the app show “up to” this day.", nav_activity: "Activity", act_hint: "Every change made by an admin: who, when, what, and why. Drivers see the changes about them and can ask a question.", act_reload: "Refresh", act_search: "Search employee…", act_all_admins: "All admins", act_all_kinds: "All kinds",
+  drv_web: "Driver app (web)", perf_report_of: "Report for", perf_vs: "compared with", perf_pick: "Day:", pf_latest_s: "latest", perf_monthend: "month end", perf_day_help: "The day the numbers are for (usually yesterday). Totals in the app show “up to” this day.", nav_bin: "Recycle bin", du_cut: "Deduct", du_cut_t: "Deduct from dues", du_cut_help: "Take money off a driver's dues at any time. From salary: it is cut on that pay month's payslip. Cash: the driver paid it back himself.", du_cut_which: "From which due", du_cut_auto: "Automatic — oldest due first", du_cut_how: "How", du_cut_salary: "Cut from salary (this pay month's payslip)", du_cut_cash: "Paid in cash / transfer", du_cut_salary_s: "from salary", du_cut_note_ph: "e.g. Taken at the office on 30 Oct", du_cut_much: "More than what is owed ({a})", du_cut_done: "{a} SAR deducted", bin_hint2: "Everything deleted stays here with who deleted it and when. It is removed automatically after 12 months. Only the super admin can delete it for good.", bin_records: "Deleted dues and payroll", bin_emps: "Deleted employees", bin_by: "Deleted by", bin_slips: "payslips", bin_purge_all: "Empty the bin", bin_purge_all_q: "Delete all {n} records in the bin for good? This cannot be undone.", bin_purge_one_q: "Delete this record for good? This cannot be undone.", bin_super_only: "Only the super admin can do this", bin_exists: "Already exists — not restored", bin_no_restore: "Payroll cannot be restored — run payroll for that month again", act_del_t: "Delete from activity", act_del_q: "Delete {n} activity record(s) for good? Drivers will no longer see them. This cannot be undone.", act_del_shown: "Delete shown ({n})", nav_activity: "Activity", act_hint: "Every change made by an admin: who, when, what, and why. Drivers see the changes about them and can ask a question.", act_reload: "Refresh", act_search: "Search employee…", act_all_admins: "All admins", act_all_kinds: "All kinds",
   act_open_q: "unanswered questions", act_admin: "Admin", act_what: "What", act_changes: "Changes", act_reason: "Reason / questions", act_add_reason: "Add reason", act_answer: "Answer", act_none: "No changes yet",
   act_create: "Added", act_update: "Changed", act_delete: "Deleted", act_deleted: "removed", act_emp: "Employee", act_reason_help: "Write why this was changed. The driver sees it in the app.",
   act_note: "Changes are kept for 12 months. New entries appear when admins save something.",
@@ -2297,7 +2405,7 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "প্রত্যেককে একটি ইমেইল, পদ আর পাসওয়ার্ড দিন। সেগুলো দিয়ে সঙ্গে সঙ্গে লগইন করতে পারবে।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", perf_report_of: "রিপোর্টের তারিখ", perf_vs: "তুলনা", perf_pick: "দিন:", pf_latest_s: "সর্বশেষ", perf_monthend: "মাস শেষ", perf_day_help: "সংখ্যাগুলো কোন দিনের (সাধারণত গতকালের)। অ্যাপে মোট অর্ডার এই তারিখ “পর্যন্ত” দেখাবে।", nav_activity: "কার্যক্রম", act_hint: "প্রতিটি পরিবর্তন: কোন এডমিন, কখন, কী বদলেছে আর কেন। কর্মীরা নিজের বিষয়ের পরিবর্তন অ্যাপে দেখে আর প্রশ্ন করতে পারে।", act_reload: "রিফ্রেশ", act_search: "কর্মী খুঁজুন…", act_all_admins: "সব এডমিন", act_all_kinds: "সব ধরন",
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", perf_report_of: "রিপোর্টের তারিখ", perf_vs: "তুলনা", perf_pick: "দিন:", pf_latest_s: "সর্বশেষ", perf_monthend: "মাস শেষ", perf_day_help: "সংখ্যাগুলো কোন দিনের (সাধারণত গতকালের)। অ্যাপে মোট অর্ডার এই তারিখ “পর্যন্ত” দেখাবে।", nav_bin: "মুছে ফেলা তথ্য", du_cut: "কর্তন", du_cut_t: "বকেয়া থেকে কর্তন", du_cut_help: "যেকোনো সময় কর্মীর বকেয়া থেকে টাকা কাটুন। বেতন থেকে: ওই বেতন-মাসের পে-স্লিপে কাটা হবে। নগদ: কর্মী নিজে টাকা ফেরত দিয়েছে।", du_cut_which: "কোন বকেয়া থেকে", du_cut_auto: "স্বয়ংক্রিয় — পুরনো বকেয়া আগে", du_cut_how: "কীভাবে", du_cut_salary: "বেতন থেকে কাটা (এই বেতন-মাসের পে-স্লিপে)", du_cut_cash: "নগদ / ট্রান্সফারে জমা", du_cut_salary_s: "বেতন থেকে", du_cut_note_ph: "যেমন: ৩০ অক্টোবর অফিসে কাটা হয়েছে", du_cut_much: "বাকির চেয়ে বেশি ({a})", du_cut_done: "{a} রিয়াল কর্তন হয়েছে", bin_hint2: "যা কিছু মুছে ফেলা হয় সব এখানে থাকে — কে, কখন মুছেছে সহ। ১২ মাস পর নিজে থেকে মুছে যায়। স্থায়ীভাবে মুছতে পারে শুধু সুপার এডমিন।", bin_records: "মুছে ফেলা বকেয়া ও বেতন", bin_emps: "মুছে ফেলা কর্মী", bin_by: "মুছেছেন", bin_slips: "পে-স্লিপ", bin_purge_all: "সব স্থায়ীভাবে মুছুন", bin_purge_all_q: "বিনের {n}টি তথ্য স্থায়ীভাবে মুছবেন? আর ফেরত আনা যাবে না।", bin_purge_one_q: "এই তথ্য স্থায়ীভাবে মুছবেন? আর ফেরত আনা যাবে না।", bin_super_only: "এটি শুধু সুপার এডমিন করতে পারে", bin_exists: "আগে থেকেই আছে — ফেরত আনা হয়নি", bin_no_restore: "বেতন ফেরত আনা যায় না — ওই মাসের Payroll আবার চালান", act_del_t: "কার্যক্রম থেকে মুছুন", act_del_q: "{n}টি কার্যক্রম রেকর্ড স্থায়ীভাবে মুছবেন? কর্মীরাও আর দেখবে না। ফেরত আনা যাবে না।", act_del_shown: "দেখানো সব মুছুন ({n})", nav_activity: "কার্যক্রম", act_hint: "প্রতিটি পরিবর্তন: কোন এডমিন, কখন, কী বদলেছে আর কেন। কর্মীরা নিজের বিষয়ের পরিবর্তন অ্যাপে দেখে আর প্রশ্ন করতে পারে।", act_reload: "রিফ্রেশ", act_search: "কর্মী খুঁজুন…", act_all_admins: "সব এডমিন", act_all_kinds: "সব ধরন",
   act_open_q: "উত্তর বাকি প্রশ্ন", act_admin: "এডমিন", act_what: "কী", act_changes: "পরিবর্তন", act_reason: "কারণ / প্রশ্ন", act_add_reason: "কারণ লিখুন", act_answer: "উত্তর দিন", act_none: "এখনো কোনো পরিবর্তন নেই",
   act_create: "যোগ", act_update: "পরিবর্তন", act_delete: "মুছে ফেলা", act_deleted: "মুছে ফেলা হয়েছে", act_emp: "কর্মীর তথ্য", act_reason_help: "কেন বদলানো হলো লিখুন। কর্মী অ্যাপে এটা দেখবে।",
   act_note: "পরিবর্তনের হিসাব ১২ মাস থাকে। এডমিন কিছু সংরক্ষণ করলে নতুন সারি যোগ হয়।",
@@ -2340,7 +2448,7 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "أعطِ كل شخص بريداً وصلاحية وكلمة مرور، ويمكنه الدخول بها فوراً.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", perf_report_of: "تقرير يوم", perf_vs: "مقارنة بـ", perf_pick: "اليوم:", pf_latest_s: "الأحدث", perf_monthend: "نهاية الشهر", perf_day_help: "اليوم الذي تخصه الأرقام (عادة أمس). يظهر إجمالي الطلبات في التطبيق «حتى» هذا اليوم.", nav_activity: "سجل التغييرات", act_hint: "كل تغيير: أي مسؤول ومتى وماذا ولماذا. يرى السائقون التغييرات الخاصة بهم ويمكنهم السؤال.", act_reload: "تحديث", act_search: "ابحث عن موظف…", act_all_admins: "كل المسؤولين", act_all_kinds: "كل الأنواع",
+  drv_web: "تطبيق السائق (ويب)", perf_report_of: "تقرير يوم", perf_vs: "مقارنة بـ", perf_pick: "اليوم:", pf_latest_s: "الأحدث", perf_monthend: "نهاية الشهر", perf_day_help: "اليوم الذي تخصه الأرقام (عادة أمس). يظهر إجمالي الطلبات في التطبيق «حتى» هذا اليوم.", nav_bin: "المحذوفات", du_cut: "خصم", du_cut_t: "خصم من المستحقات", du_cut_help: "اخصم من مستحقات السائق في أي وقت. من الراتب: يُخصم في قسيمة شهر الراتب. نقداً: السائق سدد بنفسه.", du_cut_which: "من أي مستحق", du_cut_auto: "تلقائي — الأقدم أولاً", du_cut_how: "الطريقة", du_cut_salary: "خصم من الراتب (قسيمة هذا الشهر)", du_cut_cash: "سداد نقدي / تحويل", du_cut_salary_s: "من الراتب", du_cut_note_ph: "مثال: خُصم في المكتب يوم 30 أكتوبر", du_cut_much: "أكثر من المتبقي ({a})", du_cut_done: "تم خصم {a} ريال", bin_hint2: "كل ما يُحذف يبقى هنا مع من حذفه ومتى. يُزال تلقائياً بعد 12 شهراً. الحذف النهائي للمسؤول الأعلى فقط.", bin_records: "المستحقات والرواتب المحذوفة", bin_emps: "الموظفون المحذوفون", bin_by: "حذفه", bin_slips: "قسائم", bin_purge_all: "إفراغ المحذوفات", bin_purge_all_q: "حذف {n} سجل نهائياً؟ لا يمكن التراجع.", bin_purge_one_q: "حذف هذا السجل نهائياً؟ لا يمكن التراجع.", bin_super_only: "للمسؤول الأعلى فقط", bin_exists: "موجود مسبقاً — لم تتم الاستعادة", bin_no_restore: "لا يمكن استعادة الرواتب — أعد تشغيل رواتب ذلك الشهر", act_del_t: "حذف من السجل", act_del_q: "حذف {n} سجل نهائياً؟ لن يراها السائقون. لا يمكن التراجع.", act_del_shown: "حذف المعروض ({n})", nav_activity: "سجل التغييرات", act_hint: "كل تغيير: أي مسؤول ومتى وماذا ولماذا. يرى السائقون التغييرات الخاصة بهم ويمكنهم السؤال.", act_reload: "تحديث", act_search: "ابحث عن موظف…", act_all_admins: "كل المسؤولين", act_all_kinds: "كل الأنواع",
   act_open_q: "أسئلة بلا رد", act_admin: "المسؤول", act_what: "ماذا", act_changes: "التغييرات", act_reason: "السبب / الأسئلة", act_add_reason: "إضافة سبب", act_answer: "رد", act_none: "لا توجد تغييرات بعد",
   act_create: "إضافة", act_update: "تعديل", act_delete: "حذف", act_deleted: "محذوف", act_emp: "بيانات الموظف", act_reason_help: "اكتب سبب التغيير. يراه السائق في التطبيق.",
   act_note: "تُحفظ التغييرات 12 شهراً.",
