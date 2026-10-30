@@ -265,7 +265,11 @@ dialog::backdrop{background:rgba(5,15,25,.5)}
 .photo-pick{display:flex;gap:14px;align-items:center}
 .sec{font:600 13px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--brand);border-bottom:1px solid var(--line);padding:8px 0 4px;margin-top:4px}
 .opt{text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)}
-.seg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.rk-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap} .rk-sw.dim{opacity:.4}
+.po-btn{border:1.5px solid var(--line);background:var(--surface);color:var(--muted);border-radius:999px;padding:4px 10px;font:600 12.5px var(--f-body,inherit);cursor:pointer;white-space:nowrap}
+.po-btn.on{background:#0E7C66;border-color:#0E7C66;color:#fff}
+.iban{font-family:ui-monospace,Menlo,monospace;letter-spacing:.04em;white-space:nowrap}
 .seg2-o{position:relative;display:flex;flex-direction:column;gap:2px;border:1.5px solid var(--line);border-radius:10px;padding:10px 12px;cursor:pointer}
 .seg2-o input{position:absolute;opacity:0;pointer-events:none}
 .seg2-o b{font:600 17px var(--f-display)}
@@ -310,7 +314,7 @@ en:{brandSub:"Admin panel",loading:"Loading…",
  today:"Today",activeEmp:"Active employees",pending:"awaiting approval",ordersToday:"Orders today",fuelToday:"Fuel today",reported:"drivers reported",outstanding:"Outstanding fines",advancesOut:"Advances to recover",
  leaderboard:"Today's leaderboard",recentFines:"Recent fines",noOrders:"No orders entered for today",noOrdersHint:"Enter today's orders in Daily operations.",noFines:"No fines issued",
  addEmp:"Add employee",search:"Search name, Iqama, mobile, plate…",allStatus:"All statuses",ACTIVE:"Active",PENDING:"Pending",INACTIVE:"Deactivated",
- name:"Name",nameAr:"Name (Arabic)",iqama:"Resident ID (Iqama)",mobile:"Mobile",city:"City",plate:"Vehicle plate",model:"Vehicle model",card:"Petrol card no.",dailyLimit:"Daily fuel limit",monthlyLimit:"Monthly fuel limit",status:"Status",payType:"Pay type",TARGET:"Target 450 orders · base + bonus",PER_ORDER:"Paid per order",
+ name:"Name",nameAr:"Name (Arabic)",iqama:"Resident ID (Iqama)",mobile:"Mobile",city:"City",plate:"Vehicle plate",model:"Vehicle model",card:"Petrol card no.",dailyLimit:"Daily fuel limit",monthlyLimit:"Monthly fuel limit",status:"Status",payType:"Pay type",TARGET:"Target 450 orders · base + bonus",PER_ORDER:"Unrank ladder (380 / 500 / 600)",FLAT:"Every order × his own rate · petrol by company",
  edit:"Edit",approve:"Approve",deactivate:"Deactivate",activate:"Reactivate",resetPin:"Reset PIN",save:"Save",cancel:"Cancel",close:"Close",delete:"Delete",confirm:"Confirm",
  noEmp:"No employees yet",noEmpHint:"Add your first driver with “Add employee”.",empSaved:"Employee saved",
  pinTitle:"New login PIN",pinText:"Give this PIN to the employee privately. It is shown only once.",
@@ -336,7 +340,7 @@ bn:{brandSub:"এডমিন প্যানেল",loading:"লোড হচ�
  today:"আজ",activeEmp:"সক্রিয় কর্মচারী",pending:"অনুমোদনের অপেক্ষায়",ordersToday:"আজকের অর্ডার",fuelToday:"আজকের পেট্রোল",reported:"জন ড্রাইভারের তথ্য",outstanding:"বকেয়া জরিমানা",advancesOut:"বকেয়া অগ্রিম",
  leaderboard:"আজকের র‍্যাংকিং",recentFines:"সাম্প্রতিক জরিমানা",noOrders:"আজকের অর্ডার এখনো দেওয়া হয়নি",noOrdersHint:"দৈনিক কাজ পাতায় আজকের অর্ডার লিখুন।",noFines:"কোনো জরিমানা নেই",
  addEmp:"কর্মচারী যোগ করুন",search:"নাম, ইকামা, মোবাইল, প্লেট খুঁজুন…",allStatus:"সব অবস্থা",ACTIVE:"সক্রিয়",PENDING:"অপেক্ষমাণ",INACTIVE:"নিষ্ক্রিয়",
- name:"নাম",nameAr:"নাম (আরবি)",iqama:"রেসিডেন্ট আইডি (ইকামা)",mobile:"মোবাইল",city:"শহর",plate:"গাড়ির প্লেট",model:"গাড়ির মডেল",card:"পেট্রোল কার্ড নং",dailyLimit:"দৈনিক পেট্রোল সীমা",monthlyLimit:"মাসিক পেট্রোল সীমা",status:"অবস্থা",payType:"বেতনের ধরন",TARGET:"৪৫০ অর্ডার টার্গেট · বেসিক + বোনাস",PER_ORDER:"প্রতি অর্ডারে বেতন",
+ name:"নাম",nameAr:"নাম (আরবি)",iqama:"রেসিডেন্ট আইডি (ইকামা)",mobile:"মোবাইল",city:"শহর",plate:"গাড়ির প্লেট",model:"গাড়ির মডেল",card:"পেট্রোল কার্ড নং",dailyLimit:"দৈনিক পেট্রোল সীমা",monthlyLimit:"মাসিক পেট্রোল সীমা",status:"অবস্থা",payType:"বেতনের ধরন",TARGET:"৪৫০ অর্ডার টার্গেট · বেসিক + বোনাস",PER_ORDER:"Unrank ধাপ (৩৮০ / ৫০০ / ৬০০)",FLAT:"প্রতি অর্ডার × নিজের রেট · পেট্রোল কোম্পানির",
  edit:"সম্পাদনা",approve:"অনুমোদন",deactivate:"নিষ্ক্রিয় করুন",activate:"আবার সক্রিয়",resetPin:"পিন রিসেট",save:"সংরক্ষণ",cancel:"বাতিল",close:"বন্ধ",delete:"মুছুন",confirm:"নিশ্চিত",
  noEmp:"এখনো কোনো কর্মচারী নেই",noEmpHint:"“কর্মচারী যোগ করুন” দিয়ে প্রথম ড্রাইভার যোগ করুন।",empSaved:"কর্মচারী সংরক্ষিত হয়েছে",
  pinTitle:"নতুন লগইন পিন",pinText:"এই পিনটি কর্মচারীকে গোপনে দিন। এটি শুধু একবার দেখানো হবে।",
@@ -362,7 +366,7 @@ ar:{brandSub:"لوحة الإدارة",loading:"جارٍ التحميل…",
  today:"اليوم",activeEmp:"الموظفون النشطون",pending:"بانتظار الموافقة",ordersToday:"طلبات اليوم",fuelToday:"وقود اليوم",reported:"سائق مسجل",outstanding:"مخالفات مستحقة",advancesOut:"سلف مستحقة",
  leaderboard:"ترتيب اليوم",recentFines:"أحدث المخالفات",noOrders:"لم تُدخل طلبات اليوم بعد",noOrdersHint:"أدخل طلبات اليوم من صفحة العمليات اليومية.",noFines:"لا توجد مخالفات",
  addEmp:"إضافة موظف",search:"ابحث بالاسم، الإقامة، الجوال، اللوحة…",allStatus:"كل الحالات",ACTIVE:"نشط",PENDING:"معلق",INACTIVE:"موقوف",
- name:"الاسم",nameAr:"الاسم بالعربية",iqama:"رقم الإقامة",mobile:"الجوال",city:"المدينة",plate:"رقم اللوحة",model:"طراز المركبة",card:"رقم بطاقة الوقود",dailyLimit:"حد الوقود اليومي",monthlyLimit:"حد الوقود الشهري",status:"الحالة",payType:"نوع الراتب",TARGET:"هدف 450 طلب · أساسي + حافز",PER_ORDER:"أجر لكل طلب",
+ name:"الاسم",nameAr:"الاسم بالعربية",iqama:"رقم الإقامة",mobile:"الجوال",city:"المدينة",plate:"رقم اللوحة",model:"طراز المركبة",card:"رقم بطاقة الوقود",dailyLimit:"حد الوقود اليومي",monthlyLimit:"حد الوقود الشهري",status:"الحالة",payType:"نوع الراتب",TARGET:"هدف 450 طلب · أساسي + حافز",PER_ORDER:"سلم Unrank (380 / 500 / 600)",FLAT:"كل طلب × سعره الخاص · الوقود على الشركة",
  edit:"تعديل",approve:"موافقة",deactivate:"إيقاف",activate:"إعادة تفعيل",resetPin:"إعادة الرقم السري",save:"حفظ",cancel:"إلغاء",close:"إغلاق",delete:"حذف",confirm:"تأكيد",
  noEmp:"لا يوجد موظفون بعد",noEmpHint:"أضف أول سائق من زر «إضافة موظف».",empSaved:"تم حفظ الموظف",
  pinTitle:"رقم سري جديد",pinText:"سلّم هذا الرقم للموظف بشكل خاص. يظهر مرة واحدة فقط.",
@@ -405,9 +409,11 @@ const cycleRange = k => { const [y, m] = k.split("-").map(Number), a = new Date(
   const f = d => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }); return `${f(a)} – ${f(b)} ${b.getUTCFullYear()}`; };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const vehicleText = e => { const n = (e.vehicleName || "").trim(), m = (e.vehicleModel || "").trim(); return n && m.toLowerCase().startsWith(n.toLowerCase()) ? m : [n, m].filter(Boolean).join(" "); };
-const rkSwitch = (id, p) => { const on = (p || "TARGET") === "TARGET";
-  return `<button class="rk-sw ${on ? "on" : ""}" role="switch" aria-checked="${on}" data-act="emp-rank" data-id="${id}" data-needs-write title="${t(on ? "rk_on_t" : "rk_off_t")}"><i></i><span>${on ? "Rank" : "Unrank"}</span></button>`; };
-const rkPill = p => (p || "TARGET") === "TARGET" ? `<span class="pill p-good">${t("rk_TARGET")}</span>` : `<span class="pill p-warn">${t("rk_PER_ORDER")}</span>`;
+const rkSwitch = (id, p) => { const flat = p === "FLAT", e = state.emp[id] || {}, on = ((flat ? e.payTypePrev : p) || "TARGET") === "TARGET";
+  return `<div class="rk-wrap"><button class="rk-sw ${on ? "on" : ""} ${flat ? "dim" : ""}" role="switch" aria-checked="${on && !flat}" data-act="emp-rank" data-id="${id}" data-needs-write title="${t(on ? "rk_on_t" : "rk_off_t")}"><i></i><span>${on ? "Rank" : "UnRank"}</span></button>
+    <button class="po-btn ${flat ? "on" : ""}" data-act="emp-flat" data-id="${id}" data-needs-write title="${t("po_t")}">Per Order${flat ? ` · ${+e.poRate ? fmt(e.poRate) : "?"}` : ""}</button></div>`; };
+const rkPill = p => p === "FLAT" ? `<span class="pill p-info">${t("rk_FLAT")}</span>` : (p || "TARGET") === "TARGET" ? `<span class="pill p-good">${t("rk_TARGET")}</span>` : `<span class="pill p-warn">${t("rk_PER_ORDER")}</span>`;
+const PAY_TYPES = ["TARGET", "PER_ORDER", "FLAT"];
 const plateChip = p => p ? `<span class="plate"><i>KSA</i><em>${esc(p)}</em></span>` : `<span class="sub">${t("none")}</span>`;
 const statusPill = s => `<span class="pill ${s==="ACTIVE"?"p-good":s==="PENDING"?"p-warn":"p-mute"}">${t(s)}</span>`;
 const empName = id => state.emp[id]?.fullName ?? "—";
@@ -433,7 +439,7 @@ let db = null, downloads = null, unsubOps = null, unsubMonth = null;
 const payDoc = () => state.payroll[state.payMonth] ?? null;
 
 /* ───────── routing ───────── */
-const VIEWS = ["dashboard","employees","target","perf","operations","fuel","dues","payroll","activity","bin","app","rules","admins"];
+const VIEWS = ["dashboard","employees","target","perf","operations","fuel","dues","payroll","bank","activity","bin","app","rules","admins"];
 const SUB_VIEWS = ["target","perf"];
 const view = () => { const h = location.hash.slice(1); return VIEWS.includes(h) ? h : "dashboard"; };
 window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
@@ -476,7 +482,7 @@ function render(){
   if (state.offline) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("offline")}</b></div>`; return; }
   if (!state.ready) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("loading")}</b></div>`; return; }
   const ro = state.canWrite ? "" : `<div class="note warn">${t("readOnly")}</div>`;
-  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, dues: vDues, fuel: vFuel, activity: vActivity, bin: vBinAll, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
+  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, dues: vDues, fuel: vFuel, activity: vActivity, bin: vBinAll, bank: vBank, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
   main.querySelectorAll("[data-needs-write]").forEach(el => { if (!state.canWrite) el.disabled = true; });
   if (!state.canWrite) main.querySelectorAll("input:not([id]),select:not([id]),textarea:not([id]),#rulesForm button,#rulesForm input,[data-roleof]").forEach(el => el.disabled = true);
 }
@@ -602,7 +608,7 @@ function vEmployees(){
   <div class="filters">
     <input class="input" id="q" placeholder="${t("search")}" value="${esc(state.q)}">
     <select class="input" id="qStatus"><option value="">${t("allStatus")}</option>${["ACTIVE","PENDING","INACTIVE"].map(s=>`<option value="${s}" ${state.qStatus===s?"selected":""}>${t(s)}</option>`).join("")}</select>
-    <select class="input" id="qType"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
+    <select class="input" id="qType"><option value="">${t("rk_all")}</option>${PAY_TYPES.map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
   </div>
   <section class="panel">${list.length ? `<div class="scroll"><table class="emps">
     <thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("mobile")}</th><th>${t("vehicle")}</th><th>${t("card")}</th><th>Rank</th><th>${t("status")}</th><th>${t("app_col")}</th><th></th></tr></thead>
@@ -662,8 +668,14 @@ function empForm(e = {}){
   <label class="f">${t("vehicleName")}<input class="input" name="vehicleName" list="vnList" value="${esc(e.vehicleName)}" placeholder="Hyundai"><datalist id="vnList">${["Toyota","Hyundai","Nissan","Kia","Isuzu","Suzuki","Changan","MG"].map(c => `<option value="${c}">`).join("")}</datalist></label>
   <label class="f">${t("model")}<input class="input" name="vehicleModel" value="${esc(e.vehicleModel)}" placeholder="H1 2023"></label>
   <div class="full sec">4 · ${t("payType")}</div>
-  <div class="full seg2" role="radiogroup">${["TARGET","PER_ORDER"].map(p => `<label class="seg2-o"><input type="radio" name="payType" value="${p}" ${(e.payType || "TARGET") === p ? "checked" : ""}><b>${t("rk_" + p)}</b><span>${t(p)}</span></label>`).join("")}</div>
-  ${e.residentId ? "" : `<div class="full sec">5 · ${t("pin_title_new")}</div>
+  <div class="full seg2" role="radiogroup">${PAY_TYPES.map(p => `<label class="seg2-o"><input type="radio" name="payType" value="${p}" ${(e.payType || "TARGET") === p ? "checked" : ""}><b>${t("rk_" + p)}</b><span>${t(p)}</span></label>`).join("")}</div>
+  <label class="f">${t("po_rate")} <span class="opt">· ${t("rk_FLAT")}</span><input class="input" name="poRate" type="number" min="0" step="0.01" value="${esc(e.poRate ?? "")}" placeholder="4.00"></label>
+  <p class="sub" style="align-self:end;margin:0 0 10px">${t("po_rate_help")}</p>
+  <div class="full sec">5 · 🏦 ${t("bank_t")}</div>
+  <label class="f">${t("bank_name")}<input class="input" name="bankName" list="bankList" value="${esc(e.bankName)}"><datalist id="bankList">${SA_BANKS.map(c => `<option value="${esc(c)}">`).join("")}</datalist></label>
+  <label class="f">${t("acc_name")}<input class="input" name="accountName" value="${esc(e.accountName)}"></label>
+  <label class="f full">${t("iban")}<input class="input mono" name="iban" value="${esc(ibanFmt(e.iban))}" placeholder="SA00 0000 0000 0000 0000 0000" style="text-transform:uppercase"></label>
+  ${e.residentId ? "" : `<div class="full sec">6 · ${t("pin_title_new")}</div>
   <label class="f">${t("pin_manual")}<input class="input mono pin-in" name="pin" inputmode="numeric" maxlength="4" autocomplete="off" placeholder="• • • •"></label>
   <p class="sub" style="align-self:end;margin:0 0 10px">${t("pin_manual_help")}</p>`}`;
 }
@@ -678,7 +690,7 @@ function vOperations(){
   <div class="head"><div><h1>${t("nav_operations")}</h1><p>${t("opsHint")}</p></div>
     <div class="tools">
       <input class="input" type="month" id="opsMonth" value="${m}" style="width:auto">
-      <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
+      <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${PAY_TYPES.map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
       <button class="btn ghost" data-act="csv" data-needs-write>${t("importCsv")}</button>
       <button class="btn" data-act="save-day" data-needs-write>${t("saveDay")}</button>
     </div></div>
@@ -710,15 +722,66 @@ document.addEventListener("change", e => {
   if (e.target.id === "payMonth" && e.target.value) { state.payMonth = e.target.value; state.adjDraft = {}; subMonth(); render(); }
 });
 
+/* ───────── Per Order: paid for every order at the driver's own rate ───────── */
+function poDialog(id){
+  const e = state.emp[id] || {}, flat = e.payType === "FLAT";
+  openDialog({ title: `Per Order · ${esc(e.fullName || "")}`, submit: t("save"),
+    body: `<p class="full sub">${t("po_help")}</p>
+      <label class="f">${t("po_rate")} *<input class="input" name="poRate" type="number" min="0.01" step="0.01" value="${esc(e.poRate ?? "")}" placeholder="4.00" ${flat ? "" : "required"} autofocus></label>
+      ${flat ? `<label class="f chk-f"><span>&nbsp;</span><label class="chk"><input type="checkbox" name="off"> ${t("po_off", { p: t("rk_" + (e.payTypePrev || "TARGET")) })}</label></label>` : ""}`,
+    onSubmit: async fd => {
+      if (fd.off) { await db.doc("employees/" + id).update({ payType: e.payTypePrev || "TARGET", updatedAt: Date.now() }); toast(t("empSaved")); return; }
+      const r = r2(fd.poRate); if (!(r > 0)) fail(t("po_need"));
+      await db.doc("employees/" + id).update({ payType: "FLAT", poRate: r, ...(flat ? {} : { payTypePrev: e.payType || "TARGET" }), updatedAt: Date.now() });
+      toast(t("empSaved"));
+    }});
+}
+
+/* ───────── Bank details: every driver's bank account (drivers can update their own in the app) ───────── */
+const SA_BANKS = ["Al Rajhi Bank", "Saudi National Bank (SNB)", "Riyad Bank", "Alinma Bank", "Bank Albilad", "Bank AlJazira", "Saudi Awwal Bank (SAB)", "Arab National Bank", "Banque Saudi Fransi", "Saudi Investment Bank", "STC Bank", "D360 Bank"];
+const ibanFmt = v => String(v || "").replace(/\s/g, "").replace(/(.{4})/g, "$1 ").trim();
+function vBank(){
+  const q = (state.bq || "").trim().toLowerCase(), only = state.bMiss || "";
+  const all = activeEmps().sort((a, b) => String(a[1].fullName).localeCompare(String(b[1].fullName)));
+  const has = all.filter(([, e]) => e.iban).length;
+  const list = all.filter(([, e]) => (!only || (only === "miss" ? !e.iban : !!e.iban))
+    && (!q || [e.fullName, e.residentId, e.iban, e.bankName, e.accountName].some(v => String(v ?? "").toLowerCase().replace(/\s/g, "").includes(q.replace(/\s/g, "")))));
+  return `
+  <div class="head"><div><h1>🏦 ${t("nav_bank")}</h1><p>${t("bank_hint")}</p></div>
+    <div class="tools"><button class="btn ghost" data-act="bank-csv">⬇ ${t("bank_csv")}</button></div></div>
+  <div class="kpis">
+    <div class="kpi"><span>${t("bank_with")}</span><b class="pos">${has}</b><small>/ ${all.length}</small></div>
+    <div class="kpi"><span>${t("bank_missing")}</span><b class="${all.length - has ? "neg" : ""}">${all.length - has}</b><small>${t("bank_missing_s")}</small></div>
+  </div>
+  <div class="filters">
+    <input class="input" id="bq" placeholder="${t("bank_search")}" value="${esc(state.bq || "")}">
+    <select class="input" id="bMiss"><option value="">${t("du_all_status")}</option><option value="has" ${only === "has" ? "selected" : ""}>${t("bank_with")}</option><option value="miss" ${only === "miss" ? "selected" : ""}>${t("bank_missing")}</option></select>
+  </div>
+  <section class="panel">${list.length ? `<div class="scroll"><table>
+    <thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("bank_name")}</th><th>${t("iban")}</th><th>${t("acc_name")}</th><th>${t("bank_upd")}</th><th></th></tr></thead>
+    <tbody>${list.map(([id, e]) => `<tr>
+      <td><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 34)}<div class="name">${esc(e.fullName)}</div></div></td>
+      <td class="mono">${esc(e.residentId)}</td>
+      <td>${esc(e.bankName) || `<span class="sub">—</span>`}</td>
+      <td class="nowrap">${e.iban ? `<span class="iban">${esc(ibanFmt(e.iban))}</span> <button class="btn ghost sm" data-act="bank-copy" data-id="${id}" title="${t("copy")}">⧉</button>` : `<span class="pill p-warn nodot">${t("bank_missing")}</span>`}</td>
+      <td>${esc(e.accountName) || `<span class="sub">—</span>`}</td>
+      <td class="sub nowrap">${e.profileAt ? `👤 ${new Date(+e.profileAt).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}` : "—"}</td>
+      <td><button class="btn ghost sm" data-act="bank-edit" data-id="${id}" data-needs-write>${t("edit")}</button></td></tr>`).join("")}</tbody></table></div>`
+    : `<div class="empty"><b>${t("noEmp")}</b></div>`}</section>
+  <p class="sub" style="margin-top:10px">${t("bank_note")}</p>`;
+}
+document.addEventListener("input", e => { if (e.target.id === "bq") { state.bq = e.target.value; render(); const el = $("#bq"); el.focus(); el.setSelectionRange(el.value.length, el.value.length); } });
+document.addEventListener("change", e => { if (e.target.id === "bMiss") { state.bMiss = e.target.value; render(); } });
+
 /* ───────── Activity: every change by every admin, with reasons and drivers' questions ───────── */
 const ACT = { list: [], qs: [], loaded: false, loading: false, openQ: 0 };
 const COLL_L = { employees: "act_emp", fines: "nav_dues", advances: "nav_dues", perf: "nav_perf", totals: "nav_operations", fuel: "nav_fuel", payroll: "nav_payroll", config: "nav_rules" };
 const FIELD_L = { fullName: "name", fullNameAr: "nameAr", residentId: "iqama", mobile: "mobile", city: "city", plate: "plate", card: "card", cardSerial: "cardSerial",
   vehicleName: "vehicleName", vehicleModel: "model", payType: "payType", status: "status", platform: "platform", jahezId: "jahezId", photoUrl: "photo_choose", tGrade: "pg_col",
-  amount: "amount", remaining: "remaining", monthly: "perMonth", reason: "reason", date: "date", category: "du_type", waived: "waived", history: "du_hist_t", startMonth: "startMonth",
+  bankName: "bank_name", iban: "iban", accountName: "acc_name", poRate: "po_rate", amount: "amount", remaining: "remaining", monthly: "perMonth", reason: "reason", date: "date", category: "du_type", waived: "waived", history: "du_hist_t", startMonth: "startMonth",
   o: "orders", f: "fuel", g: "pf_grade", rp: "pf_rank", fa: "pf_forced", ot: "pf_ontime", cr: "pf_complete", ne: "pf_early", p1: "fu_p1", p2: "fu_p2", p3: "fu_p3", pinVer: "resetPin", dailyLimit: "dailyLimit", monthlyLimit: "monthlyLimit" };
 const showVal = v => v === null || v === undefined || v === "" ? "—" : Array.isArray(v) ? `[${v.length}]` : typeof v === "object" ? "…" : esc(String(v)).slice(0, 60);
-const adminName = em => { const a = (auth.admins || []).find(x => x.email.toLowerCase() === String(em || "").toLowerCase()); return a?.name || String(em || "—").split("@")[0]; };
+const adminName = em => { if (String(em || "").startsWith("driver:")) { const id = String(em).slice(7); return `👤 ${state.emp[id]?.fullName || id} (${t("by_driver")})`; } const a = (auth.admins || []).find(x => x.email.toLowerCase() === String(em || "").toLowerCase()); return a?.name || String(em || "—").split("@")[0]; };
 async function loadActivity(){
   if (ACT.loading) return; ACT.loading = true;
   try {
@@ -744,7 +807,7 @@ function vActivity(){
   const actors = [...new Set(ACT.list.map(x => x.actor).filter(Boolean))], sup = auth.role === "SUPER_ADMIN";
   ACT.shown = list.slice(0, 300);
   const colls = [...new Set(Object.values(COLL_L))];
-  const chg = x => x.action === "delete" ? `<span class="pill p-mute nodot">${t("act_deleted")}</span>${x.before?.amount != null ? `<div class="chg-l"><span class="old">${fmt(x.before.amount)}${x.before.reason ? " · " + esc(String(x.before.reason).slice(0, 50)) : ""}</span></div>` : ""}${["fines", "advances", "payroll"].includes(x.coll) ? `<div class="sub">→ 🗑 ${t("bin_t")}</div>` : ""}` : Object.entries(x.changes || {}).slice(0, 8).map(([k, [a, b]]) =>
+  const chg = x => x.action === "delete" ? `<span class="pill p-mute nodot">${t("act_deleted")}</span>${x.before?.amount != null ? `<div class="chg-l"><span class="old">${fmt(x.before.amount)}${x.before.reason ? " · " + esc(String(x.before.reason).slice(0, 50)) : ""}</span></div>` : ""}${["fines", "advances", "payroll"].includes(x.coll) ? `<div class="sub">→ 🗑 ${t("bin_t")}</div>` : ""}` : Object.entries(x.changes || {}).filter(([k]) => !["pinCheck", "pinHash", "pinSalt", "profileAt", "payTypePrev", "photoPath"].includes(k)).slice(0, 10).map(([k, [a, b]]) =>
     `<div class="chg-l"><b>${t(FIELD_L[k] || k)}</b>: <span class="old">${showVal(a)}</span> → <span class="new">${showVal(b)}</span></div>`).join("") || "—";
   return `
   <div class="head"><div><h1>${t("nav_activity")}</h1><p>${t("act_hint")}</p></div>
@@ -1094,6 +1157,7 @@ function targetFor(e, orders){
    380–499 → price per order; 500–599 → level-2 salary (by rating for Rank) + orders above 500 × rating price;
    600+ → level-3 salary + orders above 600 × rating price. */
 function payFor(e, orders, grade = "C"){
+  if (e.payType === "FLAT") { const r = +e.poRate || 0; return r > 0 ? { base: orders * r, bonus: 0, shortfall: 0, tier: 0, flat: true } : { base: 0, bonus: 0, shortfall: 0, manual: "norate", tier: 0 }; }
   const p = planOf(e), g = ["A", "B", "C"].includes(grade) ? grade : "C";
   if (orders < p.min) return { base: 0, bonus: 0, shortfall: 0, manual: "below", tier: 0 };
   if (orders >= p.t1 && grade === "D") return { base: 0, bonus: 0, shortfall: 0, manual: "gradeD", tier: orders < p.t2 ? 2 : 3 };
@@ -1103,6 +1167,7 @@ function payFor(e, orders, grade = "C"){
 }
 /* Fuel allowance (separate from salary): 380–499 → 2 SAR/order, 500+ → 2.5 SAR/order. */
 function fuelAllowance(e, orders){
+  if (e.payType === "FLAT") return 0;
   const p = planOf(e); if (orders < p.min) return 0;
   return orders * (orders < p.t1 ? p.fuelLow : p.fuelHigh);
 }
@@ -1112,7 +1177,7 @@ function vTarget(){
   return `
   <div class="head"><div><h1>${t("nav_target")}</h1><p>${t("tgt_hint2")}</p></div>
     <div class="tools">
-      <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
+      <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${PAY_TYPES.map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
       <a class="btn ghost" href="#rules">${t("tgt_defaults")}</a>
       <button class="btn" data-act="tgt-save" data-needs-write>${t("save")}</button>
     </div></div>
@@ -1128,7 +1193,7 @@ function vTarget(){
         <td class="r nowrap">${fmt0(o)} / ${fmt0(tg)}${o >= p.t2 ? " ✓" : ""}</td>
         <td class="r nowrap">${pay.manual ? `<span class="pill p-warn nodot">${t("pay_manual")}</span>` : `<b>${fmt(pay.base + pay.bonus)}</b>`}</td>
         <td><select class="input sm" data-tgt="tGrade" data-id="${id}" style="width:auto">${[["", t("pg_auto") + (pg.src !== "set" ? ` (${pg.g})` : "")], ["A", "A"], ["B", "B"], ["C", "C"], ["D", "D"]].map(([v, l]) => `<option value="${v}" ${(draft.tGrade || "") === v ? "selected" : ""}>${l}</option>`).join("")}</select></td>
-        <td class="sub nowrap">${pay.manual ? t("pay_manual") : pay.tier === 1 ? `${fmt0(p.min)}–${fmt0(p.t1 - 1)} · ${fmt(p.rate)}/${t("orders")}` : pay.tier === 2 ? `${fmt0(p.b1[g])} + ${fmt(p.ex1[g])}/${t("orders")}` : `${fmt0(p.b2[g])} + ${fmt(p.ex2[g])}/${t("orders")}`}</td>
+        <td class="sub nowrap">${pay.flat ? `${t("rk_FLAT")} · ${fmt(draft.poRate)}/${t("orders")}` : pay.manual === "norate" ? `<span class="pill p-warn nodot">${t("po_need")}</span>` : pay.manual ? t("pay_manual") : pay.tier === 1 ? `${fmt0(p.min)}–${fmt0(p.t1 - 1)} · ${fmt(p.rate)}/${t("orders")}` : pay.tier === 2 ? `${fmt0(p.b1[g])} + ${fmt(p.ex1[g])}/${t("orders")}` : `${fmt0(p.b2[g])} + ${fmt(p.ex2[g])}/${t("orders")}`}</td>
       </tr>`; }).join("")}</tbody></table></div>`
     : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</section>
   <p class="sub" style="margin-top:10px">${t("tgt_note")}</p>`;
@@ -1177,7 +1242,7 @@ function vPerf(){
     ${days.length ? `<label class="sub" style="margin-inline-start:auto;display:flex;gap:6px;align-items:center">${t("perf_pick")} <select class="input sm" id="perfArc" style="width:auto">${days.map((k, i) => `<option value="${i ? k : ""}" ${(arc || days[0]) === k ? "selected" : ""}>${dmy(k)}${i === 0 ? " · " + t("pf_latest_s") : k.endsWith("-01") ? " · " + t("perf_monthend") : ""}</option>`).join("")}</select></label>` : ""}</div>
   <div class="filters">
     <input class="input" id="q" placeholder="${t("search")}" value="${esc(state.q)}">
-    <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
+    <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${PAY_TYPES.map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
   </div>
   <section class="panel">${emps.length ? `<div class="scroll"><table class="perf">
     <thead><tr><th>${t("name")}</th>${PERF_F.map(([, l]) => `<th>${t(l)}</th>`).join("")}<th></th></tr></thead>
@@ -1244,7 +1309,7 @@ function computePayroll(){
     if (pay.manual) base = +a.man || 0;
     const incent = +a.incent || 0, overtime = +a.overtime || 0, other = +a.other || 0;
     const allowance = r2(fuelAllowance(e, orders));
-    const fuelAdj = r2((+a.fuel || 0) + allowance - fuelSpent);
+    const fuelAdj = r2((+a.fuel || 0) + allowance - (e.payType === "FLAT" ? 0 : fuelSpent));
     const absDed = r2((+a.abs || 0) * (+R.absence || 0));
     const gross = r2(base + bonus + incent + overtime + Math.max(0, fuelAdj) + Math.max(0, other));
     let avail = r2(gross - shortfall - absDed + Math.min(0, fuelAdj) + Math.min(0, other));
@@ -1377,6 +1442,12 @@ document.addEventListener("click", async e => {
         if (typedPin && !/^\d{4}$/.test(typedPin)) fail(t("pin_4"));
         const dup = Object.entries(state.emp).find(([k,v]) => v.residentId === fd.residentId && k !== id);
         if (dup) fail(t("dupIqama"));
+        fd.iban = (fd.iban || "").replace(/\s/g, "").toUpperCase();
+        if (fd.iban && !/^SA\d{22}$/.test(fd.iban)) fail(t("iban_bad"));
+        fd.poRate = fd.poRate === "" || fd.poRate == null ? "" : r2(fd.poRate);
+        if (fd.payType === "FLAT" && !(+fd.poRate > 0)) fail(t("po_need"));
+        if (fd.payType === "FLAT" && cur.payType !== "FLAT") fd.payTypePrev = cur.payType || "TARGET";
+        fd.bankName = (fd.bankName || "").trim(); fd.accountName = (fd.accountName || "").trim();
         const data = { ...fd, fullName: fd.fullName.trim(), plate: fd.plate.trim().toUpperCase(), jahezId: (fd.jahezId || "").replace(/\D/g, ""), card: fd.card.trim(), cardSerial: fd.cardSerial.trim(), vehicleName: fd.vehicleName.trim(), vehicleModel: fd.vehicleModel.trim(), city: fd.city.trim(), dailyLimit: +fd.dailyLimit || 0, monthlyLimit: +fd.monthlyLimit || 0, updatedAt: Date.now() };
 
 
@@ -1422,7 +1493,28 @@ document.addEventListener("click", async e => {
         }});
       return;
     }
-    if (act === "emp-rank") { const cur = (state.emp[id]?.payType || "TARGET") === "TARGET"; await db.doc("employees/" + id).update({ payType: cur ? "PER_ORDER" : "TARGET", updatedAt: Date.now() }); toast(t(cur ? "rk_set_off" : "rk_set_on", { n: state.emp[id]?.fullName ?? "" })); return; }
+    if (act === "emp-flat") { poDialog(id); return; }
+    if (act === "bank-copy") { const v = (state.emp[id]?.iban || ""); try { await navigator.clipboard.writeText(v); toast(t("copied")); } catch { toast(v); } return; }
+    if (act === "bank-csv") {
+      const rows = [["Name", "Iqama", "Bank", "IBAN", "Account holder", "Mobile"], ...activeEmps().map(([, e]) => [e.fullName, e.residentId, e.bankName || "", e.iban || "", e.accountName || "", e.mobile || ""])];
+      const csv = "\ufeff" + rows.map(r => r.map(v => `"${String(v ?? "").replace(/"/g, '""')}"`).join(",")).join("\r\n");
+      const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" })); a.download = `ASB-bank-details-${todayKey()}.csv`; a.click(); return;
+    }
+    if (act === "bank-edit") {
+      const e = state.emp[id] || {};
+      openDialog({ title: `🏦 ${esc(e.fullName || "")}`, submit: t("save"),
+        body: `<label class="f">${t("bank_name")}<input class="input" name="bankName" list="bankList2" value="${esc(e.bankName)}"><datalist id="bankList2">${SA_BANKS.map(c => `<option value="${esc(c)}">`).join("")}</datalist></label>
+          <label class="f">${t("acc_name")}<input class="input" name="accountName" value="${esc(e.accountName || e.fullName)}"></label>
+          <label class="f full">${t("iban")}<input class="input mono" name="iban" value="${esc(ibanFmt(e.iban))}" placeholder="SA00 0000 0000 0000 0000 0000" style="text-transform:uppercase"></label>`,
+        onSubmit: async fd => {
+          const iban = (fd.iban || "").replace(/\s/g, "").toUpperCase();
+          if (iban && !/^SA\d{22}$/.test(iban)) fail(t("iban_bad"));
+          await db.doc("employees/" + id).update({ bankName: (fd.bankName || "").trim(), accountName: (fd.accountName || "").trim(), iban, updatedAt: Date.now() });
+          toast(t("empSaved"));
+        }});
+      return;
+    }
+    if (act === "emp-rank") { const e0 = state.emp[id] || {}, cur = ((e0.payType === "FLAT" ? e0.payTypePrev : e0.payType) || "TARGET") === "TARGET"; await db.doc("employees/" + id).update({ payType: cur ? "PER_ORDER" : "TARGET", updatedAt: Date.now() }); toast(t(cur ? "rk_set_off" : "rk_set_on", { n: state.emp[id]?.fullName ?? "" })); return; }
     if (act === "emp-status") { await db.doc("employees/" + id).update({ status: b.dataset.v, updatedAt: Date.now() }); }
 
     if (act === "emp-pin") {
@@ -2362,7 +2454,7 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "Give each person an email, a role and a password. They can sign in right away with them.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", perf_report_of: "Report for", perf_vs: "compared with", perf_pick: "Day:", pf_latest_s: "latest", perf_monthend: "month end", perf_day_help: "The day the numbers are for (usually yesterday). Totals in the app show “up to” this day.", nav_bin: "Recycle bin", du_cut: "Deduct", du_cut_t: "Deduct from dues", du_cut_help: "Take money off a driver's dues at any time. From salary: it is cut on that pay month's payslip. Cash: the driver paid it back himself.", du_cut_which: "From which due", du_cut_auto: "Automatic — oldest due first", du_cut_how: "How", du_cut_salary: "Cut from salary (this pay month's payslip)", du_cut_cash: "Paid in cash / transfer", du_cut_salary_s: "from salary", du_cut_note_ph: "e.g. Taken at the office on 30 Oct", du_cut_much: "More than what is owed ({a})", du_cut_done: "{a} SAR deducted", bin_hint2: "Everything deleted stays here with who deleted it and when. It is removed automatically after 12 months. Only the super admin can delete it for good.", bin_records: "Deleted dues and payroll", bin_emps: "Deleted employees", bin_by: "Deleted by", bin_slips: "payslips", bin_purge_all: "Empty the bin", bin_purge_all_q: "Delete all {n} records in the bin for good? This cannot be undone.", bin_purge_one_q: "Delete this record for good? This cannot be undone.", bin_super_only: "Only the super admin can do this", bin_exists: "Already exists — not restored", bin_no_restore: "Payroll cannot be restored — run payroll for that month again", act_del_t: "Delete from activity", act_del_q: "Delete {n} activity record(s) for good? Drivers will no longer see them. This cannot be undone.", act_del_shown: "Delete shown ({n})", nav_activity: "Activity", act_hint: "Every change made by an admin: who, when, what, and why. Drivers see the changes about them and can ask a question.", act_reload: "Refresh", act_search: "Search employee…", act_all_admins: "All admins", act_all_kinds: "All kinds",
+  drv_web: "Driver app (web)", perf_report_of: "Report for", perf_vs: "compared with", perf_pick: "Day:", pf_latest_s: "latest", perf_monthend: "month end", perf_day_help: "The day the numbers are for (usually yesterday). Totals in the app show “up to” this day.", nav_bin: "Recycle bin", du_cut: "Deduct", du_cut_t: "Deduct from dues", du_cut_help: "Take money off a driver's dues at any time. From salary: it is cut on that pay month's payslip. Cash: the driver paid it back himself.", du_cut_which: "From which due", du_cut_auto: "Automatic — oldest due first", du_cut_how: "How", du_cut_salary: "Cut from salary (this pay month's payslip)", du_cut_cash: "Paid in cash / transfer", du_cut_salary_s: "from salary", du_cut_note_ph: "e.g. Taken at the office on 30 Oct", du_cut_much: "More than what is owed ({a})", du_cut_done: "{a} SAR deducted", bin_hint2: "Everything deleted stays here with who deleted it and when. It is removed automatically after 12 months. Only the super admin can delete it for good.", bin_records: "Deleted dues and payroll", bin_emps: "Deleted employees", bin_by: "Deleted by", bin_slips: "payslips", bin_purge_all: "Empty the bin", bin_purge_all_q: "Delete all {n} records in the bin for good? This cannot be undone.", bin_purge_one_q: "Delete this record for good? This cannot be undone.", bin_super_only: "Only the super admin can do this", bin_exists: "Already exists — not restored", bin_no_restore: "Payroll cannot be restored — run payroll for that month again", act_del_t: "Delete from activity", act_del_q: "Delete {n} activity record(s) for good? Drivers will no longer see them. This cannot be undone.", act_del_shown: "Delete shown ({n})", nav_bank: "Bank details", bank_hint: "Every driver's bank account. Drivers can add or change their own in the app — you see it here at once, and in Activity.", bank_t: "Bank account", bank_name: "Bank", iban: "IBAN", acc_name: "Account holder", bank_csv: "Download (Excel/CSV)", bank_with: "With IBAN", bank_missing: "No IBAN yet", bank_missing_s: "drivers", bank_search: "Search name, Iqama or IBAN…", bank_upd: "Driver updated", bank_note: "IBAN must be Saudi: SA + 22 digits. Changes by drivers show in Activity with their name.", iban_bad: "IBAN must be SA followed by 22 digits", copied: "Copied", copy: "Copy", by_driver: "driver", po_t: "Per Order: paid for every order at his own rate", po_rate: "Rate per order (SAR)", po_rate_help: "Only for Per Order. Each driver can have his own rate.", po_need: "Set the rate per order", po_help: "The driver is paid orders × this rate. No target ladder, no fuel allowance — petrol is paid by the company.", po_off: "Turn Per Order off (back to {p})", nav_activity: "Activity", act_hint: "Every change made by an admin: who, when, what, and why. Drivers see the changes about them and can ask a question.", act_reload: "Refresh", act_search: "Search employee…", act_all_admins: "All admins", act_all_kinds: "All kinds",
   act_open_q: "unanswered questions", act_admin: "Admin", act_what: "What", act_changes: "Changes", act_reason: "Reason / questions", act_add_reason: "Add reason", act_answer: "Answer", act_none: "No changes yet",
   act_create: "Added", act_update: "Changed", act_delete: "Deleted", act_deleted: "removed", act_emp: "Employee", act_reason_help: "Write why this was changed. The driver sees it in the app.",
   act_note: "Changes are kept for 12 months. New entries appear when admins save something.",
@@ -2399,13 +2491,13 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   tgt_rank_rule: "380–499 × 3.5 SAR · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C), plus rating price for each extra order.", tgt_unrank_rule: "380–499 orders × 4 SAR · 500+ = 2,500 · 600+ = 3,500, plus A/B/C price for each order above 500 or 600. Fuel allowance is paid separately.",
   tgt_note: "Pay so far uses this month's total orders and excludes fines, advances and fuel. Payroll uses these same settings.",
   perf_hint: "Daily Keeta performance for each driver. Drivers see yesterday and today side by side in their app.", perf_yest: "Yesterday", perf_today: "Today", perf_change: "Orders change",
-  perf_orders: "Orders", perf_hours: "Hours", perf_accept: "Accept %", perf_note: "Every daily report is kept for 12 months. The app always shows the latest two report days, and drivers can open any older day from the calendar.", totalOrders: "Total orders", fuel_month_k: "Fuel this month", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
+  perf_orders: "Orders", perf_hours: "Hours", perf_accept: "Accept %", perf_note: "Every daily report is kept for 12 months. The app always shows the latest two report days, and drivers can open any older day from the calendar.", totalOrders: "Total orders", fuel_month_k: "Fuel this month", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
 Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB LOGISTICS · কর্মচারী ব্যবস্থাপনা", au_email: "ইমেইল", au_pass: "পাসওয়ার্ড",
   au_signin: "লগইন", au_signup: "এডমিন অ্যাকাউন্ট খুলুন", au_forgot: "পাসওয়ার্ড ভুলে গেছেন?", au_have: "অ্যাকাউন্ট আছে? লগইন করুন", au_new: "প্রথমবার? এডমিন অ্যাকাউন্ট খুলুন",
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "প্রত্যেককে একটি ইমেইল, পদ আর পাসওয়ার্ড দিন। সেগুলো দিয়ে সঙ্গে সঙ্গে লগইন করতে পারবে।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", perf_report_of: "রিপোর্টের তারিখ", perf_vs: "তুলনা", perf_pick: "দিন:", pf_latest_s: "সর্বশেষ", perf_monthend: "মাস শেষ", perf_day_help: "সংখ্যাগুলো কোন দিনের (সাধারণত গতকালের)। অ্যাপে মোট অর্ডার এই তারিখ “পর্যন্ত” দেখাবে।", nav_bin: "মুছে ফেলা তথ্য", du_cut: "কর্তন", du_cut_t: "বকেয়া থেকে কর্তন", du_cut_help: "যেকোনো সময় কর্মীর বকেয়া থেকে টাকা কাটুন। বেতন থেকে: ওই বেতন-মাসের পে-স্লিপে কাটা হবে। নগদ: কর্মী নিজে টাকা ফেরত দিয়েছে।", du_cut_which: "কোন বকেয়া থেকে", du_cut_auto: "স্বয়ংক্রিয় — পুরনো বকেয়া আগে", du_cut_how: "কীভাবে", du_cut_salary: "বেতন থেকে কাটা (এই বেতন-মাসের পে-স্লিপে)", du_cut_cash: "নগদ / ট্রান্সফারে জমা", du_cut_salary_s: "বেতন থেকে", du_cut_note_ph: "যেমন: ৩০ অক্টোবর অফিসে কাটা হয়েছে", du_cut_much: "বাকির চেয়ে বেশি ({a})", du_cut_done: "{a} রিয়াল কর্তন হয়েছে", bin_hint2: "যা কিছু মুছে ফেলা হয় সব এখানে থাকে — কে, কখন মুছেছে সহ। ১২ মাস পর নিজে থেকে মুছে যায়। স্থায়ীভাবে মুছতে পারে শুধু সুপার এডমিন।", bin_records: "মুছে ফেলা বকেয়া ও বেতন", bin_emps: "মুছে ফেলা কর্মী", bin_by: "মুছেছেন", bin_slips: "পে-স্লিপ", bin_purge_all: "সব স্থায়ীভাবে মুছুন", bin_purge_all_q: "বিনের {n}টি তথ্য স্থায়ীভাবে মুছবেন? আর ফেরত আনা যাবে না।", bin_purge_one_q: "এই তথ্য স্থায়ীভাবে মুছবেন? আর ফেরত আনা যাবে না।", bin_super_only: "এটি শুধু সুপার এডমিন করতে পারে", bin_exists: "আগে থেকেই আছে — ফেরত আনা হয়নি", bin_no_restore: "বেতন ফেরত আনা যায় না — ওই মাসের Payroll আবার চালান", act_del_t: "কার্যক্রম থেকে মুছুন", act_del_q: "{n}টি কার্যক্রম রেকর্ড স্থায়ীভাবে মুছবেন? কর্মীরাও আর দেখবে না। ফেরত আনা যাবে না।", act_del_shown: "দেখানো সব মুছুন ({n})", nav_activity: "কার্যক্রম", act_hint: "প্রতিটি পরিবর্তন: কোন এডমিন, কখন, কী বদলেছে আর কেন। কর্মীরা নিজের বিষয়ের পরিবর্তন অ্যাপে দেখে আর প্রশ্ন করতে পারে।", act_reload: "রিফ্রেশ", act_search: "কর্মী খুঁজুন…", act_all_admins: "সব এডমিন", act_all_kinds: "সব ধরন",
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", perf_report_of: "রিপোর্টের তারিখ", perf_vs: "তুলনা", perf_pick: "দিন:", pf_latest_s: "সর্বশেষ", perf_monthend: "মাস শেষ", perf_day_help: "সংখ্যাগুলো কোন দিনের (সাধারণত গতকালের)। অ্যাপে মোট অর্ডার এই তারিখ “পর্যন্ত” দেখাবে।", nav_bin: "মুছে ফেলা তথ্য", du_cut: "কর্তন", du_cut_t: "বকেয়া থেকে কর্তন", du_cut_help: "যেকোনো সময় কর্মীর বকেয়া থেকে টাকা কাটুন। বেতন থেকে: ওই বেতন-মাসের পে-স্লিপে কাটা হবে। নগদ: কর্মী নিজে টাকা ফেরত দিয়েছে।", du_cut_which: "কোন বকেয়া থেকে", du_cut_auto: "স্বয়ংক্রিয় — পুরনো বকেয়া আগে", du_cut_how: "কীভাবে", du_cut_salary: "বেতন থেকে কাটা (এই বেতন-মাসের পে-স্লিপে)", du_cut_cash: "নগদ / ট্রান্সফারে জমা", du_cut_salary_s: "বেতন থেকে", du_cut_note_ph: "যেমন: ৩০ অক্টোবর অফিসে কাটা হয়েছে", du_cut_much: "বাকির চেয়ে বেশি ({a})", du_cut_done: "{a} রিয়াল কর্তন হয়েছে", bin_hint2: "যা কিছু মুছে ফেলা হয় সব এখানে থাকে — কে, কখন মুছেছে সহ। ১২ মাস পর নিজে থেকে মুছে যায়। স্থায়ীভাবে মুছতে পারে শুধু সুপার এডমিন।", bin_records: "মুছে ফেলা বকেয়া ও বেতন", bin_emps: "মুছে ফেলা কর্মী", bin_by: "মুছেছেন", bin_slips: "পে-স্লিপ", bin_purge_all: "সব স্থায়ীভাবে মুছুন", bin_purge_all_q: "বিনের {n}টি তথ্য স্থায়ীভাবে মুছবেন? আর ফেরত আনা যাবে না।", bin_purge_one_q: "এই তথ্য স্থায়ীভাবে মুছবেন? আর ফেরত আনা যাবে না।", bin_super_only: "এটি শুধু সুপার এডমিন করতে পারে", bin_exists: "আগে থেকেই আছে — ফেরত আনা হয়নি", bin_no_restore: "বেতন ফেরত আনা যায় না — ওই মাসের Payroll আবার চালান", act_del_t: "কার্যক্রম থেকে মুছুন", act_del_q: "{n}টি কার্যক্রম রেকর্ড স্থায়ীভাবে মুছবেন? কর্মীরাও আর দেখবে না। ফেরত আনা যাবে না।", act_del_shown: "দেখানো সব মুছুন ({n})", nav_bank: "ব্যাংক তথ্য", bank_hint: "সব কর্মীর ব্যাংক একাউন্ট। কর্মীরা অ্যাপ থেকে নিজের তথ্য যোগ বা বদলাতে পারে — সাথে সাথে এখানে আর কার্যক্রমে দেখাবে।", bank_t: "ব্যাংক একাউন্ট", bank_name: "ব্যাংক", iban: "IBAN", acc_name: "একাউন্টধারীর নাম", bank_csv: "ডাউনলোড (Excel/CSV)", bank_with: "IBAN আছে", bank_missing: "IBAN নেই", bank_missing_s: "জন কর্মী", bank_search: "নাম, ইকামা বা IBAN খুঁজুন…", bank_upd: "কর্মী আপডেট করেছে", bank_note: "IBAN সৌদি হতে হবে: SA + ২২টি সংখ্যা। কর্মীরা বদলালে কার্যক্রমে তাদের নামসহ দেখাবে।", iban_bad: "IBAN হবে SA এবং তারপর ২২টি সংখ্যা", copied: "কপি হয়েছে", copy: "কপি", by_driver: "কর্মী", po_t: "Per Order: প্রতি অর্ডারে নিজের রেটে বেতন", po_rate: "প্রতি অর্ডারের রেট (রিয়াল)", po_rate_help: "শুধু Per Order-এর জন্য। প্রতিটি কর্মীর আলাদা রেট দেওয়া যায়।", po_need: "প্রতি অর্ডারের রেট দিন", po_help: "কর্মী পাবে অর্ডার × এই রেট। কোনো টার্গেট ধাপ বা পেট্রোল ভাতা নেই — পেট্রোলের খরচ কোম্পানির।", po_off: "Per Order বন্ধ করুন ({p}-এ ফিরে যাবে)", nav_activity: "কার্যক্রম", act_hint: "প্রতিটি পরিবর্তন: কোন এডমিন, কখন, কী বদলেছে আর কেন। কর্মীরা নিজের বিষয়ের পরিবর্তন অ্যাপে দেখে আর প্রশ্ন করতে পারে।", act_reload: "রিফ্রেশ", act_search: "কর্মী খুঁজুন…", act_all_admins: "সব এডমিন", act_all_kinds: "সব ধরন",
   act_open_q: "উত্তর বাকি প্রশ্ন", act_admin: "এডমিন", act_what: "কী", act_changes: "পরিবর্তন", act_reason: "কারণ / প্রশ্ন", act_add_reason: "কারণ লিখুন", act_answer: "উত্তর দিন", act_none: "এখনো কোনো পরিবর্তন নেই",
   act_create: "যোগ", act_update: "পরিবর্তন", act_delete: "মুছে ফেলা", act_deleted: "মুছে ফেলা হয়েছে", act_emp: "কর্মীর তথ্য", act_reason_help: "কেন বদলানো হলো লিখুন। কর্মী অ্যাপে এটা দেখবে।",
   act_note: "পরিবর্তনের হিসাব ১২ মাস থাকে। এডমিন কিছু সংরক্ষণ করলে নতুন সারি যোগ হয়।",
@@ -2442,13 +2534,13 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   tgt_rank_rule: "৩৮০–৪৯৯ × ৩.৫ রিয়াল · ৫০০+ = ৩,০০০ / ২,৫০০ / ২,০০০ · ৬০০+ = ৪,২৫০ / ৩,৮০০ / ৩,০০০ (A / B / C), সাথে প্রতি অতিরিক্ত অর্ডারে রেটিং মূল্য।", tgt_unrank_rule: "৩৮০–৪৯৯ অর্ডার × ৪ রিয়াল · ৫০০+ = ২,৫০০ · ৬০০+ = ৩,৫০০, সাথে ৫০০ বা ৬০০-এর বেশি প্রতি অর্ডারে A/B/C মূল্য। জ্বালানি ভাতা আলাদা।",
   tgt_note: "এখন পর্যন্ত বেতন এই মাসের মোট অর্ডার থেকে হিসাব, জরিমানা, অগ্রিম ও পেট্রোল বাদে। বেতন হিসাবেও এই একই নিয়ম ব্যবহার হয়।",
   perf_hint: "প্রত্যেক কর্মীর দৈনিক Keeta পারফরমেন্স। কর্মীরা অ্যাপে গতকাল আর আজ পাশাপাশি দেখবে।", perf_yest: "গতকাল", perf_today: "আজ", perf_change: "অর্ডারের পরিবর্তন",
-  perf_orders: "অর্ডার", perf_hours: "ঘণ্টা", perf_accept: "গ্রহণ %", perf_note: "প্রতিদিনের রিপোর্ট ১২ মাস রাখা থাকে। অ্যাপে সবসময় সর্বশেষ দুই দিনের রিপোর্ট দেখায়, আর ক্যালেন্ডার থেকে কর্মী আগের যেকোনো দিন দেখতে পারে।", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
+  perf_orders: "অর্ডার", perf_hours: "ঘণ্টা", perf_accept: "গ্রহণ %", perf_note: "প্রতিদিনের রিপোর্ট ১২ মাস রাখা থাকে। অ্যাপে সবসময় সর্বশেষ দুই দিনের রিপোর্ট দেখায়, আর ক্যালেন্ডার থেকে কর্মী আগের যেকোনো দিন দেখতে পারে।", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
 Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTICS · إدارة الموظفين", au_email: "البريد الإلكتروني", au_pass: "كلمة المرور",
   au_signin: "دخول", au_signup: "إنشاء حساب مشرف", au_forgot: "نسيت كلمة المرور؟", au_have: "لديك حساب؟ سجّل الدخول", au_new: "أول مرة؟ أنشئ حساب المشرف",
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "أعطِ كل شخص بريداً وصلاحية وكلمة مرور، ويمكنه الدخول بها فوراً.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", perf_report_of: "تقرير يوم", perf_vs: "مقارنة بـ", perf_pick: "اليوم:", pf_latest_s: "الأحدث", perf_monthend: "نهاية الشهر", perf_day_help: "اليوم الذي تخصه الأرقام (عادة أمس). يظهر إجمالي الطلبات في التطبيق «حتى» هذا اليوم.", nav_bin: "المحذوفات", du_cut: "خصم", du_cut_t: "خصم من المستحقات", du_cut_help: "اخصم من مستحقات السائق في أي وقت. من الراتب: يُخصم في قسيمة شهر الراتب. نقداً: السائق سدد بنفسه.", du_cut_which: "من أي مستحق", du_cut_auto: "تلقائي — الأقدم أولاً", du_cut_how: "الطريقة", du_cut_salary: "خصم من الراتب (قسيمة هذا الشهر)", du_cut_cash: "سداد نقدي / تحويل", du_cut_salary_s: "من الراتب", du_cut_note_ph: "مثال: خُصم في المكتب يوم 30 أكتوبر", du_cut_much: "أكثر من المتبقي ({a})", du_cut_done: "تم خصم {a} ريال", bin_hint2: "كل ما يُحذف يبقى هنا مع من حذفه ومتى. يُزال تلقائياً بعد 12 شهراً. الحذف النهائي للمسؤول الأعلى فقط.", bin_records: "المستحقات والرواتب المحذوفة", bin_emps: "الموظفون المحذوفون", bin_by: "حذفه", bin_slips: "قسائم", bin_purge_all: "إفراغ المحذوفات", bin_purge_all_q: "حذف {n} سجل نهائياً؟ لا يمكن التراجع.", bin_purge_one_q: "حذف هذا السجل نهائياً؟ لا يمكن التراجع.", bin_super_only: "للمسؤول الأعلى فقط", bin_exists: "موجود مسبقاً — لم تتم الاستعادة", bin_no_restore: "لا يمكن استعادة الرواتب — أعد تشغيل رواتب ذلك الشهر", act_del_t: "حذف من السجل", act_del_q: "حذف {n} سجل نهائياً؟ لن يراها السائقون. لا يمكن التراجع.", act_del_shown: "حذف المعروض ({n})", nav_activity: "سجل التغييرات", act_hint: "كل تغيير: أي مسؤول ومتى وماذا ولماذا. يرى السائقون التغييرات الخاصة بهم ويمكنهم السؤال.", act_reload: "تحديث", act_search: "ابحث عن موظف…", act_all_admins: "كل المسؤولين", act_all_kinds: "كل الأنواع",
+  drv_web: "تطبيق السائق (ويب)", perf_report_of: "تقرير يوم", perf_vs: "مقارنة بـ", perf_pick: "اليوم:", pf_latest_s: "الأحدث", perf_monthend: "نهاية الشهر", perf_day_help: "اليوم الذي تخصه الأرقام (عادة أمس). يظهر إجمالي الطلبات في التطبيق «حتى» هذا اليوم.", nav_bin: "المحذوفات", du_cut: "خصم", du_cut_t: "خصم من المستحقات", du_cut_help: "اخصم من مستحقات السائق في أي وقت. من الراتب: يُخصم في قسيمة شهر الراتب. نقداً: السائق سدد بنفسه.", du_cut_which: "من أي مستحق", du_cut_auto: "تلقائي — الأقدم أولاً", du_cut_how: "الطريقة", du_cut_salary: "خصم من الراتب (قسيمة هذا الشهر)", du_cut_cash: "سداد نقدي / تحويل", du_cut_salary_s: "من الراتب", du_cut_note_ph: "مثال: خُصم في المكتب يوم 30 أكتوبر", du_cut_much: "أكثر من المتبقي ({a})", du_cut_done: "تم خصم {a} ريال", bin_hint2: "كل ما يُحذف يبقى هنا مع من حذفه ومتى. يُزال تلقائياً بعد 12 شهراً. الحذف النهائي للمسؤول الأعلى فقط.", bin_records: "المستحقات والرواتب المحذوفة", bin_emps: "الموظفون المحذوفون", bin_by: "حذفه", bin_slips: "قسائم", bin_purge_all: "إفراغ المحذوفات", bin_purge_all_q: "حذف {n} سجل نهائياً؟ لا يمكن التراجع.", bin_purge_one_q: "حذف هذا السجل نهائياً؟ لا يمكن التراجع.", bin_super_only: "للمسؤول الأعلى فقط", bin_exists: "موجود مسبقاً — لم تتم الاستعادة", bin_no_restore: "لا يمكن استعادة الرواتب — أعد تشغيل رواتب ذلك الشهر", act_del_t: "حذف من السجل", act_del_q: "حذف {n} سجل نهائياً؟ لن يراها السائقون. لا يمكن التراجع.", act_del_shown: "حذف المعروض ({n})", nav_bank: "البيانات البنكية", bank_hint: "الحساب البنكي لكل سائق. يمكن للسائق إضافة أو تعديل بياناته من التطبيق — تظهر هنا فوراً وفي سجل التغييرات.", bank_t: "الحساب البنكي", bank_name: "البنك", iban: "الآيبان", acc_name: "صاحب الحساب", bank_csv: "تنزيل (Excel/CSV)", bank_with: "لديه آيبان", bank_missing: "بدون آيبان", bank_missing_s: "سائق", bank_search: "ابحث بالاسم أو الإقامة أو الآيبان…", bank_upd: "حدّثه السائق", bank_note: "الآيبان سعودي: SA + 22 رقماً. تعديلات السائقين تظهر في السجل بأسمائهم.", iban_bad: "الآيبان يبدأ بـ SA ثم 22 رقماً", copied: "تم النسخ", copy: "نسخ", by_driver: "سائق", po_t: "Per Order: أجر لكل طلب بسعره الخاص", po_rate: "سعر الطلب (ريال)", po_rate_help: "لـ Per Order فقط. لكل سائق سعره.", po_need: "حدد سعر الطلب", po_help: "يحصل السائق على الطلبات × هذا السعر. بلا سلم أهداف وبلا بدل وقود — الوقود على الشركة.", po_off: "إيقاف Per Order (العودة إلى {p})", nav_activity: "سجل التغييرات", act_hint: "كل تغيير: أي مسؤول ومتى وماذا ولماذا. يرى السائقون التغييرات الخاصة بهم ويمكنهم السؤال.", act_reload: "تحديث", act_search: "ابحث عن موظف…", act_all_admins: "كل المسؤولين", act_all_kinds: "كل الأنواع",
   act_open_q: "أسئلة بلا رد", act_admin: "المسؤول", act_what: "ماذا", act_changes: "التغييرات", act_reason: "السبب / الأسئلة", act_add_reason: "إضافة سبب", act_answer: "رد", act_none: "لا توجد تغييرات بعد",
   act_create: "إضافة", act_update: "تعديل", act_delete: "حذف", act_deleted: "محذوف", act_emp: "بيانات الموظف", act_reason_help: "اكتب سبب التغيير. يراه السائق في التطبيق.",
   act_note: "تُحفظ التغييرات 12 شهراً.",
@@ -2485,7 +2577,7 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   tgt_rank_rule: "380–499 × 3.5 ريال · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C)، مع سعر التقييم لكل طلب إضافي.", tgt_unrank_rule: "380–499 طلب × 4 ريال · 500+ = 2,500 · 600+ = 3,500، مع سعر A/B/C لكل طلب فوق 500 أو 600. بدل الوقود منفصل.",
   tgt_note: "الراتب حتى الآن من إجمالي طلبات الشهر بدون المخالفات والسلف والوقود. الرواتب تستخدم نفس الإعدادات.",
   perf_hint: "الأداء اليومي لكل سائق. يرى السائق أمس واليوم جنباً إلى جنب في تطبيقه.", perf_yest: "أمس", perf_today: "اليوم", perf_change: "تغير الطلبات",
-  perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ كل تقرير يومي 12 شهراً. يعرض التطبيق دائماً آخر يومين، ويمكن للسائق فتح أي يوم سابق من التقويم.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
+  perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ كل تقرير يومي 12 شهراً. يعرض التطبيق دائماً آخر يومين، ويمكن للسائق فتح أي يوم سابق من التقويم.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
 
 const auth = { mode: "signin", msg: "", err: "", busy: false, session: null, role: null, admins: [] };
 function renderAuth(){
