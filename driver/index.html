@@ -59,6 +59,28 @@ button{cursor:pointer}
 .pad button:active{background:color-mix(in srgb,var(--gold) 35%,var(--sunk))}
 .pad .ghost{background:none;font-size:15px;font-family:var(--f-body);font-weight:500;color:var(--muted)}
 .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+/* compact login: everything fits on one phone screen without scrolling */
+.login{height:100dvh;min-height:0;overflow:hidden}
+.login .brand{flex-direction:row;align-items:center;gap:14px;padding:calc(env(safe-area-inset-top,0px) + 16px) 18px 20px;justify-content:flex-start}
+.login .logo-badge{width:clamp(62px,9.5vh,84px);height:clamp(62px,9.5vh,84px);border-radius:22px;flex:none;box-shadow:0 10px 24px rgba(0,0,0,.35)}
+.login .brand-t{flex:1;min-width:0}
+.login .brand h1{font-size:clamp(19px,3vh,24px);letter-spacing:.06em;white-space:nowrap}
+.login .brand p{font-size:12.5px;margin-top:4px}
+.login .langs{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);inset-inline-end:12px;transform:scale(.86);transform-origin:top right}
+.login .brand{padding-top:calc(env(safe-area-inset-top,0px) + 34px)}
+.login .road{height:4px}
+.login .sheet{gap:clamp(8px,2vh,18px);padding-top:clamp(14px,2.4vh,22px);border-radius:24px 24px 0 0;overflow:hidden}
+.login .sheet h2{font-size:clamp(19px,2.8vh,23px)}
+.login .field{gap:4px}
+.login .field input{padding:clamp(8px,1.4vh,13px) 14px;font-size:clamp(18px,2.6vh,21px);border-radius:12px}
+.login .dots{padding:2px 0}
+.login .dots i{width:14px;height:14px}
+.login .pad{gap:clamp(6px,1vh,10px)}
+.login .pad button{height:clamp(44px,7.4vh,62px);font-size:clamp(21px,3.1vh,26px);border-radius:14px}
+.login .sheet{justify-content:center}
+.login .sheet>.row{padding-top:2px}
+.login .brand{min-height:0}
+.login .row{font-size:13.5px}
 .check{display:flex;gap:8px;align-items:center;font-size:14px}
 .check input{width:20px;height:20px;accent-color:var(--cab-2)}
 .link{background:none;border:0;color:var(--info);font-weight:600;font-size:14px;padding:6px 0}
@@ -323,10 +345,9 @@ function toast(m){ const d = document.createElement("div"); d.className = "toast
 /* ── Login ── */
 function vLogin(){
   return `<div class="login">
-    <div class="login-top"><div class="langs">${langBtns()}</div></div>
-    <div class="brand">${SHIELD}<h1>ASB LOGISTICS</h1><p>${t("brand_sub")}</p><div class="road"></div></div>
+    <div class="brand">${SHIELD}<div class="brand-t"><h1>ASB LOGISTICS</h1><p>${t("brand_sub")}</p></div><div class="langs">${langBtns()}</div><div class="road"></div></div>
     <form class="sheet" id="loginForm" novalidate>
-      <div><h2>${t("signin")}</h2><div class="muted" style="font-size:14px">${t("signin_sub")}</div></div>
+      <div><h2>${t("signin")}</h2><div class="muted" style="font-size:13px">${t("signin_sub")}</div></div>
       <label class="field"><span>${t("iqama")}</span><input id="rid" inputmode="numeric" autocomplete="username" maxlength="10" value="${esc(S.rid)}" placeholder="2XXXXXXXXX"></label>
       <div class="field"><span>${t("pin")}</span><div class="dots" id="dots">${[0,1,2,3].map(i => `<i class="${i < S.pin.length ? "on" : ""}"></i>`).join("")}</div></div>
       ${S.err ? `<div class="msg err">${esc(S.err)}</div>` : ""}${S.info ? `<div class="msg ok">${esc(S.info)}</div>` : ""}
