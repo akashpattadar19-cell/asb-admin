@@ -668,16 +668,17 @@ function vUnrank(m){
 }
 /* Top 10 by orders this month, with the driver's own position — shown on the Target page for everyone */
 function tgLeaderboard(m){
+  // order counts of other drivers are not sent by the server (privacy); we rank by the server's position
   const pool = (m.targets || []).filter(r => !S.tq || (S.tq === "R" ? r.pt !== "PER_ORDER" : r.pt === "PER_ORDER"))
-    .sort((a, b) => (b.o - a.o) || String(a.n).localeCompare(String(b.n)));
+    .sort((a, b) => ((a.rank || 1e9) - (b.rank || 1e9)) || String(a.n).localeCompare(String(b.n)));
   pool.forEach((r, i) => r.pos = i + 1);
   const meRow = pool.find(r => r.me), mePos = meRow ? meRow.pos : 0;
   const top10 = pool.slice(0, 10), meOut = mePos > 10 ? meRow : null;
-  const trow = r => { const pc = r.t ? Math.min(100, r.o / r.t * 100) : 0; return `<div class="li ${r.me ? "me" : ""}" style="align-items:center;gap:10px">
+  const trow = r => { const pc = r.me && r.t ? Math.min(100, r.o / r.t * 100) : 0; return `<div class="li ${r.me ? "me" : ""}" style="align-items:center;gap:10px">
       <span class="tg-pos ${r.pos <= 3 ? "tg-top" : ""}">${r.pos}</span>
       <div style="display:flex;gap:10px;align-items:center;min-width:0;flex:1">${ava(r.p, r.n, 36)}<div style="min-width:0;flex:1"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.n)}${r.me ? ` · ${t("you")}` : ""}</b>
-        <div class="tbar2" style="margin-top:6px"><span style="width:${pc}%;${r.o >= r.t ? "background:var(--good)" : ""}"></span></div></div></div>
-      <div class="v" style="min-width:64px"><div class="num" style="font-size:17px">${fmt0(r.o)}</div><div class="muted" style="font-size:11.5px">${t("tg_done_s")} / ${fmt0(r.t)}</div></div></div>`; };
+        ${r.me ? `<div class="tbar2" style="margin-top:6px"><span style="width:${pc}%;${r.o >= r.t ? "background:var(--good)" : ""}"></span></div>` : ""}</div></div>
+      ${r.me ? `<div class="v" style="min-width:64px"><div class="num" style="font-size:17px">${fmt0(r.o)}</div><div class="muted" style="font-size:11.5px">${t("tg_done_s")} / ${fmt0(r.t)}</div></div>` : ""}</div>`; };
   return `<section class="card"><h3>${t("tg_top10")}</h3>
     ${mePos ? `<div class="tg-mypos"><span>📍 ${t("tg_your_pos")}</span><b>#${mePos} <small>/ ${pool.length}</small></b></div>` : ""}
     <div class="seg" style="margin:4px 0 10px">${[["", t("tg_f_all")], ["R", t("rk_r")], ["U", t("rk_u")]].map(([k, l]) => `<button data-tq="${k}" aria-pressed="${(S.tq || "") === k}">${l}</button>`).join("")}</div>
@@ -784,8 +785,8 @@ function board(list){
   const order = pod.length === 3 ? [pod[1], pod[0], pod[2]] : pod.length === 2 ? [pod[1], pod[0]] : pod;
   const col = r => { const pos = top.indexOf(r); return `<div class="pod pod${pos + 1} ${r.me ? "pod-me" : ""}">
       <div class="pod-ph">${ava(r.p, r.n, pos === 0 ? 76 : 60)}<span class="medal m${Math.min(r.r, 3)}">${r.r}</span></div>
-      <b>${esc(r.n)}${r.me ? ` · ${t("you")}` : ""}</b><span class="num">${fmt0(r.o)}</span><div class="step"></div></div>`; };
-  const row = r => `<div class="li ${r.me ? "me" : ""}"><div style="display:flex;gap:12px;align-items:center;min-width:0"><span class="medal">${r.r}</span>${ava(r.p, r.n, 38)}<b>${esc(r.n)}</b>${r.me ? `<span class="pill p-info">${t("you")}</span>` : ""}</div><span class="num" style="font-size:18px">${fmt0(r.o)}</span></div>`;
+      <b>${esc(r.n)}${r.me ? ` · ${t("you")}` : ""}</b>${r.o != null ? `<span class="num">${fmt0(r.o)}</span>` : `<span class="num" style="opacity:.3">—</span>`}<div class="step"></div></div>`; };
+  const row = r => `<div class="li ${r.me ? "me" : ""}"><div style="display:flex;gap:12px;align-items:center;min-width:0"><span class="medal">${r.r}</span>${ava(r.p, r.n, 38)}<b>${esc(r.n)}</b>${r.me ? `<span class="pill p-info">${t("you")}</span>` : ""}</div>${r.o != null ? `<span class="num" style="font-size:18px">${fmt0(r.o)}</span>` : ""}</div>`;
   return `<div class="podium">${order.map(col).join("")}</div>
     ${rest.length ? `<div class="list">${rest.map(row).join("")}</div>` : ""}
     ${mine ? `<div class="gap">···</div><div class="list">${row(mine)}</div>` : ""}`;
