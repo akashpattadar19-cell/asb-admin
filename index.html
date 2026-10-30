@@ -138,7 +138,7 @@ table.dues tr.due-items>td{padding:0 0 12px 40px;background:var(--sunk,rgba(0,0,
 table.inner{width:100%;background:var(--card,#fff);border:1px solid var(--line);border-radius:10px}
 table.inner th{font-size:11px}
 .danger-t{color:var(--bad)}
-.hrow{display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center;margin-bottom:8px}
+.hrow{display:grid;grid-template-columns:1.1fr .9fr .9fr auto auto;gap:8px;align-items:center;margin-bottom:8px}
 .chk{display:inline-flex;gap:6px;align-items:center;font-size:13px;white-space:nowrap}
 .chk-f .chk{margin-top:10px}
 .rk-sw{display:inline-flex;align-items:center;gap:8px;border:0;background:none;padding:2px 0;cursor:pointer;font:inherit;font-size:13px;font-weight:600;color:var(--muted)}
@@ -490,7 +490,7 @@ function vDashboard(){
   const fOut = outstandingOf(state.fines), aOut = outstandingOf(state.adv);
   const recent = Object.entries(state.fines).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0)).slice(0,6);
   return `
-  <div class="head"><div><h1>${t("today")} · ${todayKey()}</h1><p>${t("riyadh")}</p></div><div class="tools"><a class="btn gold" href="${DRIVER_WEB}" target="_blank" rel="noopener">${t("drv_web")} ↗</a></div></div>
+  <div class="head"><div><h1>${t("today")} · ${todayKey()}</h1><p>${t("riyadh")}</p></div><div class="tools"><button class="btn" data-act="notice-new" data-needs-write>📣 ${t("nt_send")}</button><a class="btn gold" href="${DRIVER_WEB}" target="_blank" rel="noopener">${t("drv_web")} ↗</a></div></div>
   <div class="kpis">
     <div class="kpi"><span>${t("activeEmp")}</span><b>${active}</b><small>${pend} ${t("pending")}</small></div>
     <div class="kpi"><span>${t("totalOrders")}</span><b>${fmt0(orders)}</b><small>${allRows.length} ${t("reported")}</small></div>
@@ -566,7 +566,7 @@ function vEmployees(){
       </div></td></tr>`;
   return `
   <div class="head"><div><h1>${t("nav_employees")}</h1><p>${all.length} · ${act.length} ${t("ACTIVE")}</p></div>
-    <div class="tools"><button class="btn" data-act="emp-new" data-needs-write>+ ${t("addEmp")}</button></div></div>
+    <div class="tools"><button class="btn ghost" data-act="notice-new" data-needs-write>📣 ${t("nt_send")}</button><button class="btn" data-act="emp-new" data-needs-write>+ ${t("addEmp")}</button></div></div>
   ${(()=>{const req=all.filter(([id,e])=>(state.pinreq[id]?.at||0)>(e.pinResetAt||0));return req.length?`<div class="note warn"><b>${t("pin_req")}:</b> ${req.map(([id,e])=>`<button class="btn ghost sm" data-act="emp-pin" data-id="${id}" data-needs-write style="margin:4px 4px 0 0">${esc(e.fullName)} · ${t("pin_change")}</button>`).join("")}</div>`:""})()}
   <div class="chips">
     ${chip(t("all"), all.length, "qCity", "")}
@@ -689,6 +689,12 @@ document.addEventListener("change", e => {
 
 /* ───────── Dues overview: fines, advances and other money a driver owes, in one place ───────── */
 const DUE_TYPES = ["ADVANCE", ...CATS];
+/* notices go to the driver app (and the phone's notification bar) — kind decides the wording in the driver's language */
+async function sendNotice(kind, to, extra = {}){
+  try { await db.doc("notices/n" + uid()).set({ kind, to: to && to.length ? [...new Set(to)] : null, at: Date.now(), ...extra }); } catch (e) { console.warn(e); }
+}
+const dmy = d => d ? String(d).slice(0, 10).split("-").reverse().join("/") : "";
+const isPayrollEntry = z => z.src === "payroll" || (!z.src && !z.date && !z.cash);
 /* every due as one list; advances live in "advances", everything else in "fines" */
 function allDues(){
   return [
@@ -744,13 +750,13 @@ function vDues(){
         <td class="r"><button class="btn ghost sm" data-act="due-new" data-emp="${g.eid}" data-needs-write>+ ${t("du_add")}</button></td></tr>
       ${isOpen ? `<tr class="due-items"><td colspan="7"><table class="inner"><thead><tr><th>${t("date")}</th><th>${t("du_type")}</th><th>${t("reason")}</th><th class="r">${t("amount")}</th><th class="r">${t("perMonth")}</th><th class="r">${t("remaining")}</th><th>${t("history")}</th><th></th></tr></thead><tbody>
         ${g.list.map(x => `<tr>
-          <td class="nowrap">${esc(x.date)}</td>
+          <td class="nowrap">${x.date ? esc(dmy(x.date)) : `<span class="pill p-warn nodot">${t("du_nodate")}</span>`}</td>
           <td><span class="pill ${x.type === "ADVANCE" ? "p-warn" : "p-info"} nodot">${t(x.type)}</span></td>
           <td style="max-width:240px">${esc(x.reason) || `<span class="sub">${t("none")}</span>`}</td>
           <td class="r nowrap">${fmt(x.amount)}</td>
-          <td class="r nowrap">${fmt(x.monthly)}<div class="sub">${t("du_from")} ${esc(x.startMonth || "")}</div></td>
+          <td class="r nowrap">${+x.monthly ? `${fmt(x.monthly)}<div class="sub">${t("du_from")} ${esc(x.startMonth || "")}</div>` : `<span class="sub" title="${t("du_manual_t")}">${t("du_manual")}</span>`}</td>
           <td class="r nowrap">${stPill(x)}</td>
-          <td class="sub">${(x.history ?? []).map(h => `${esc(h.month)}: −${fmt(h.amount)}${h.cash ? ` · ${t("du_cash")}` : ""}`).join("<br>") || t("none")}</td>
+          <td class="sub">${(x.history ?? []).map(h => `${esc(h.date ? dmy(h.date) : h.month)}: −${fmt(h.amount)}${h.cash ? ` · ${t("du_cash")}` : ""}`).join("<br>") || t("none")}</td>
           <td><div class="row-actions">
             <button class="btn ghost sm" data-act="due-edit" data-id="${x.coll}/${x.id}" data-needs-write>${t("edit")}</button>
             ${dueStatus(x) === "open" ? `<button class="btn ghost sm" data-act="due-pay" data-id="${x.coll}/${x.id}" data-needs-write>${t("du_pay")}</button>` : ""}
@@ -772,12 +778,12 @@ function dueDialog(path, empId){
   const x = path ? (coll === "fines" ? state.fines : state.adv)[did] : null;
   const type = x ? (coll === "advances" ? "ADVANCE" : (x.category || "OTHER")) : "ADVANCE";
   const hist = (x?.history ?? []).map(h => ({ ...h }));
-  const hRow = (h, i) => `<div class="hrow" data-i="${i}"><input class="input" type="month" name="hm${i}" value="${esc(h.month || "")}"><input class="input num" type="number" step="0.01" min="0" name="ha${i}" value="${h.amount ?? ""}" placeholder="${t("amount")}">
+  const hRow = (h, i) => `<div class="hrow" data-i="${i}"><input type="hidden" name="hs${i}" value="${esc(h.src || "")}"><input class="input" type="date" name="hd${i}" value="${esc(h.date || "")}" title="${t("date")}"><input class="input" type="month" name="hm${i}" value="${esc(h.month || "")}" title="${t("month")}"><input class="input num" type="number" step="0.01" min="0" name="ha${i}" value="${h.amount ?? ""}" placeholder="${t("amount")}">
     <label class="chk"><input type="checkbox" name="hc${i}" ${h.cash ? "checked" : ""}> ${t("du_cash")}</label><button type="button" class="btn ghost sm" data-hdel="${i}">×</button></div>`;
   openDialog({ title: x ? t("du_edit") : t("du_new"), submit: t("save"),
     body: `<label class="f full">${t("employee")} *<select class="input" name="employeeId" required>${empOptions(x?.employeeId ?? empId ?? "")}</select></label>
       <label class="f">${t("du_type")}<select class="input" name="type">${DUE_TYPES.map(c => `<option value="${c}" ${type === c ? "selected" : ""}>${t(c)}</option>`).join("")}</select></label>
-      <label class="f">${t("date")} *<input class="input" name="date" type="date" value="${esc(x?.date ?? todayKey())}" required></label>
+      <label class="f">${t("date")}<input class="input" name="date" type="date" value="${esc(x ? (x.date || "") : todayKey())}"></label>
       <label class="f">${t("amount")} *<input class="input" name="amount" type="number" min="0.01" step="0.01" value="${x?.amount ?? ""}" required></label>
       <label class="f">${t("perMonth")}<input class="input" name="monthly" type="number" min="0" step="0.01" value="${x?.monthly ?? ""}" placeholder="${t("du_monthly_ph")}"></label>
       <label class="f">${t("startMonth")}<input class="input" name="startMonth" type="month" value="${esc(x?.startMonth ?? monthKey())}"></label>
@@ -787,10 +793,10 @@ function dueDialog(path, empId){
       <div class="full"><button type="button" class="btn ghost sm" id="hAdd">+ ${t("du_hist_add")}</button></div>` : ""}`,
     onSubmit: async fd => {
       const amount = r2(fd.amount);
-      if (!fd.employeeId || !(amount > 0) || !fd.date) fail(t("required"));
+      if (!fd.employeeId || !(amount > 0)) fail(t("required"));
       const history = [];
-      for (const k of Object.keys(fd)) if (/^ha\d+$/.test(k)) { const i = k.slice(2), amt = r2(fd[k]); if (fd["hm" + i] && amt > 0) history.push({ month: fd["hm" + i], amount: amt, ...(fd["hc" + i] ? { cash: true } : {}) }); }
-      history.sort((a, b) => a.month.localeCompare(b.month));
+      for (const k of Object.keys(fd)) if (/^ha\d+$/.test(k)) { const i = k.slice(2), amt = r2(fd[k]); const hd = fd["hd" + i] || "", hm = hd ? hd.slice(0, 7) : fd["hm" + i]; if (hm && amt > 0) history.push({ month: hm, ...(hd ? { date: hd } : {}), amount: amt, ...(fd["hc" + i] ? { cash: true } : {}), ...(fd["hs" + i] ? { src: fd["hs" + i] } : {}) }); }
+      history.sort((a, b) => (a.date || a.month).localeCompare(b.date || b.month));
       const inst = Math.min(36, Math.max(1, Math.round(+fd.inst || 1)));
       const monthly = fd.monthly !== "" && fd.monthly != null ? r2(fd.monthly) : r2(Math.ceil(amount / inst * 100) / 100);
       const rec = { employeeId: fd.employeeId, amount, date: fd.date, reason: (fd.reason || "").trim(), monthly, startMonth: fd.startMonth || monthKey(),
@@ -805,6 +811,7 @@ function dueDialog(path, empId){
         if (x) await db.doc(path).delete();
       }
       state.dOpen = { ...(state.dOpen ?? {}), [fd.employeeId]: true };
+      await sendNotice(x ? "due_edit" : "due_new", [fd.employeeId], { amount });
       toast(t("du_saved"));
     }});
   let n = hist.length;
@@ -1133,6 +1140,19 @@ document.addEventListener("click", async e => {
     }
 
     if (act === "emp-chip") { state[b.dataset.k] = state[b.dataset.k] === b.dataset.v && b.dataset.v !== "" ? "" : b.dataset.v; render(); return; }
+    if (act === "notice-new") {
+      openDialog({ title: "📣 " + t("nt_send"), submit: t("nt_send_btn"),
+        body: `<p class="full sub" style="margin:0">${t("nt_help")}</p>
+          <label class="f full">${t("nt_to")}<select class="input" name="to"><option value="">${t("nt_all")} (${activeEmps().length})</option>${activeEmps().sort((a, b) => String(a[1].fullName).localeCompare(String(b[1].fullName))).map(([i, e]) => `<option value="${i}">${esc(e.fullName)}</option>`).join("")}</select></label>
+          <label class="f full">${t("nt_title")}<input class="input" name="title" maxlength="80" placeholder="${t("nt_title_ph")}" required></label>
+          <label class="f full">${t("nt_body")}<textarea class="input" name="body" rows="3" maxlength="500"></textarea></label>`,
+        onSubmit: async fd => {
+          if (!fd.title.trim()) fail(t("required"));
+          await sendNotice("msg", fd.to ? [fd.to] : null, { title: fd.title.trim(), body: (fd.body || "").trim() });
+          toast(t("nt_sent"));
+        }});
+      return;
+    }
     if (act === "emp-del") {
       const e2 = state.emp[id], dues = allDues().filter(x => x.employeeId === id);
       openDialog({ title: t("emp_del_t"), danger: true, submit: t("delete"),
@@ -1196,6 +1216,8 @@ document.addEventListener("click", async e => {
             if (r.id && !state.emp[eid].jahezId) await db.doc("employees/" + eid).update({ jahezId: r.id });
           }
           if (Object.keys(rows).length) await db.doc("perf/" + day).set({ date: day, rows, updatedAt: Date.now() });
+          const touched = rowsIn.map(r => (r.id && byJ[r.id]) || byN[normName(r.name)]).filter(Boolean);
+          if (touched.length) await sendNotice("perf", touched, { day });
           if (nVol) await db.doc("totals/" + volMonth).set({ month: volMonth, rows: tot, updatedAt: Date.now() });
           await cleanupPerf();
           toast(`${t("imported")}: ${rowsIn.length - missing.length}${nVol ? ` · ${t("totalOrders")}: ${nVol}` : ""} · ${t("perf_unmatched")}: ${missing.length}`);
@@ -1233,6 +1255,7 @@ document.addEventListener("click", async e => {
       if (!n) { toast(t("nothing_changed")); return; }
       b.disabled = true;
       await db.doc("totals/" + m).set({ month: m, rows, updatedAt: Date.now() });
+      await sendNotice("orders", Object.keys(state.opsDraft), { month: m });
       state.opsDraft = {}; toast(t("daySaved")); render();
     }
 
@@ -1255,7 +1278,7 @@ document.addEventListener("click", async e => {
             if (!eid || o === undefined || o === "" || isNaN(+o)) { bad++; continue; }
             rows[eid] = { o: Math.max(0, Math.round(+o)), f: r2(Math.max(0, +f || 0)), at: Date.now() }; ok++;
           }
-          if (ok) await db.doc("totals/" + m).set({ month: m, rows, updatedAt: Date.now() });
+          if (ok) { await db.doc("totals/" + m).set({ month: m, rows, updatedAt: Date.now() }); await sendNotice("orders", null, { month: m }); }
           toast(`${t("imported")}: ${ok} · ${t("skipped")}: ${bad}`);
         }});
     }
@@ -1268,11 +1291,12 @@ document.addEventListener("click", async e => {
       openDialog({ title: `${t("du_pay")} · ${esc(empName(x.employeeId))}`, submit: t("save"),
         body: `<p class="full sub">${t("du_pay_help")}</p>
           <label class="f">${t("amount")} *<input class="input" name="amount" type="number" min="0.01" step="0.01" max="${x.remaining}" value="${x.remaining}" required></label>
-          <label class="f">${t("month")}<input class="input" name="month" type="month" value="${monthKey()}"></label>`,
+          <label class="f">${t("date")}<input class="input" name="date" type="date" value="${todayKey()}"></label>`,
         onSubmit: async fd => {
           const amt = r2(fd.amount); if (!(amt > 0)) fail(t("required"));
-          const h = [...(x.history ?? []), { month: fd.month || monthKey(), amount: Math.min(amt, +x.remaining || 0), cash: true }];
+          const h = [...(x.history ?? []), { month: (fd.date || todayKey()).slice(0, 7), date: fd.date || todayKey(), amount: Math.min(amt, +x.remaining || 0), cash: true }];
           await db.doc(id).update({ ...withHistory(+x.amount || 0, h), updatedAt: Date.now() });
+          await sendNotice("due_paid", [x.employeeId], { amount: amt });
           toast(t("du_saved"));
         }});
       return;
@@ -1285,8 +1309,8 @@ document.addEventListener("click", async e => {
       const m = state.payMonth;
       openDialog({ title: t("pay_reopen"), body: `<p class="full">${t("pay_reopen_q", { m })}</p>`, submit: t("pay_reopen"), onSubmit: async () => {
         for (const [coll, map] of [["fines", state.fines], ["advances", state.adv]]) for (const [did, x] of Object.entries(map)) {
-          const h = x.history ?? []; if (!h.some(z => z.month === m && !z.cash)) continue;
-          await db.doc(coll + "/" + did).update(withHistory(+x.amount || 0, h.filter(z => !(z.month === m && !z.cash))));
+          const h = x.history ?? []; if (!h.some(z => z.month === m && isPayrollEntry(z))) continue;
+          await db.doc(coll + "/" + did).update(withHistory(+x.amount || 0, h.filter(z => !(z.month === m && isPayrollEntry(z)))));
         }
         const d = payDoc();
         await db.doc("payroll/" + m).set({ month: m, status: "DRAFT", adj: d?.adj ?? {}, updatedAt: Date.now() });
@@ -1339,12 +1363,13 @@ document.addEventListener("click", async e => {
         for (const [path, amt] of Object.entries(per)) {
           const [coll, did] = path.split("/"); const cur = (coll === "fines" ? state.fines : state.adv)[did];
           const remaining = r2(Math.max(0, (+cur.remaining || 0) - amt));
-          await db.doc(path).update({ remaining, history: [...(cur.history ?? []), { month: m, amount: r2(amt), remaining }] });
+          await db.doc(path).update({ remaining, history: [...(cur.history ?? []), { month: m, amount: r2(amt), remaining, src: "payroll" }] });
         }
         const adj = { ...(payDoc()?.adj ?? {}) };
         for (const s of slips) adj[s.id] = s.adj;
         await db.doc("payroll/" + m).set({ month: m, status: "PUBLISHED", publishedAt: Date.now(), adj, rules: state.rules,
           slips: slips.map(({ adj, planned, ...rest }) => ({ ...rest, adj, planned })) });
+        await sendNotice("salary", slips.map(s => s.id), { month: m });
         state.adjDraft = {}; toast(t("publishedOk"));
       }});
     }
@@ -1978,7 +2003,7 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
   admins_title: "Admins", admins_add: "Add admin email", admins_hint: "The person then creates an account on this page with that email.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", app_never: "App not opened yet", app_online: "Online now", app_offline: "Offline", app_open_for: "open for {d}", app_last: "last seen {t}", app_today: "Today", app_week_s: "7 days", app_week: "Last 7 days",
+  drv_web: "Driver app (web)", nt_send: "Send notice", nt_send_btn: "Send", nt_help: "Drivers see it in the app and as a phone notification. Daily updates (performance, orders, salary, dues) send a notice by themselves.", nt_to: "To", nt_all: "All drivers", nt_title: "Title", nt_title_ph: "e.g. Today's orders are updated", nt_body: "Message (optional)", nt_sent: "Notice sent", du_nodate: "No date", du_manual: "by hand", du_manual_t: "No automatic monthly instalment — record deductions yourself or set a monthly amount.", app_never: "App not opened yet", app_online: "Online now", app_offline: "Offline", app_open_for: "open for {d}", app_last: "last seen {t}", app_today: "Today", app_week_s: "7 days", app_week: "Last 7 days",
   app_online_n: "online", dur_m: "{m} min", dur_hm: "{h} h {m} min", ago_m: "{n} min ago", ago_h: "{n} h ago",
   emp_del_t: "Delete employee", emp_del_q: "This removes the employee from the panel and the app. Their sign-in stops working. This cannot be undone.", emp_del_dues: "Their {n} dues records will be deleted too.", emp_deleted: "Employee deleted", platform: "Works on", pin_set: "Set PIN", pin_change: "Change PIN", pin_missing: "without PIN", pin_manual: "PIN (4 digits)", pin_4: "The PIN must be exactly 4 digits",
   pin_manual_help: "Type the PIN you want to give the driver, or leave it empty to create one automatically.", pin_title_new: "App sign-in PIN", no_city: "No city", emp_n: "drivers", all: "All", nav_dues: "Dues overview", du_hint: "Everything each driver owes — fines, advances, damage and more. Click a driver to see and edit each item.",
@@ -2012,7 +2037,7 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
   admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "তারপর ওই ব্যক্তি এই পাতায় সেই ইমেইল দিয়ে অ্যাকাউন্ট খুলবেন।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", app_never: "এখনো অ্যাপ খোলেনি", app_online: "এখন অনলাইন", app_offline: "অফলাইন", app_open_for: "{d} ধরে খোলা", app_last: "শেষ দেখা {t}", app_today: "আজ", app_week_s: "৭ দিনে", app_week: "গত ৭ দিন",
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", nt_send: "নোটিশ পাঠান", nt_send_btn: "পাঠান", nt_help: "কর্মীরা অ্যাপে আর ফোনের নোটিফিকেশনে দেখবে। পারফরমেন্স, অর্ডার, বেতন বা বকেয়া আপডেট করলে নোটিশ নিজে থেকেই চলে যায়।", nt_to: "কাকে", nt_all: "সব কর্মী", nt_title: "শিরোনাম", nt_title_ph: "যেমন: আজকের অর্ডার আপডেট হয়েছে", nt_body: "বার্তা (ইচ্ছা হলে)", nt_sent: "নোটিশ পাঠানো হয়েছে", du_nodate: "তারিখ নেই", du_manual: "হাতে কাটা", du_manual_t: "মাসিক কিস্তি নিজে থেকে কাটা হবে না — কাটার হিসাব নিজে লিখুন অথবা মাসিক পরিমাণ দিন।", app_never: "এখনো অ্যাপ খোলেনি", app_online: "এখন অনলাইন", app_offline: "অফলাইন", app_open_for: "{d} ধরে খোলা", app_last: "শেষ দেখা {t}", app_today: "আজ", app_week_s: "৭ দিনে", app_week: "গত ৭ দিন",
   app_online_n: "জন অনলাইন", dur_m: "{m} মিনিট", dur_hm: "{h} ঘণ্টা {m} মিনিট", ago_m: "{n} মিনিট আগে", ago_h: "{n} ঘণ্টা আগে",
   emp_del_t: "কর্মী মুছুন", emp_del_q: "কর্মীকে প্যানেল ও অ্যাপ থেকে সরিয়ে দেওয়া হবে, তার লগইন আর কাজ করবে না। এটা ফেরানো যাবে না।", emp_del_dues: "তার {n}টি বকেয়ার হিসাবও মুছে যাবে।", emp_deleted: "কর্মী মুছে ফেলা হয়েছে", platform: "কোথায় কাজ করে", pin_set: "পিন দিন", pin_change: "পিন বদলান", pin_missing: "জনের পিন নেই", pin_manual: "পিন (৪ সংখ্যা)", pin_4: "পিন ঠিক ৪ সংখ্যার হতে হবে",
   pin_manual_help: "কর্মীকে যে পিন দিতে চান সেটা লিখুন, অথবা খালি রাখলে নিজে থেকে একটা পিন তৈরি হবে।", pin_title_new: "অ্যাপ লগইনের পিন", no_city: "শহর দেওয়া নেই", emp_n: "জন", all: "সবাই", nav_dues: "বকেয়ার হিসাব", du_hint: "প্রত্যেক কর্মীর সব বকেয়া — জরিমানা, অগ্রিম, গাড়ির ক্ষতি ইত্যাদি। কর্মীর নামে চাপলে প্রতিটি হিসাব দেখা ও বদলানো যাবে।",
@@ -2046,7 +2071,7 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
   admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "ثم ينشئ الشخص حساباً من هذه الصفحة بنفس البريد.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", app_never: "لم يفتح التطبيق بعد", app_online: "متصل الآن", app_offline: "غير متصل", app_open_for: "مفتوح منذ {d}", app_last: "آخر ظهور {t}", app_today: "اليوم", app_week_s: "7 أيام", app_week: "آخر 7 أيام",
+  drv_web: "تطبيق السائق (ويب)", nt_send: "إرسال إشعار", nt_send_btn: "إرسال", nt_help: "يراه السائقون في التطبيق وكإشعار على الهاتف. تحديثات الأداء والطلبات والرواتب والمستحقات ترسل إشعاراً تلقائياً.", nt_to: "إلى", nt_all: "كل السائقين", nt_title: "العنوان", nt_title_ph: "مثال: تم تحديث طلبات اليوم", nt_body: "الرسالة (اختياري)", nt_sent: "تم إرسال الإشعار", du_nodate: "بدون تاريخ", du_manual: "يدوي", du_manual_t: "لا يوجد قسط شهري تلقائي — سجّل الخصومات بنفسك أو حدد مبلغاً شهرياً.", app_never: "لم يفتح التطبيق بعد", app_online: "متصل الآن", app_offline: "غير متصل", app_open_for: "مفتوح منذ {d}", app_last: "آخر ظهور {t}", app_today: "اليوم", app_week_s: "7 أيام", app_week: "آخر 7 أيام",
   app_online_n: "متصل", dur_m: "{m} دقيقة", dur_hm: "{h} س {m} د", ago_m: "قبل {n} دقيقة", ago_h: "قبل {n} ساعة",
   emp_del_t: "حذف الموظف", emp_del_q: "سيُحذف الموظف من اللوحة والتطبيق ويتوقف دخوله. لا يمكن التراجع.", emp_del_dues: "ستُحذف أيضاً {n} من مستحقاته.", emp_deleted: "تم حذف الموظف", platform: "يعمل في", pin_set: "تعيين الرقم السري", pin_change: "تغيير الرقم السري", pin_missing: "بدون رقم سري", pin_manual: "الرقم السري (4 أرقام)", pin_4: "يجب أن يكون الرقم السري 4 أرقام",
   pin_manual_help: "اكتب الرقم السري الذي تريده للسائق، أو اتركه فارغاً لإنشائه تلقائياً.", pin_title_new: "رقم الدخول للتطبيق", no_city: "بدون مدينة", emp_n: "سائق", all: "الكل", nav_dues: "المستحقات", du_hint: "كل ما على السائق — مخالفات وسلف وأضرار وغيرها. اضغط على السائق لعرض وتعديل كل بند.",
