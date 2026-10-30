@@ -132,6 +132,7 @@ a.tel{color:inherit;text-decoration:none} a.tel:hover{text-decoration:underline}
 @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(29,131,88,.5)}70%{box-shadow:0 0 0 6px rgba(29,131,88,0)}100%{box-shadow:0 0 0 0 rgba(29,131,88,0)}}
 .chip.online{border-color:#9ED6BA;background:#E7F6EE;color:#14623F} .chip.online.on{background:#14623F;color:#fff}
 .pin-in{letter-spacing:.5em;font-size:20px;text-align:center}
+table.fuel .input.num{width:96px} table.fuel tfoot td{border-top:2px solid var(--line);background:var(--sunk,rgba(0,0,0,.03))}
 table.dues tr.due-emp{cursor:pointer} table.dues tr.due-emp:hover td{background:var(--sunk,rgba(0,0,0,.03))}
 table.dues tr.due-emp.open td{background:var(--sunk,rgba(0,0,0,.04));border-bottom:0}
 table.dues .chev{width:14px;color:var(--muted);font-size:12px}
@@ -382,7 +383,13 @@ const r2 = n => Math.round((+n || 0) * 100) / 100;
 const fmt = n => (+n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const fmt0 = n => (+n || 0).toLocaleString("en-US");
 const todayKey = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh" }).format(new Date());
-const monthKey = () => todayKey().slice(0, 7);
+/* Pay month (cycle): from the 2nd of a month to the 1st of the next month, named after the month it starts in.
+   Keeta's report on the 2nd closes the previous cycle. Data shown "today" runs up to yesterday. */
+const dayBefore = d => new Date(Date.parse(d + "T12:00:00Z") - 864e5).toISOString().slice(0, 10);
+const cycleOf = d => { const [y, m, dd] = d.split("-").map(Number); return dd >= 2 ? d.slice(0, 7) : new Date(Date.UTC(y, m - 2, 1)).toISOString().slice(0, 7); };
+const monthKey = () => cycleOf(dayBefore(todayKey()));
+const cycleRange = k => { const [y, m] = k.split("-").map(Number), a = new Date(Date.UTC(y, m - 1, 2)), b = new Date(Date.UTC(y, m, 1));
+  const f = d => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }); return `${f(a)} – ${f(b)} ${b.getUTCFullYear()}`; };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
 const vehicleText = e => { const n = (e.vehicleName || "").trim(), m = (e.vehicleModel || "").trim(); return n && m.toLowerCase().startsWith(n.toLowerCase()) ? m : [n, m].filter(Boolean).join(" "); };
 const rkSwitch = (id, p) => { const on = (p || "TARGET") === "TARGET";
@@ -402,7 +409,7 @@ function toast(msg){ const el = document.createElement("div"); el.className = "t
 
 /* ───────── state ───────── */
 const state = {
-  staff: {}, claimlog: {}, duty: {}, presence: {}, pinreq: {}, payroll: {}, curMonthDocs: [], mode: "admin", myId: null, appTab: "home", appSlip: null, previewId: "",
+  staff: {}, claimlog: {}, duty: {}, presence: {}, fuel: {}, fuelDraft: {}, fuelMonth: "", pinreq: {}, payroll: {}, curMonthDocs: [], mode: "admin", myId: null, appTab: "home", appSlip: null, previewId: "",
   emp: {}, fines: {}, adv: {}, rules: { ...DEFAULT_RULES },
   todayDoc: null, opsDoc: null, monthDocs: [], payDoc: null, dailyAll: {}, totals: {},
   opsDate: todayKey(), opsMonth: monthKey(), payMonth: monthKey(),
@@ -413,7 +420,7 @@ let db = null, downloads = null, unsubOps = null, unsubMonth = null;
 const payDoc = () => state.payroll[state.payMonth] ?? null;
 
 /* ───────── routing ───────── */
-const VIEWS = ["dashboard","employees","target","perf","operations","dues","payroll","app","rules","admins"];
+const VIEWS = ["dashboard","employees","target","perf","operations","fuel","dues","payroll","app","rules","admins"];
 const SUB_VIEWS = ["target","perf"];
 const view = () => { const h = location.hash.slice(1); return VIEWS.includes(h) ? h : "dashboard"; };
 window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
@@ -455,8 +462,9 @@ function render(){
   if (state.offline) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("offline")}</b></div>`; return; }
   if (!state.ready) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("loading")}</b></div>`; return; }
   const ro = state.canWrite ? "" : `<div class="note warn">${t("readOnly")}</div>`;
-  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, dues: vDues, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
+  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, dues: vDues, fuel: vFuel, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
   main.querySelectorAll("[data-needs-write]").forEach(el => { if (!state.canWrite) el.disabled = true; });
+  if (!state.canWrite) main.querySelectorAll("input:not([id]),select:not([id]),textarea:not([id]),#rulesForm button,#rulesForm input,[data-roleof]").forEach(el => el.disabled = true);
 }
 
 /* ───────── derived ───────── */
@@ -489,15 +497,14 @@ function vDashboard(){
   const allRows = Object.values(monthRows(monthKey()));
   const orders = allRows.reduce((s,r)=>s+(+r.o||0),0), fuel = allRows.reduce((s,r)=>s+(+r.f||0),0);
   const fOut = outstandingOf(state.fines), aOut = outstandingOf(state.adv);
-  const recent = Object.entries(state.fines).sort((a,b)=>(b[1].createdAt||0)-(a[1].createdAt||0)).slice(0,6);
+  const recent = allDues().map(x => [x.id, { ...x, category: x.type }]).sort((a,b)=>String(b[1].date||"").localeCompare(String(a[1].date||""))).slice(0,6);
   return `
   <div class="head"><div><h1>${t("today")} · ${todayKey()}</h1><p>${t("riyadh")}</p></div><div class="tools"><button class="btn" data-act="notice-new" data-needs-write>📣 ${t("nt_send")}</button><a class="btn gold" href="${DRIVER_WEB}" target="_blank" rel="noopener">${t("drv_web")} ↗</a></div></div>
   <div class="kpis">
     <div class="kpi"><span>${t("activeEmp")}</span><b>${active}</b><small>${pend} ${t("pending")}</small></div>
     <div class="kpi"><span>${t("totalOrders")}</span><b>${fmt0(orders)}</b><small>${allRows.length} ${t("reported")}</small></div>
     <div class="kpi"><span>${t("fuel_month_k")}</span><b>${fmt(fuel)}</b><small>${t("sar")}</small></div>
-    <div class="kpi ${fOut>0?"alert":""}"><span>${t("outstanding")}</span><b>${fmt(fOut)}</b><small>${t("sar")}</small></div>
-    <div class="kpi"><span>${t("advancesOut")}</span><b>${fmt(aOut)}</b><small>${t("sar")}</small></div>
+    <a class="kpi" href="#dues" style="color:inherit;text-decoration:none"><span>${t("du_left")} · ${t("nav_dues")}</span><b class="neg">${fmt(fOut + aOut)}</b><small>${t("sar")}</small></a>
   </div>
   <div class="grid2">
     <section class="panel"><h2>${t("leaderboard_m")}</h2>
@@ -505,8 +512,8 @@ function vDashboard(){
       ${rows.slice(0,10).map(r=>`<tr><td><span class="rank ${r.rank<=3?"r"+r.rank:""}">${r.rank}</span></td><td class="name">${esc(empName(r.id))}</td><td>${plateChip(state.emp[r.id]?.plate)}</td><td class="r"><b>${r.o}</b></td></tr>`).join("")}
       </tbody></table></div>` : `<div class="empty"><b>${t("noOrders")}</b>${t("noOrdersHint")}</div>`}
     </section>
-    <section class="panel"><h2>${t("recentFines")}<a class="btn ghost sm" href="#dues">${t("nav_dues")}</a></h2>
-      ${recent.length ? `<div class="scroll"><table><tbody>${recent.map(([,f])=>`<tr><td><div class="name">${esc(empName(f.employeeId))}</div><div class="sub">${esc(f.date)} · ${t(f.category)}</div></td><td class="r nowrap ${f.waived?"sub":"neg"}">${fmt(f.amount)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty"><b>${t("noFines")}</b></div>`}
+    <section class="panel"><h2>${t("du_recent")}<a class="btn ghost sm" href="#dues">${t("nav_dues")}</a></h2>
+      ${recent.length ? `<div class="scroll"><table><tbody>${recent.map(([,f])=>`<tr><td><div class="name">${esc(empName(f.employeeId))}</div><div class="sub">${f.date ? esc(dmy(f.date)) : t("du_nodate")} · ${t(f.category)}</div></td><td class="r nowrap ${f.waived?"sub":"neg"}">${fmt(f.amount)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty"><b>${t("noFines")}</b></div>`}
     </section>
   </div>`;
 }
@@ -557,7 +564,6 @@ function vEmployees(){
       <td>${rkSwitch(id, e.payType)}</td>
       <td>${statusPill(e.status)}</td>
       <td class="nowrap">${!e.pinCheck ? `<button class="btn gold sm" data-act="emp-pin" data-id="${id}" data-needs-write>🔑 ${t("pin_set")}</button>` : presenceCell(id)}</td>
-      <td class="r nowrap">${(()=>{const o=outstandingOf(state.fines,id)+outstandingOf(state.adv,id);return o?`<span class="neg">${fmt(o)}</span>`:`<span class="sub">0.00</span>`})()}</td>
       <td><div class="row-actions">
         ${e.status==="PENDING"?`<button class="btn sm" data-act="emp-status" data-id="${id}" data-v="ACTIVE" data-needs-write>${t("approve")}</button>`:""}
         <button class="btn ghost sm" data-act="emp-edit" data-id="${id}" data-needs-write>${t("edit")}</button>
@@ -583,8 +589,8 @@ function vEmployees(){
     <select class="input" id="qType"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
   </div>
   <section class="panel">${list.length ? `<div class="scroll"><table class="emps">
-    <thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("mobile")}</th><th>${t("vehicle")}</th><th>${t("card")}</th><th>Rank</th><th>${t("status")}</th><th>${t("app_col")}</th><th class="r">${t("outstanding")}</th><th></th></tr></thead>
-    ${groups.map(([c, l]) => `<tbody><tr class="grp"><td colspan="10"><b>${esc(c || t("no_city"))}</b> <span class="sub">· ${l.length} ${t("emp_n")}</span></td></tr>${l.map(row).join("")}</tbody>`).join("")}
+    <thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("mobile")}</th><th>${t("vehicle")}</th><th>${t("card")}</th><th>Rank</th><th>${t("status")}</th><th>${t("app_col")}</th><th></th></tr></thead>
+    ${groups.map(([c, l]) => `<tbody><tr class="grp"><td colspan="9"><b>${esc(c || t("no_city"))}</b> <span class="sub">· ${l.length} ${t("emp_n")}</span></td></tr>${l.map(row).join("")}</tbody>`).join("")}
     </table></div>`
     : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</section>`;
 }
@@ -674,7 +680,7 @@ function vOperations(){
         <td>${rkPill(e.payType)}</td>
         <td class="r"><input class="input num" type="number" min="0" step="1" data-ops="o" data-id="${id}" value="${o}" aria-label="${t("totalOrders")}"></td>
         <td style="min-width:130px"><div class="bar ${(+o||0) >= target ? "done" : ""}"><span style="width:${pct}%"></span></div><div class="sub">${fmt0(+o||0)} / ${fmt0(target)}</div></td>
-        <td class="r"><input class="input num" type="number" min="0" step="0.01" data-ops="f" data-id="${id}" value="${f}" aria-label="${t("fuel_month_k")}"></td>
+        <td class="r nowrap"><a href="#fuel" class="sub" style="color:inherit" title="${t("nav_fuel")}">${fmt(+f || 0)}</a></td>
         <td class="sub nowrap">${saved.at ? shortDate(saved.at) : t("none")}</td>
       </tr>`;}).join("")}</tbody></table></div>`
     : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</section>`;
@@ -687,6 +693,64 @@ document.addEventListener("change", e => {
   if (e.target.id === "opsMonth" && e.target.value) { state.opsMonth = e.target.value; state.opsDraft = {}; render(); }
   if (e.target.id === "payMonth" && e.target.value) { state.payMonth = e.target.value; state.adjDraft = {}; subMonth(); render(); }
 });
+
+/* ───────── Petrol: three 10-day periods per pay month (2nd → 1st), kept for every month ───────── */
+const FUEL_P = ["p1", "p2", "p3"];
+function fuelPeriods(k){
+  const [y, m] = k.split("-").map(Number), d = (mm, dd) => new Date(Date.UTC(y, mm - 1, dd));
+  const f = x => x.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+  return [[d(m, 2), d(m, 11)], [d(m, 12), d(m, 21)], [d(m, 22), d(m + 1, 1)]].map(([a, b]) => `${f(a)} – ${f(b)}`);
+}
+const fuelRow = (k, id) => state.fuel[k]?.rows?.[id] ?? {};
+const fuelSum = r => FUEL_P.reduce((s, p) => s + (+r[p] || 0), 0);
+function vFuel(){
+  const k = state.fuelMonth || monthKey(), per = fuelPeriods(k), orders = monthRows(k);
+  const months = [...new Set([monthKey(), ...Object.keys(state.fuel)])].sort().reverse();
+  const emps = activeEmps().filter(([, e]) => !state.qPlat || e.platform === state.qPlat).sort((a, b) => String(a[1].fullName).localeCompare(String(b[1].fullName)));
+  const val = (id, p) => state.fuelDraft[id]?.[p] ?? fuelRow(k, id)[p] ?? "";
+  const totP = p => emps.reduce((s, [id]) => s + (+val(id, p) || 0), 0);
+  const all = FUEL_P.reduce((s, p) => s + totP(p), 0);
+  const allow = emps.reduce((s, [id, e]) => s + fuelAllowance(e, +orders[id]?.o || 0), 0);
+  return `
+  <div class="head"><div><h1>${t("nav_fuel")}</h1><p>${t("fu_hint")}</p></div>
+    <div class="tools">
+      <input class="input" type="month" id="fuelMonth" value="${k}" style="width:auto">
+      <button class="btn ghost" data-act="fuel-import" data-needs-write>${t("fu_import")}</button>
+      <button class="btn" data-act="fuel-save" data-needs-write>${t("save")}</button>
+    </div></div>
+  <div class="chips"><span class="sub" style="margin-inline-end:4px">${t("fu_months")}:</span>${months.map(m => `<button class="chip ${m === k ? "on" : ""}" data-act="fuel-month" data-v="${m}"><b>${m}</b> · ${cycleRange(m)}</button>`).join("")}</div>
+  <div class="kpis">
+    ${FUEL_P.map((p, i) => `<div class="kpi"><span>${t("fu_p" + (i + 1))} · ${per[i]}</span><b>${fmt(totP(p))}</b><small>${t("sar")}</small></div>`).join("")}
+    <div class="kpi"><span>${t("fu_total")} · ${cycleRange(k)}</span><b>${fmt(all)}</b><small>${t("fuel_allow")}: ${fmt(allow)} · <span class="${allow - all < 0 ? "neg" : "pos"}">${allow - all < 0 ? "−" : "+"}${fmt(Math.abs(allow - all))}</span></small></div>
+  </div>
+  <section class="panel">${emps.length ? `<div class="scroll"><table class="fuel">
+    <thead><tr><th>${t("name")}</th>${FUEL_P.map((p, i) => `<th class="r">${t("fu_p" + (i + 1))}<div class="sub" style="font-weight:400">${per[i]}</div></th>`).join("")}<th class="r">${t("fu_total")}</th><th class="r">${t("fuel_allow")}</th><th class="r">${t("fu_diff")}</th></tr></thead>
+    <tbody>${emps.map(([id, e]) => { const tot = FUEL_P.reduce((s, p) => s + (+val(id, p) || 0), 0), al = fuelAllowance(e, +orders[id]?.o || 0), df = al - tot; return `<tr>
+      <td><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 32)}<div><div class="name">${esc(e.fullName)}</div><div class="sub mono">${esc(e.card || e.residentId)}</div></div></div></td>
+      ${FUEL_P.map(p => `<td class="r"><input class="input num" type="number" min="0" step="0.01" data-fuel="${p}" data-id="${id}" value="${val(id, p)}" placeholder="0"></td>`).join("")}
+      <td class="r nowrap"><b>${fmt(tot)}</b></td>
+      <td class="r nowrap sub">${al ? fmt(al) : "—"}<div class="sub">${fmt0(+orders[id]?.o || 0)} ${t("orders")}</div></td>
+      <td class="r nowrap">${al || tot ? `<b class="${df < 0 ? "neg" : "pos"}">${df < 0 ? "−" : "+"}${fmt(Math.abs(df))}</b><div class="sub">${df < 0 ? t("fu_over") : t("fu_save")}</div>` : "—"}</td>
+    </tr>`; }).join("")}</tbody>
+    <tfoot><tr><td><b>${t("fu_total")}</b></td>${FUEL_P.map(p => `<td class="r"><b>${fmt(totP(p))}</b></td>`).join("")}<td class="r"><b>${fmt(all)}</b></td><td class="r"><b>${fmt(allow)}</b></td><td class="r"><b class="${allow - all < 0 ? "neg" : "pos"}">${fmt(allow - all)}</b></td></tr></tfoot>
+    </table></div>` : `<div class="empty"><b>${t("noEmp")}</b></div>`}</section>
+  <p class="sub" style="margin-top:10px">${t("fu_note")}</p>`;
+}
+document.addEventListener("input", e => { const p = e.target.dataset?.fuel; if (!p) return; (state.fuelDraft[e.target.dataset.id] ??= {})[p] = e.target.value; });
+document.addEventListener("change", e => {
+  if (e.target.dataset?.fuel) render();
+  if (e.target.id === "fuelMonth" && e.target.value) { state.fuelMonth = e.target.value; state.fuelDraft = {}; render(); }
+});
+/* saves the petrol periods and puts the month total into the orders/fuel totals that payroll uses */
+async function saveFuel(k, rowsPatch){
+  const rows = { ...(state.fuel[k]?.rows ?? {}) };
+  for (const [id, r] of Object.entries(rowsPatch)) rows[id] = { ...(rows[id] ?? {}), ...r, at: Date.now() };
+  await db.doc("fuel/" + k).set({ month: k, rows, updatedAt: Date.now() });
+  const cur = monthRows(k), tot = { ...(state.totals[k]?.rows ?? {}) };
+  for (const id of Object.keys(rowsPatch)) tot[id] = { o: +cur[id]?.o || 0, ...(tot[id] ?? {}), f: r2(fuelSum(rows[id])), at: Date.now() };
+  await db.doc("totals/" + k).set({ month: k, rows: tot, updatedAt: Date.now() });
+  await sendNotice("fuel", Object.keys(rowsPatch), { month: k });
+}
 
 /* ───────── Dues overview: fines, advances and other money a driver owes, in one place ───────── */
 const DUE_TYPES = ["ADVANCE", ...CATS];
@@ -915,7 +979,9 @@ function perfCell(k, y, v){
   return `<div class="pc">${main} ${arrow}</div>${prev}`;
 }
 function vPerf(){
-  const td = todayKey(), yd = yesterdayKey(), T = state.perf[td]?.rows ?? {}, Y = state.perf[yd]?.rows ?? {};
+  const arcs = Object.keys(state.perf).filter(k => k.endsWith("-02")).sort().reverse();
+  const arc = arcs.includes(state.perfArc) ? state.perfArc : "";
+  const td = arc || todayKey(), yd = yesterdayKey(), T = state.perf[td]?.rows ?? {}, Y = arc ? {} : (state.perf[yd]?.rows ?? {});
   const q = state.q.trim().toLowerCase();
   const emps = activeEmps().filter(([id, e]) => (!state.qType || (e.payType || "TARGET") === state.qType) && (!state.qGrade || (T[id]?.g ?? "") === state.qGrade)
     && (!q || [e.fullName, e.jahezId, e.residentId].some(v => String(v ?? "").toLowerCase().includes(q))))
@@ -927,7 +993,8 @@ function vPerf(){
       <button class="btn" data-act="perf-import" data-needs-write>${t("perf_import")}</button>
     </div></div>
   <div class="grade-sum">${counts.map(([g, n]) => `<button class="gs ${state.qGrade === g ? "on" : ""}" data-act="grade-filter" data-v="${g}"><span class="grade ${gradeCls(g)}">${g}</span><b>${n}</b></button>`).join("")}
-    <span class="sub">${t("perf_today")} · ${shortDate(Date.now())}</span></div>
+    <span class="sub">${arc ? `${t("perf_arc")} · ${esc(arc)}` : `${t("perf_today")} · ${shortDate(Date.now())}`}</span></div>
+  ${arcs.length ? `<div class="chips"><span class="sub" style="margin-inline-end:4px">${t("perf_arc_list")}:</span><button class="chip ${!arc ? "on" : ""}" data-act="perf-arc" data-v="">${t("perf_today")}</button>${arcs.map(k => `<button class="chip ${arc === k ? "on" : ""}" data-act="perf-arc" data-v="${k}"><b>${cycleOf(dayBefore(k))}</b> · ${cycleRange(cycleOf(dayBefore(k)))}</button>`).join("")}</div>` : ""}
   <div class="filters">
     <input class="input" id="q" placeholder="${t("search")}" value="${esc(state.q)}">
     <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${["TARGET","PER_ORDER"].map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
@@ -969,9 +1036,10 @@ function parseJahez(text){
   return out;
 }
 const normName = n => String(n || "").toLowerCase().replace(/\s+/g, " ").trim();
+/* keep yesterday and today, plus every report taken on the 2nd (it closes a pay month and stays for good) */
 async function cleanupPerf(){
   const yd = yesterdayKey();
-  for (const id of Object.keys(state.perf)) if (id < yd) { try { await db.doc("perf/" + id).delete(); } catch {} }
+  for (const id of Object.keys(state.perf)) if (id < yd && !id.endsWith("-02")) { try { await db.doc("perf/" + id).delete(); } catch {} }
 }
 
 function computePayroll(){
@@ -1211,7 +1279,7 @@ document.addEventListener("click", async e => {
           for (const [id, e] of Object.entries(state.emp)) { if (e.jahezId) byJ[e.jahezId] = id; byN[normName(e.fullName)] = id; }
           const day = fd.day, rows = { ...(state.perf[day]?.rows ?? {}) }, missing = [];
           // order volume = this month's total orders up to the day before the report
-          const volMonth = new Date(Date.parse(day + "T12:00:00Z") - 864e5).toISOString().slice(0, 7);
+          const volMonth = cycleOf(dayBefore(day));
           const tot = { ...(state.totals[volMonth]?.rows ?? {}) }; let nVol = 0;
           for (const r of rowsIn) {
             const eid = (r.id && byJ[r.id]) || byN[normName(r.name)];
@@ -1310,6 +1378,38 @@ document.addEventListener("click", async e => {
       openDialog({ title: t("delete"), body: `<p class="full">${t("du_del_q")}</p>`, submit: t("delete"), danger: true, onSubmit: async () => { await db.doc(id).delete(); toast(t("du_deleted")); } });
       return;
     }
+    if (act === "fuel-month") { state.fuelMonth = b.dataset.v; state.fuelDraft = {}; render(); return; }
+    if (act === "fuel-save") {
+      const k = state.fuelMonth || monthKey(), patch = {};
+      for (const [id, d] of Object.entries(state.fuelDraft)) { patch[id] = {}; for (const p of FUEL_P) if (p in d) patch[id][p] = d[p] === "" ? 0 : r2(Math.max(0, +d[p] || 0)); }
+      if (!Object.keys(patch).length) { toast(t("nothing_changed")); return; }
+      b.disabled = true; await saveFuel(k, patch); state.fuelDraft = {}; toast(t("empSaved")); render(); return;
+    }
+    if (act === "fuel-import") {
+      const k = state.fuelMonth || monthKey(), per = fuelPeriods(k);
+      openDialog({ title: t("fu_import"), submit: t("csvImport"),
+        body: `<p class="full sub">${t("fu_import_help")}</p>
+          <label class="f full">${t("fu_period")}<select class="input" name="p">${FUEL_P.map((p, i) => `<option value="${p}">${t("fu_p" + (i + 1))} · ${per[i]}</option>`).join("")}</select></label>
+          <label class="f full">${t("csvPaste")}<textarea class="input mono" name="csv" rows="8" placeholder="logistic 4, 235.50&#10;2603158888, 180"></textarea></label>`,
+        onSubmit: async fd => {
+          const byKey = {};
+          for (const [id, e] of activeEmps()) { for (const v of [e.card, e.residentId, e.fullName]) if (v) byKey[String(v).trim().toLowerCase()] = id; }
+          const patch = {}, miss = [];
+          for (const line of (fd.csv || "").split(/\r?\n/)) {
+            const c = line.split(/\t|,|;/).map(x => x.trim()).filter(Boolean); if (c.length < 2) continue;
+            const amt = parseFloat(String(c[c.length - 1]).replace(/[^\d.]/g, "")); const key = c.slice(0, -1).join(" ").toLowerCase();
+            const id = byKey[key] || byKey[c[0].toLowerCase()];
+            if (!id || isNaN(amt)) { if (!/amount|المبلغ|card/i.test(line)) miss.push(c[0]); continue; }
+            patch[id] = { ...(patch[id] ?? {}), [fd.p]: r2(((patch[id]?.[fd.p]) || 0) + amt) };
+          }
+          if (!Object.keys(patch).length) fail(t("perf_nothing"));
+          await saveFuel(k, patch);
+          toast(`${t("imported")}: ${Object.keys(patch).length}${miss.length ? ` · ${t("perf_unmatched")}: ${miss.length}` : ""}`);
+          if (miss.length) setTimeout(() => openDialog({ title: t("perf_unmatched"), body: `<p class="full mono sub">${miss.map(esc).join("<br>")}</p>`, footer: `<button type="button" class="btn" data-close>${t("close")}</button>` }), 60);
+        }});
+      return;
+    }
+    if (act === "perf-arc") { state.perfArc = b.dataset.v; render(); return; }
     if (act === "pay-month") { state.payMonth = b.dataset.v; state.adjDraft = {}; subMonth(); render(); return; }
     if (act === "pay-delete" || act === "slip-del") {
       const m = state.payMonth, d = payDoc(), one = act === "slip-del" ? id : null;
@@ -2029,8 +2129,8 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   au_signin: "Sign in", au_signup: "Create admin account", au_forgot: "Forgot password?", au_have: "Already have an account? Sign in", au_new: "First time? Create your admin account",
   au_check: "Check your email and tap the confirmation link, then come back and sign in.", au_reset_sent: "Password reset email sent.", au_notadmin: "This account is not an admin of ASB LOGISTICS. Ask the super admin to add your email.",
   au_signout: "Sign out", au_err: "Email or password is wrong.", au_short: "Password must be at least 8 characters.", au_unconfirmed: "Confirm your email first: open the link we emailed you.",
-  admins_title: "Admins", admins_add: "Add admin email", admins_hint: "The person then creates an account on this page with that email.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
-  drv_web: "Driver app (web)", pay_del: "Delete month", pay_del_q: "Delete the whole payroll for {m}? Payslips leave the driver app and any dues instalments taken in {m} are put back. This cannot be undone.", slip_del: "Delete payslip", slip_del_q: "Delete the {m} payslip of {n}? Their dues instalments for {m} are put back.", pay_gone: "deleted employee", pay_saved: "Saved months", nt_send: "Send notice", nt_send_btn: "Send", nt_help: "Drivers see it in the app and as a phone notification. Daily updates (performance, orders, salary, dues) send a notice by themselves.", nt_to: "To", nt_all: "All drivers", nt_title: "Title", nt_title_ph: "e.g. Today's orders are updated", nt_body: "Message (optional)", nt_sent: "Notice sent", du_nodate: "No date", du_manual: "by hand", du_manual_t: "No automatic monthly instalment — record deductions yourself or set a monthly amount.", app_never: "App not opened yet", app_online: "Online now", app_offline: "Offline", app_open_for: "open for {d}", app_last: "last seen {t}", app_today: "Today", app_week_s: "7 days", app_week: "Last 7 days",
+  admins_title: "Admins", admins_add: "Add admin email", admins_hint: "Give each person an email, a role and a password. They can sign in right away with them.", role_SUPER_ADMIN: "Super admin", role_SUB_ADMIN: "Admin", remove: "Remove",
+  drv_web: "Driver app (web)", nav_fuel: "Petrol", fu_hint: "Petrol used by each driver in three 10-day periods of the pay month (2nd to 1st). Every month stays saved.", fu_months: "Months", fu_p1: "Days 1–10", fu_p2: "Days 11–20", fu_p3: "Days 21–end", fu_total: "Month total", fu_diff: "Saved / over", fu_save: "saved · paid in cash", fu_over: "over · cut from salary", fu_import: "Paste from PetroApp", fu_period: "Period", fu_import_help: "One line per driver: PetroApp account (e.g. logistic 4), Iqama or name, then the amount. Amounts are added to the chosen period.", fu_note: "The month total goes into Payroll automatically and drivers see their periods and past months in the app.", perf_arc: "Month-end report", perf_arc_list: "Month-end reports", du_recent: "Latest dues", adm_role: "Role", adm_pw: "Password (at least 8 characters)", adm_pw_ph: "e.g. Asb-2026-Riyadh", adm_roles_help: "Viewer: can see everything but cannot change anything. Sub admin: can add and change data. Super admin: also manages admins. The person signs in at once with this email and password — no email is sent.", adm_setpw: "Set password", adm_setpw_help: "The new password works at once. Tell it to the person yourself.", adm_pw_done: "Password changed", adm_created: "Login ready for {e}", adm_bad_email: "Check the email address", role_VIEWER: "Viewer (read only)", pay_del: "Delete month", pay_del_q: "Delete the whole payroll for {m}? Payslips leave the driver app and any dues instalments taken in {m} are put back. This cannot be undone.", slip_del: "Delete payslip", slip_del_q: "Delete the {m} payslip of {n}? Their dues instalments for {m} are put back.", pay_gone: "deleted employee", pay_saved: "Saved months", nt_send: "Send notice", nt_send_btn: "Send", nt_help: "Drivers see it in the app and as a phone notification. Daily updates (performance, orders, salary, dues) send a notice by themselves.", nt_to: "To", nt_all: "All drivers", nt_title: "Title", nt_title_ph: "e.g. Today's orders are updated", nt_body: "Message (optional)", nt_sent: "Notice sent", du_nodate: "No date", du_manual: "by hand", du_manual_t: "No automatic monthly instalment — record deductions yourself or set a monthly amount.", app_never: "App not opened yet", app_online: "Online now", app_offline: "Offline", app_open_for: "open for {d}", app_last: "last seen {t}", app_today: "Today", app_week_s: "7 days", app_week: "Last 7 days",
   app_online_n: "online", dur_m: "{m} min", dur_hm: "{h} h {m} min", ago_m: "{n} min ago", ago_h: "{n} h ago",
   emp_del_t: "Delete employee", emp_del_q: "This removes the employee from the panel and the app. Their sign-in stops working. This cannot be undone.", emp_del_dues: "Their {n} dues records will be deleted too.", emp_deleted: "Employee deleted", platform: "Works on", pin_set: "Set PIN", pin_change: "Change PIN", pin_missing: "without PIN", pin_manual: "PIN (4 digits)", pin_4: "The PIN must be exactly 4 digits",
   pin_manual_help: "Type the PIN you want to give the driver, or leave it empty to create one automatically.", pin_title_new: "App sign-in PIN", no_city: "No city", emp_n: "drivers", all: "All", nav_dues: "Dues overview", du_hint: "Everything each driver owes — fines, advances, damage and more. Click a driver to see and edit each item.",
@@ -2058,13 +2158,13 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   tgt_rank_rule: "380–499 × 3.5 SAR · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C), plus rating price for each extra order.", tgt_unrank_rule: "380–499 orders × 4 SAR · 500+ = 2,500 · 600+ = 3,500, plus A/B/C price for each order above 500 or 600. Fuel allowance is paid separately.",
   tgt_note: "Pay so far uses this month's total orders and excludes fines, advances and fuel. Payroll uses these same settings.",
   perf_hint: "Daily Keeta performance for each driver. Drivers see yesterday and today side by side in their app.", perf_yest: "Yesterday", perf_today: "Today", perf_change: "Orders change",
-  perf_orders: "Orders", perf_hours: "Hours", perf_accept: "Accept %", perf_note: "Only yesterday and today are kept. Older days are deleted automatically.", totalOrders: "Total orders", fuel_month_k: "Fuel this month", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
+  perf_orders: "Orders", perf_hours: "Hours", perf_accept: "Accept %", perf_note: "Yesterday and today are kept for daily comparison. The report imported on the 2nd closes the pay month (2nd to 1st) and is kept for good, so drivers can look back at past months.", totalOrders: "Total orders", fuel_month_k: "Fuel this month", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
 Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB LOGISTICS · কর্মচারী ব্যবস্থাপনা", au_email: "ইমেইল", au_pass: "পাসওয়ার্ড",
   au_signin: "লগইন", au_signup: "এডমিন অ্যাকাউন্ট খুলুন", au_forgot: "পাসওয়ার্ড ভুলে গেছেন?", au_have: "অ্যাকাউন্ট আছে? লগইন করুন", au_new: "প্রথমবার? এডমিন অ্যাকাউন্ট খুলুন",
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
   au_signout: "লগআউট", au_err: "ইমেইল বা পাসওয়ার্ড ভুল।", au_short: "পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে।", au_unconfirmed: "আগে ইমেইল নিশ্চিত করুন: ইমেইলে পাঠানো লিংকটি খুলুন।",
-  admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "তারপর ওই ব্যক্তি এই পাতায় সেই ইমেইল দিয়ে অ্যাকাউন্ট খুলবেন।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
-  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", pay_del: "মাস মুছুন", pay_del_q: "{m} মাসের পুরো বেতন হিসাব মুছে ফেলবেন? কর্মীদের অ্যাপ থেকে পে-স্লিপ সরে যাবে, আর {m} মাসে কাটা বকেয়ার কিস্তি ফেরত যাবে। ফেরানো যাবে না।", slip_del: "পে-স্লিপ মুছুন", slip_del_q: "{n}-এর {m} মাসের পে-স্লিপ মুছবেন? তার {m} মাসে কাটা বকেয়ার কিস্তি ফেরত যাবে।", pay_gone: "মুছে ফেলা কর্মী", pay_saved: "সংরক্ষিত মাস", nt_send: "নোটিশ পাঠান", nt_send_btn: "পাঠান", nt_help: "কর্মীরা অ্যাপে আর ফোনের নোটিফিকেশনে দেখবে। পারফরমেন্স, অর্ডার, বেতন বা বকেয়া আপডেট করলে নোটিশ নিজে থেকেই চলে যায়।", nt_to: "কাকে", nt_all: "সব কর্মী", nt_title: "শিরোনাম", nt_title_ph: "যেমন: আজকের অর্ডার আপডেট হয়েছে", nt_body: "বার্তা (ইচ্ছা হলে)", nt_sent: "নোটিশ পাঠানো হয়েছে", du_nodate: "তারিখ নেই", du_manual: "হাতে কাটা", du_manual_t: "মাসিক কিস্তি নিজে থেকে কাটা হবে না — কাটার হিসাব নিজে লিখুন অথবা মাসিক পরিমাণ দিন।", app_never: "এখনো অ্যাপ খোলেনি", app_online: "এখন অনলাইন", app_offline: "অফলাইন", app_open_for: "{d} ধরে খোলা", app_last: "শেষ দেখা {t}", app_today: "আজ", app_week_s: "৭ দিনে", app_week: "গত ৭ দিন",
+  admins_title: "এডমিন", admins_add: "এডমিন ইমেইল যোগ করুন", admins_hint: "প্রত্যেককে একটি ইমেইল, পদ আর পাসওয়ার্ড দিন। সেগুলো দিয়ে সঙ্গে সঙ্গে লগইন করতে পারবে।", role_SUPER_ADMIN: "সুপার এডমিন", role_SUB_ADMIN: "এডমিন", remove: "সরান",
+  drv_web: "ড্রাইভার অ্যাপ (ওয়েব)", nav_fuel: "পেট্রোল", fu_hint: "বেতন-মাসের (২ তারিখ থেকে পরের মাসের ১ তারিখ) তিনটি ১০ দিনের ভাগে প্রত্যেক কর্মীর পেট্রোল খরচ। প্রতি মাসের হিসাব সংরক্ষিত থাকে।", fu_months: "মাস", fu_p1: "১ম ১০ দিন", fu_p2: "২য় ১০ দিন", fu_p3: "শেষ ১০ দিন", fu_total: "মাসের মোট", fu_diff: "বেঁচেছে / বেশি", fu_save: "বেঁচেছে · নগদ ফেরত", fu_over: "বেশি · বেতন থেকে কাটা", fu_import: "PetroApp থেকে পেস্ট", fu_period: "কোন ভাগ", fu_import_help: "প্রতি লাইনে একজন: PetroApp নম্বর (যেমন logistic 4), ইকামা বা নাম, তারপর টাকা। টাকা বাছাই করা ভাগে যোগ হবে।", fu_note: "মাসের মোট নিজে থেকে বেতনের হিসাবে যায়, আর কর্মীরা অ্যাপে নিজের ভাগগুলো ও আগের মাস দেখতে পারে।", perf_arc: "মাস শেষের রিপোর্ট", perf_arc_list: "মাস শেষের রিপোর্ট", du_recent: "সাম্প্রতিক বকেয়া", adm_role: "পদ", adm_pw: "পাসওয়ার্ড (কমপক্ষে ৮ অক্ষর)", adm_pw_ph: "যেমন: Asb-2026-Riyadh", adm_roles_help: "দর্শক: সব দেখতে পারবে, কিছু বদলাতে পারবে না। সাব এডমিন: তথ্য যোগ ও বদল করতে পারবে। সুপার এডমিন: এডমিনও পরিচালনা করতে পারবে। এই ইমেইল ও পাসওয়ার্ড দিয়ে সঙ্গে সঙ্গে লগইন করা যাবে — কোনো ইমেইল যায় না।", adm_setpw: "পাসওয়ার্ড দিন", adm_setpw_help: "নতুন পাসওয়ার্ড সঙ্গে সঙ্গে কাজ করবে। ব্যক্তিকে আপনি নিজে জানিয়ে দিন।", adm_pw_done: "পাসওয়ার্ড বদলানো হয়েছে", adm_created: "{e}-এর লগইন তৈরি হয়েছে", adm_bad_email: "ইমেইল ঠিক আছে কিনা দেখুন", role_VIEWER: "দর্শক (শুধু দেখবে)", pay_del: "মাস মুছুন", pay_del_q: "{m} মাসের পুরো বেতন হিসাব মুছে ফেলবেন? কর্মীদের অ্যাপ থেকে পে-স্লিপ সরে যাবে, আর {m} মাসে কাটা বকেয়ার কিস্তি ফেরত যাবে। ফেরানো যাবে না।", slip_del: "পে-স্লিপ মুছুন", slip_del_q: "{n}-এর {m} মাসের পে-স্লিপ মুছবেন? তার {m} মাসে কাটা বকেয়ার কিস্তি ফেরত যাবে।", pay_gone: "মুছে ফেলা কর্মী", pay_saved: "সংরক্ষিত মাস", nt_send: "নোটিশ পাঠান", nt_send_btn: "পাঠান", nt_help: "কর্মীরা অ্যাপে আর ফোনের নোটিফিকেশনে দেখবে। পারফরমেন্স, অর্ডার, বেতন বা বকেয়া আপডেট করলে নোটিশ নিজে থেকেই চলে যায়।", nt_to: "কাকে", nt_all: "সব কর্মী", nt_title: "শিরোনাম", nt_title_ph: "যেমন: আজকের অর্ডার আপডেট হয়েছে", nt_body: "বার্তা (ইচ্ছা হলে)", nt_sent: "নোটিশ পাঠানো হয়েছে", du_nodate: "তারিখ নেই", du_manual: "হাতে কাটা", du_manual_t: "মাসিক কিস্তি নিজে থেকে কাটা হবে না — কাটার হিসাব নিজে লিখুন অথবা মাসিক পরিমাণ দিন।", app_never: "এখনো অ্যাপ খোলেনি", app_online: "এখন অনলাইন", app_offline: "অফলাইন", app_open_for: "{d} ধরে খোলা", app_last: "শেষ দেখা {t}", app_today: "আজ", app_week_s: "৭ দিনে", app_week: "গত ৭ দিন",
   app_online_n: "জন অনলাইন", dur_m: "{m} মিনিট", dur_hm: "{h} ঘণ্টা {m} মিনিট", ago_m: "{n} মিনিট আগে", ago_h: "{n} ঘণ্টা আগে",
   emp_del_t: "কর্মী মুছুন", emp_del_q: "কর্মীকে প্যানেল ও অ্যাপ থেকে সরিয়ে দেওয়া হবে, তার লগইন আর কাজ করবে না। এটা ফেরানো যাবে না।", emp_del_dues: "তার {n}টি বকেয়ার হিসাবও মুছে যাবে।", emp_deleted: "কর্মী মুছে ফেলা হয়েছে", platform: "কোথায় কাজ করে", pin_set: "পিন দিন", pin_change: "পিন বদলান", pin_missing: "জনের পিন নেই", pin_manual: "পিন (৪ সংখ্যা)", pin_4: "পিন ঠিক ৪ সংখ্যার হতে হবে",
   pin_manual_help: "কর্মীকে যে পিন দিতে চান সেটা লিখুন, অথবা খালি রাখলে নিজে থেকে একটা পিন তৈরি হবে।", pin_title_new: "অ্যাপ লগইনের পিন", no_city: "শহর দেওয়া নেই", emp_n: "জন", all: "সবাই", nav_dues: "বকেয়ার হিসাব", du_hint: "প্রত্যেক কর্মীর সব বকেয়া — জরিমানা, অগ্রিম, গাড়ির ক্ষতি ইত্যাদি। কর্মীর নামে চাপলে প্রতিটি হিসাব দেখা ও বদলানো যাবে।",
@@ -2092,13 +2192,13 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   tgt_rank_rule: "৩৮০–৪৯৯ × ৩.৫ রিয়াল · ৫০০+ = ৩,০০০ / ২,৫০০ / ২,০০০ · ৬০০+ = ৪,২৫০ / ৩,৮০০ / ৩,০০০ (A / B / C), সাথে প্রতি অতিরিক্ত অর্ডারে রেটিং মূল্য।", tgt_unrank_rule: "৩৮০–৪৯৯ অর্ডার × ৪ রিয়াল · ৫০০+ = ২,৫০০ · ৬০০+ = ৩,৫০০, সাথে ৫০০ বা ৬০০-এর বেশি প্রতি অর্ডারে A/B/C মূল্য। জ্বালানি ভাতা আলাদা।",
   tgt_note: "এখন পর্যন্ত বেতন এই মাসের মোট অর্ডার থেকে হিসাব, জরিমানা, অগ্রিম ও পেট্রোল বাদে। বেতন হিসাবেও এই একই নিয়ম ব্যবহার হয়।",
   perf_hint: "প্রত্যেক কর্মীর দৈনিক Keeta পারফরমেন্স। কর্মীরা অ্যাপে গতকাল আর আজ পাশাপাশি দেখবে।", perf_yest: "গতকাল", perf_today: "আজ", perf_change: "অর্ডারের পরিবর্তন",
-  perf_orders: "অর্ডার", perf_hours: "ঘণ্টা", perf_accept: "গ্রহণ %", perf_note: "শুধু গতকাল আর আজকের তথ্য থাকে। পুরনো দিনের তথ্য নিজে থেকেই মুছে যায়।", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
+  perf_orders: "অর্ডার", perf_hours: "ঘণ্টা", perf_accept: "গ্রহণ %", perf_note: "প্রতিদিনের তুলনার জন্য গতকাল আর আজকের তথ্য থাকে। প্রতি মাসের ২ তারিখে আমদানি করা রিপোর্ট সেই বেতন-মাস (২ তারিখ থেকে পরের মাসের ১ তারিখ) শেষ করে এবং স্থায়ীভাবে থেকে যায়, তাই কর্মীরা পুরোনো মাস দেখতে পারে।", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
 Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTICS · إدارة الموظفين", au_email: "البريد الإلكتروني", au_pass: "كلمة المرور",
   au_signin: "دخول", au_signup: "إنشاء حساب مشرف", au_forgot: "نسيت كلمة المرور؟", au_have: "لديك حساب؟ سجّل الدخول", au_new: "أول مرة؟ أنشئ حساب المشرف",
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
   au_signout: "تسجيل الخروج", au_err: "البريد أو كلمة المرور غير صحيحة.", au_short: "كلمة المرور 8 أحرف على الأقل.", au_unconfirmed: "أكّد بريدك أولاً من الرابط المرسل.",
-  admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "ثم ينشئ الشخص حساباً من هذه الصفحة بنفس البريد.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
-  drv_web: "تطبيق السائق (ويب)", pay_del: "حذف الشهر", pay_del_q: "حذف رواتب {m} بالكامل؟ تختفي القسائم من التطبيق وتُعاد أقساط المستحقات المخصومة في {m}. لا يمكن التراجع.", slip_del: "حذف القسيمة", slip_del_q: "حذف قسيمة {m} لـ {n}؟ تُعاد أقساط مستحقاته في {m}.", pay_gone: "موظف محذوف", pay_saved: "الأشهر المحفوظة", nt_send: "إرسال إشعار", nt_send_btn: "إرسال", nt_help: "يراه السائقون في التطبيق وكإشعار على الهاتف. تحديثات الأداء والطلبات والرواتب والمستحقات ترسل إشعاراً تلقائياً.", nt_to: "إلى", nt_all: "كل السائقين", nt_title: "العنوان", nt_title_ph: "مثال: تم تحديث طلبات اليوم", nt_body: "الرسالة (اختياري)", nt_sent: "تم إرسال الإشعار", du_nodate: "بدون تاريخ", du_manual: "يدوي", du_manual_t: "لا يوجد قسط شهري تلقائي — سجّل الخصومات بنفسك أو حدد مبلغاً شهرياً.", app_never: "لم يفتح التطبيق بعد", app_online: "متصل الآن", app_offline: "غير متصل", app_open_for: "مفتوح منذ {d}", app_last: "آخر ظهور {t}", app_today: "اليوم", app_week_s: "7 أيام", app_week: "آخر 7 أيام",
+  admins_title: "المشرفون", admins_add: "إضافة بريد مشرف", admins_hint: "أعطِ كل شخص بريداً وصلاحية وكلمة مرور، ويمكنه الدخول بها فوراً.", role_SUPER_ADMIN: "مشرف رئيسي", role_SUB_ADMIN: "مشرف", remove: "حذف",
+  drv_web: "تطبيق السائق (ويب)", nav_fuel: "الوقود", fu_hint: "وقود كل سائق في ثلاث فترات كل منها 10 أيام من شهر الراتب (من 2 إلى 1). يبقى كل شهر محفوظاً.", fu_months: "الأشهر", fu_p1: "الأيام 1–10", fu_p2: "الأيام 11–20", fu_p3: "الأيام 21–النهاية", fu_total: "إجمالي الشهر", fu_diff: "وفر / زيادة", fu_save: "وفر · يُصرف نقداً", fu_over: "زيادة · تُخصم", fu_import: "لصق من PetroApp", fu_period: "الفترة", fu_import_help: "سطر لكل سائق: حساب PetroApp (مثل logistic 4) أو الإقامة أو الاسم ثم المبلغ. يُضاف المبلغ للفترة المختارة.", fu_note: "يذهب إجمالي الشهر إلى الرواتب تلقائياً، ويرى السائقون فتراتهم والأشهر السابقة في التطبيق.", perf_arc: "تقرير نهاية الشهر", perf_arc_list: "تقارير نهاية الشهر", du_recent: "أحدث المستحقات", adm_role: "الصلاحية", adm_pw: "كلمة المرور (8 أحرف على الأقل)", adm_pw_ph: "مثال: Asb-2026-Riyadh", adm_roles_help: "مشاهد: يرى كل شيء ولا يغيّر شيئاً. مدير فرعي: يضيف ويعدّل البيانات. مدير أعلى: يدير المسؤولين أيضاً. يدخل الشخص فوراً بهذا البريد وكلمة المرور دون إرسال بريد.", adm_setpw: "تعيين كلمة المرور", adm_setpw_help: "تعمل كلمة المرور الجديدة فوراً. أخبر الشخص بها بنفسك.", adm_pw_done: "تم تغيير كلمة المرور", adm_created: "تم تجهيز دخول {e}", adm_bad_email: "تحقق من البريد الإلكتروني", role_VIEWER: "مشاهد (قراءة فقط)", pay_del: "حذف الشهر", pay_del_q: "حذف رواتب {m} بالكامل؟ تختفي القسائم من التطبيق وتُعاد أقساط المستحقات المخصومة في {m}. لا يمكن التراجع.", slip_del: "حذف القسيمة", slip_del_q: "حذف قسيمة {m} لـ {n}؟ تُعاد أقساط مستحقاته في {m}.", pay_gone: "موظف محذوف", pay_saved: "الأشهر المحفوظة", nt_send: "إرسال إشعار", nt_send_btn: "إرسال", nt_help: "يراه السائقون في التطبيق وكإشعار على الهاتف. تحديثات الأداء والطلبات والرواتب والمستحقات ترسل إشعاراً تلقائياً.", nt_to: "إلى", nt_all: "كل السائقين", nt_title: "العنوان", nt_title_ph: "مثال: تم تحديث طلبات اليوم", nt_body: "الرسالة (اختياري)", nt_sent: "تم إرسال الإشعار", du_nodate: "بدون تاريخ", du_manual: "يدوي", du_manual_t: "لا يوجد قسط شهري تلقائي — سجّل الخصومات بنفسك أو حدد مبلغاً شهرياً.", app_never: "لم يفتح التطبيق بعد", app_online: "متصل الآن", app_offline: "غير متصل", app_open_for: "مفتوح منذ {d}", app_last: "آخر ظهور {t}", app_today: "اليوم", app_week_s: "7 أيام", app_week: "آخر 7 أيام",
   app_online_n: "متصل", dur_m: "{m} دقيقة", dur_hm: "{h} س {m} د", ago_m: "قبل {n} دقيقة", ago_h: "قبل {n} ساعة",
   emp_del_t: "حذف الموظف", emp_del_q: "سيُحذف الموظف من اللوحة والتطبيق ويتوقف دخوله. لا يمكن التراجع.", emp_del_dues: "ستُحذف أيضاً {n} من مستحقاته.", emp_deleted: "تم حذف الموظف", platform: "يعمل في", pin_set: "تعيين الرقم السري", pin_change: "تغيير الرقم السري", pin_missing: "بدون رقم سري", pin_manual: "الرقم السري (4 أرقام)", pin_4: "يجب أن يكون الرقم السري 4 أرقام",
   pin_manual_help: "اكتب الرقم السري الذي تريده للسائق، أو اتركه فارغاً لإنشائه تلقائياً.", pin_title_new: "رقم الدخول للتطبيق", no_city: "بدون مدينة", emp_n: "سائق", all: "الكل", nav_dues: "المستحقات", du_hint: "كل ما على السائق — مخالفات وسلف وأضرار وغيرها. اضغط على السائق لعرض وتعديل كل بند.",
@@ -2126,7 +2226,7 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   tgt_rank_rule: "380–499 × 3.5 ريال · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C)، مع سعر التقييم لكل طلب إضافي.", tgt_unrank_rule: "380–499 طلب × 4 ريال · 500+ = 2,500 · 600+ = 3,500، مع سعر A/B/C لكل طلب فوق 500 أو 600. بدل الوقود منفصل.",
   tgt_note: "الراتب حتى الآن من إجمالي طلبات الشهر بدون المخالفات والسلف والوقود. الرواتب تستخدم نفس الإعدادات.",
   perf_hint: "الأداء اليومي لكل سائق. يرى السائق أمس واليوم جنباً إلى جنب في تطبيقه.", perf_yest: "أمس", perf_today: "اليوم", perf_change: "تغير الطلبات",
-  perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ أمس واليوم فقط، وتُحذف الأيام الأقدم تلقائياً.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
+  perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ أمس واليوم للمقارنة اليومية. تقرير يوم 2 من كل شهر يغلق شهر الراتب (من 2 إلى 1 من الشهر التالي) ويبقى محفوظاً ليراجعه السائقون لاحقاً.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank", rk_PER_ORDER: "Unrank", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
 
 const auth = { mode: "signin", msg: "", err: "", busy: false, session: null, role: null, admins: [] };
 function renderAuth(){
@@ -2188,12 +2288,15 @@ async function loadAdmins(){
 function vAdmins(){
   const sup = auth.role === "SUPER_ADMIN";
   return `<div class="head"><div><h1>${t("admins_title")}</h1><p>${t("admins_hint")}</p></div></div>
-  ${sup ? `<form class="filters" id="adminAdd"><input class="input" id="newAdmin" type="email" placeholder="${t("au_email")}" required>
-     <select class="input" id="newRole"><option value="SUB_ADMIN">${t("role_SUB_ADMIN")}</option><option value="SUPER_ADMIN">${t("role_SUPER_ADMIN")}</option></select>
-     <button class="btn">+ ${t("admins_add")}</button></form>` : ""}
+  ${sup ? `<form class="panel" id="adminAdd" style="margin-bottom:16px"><h2>+ ${t("admins_add")}</h2>
+     <div class="rules"><label class="f">${t("au_email")}<input class="input" id="newAdmin" type="email" autocomplete="off" required></label>
+     <label class="f">${t("adm_role")}<select class="input" id="newRole">${["VIEWER","SUB_ADMIN","SUPER_ADMIN"].map(r => `<option value="${r}">${t("role_" + r)}</option>`).join("")}</select></label>
+     <label class="f">${t("adm_pw")}<input class="input" id="newPw" type="text" autocomplete="off" minlength="8" required placeholder="${t("adm_pw_ph")}"></label></div>
+     <p class="sub" style="padding:0 16px;margin:0">${t("adm_roles_help")}</p>
+     <div class="dlg-f"><button class="btn">${t("save")}</button></div></form>` : ""}
   <section class="panel"><div class="scroll"><table><thead><tr><th>${t("au_email")}</th><th>${t("status")}</th><th></th></tr></thead><tbody>
-  ${auth.admins.map(a => `<tr><td>${esc(a.email)}</td><td><span class="pill ${a.role === "SUPER_ADMIN" ? "p-info" : "p-mute"}">${t("role_" + a.role)}</span></td>
-    <td class="r">${sup && a.email !== auth.session?.user?.email ? `<button class="btn ghost sm" data-deladmin="${esc(a.email)}">${t("remove")}</button>` : ""}</td></tr>`).join("")}
+  ${auth.admins.map(a => `<tr><td>${esc(a.email)}</td><td>${sup && a.email !== auth.session?.user?.email ? `<select class="input sm" data-roleof="${esc(a.email)}" style="width:auto">${["VIEWER","SUB_ADMIN","SUPER_ADMIN"].map(r => `<option value="${r}" ${a.role === r ? "selected" : ""}>${t("role_" + r)}</option>`).join("")}</select>` : `<span class="pill ${a.role === "SUPER_ADMIN" ? "p-info" : "p-mute"}">${t("role_" + a.role)}</span>`}</td>
+    <td class="r"><div class="row-actions">${sup ? `<button class="btn ghost sm" data-adminpw="${esc(a.email)}">🔑 ${t("adm_setpw")}</button>` : ""}${sup && a.email !== auth.session?.user?.email ? `<button class="btn ghost sm danger-t" data-deladmin="${esc(a.email)}">${t("remove")}</button>` : ""}</div></td></tr>`).join("")}
   </tbody></table></div></section>
   <form class="panel" id="pwForm" style="margin-top:16px"><h2>${t("pw_title")}</h2>
     <div class="rules"><label class="f">${t("pw_new")}<input class="input" id="pwNew" type="password" autocomplete="new-password" minlength="8" required></label>
@@ -2210,10 +2313,29 @@ document.addEventListener("submit", async e => {
 });
 document.addEventListener("submit", async e => {
   if (e.target.id !== "adminAdd") return; e.preventDefault();
-  const email = $("#newAdmin").value.trim().toLowerCase(), role = $("#newRole").value;
+  const email = $("#newAdmin").value.trim().toLowerCase(), role = $("#newRole").value, pw = $("#newPw").value;
   if (!email) return;
-  const { error } = await sb.from("admins").upsert({ email, role });
+  if (pw.length < 8) return toast(t("au_short"));
+  const { error } = await sb.rpc("admin_set_login", { p_email: email, p_password: pw, p_role: role });
+  if (error) toast(error.message.includes("bad_email") ? t("adm_bad_email") : t("dbErr"));
+  else { toast(t("adm_created", { e: email })); e.target.reset(); loadAdmins(); }
+});
+document.addEventListener("change", async e => {
+  const el = e.target.closest("[data-roleof]"); if (!el) return;
+  const { error } = await sb.from("admins").update({ role: el.value }).eq("email", el.dataset.roleof);
   if (error) toast(t("dbErr")); else { toast(t("empSaved")); loadAdmins(); }
+});
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-adminpw]"); if (!b) return;
+  const email = b.dataset.adminpw;
+  openDialog({ title: "🔑 " + t("adm_setpw"), submit: t("save"),
+    body: `<p class="full"><b>${esc(email)}</b></p><label class="f full">${t("adm_pw")}<input class="input" name="pw" type="text" minlength="8" autocomplete="off" required></label><p class="full sub" style="margin:0">${t("adm_setpw_help")}</p>`,
+    onSubmit: async fd => {
+      if ((fd.pw || "").length < 8) fail(t("au_short"));
+      const { error } = await sb.rpc("admin_set_login", { p_email: email, p_password: fd.pw, p_role: null });
+      if (error) fail(t("dbErr"));
+      toast(t("adm_pw_done"));
+    }});
 });
 document.addEventListener("click", async e => {
   const b = e.target.closest("[data-deladmin]"); if (!b) return;
@@ -2229,7 +2351,7 @@ async function startAdmin(session){
   if (error || !role) { auth.err = t("au_notadmin"); await sb.auth.signOut(); return renderAuth(); }
   auth.role = role;
   if (started) return; started = true;
-  state.mode = "admin"; state.canWrite = true;
+  state.mode = "admin"; state.canWrite = role !== "VIEWER";
   $("#emp").hidden = true; $("#app").hidden = false;
   db = makeDb();
   let loaded = 0; const done = () => { if (++loaded >= 3 && !state.ready) { state.ready = true; render(); } };
@@ -2244,6 +2366,7 @@ async function startAdmin(session){
   db.collection("payroll").onSnapshot(s => { state.payroll = docsMap(s); soon(); }, console.warn);
   db.collection("daily").onSnapshot(s => { state.dailyAll = docsMap(s); soon(); }, console.warn);
   db.collection("totals").onSnapshot(s => { state.totals = docsMap(s); soon(); }, console.warn);
+  db.collection("fuel").onSnapshot(s => { state.fuel = docsMap(s); soon(); }, console.warn);
   let perfCleaned = false;
   db.collection("perf").onSnapshot(s => { state.perf = docsMap(s); if (!perfCleaned) { perfCleaned = true; cleanupPerf(); } soon(); }, console.warn);
   loadAdmins();
