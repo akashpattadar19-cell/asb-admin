@@ -468,7 +468,6 @@ function vHome(m){
   const target = +mm.target || 0, pct = target ? Math.min(100, mm.o / target * 100) : 0, isRank = p.payType !== "PER_ORDER";
   const upd = mm.at ? new Date(mm.at).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { timeZone: "Asia/Riyadh", day: "numeric", month: "short" }) : "";
   return `
-  <div class="seg" role="group">${["ACTIVE","ON_DUTY","OFFLINE"].map(s => `<button data-duty="${s}" aria-pressed="${S.duty === s}"><span class="dot" style="color:${dutyColor(s)}"></span>${t("duty_" + s)}</button>`).join("")}</div>
   <section class="card hero">
     <div class="hero-grid">${ava(p.photo, p.fullName, 74, "border-radius:22px;border:3px solid var(--gold)")}
       <div><div class="lbl">${t("rank")}</div><div class="rank">${mm.rank ? "#" + mm.rank : "—"}</div><div style="font-size:15px;font-weight:600">${mm.rank ? t("of", { n: mm.of }) : t("norank")}</div></div></div>
@@ -610,12 +609,20 @@ async function refresh(force){
   try {
     const r = await rpc("driver_data", { p_token: S.token });
     if (!r.ok) return toLogin(r.error === "deactivated" ? t("deactivated") : t("expired"));
-    S.data = r; S.duty = r.duty || "OFFLINE"; S.lastAt = Date.now();
+    S.data = r; S.lastAt = Date.now(); ping();
   } catch { if (!S.data) toast(t("offline")); }
   S.refreshing = false; render();
 }
 setInterval(() => { if (document.visibilityState === "visible") refresh(); }, REFRESH_MS);
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") refresh(); });
+/* tell the office the app is open: one small ping a minute while it is on screen */
+let lastPing = 0;
+async function ping(){
+  if (!S.token || S.view !== "app" || document.visibilityState !== "visible" || Date.now() - lastPing < 50000) return;
+  lastPing = Date.now();
+  try { await rpc("driver_ping", { p_token: S.token }); } catch {}
+}
+setInterval(ping, 60000);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { refresh(); ping(); } });
 window.addEventListener("online", () => refresh());
 
 /* Android back button: the app asks the page first */
