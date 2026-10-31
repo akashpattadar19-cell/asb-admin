@@ -244,6 +244,11 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .tile-ic{width:46px;height:46px;border-radius:14px;background:var(--sunk);display:grid;place-items:center;color:#fff}
 .tile[data-sub="perf"] .tile-ic{background:linear-gradient(135deg,#8B6CF0,#2F6FD6);box-shadow:0 6px 14px rgba(76,90,220,.35)}
 .tile[data-sub="target"] .tile-ic{background:linear-gradient(135deg,#F7B531,#EE6A1F);box-shadow:0 6px 14px rgba(238,106,31,.3)}
+.tile[data-sub="ordd"] .tile-ic{background:linear-gradient(135deg,#2FB67C,#149B7F);box-shadow:0 6px 14px rgba(20,155,127,.3)}
+.od-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.od-cell{background:var(--sunk);border-radius:12px;padding:10px 12px}
+.od-cell small{color:var(--muted);font-size:12px;display:block;margin-bottom:2px}
+.od-cell b{font:600 18px var(--f-display)}
 .tile-ic svg{width:24px;height:24px}
 .tile-go{font-size:22px;color:var(--muted)}
 .tile b{font:600 18px var(--f-display);letter-spacing:.02em}
@@ -301,7 +306,7 @@ en:{su_no_acc:"New driver?",su_make:"Create account",su_title:"Create account",s
  locked:"Too many wrong tries. Try again in {n} minutes or ask your supervisor.",offline:"No internet connection. Check your data or Wi-Fi.",expired:"Please sign in again.",deactivated:"Your account is not active. Contact your supervisor.",
  home:"Home",fines:"Fines",salary:"Salary",profile:"Profile",duty_ACTIVE:"Active",duty_ON_DUTY:"On duty",duty_OFFLINE:"Offline",
  of:"of {n} drivers",orders_today:"Orders today",
- fuel:"Fuel today",left:"left",limit:"Daily limit",fuel_month:"This month",nocard:"No petrol card assigned",sar:"SAR",
+ fuel:"Fuel today",left:"left",limit:"Daily limit",fuel_month:"This month",nocard:"No petrol card assigned",od_tile: "Order details", od_none: "No report yet", od_delivered: "delivered", od_accepted: "Accepted", od_ontime: "On-time", od_completion: "Completion", od_avgtime: "Avg time", od_rejected: "Rejected", od_overdue: "Overdue", sar:"SAR",
  outstanding_old:"Outstanding fines",you:"You",
  fines_out:"Outstanding",fines_paid:"Already deducted",fine_list:"Fines",nofines:"No fines. Keep it up!",waived:"Waived",paid:"Recovered",remaining:"Remaining",per_month:"per month",
  advances:"Advances",deduct_hist:"Monthly deductions",none:"Nothing yet",
@@ -316,7 +321,7 @@ bn:{su_no_acc:"নতুন কর্মী?",su_make:"অ্যাকাউন�
  locked:"অনেকবার ভুল হয়েছে। {n} মিনিট পরে চেষ্টা করুন বা সুপারভাইজারকে বলুন।",offline:"ইন্টারনেট সংযোগ নেই। ডাটা বা Wi-Fi দেখুন।",expired:"আবার লগইন করুন।",deactivated:"আপনার অ্যাকাউন্ট চালু নেই। সুপারভাইজারের সাথে যোগাযোগ করুন।",
  home:"হোম",fines:"জরিমানা",salary:"বেতন",profile:"প্রোফাইল",duty_ACTIVE:"সক্রিয়",duty_ON_DUTY:"ডিউটিতে",duty_OFFLINE:"অফলাইন",
  of:"{n} জনের মধ্যে",orders_today:"আজকের অর্ডার",
- fuel:"আজকের পেট্রোল",left:"বাকি",limit:"দৈনিক সীমা",fuel_month:"এই মাসে",nocard:"পেট্রোল কার্ড দেওয়া হয়নি",sar:"রিয়াল",
+ fuel:"আজকের পেট্রোল",left:"বাকি",limit:"দৈনিক সীমা",fuel_month:"এই মাসে",nocard:"পেট্রোল কার্ড দেওয়া হয়নি",od_tile: "অর্ডার বিস্তারিত", od_none: "এখনো রিপোর্ট নেই", od_delivered: "ডেলিভারড", od_accepted: "গৃহীত", od_ontime: "সময়মতো", od_completion: "সম্পন্ন", od_avgtime: "গড় সময়", od_rejected: "বাতিল", od_overdue: "বিলম্বিত", sar:"রিয়াল",
  outstanding_old:"বকেয়া জরিমানা",you:"আপনি",
  fines_out:"বকেয়া",fines_paid:"কাটা হয়েছে",fine_list:"জরিমানা",nofines:"কোনো জরিমানা নেই। এভাবেই চালিয়ে যান!",waived:"মাফ",paid:"আদায় হয়েছে",remaining:"বাকি",per_month:"প্রতি মাসে",
  advances:"অগ্রিম",deduct_hist:"মাসিক কর্তন",none:"এখনো কিছু নেই",
@@ -331,7 +336,7 @@ ar:{su_no_acc:"سائق جديد؟",su_make:"إنشاء حساب",su_title:"إن
  locked:"محاولات خاطئة كثيرة. حاول بعد {n} دقيقة أو راجع المشرف.",offline:"لا يوجد اتصال بالإنترنت.",expired:"سجّل الدخول مرة أخرى.",deactivated:"حسابك غير مفعل. راجع المشرف.",
  home:"الرئيسية",fines:"المخالفات",salary:"الراتب",profile:"ملفي",duty_ACTIVE:"نشط",duty_ON_DUTY:"في العمل",duty_OFFLINE:"غير متصل",
  of:"من {n} سائق",orders_today:"طلبات اليوم",
- fuel:"وقود اليوم",left:"متبقي",limit:"الحد اليومي",fuel_month:"هذا الشهر",nocard:"لا توجد بطاقة وقود",sar:"ريال",
+ fuel:"وقود اليوم",left:"متبقي",limit:"الحد اليومي",fuel_month:"هذا الشهر",nocard:"لا توجد بطاقة وقود",od_tile: "تفاصيل الطلبات", od_none: "لا يوجد تقرير بعد", od_delivered: "مُسلَّمة", od_accepted: "المقبولة", od_ontime: "في الوقت", od_completion: "الإكمال", od_avgtime: "متوسط الوقت", od_rejected: "المرفوضة", od_overdue: "متأخرة", sar:"ريال",
  outstanding_old:"مخالفات مستحقة",you:"أنت",
  fines_out:"مستحق",fines_paid:"تم خصمه",fine_list:"المخالفات",nofines:"لا توجد مخالفات. أحسنت!",waived:"معفى",paid:"مسدد",remaining:"المتبقي",per_month:"شهرياً",
  advances:"السلف",deduct_hist:"الخصومات الشهرية",none:"لا شيء بعد",
@@ -483,7 +488,7 @@ function vApp(){
   if (!m) return `<div class="login" style="justify-content:center"><div class="brand">${SHIELD}<div class="spin"></div></div></div>`;
   const p = m.profile;
   const outstanding = duesOf(m).filter(x => !x.waived).reduce((s, f) => s + (+f.remaining || 0), 0);
-  let body = S.sub === "notices" ? vNotices(m) : S.sub === "fuel" ? vFuelPage(m) : S.sub === "changes" ? vChanges() : S.sub === "editp" ? vEditProfile(m) : S.sub === "reports" ? vReports() : S.tab === "home" ? (S.sub === "perf" ? vPerfPage(m) : S.sub === "target" ? vTargetPage(m) : vHome(m)) : S.tab === "fines" ? vDues(m) : S.tab === "salary" ? (S.slip ? vSlip(m, S.slip) : vSalary(m)) : vProfile(m);
+  let body = S.sub === "notices" ? vNotices(m) : S.sub === "fuel" ? vFuelPage(m) : S.sub === "changes" ? vChanges() : S.sub === "editp" ? vEditProfile(m) : S.sub === "reports" ? vReports() : S.tab === "home" ? (S.sub === "perf" ? vPerfPage(m) : S.sub === "target" ? vTargetPage(m) : S.sub === "ordd" ? vOrddPage(m) : vHome(m)) : S.tab === "fines" ? vDues(m) : S.tab === "salary" ? (S.slip ? vSlip(m, S.slip) : vSalary(m)) : vProfile(m);
   const last = S.lastAt ? new Date(S.lastAt).toLocaleTimeString(lang === "ar" ? "ar-SA" : "en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
   if (window.ASBAndroid?.locStart) {
     if (!p.locOn) { if (!S.locStopped) { S.locStopped = true; try { window.ASBAndroid.locStop && window.ASBAndroid.locStop(); } catch {} } }
@@ -530,7 +535,23 @@ function optionTiles(m){
       <b>${t("tg")}</b>
       ${m.plan?.flat ? `<small>${t("rk_p")} · <span class="num" style="font-size:15px">${fmt(m.plan.poRate)}</span> ${t("sar")}</small>` : `<small><span class="num" style="font-size:15px">${fmt0(mm.o)}</span> / ${fmt0(tg)}</small>
       <div class="tbar2"><span style="width:${pct}%"></span></div>`}
+    </button>
+    <button class="tile" data-sub="ordd">
+      <div class="tile-top"><span class="tile-ic">${icon("target")}</span><span class="tile-go">›</span></div>
+      <b>${t("od_tile")}</b>
+      ${m.ordd?.row?.d != null ? `<small><span class="num" style="font-size:15px">${fmt0(m.ordd.row.d)}</span> ${t("od_delivered")}</small>` : `<small class="muted">${t("od_none")}</small>`}
     </button></div>`;
+}
+function vOrddPage(m){
+  const od = m.ordd || {}, r = od.row || {}, has = r && Object.keys(r).length;
+  const pc = v => v == null ? "—" : fmt(v * 100) + "%";
+  const cells = has ? [[t("od_accepted"), fmt0(r.b)], [t("od_ontime"), pc(r.k)], [t("od_completion"), pc(r.j)], [t("od_avgtime"), r.m != null ? fmt(r.m) + "m" : "—"], [t("od_rejected"), fmt0(r.f)], [t("od_overdue"), fmt0(r.o)]] : [];
+  return `<div class="subhead"><button class="back" data-subback>‹ ${t("back")}</button><h2>${t("od_tile")}</h2></div>` +
+    (has ? `<section class="card">
+      <div class="muted" style="font-size:13px;margin-bottom:8px">📅 ${od.from ? ddate(od.from) : ""} – ${od.to ? ddate(od.to) : ""}</div>
+      <div style="text-align:center;margin:4px 0 14px"><div class="num" style="font-size:42px;line-height:1">${fmt0(r.d)}</div><div class="muted" style="font-size:13px;margin-top:2px">${t("od_delivered")}</div></div>
+      <div class="od-grid">${cells.map(([a, b]) => `<div class="od-cell"><small>${a}</small><b>${b}</b></div>`).join("")}</div>
+    </section>` : `<section class="card"><div class="empty">${t("od_none")}</div></section>`);
 }
 /* ── notices from the office ── */
 const seenAt = () => +store.get("asb-seen-notice") || 0;
