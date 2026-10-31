@@ -452,7 +452,7 @@ const plateChip = p => p ? `<span class="plate"><i>KSA</i><em>${esc(p)}</em></sp
 const statusPill = s => `<span class="pill ${s==="ACTIVE"?"p-good":s==="PENDING"?"p-warn":"p-mute"}">${t(s)}</span>`;
 const empName = id => state.emp[id]?.fullName ?? "—";
 const DEFAULT_RULES = { targetOrders: 450, baseSalary: 2400, bonusPer: 5, penaltyPer: 10, perThreshold: 400, rateHigh: 2.5, rateLow: 2,
-  uMin: 380, uRate: 4, uT1: 500, uB1: 2500, uT2: 600, uB2: 3500, ex1A: 5, ex1B: 4, ex1C: 3, ex2A: 7, ex2B: 6, ex2C: 5, uFuelLow: 2, uFuelHigh: 2.5, absence: 100,
+  uMin: 380, uRate: 4, uT1: 500, uB1: 2500, uT2: 600, uB2: 3500, ex1A: 5, ex1B: 4, ex1C: 3, ex2A: 7, ex2B: 6, ex2C: 5, fuelPer: 2, absence: 100,
   rMin: 380, rRate: 3.5, rT1: 500, rB1A: 3000, rB1B: 2500, rB1C: 2000, rT2: 600, rB2A: 4250, rB2B: 3800, rB2C: 3000, rx1A: 6, rx1B: 5, rx1C: 4, rx2A: 8, rx2B: 7, rx2C: 6 };
 const CATS = ["TRAFFIC_VIOLATION","DELAY","MISSING_ITEM","VEHICLE_DAMAGE","OTHER"];
 async function sha(s){ const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
@@ -1461,7 +1461,7 @@ function planOf(e){
   return { rank, min: +R[P + "Min"], rate: +R[P + "Rate"], t1: +R[P + "T1"], t2: +R[P + "T2"],
     b1: rank ? abc(g => R["rB1" + g]) : abc(() => R.uB1), b2: rank ? abc(g => R["rB2" + g]) : abc(() => R.uB2),
     ex1: rank ? abc(g => R["rx1" + g]) : abc(g => R["ex1" + g]), ex2: rank ? abc(g => R["rx2" + g]) : abc(g => R["ex2" + g]),
-    fuelLow: +R.uFuelLow, fuelHigh: +R.uFuelHigh };
+  };
 }
 /* Pay rating: the one set on the Target page, else the latest Keeta grade, else C. */
 function payGrade(id, e){
@@ -1491,8 +1491,8 @@ function payFor(e, orders, grade = "C"){
 /* Fuel allowance (separate from salary): 380–499 → 2 SAR/order, 500+ → 2.5 SAR/order. */
 function fuelAllowance(e, orders){
   if (e.payType === "FLAT") return 0;
-  const p = planOf(e); if (orders < p.min) return 0;
-  return orders * (orders < p.t1 ? p.fuelLow : p.fuelHigh);
+  const n = Math.min(Math.max(0, +orders || 0), 1000); // orders 1..1000
+  return r2(n * (+state.rules.fuelPer || 0));           // one rate per order, Rank/Unrank same
 }
 function vTarget(){
   const R = state.rules, rows = monthRows(monthKey());
@@ -1730,7 +1730,7 @@ function vRules(){
     <h2 style="border-top:1px solid var(--line)">${t("u_extra_title")}</h2>
     <div class="rules">${field("ex1A","0.01")}${field("ex1B","0.01")}${field("ex1C","0.01")}${field("ex2A","0.01")}${field("ex2B","0.01")}${field("ex2C","0.01")}</div>
     <h2 style="border-top:1px solid var(--line)">${t("fuel_title_all")}</h2>
-    <div class="rules">${field("uFuelLow","0.01")}${field("uFuelHigh","0.01")}${field("absence","0.01")}</div>
+    <div class="rules">${field("fuelPer","0.01")}${field("absence","0.01")}</div>
     <p class="sub" style="padding:0 16px">${t("u_note")}</p>
     <div class="dlg-f"><button class="btn" data-needs-write>${t("save")}</button></div>
   </form>`;
@@ -2900,7 +2900,7 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   u_title: "monthly salary", u_extra_title: "Unrank · extra order price by rating", u_fuel_title: "Unrank · fuel allowance and deductions",
   uMin: "Minimum orders (below = company decides)", uRate: "Per order (380–499)", uT1: "Level 2 starts at", uB1: "Level 2 salary", uT2: "Level 3 starts at", uB2: "Level 3 salary",
   ex1A: "Above 500 · A", ex1B: "Above 500 · B", ex1C: "Above 500 · C", ex2A: "Above 600 · A", ex2B: "Above 600 · B", ex2C: "Above 600 · C",
-  uFuelLow: "Fuel per order (380–499)", uFuelHigh: "Fuel per order (500+)", absence: "Deduction per missed shift",
+  fuelPer: "Fuel per order (1–1000)", absence: "Deduction per missed shift",
   u_note: "Rank and Unrank: D rating (500+) and under 380 orders: the company sets the salary by hand in Payroll. Fuel allowance is separate from salary: unused allowance is paid in cash, overspend is deducted.", jahezId: "Keeta Courier ID", pf_grade: "Grade", pf_rank: "Ranking %", pf_forced: "Forced assignment", pf_ontime: "On-time delivery", pf_complete: "Order completion", pf_early: "Not marked delivered early",
   sg_badge: "Self sign-up", sg_hint: "The driver registered from the app and set their own PIN. Add Courier ID, vehicle and pay type with Edit, then Approve.", perf_import: "Import Keeta report", perf_file: "Report file (Excel or CSV)", perf_file_help: "Upload the Keeta performance report straight from Excel (.xlsx). Drivers are matched by Courier ID, so the file does not need a name column.", perf_xlsx_off: "Excel reader did not load — check the internet and reopen, or paste the rows below.", perf_file_err: "Could not read that file. Try the .xlsx from Keeta, or paste the rows.", perf_day: "Report day", perf_paste: "Paste the report rows (copy them from Excel)", perf_import_help: "Copy the rows of the Keeta driver report from Excel (driver ID, name, grade, ranking, the four rates and Order volume) and paste them here, or upload a CSV. Order volume is saved as the month's total orders up to yesterday. Drivers are matched by Keeta ID, then by name.",
   perf_nothing: "No report rows found. Copy the rows including the driver ID and the percentages.", perf_unmatched: "Not matched", perf_unmatched_help: "These drivers are not in Employees yet. Add them (with their Keeta ID) and import again.",
@@ -2943,7 +2943,7 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   u_title: "মাসিক বেতন", u_extra_title: "Unrank · রেটিং অনুযায়ী অতিরিক্ত অর্ডারের মূল্য", u_fuel_title: "Unrank · জ্বালানি ভাতা ও কর্তন",
   uMin: "সর্বনিম্ন অর্ডার (এর কম হলে কোম্পানি নির্ধারণ করবে)", uRate: "প্রতি অর্ডার (৩৮০–৪৯৯)", uT1: "দ্বিতীয় ধাপ শুরু", uB1: "দ্বিতীয় ধাপের বেতন", uT2: "তৃতীয় ধাপ শুরু", uB2: "তৃতীয় ধাপের বেতন",
   ex1A: "৫০০-এর বেশি · A", ex1B: "৫০০-এর বেশি · B", ex1C: "৫০০-এর বেশি · C", ex2A: "৬০০-এর বেশি · A", ex2B: "৬০০-এর বেশি · B", ex2C: "৬০০-এর বেশি · C",
-  uFuelLow: "প্রতি অর্ডারে জ্বালানি (৩৮০–৪৯৯)", uFuelHigh: "প্রতি অর্ডারে জ্বালানি (৫০০+)", absence: "প্রতি অনুপস্থিত শিফটে কর্তন",
+  fuelPer: "প্রতি অর্ডারে জ্বালানি (১–১০০০)", absence: "প্রতি অনুপস্থিত শিফটে কর্তন",
   u_note: "D রেটিং ও ৩৮০-এর কম অর্ডার: বেতন পাতায় কোম্পানি হাতে বেতন বসাবে। জ্বালানি ভাতা বেতন থেকে আলাদা: বেঁচে যাওয়া অংশ নগদে ফেরত, বেশি খরচ বেতন থেকে কাটা।", jahezId: "Keeta Courier ID", pf_grade: "গ্রেড", pf_rank: "র‍্যাংকিং %", pf_forced: "বাধ্যতামূলক অ্যাসাইনমেন্ট", pf_ontime: "সময়মতো ডেলিভারি", pf_complete: "অর্ডার সম্পূর্ণ", pf_early: "আগেভাগে ডেলিভারড চাপেনি",
   sg_badge: "স্ব-সাইনআপ", sg_hint: "কর্মী অ্যাপ থেকে নিজে নিবন্ধন করেছে ও নিজের পিন দিয়েছে। Edit দিয়ে Courier ID, গাড়ি ও বেতনের ধরন বসিয়ে Approve করুন।", perf_import: "Keeta রিপোর্ট আমদানি", perf_file: "রিপোর্ট ফাইল (Excel বা CSV)", perf_file_help: "Keeta পারফরমেন্স রিপোর্ট সরাসরি Excel (.xlsx) থেকে আপলোড করুন। Courier ID মিলিয়ে কর্মী খুঁজে নেওয়া হয়, তাই ফাইলে নামের দরকার নেই।", perf_xlsx_off: "Excel রিডার লোড হয়নি — ইন্টারনেট দেখে আবার খুলুন, অথবা নিচে সারিগুলো পেস্ট করুন।", perf_file_err: "ফাইলটি পড়া যায়নি। Keeta-র .xlsx দিন, অথবা সারিগুলো পেস্ট করুন।", perf_day: "রিপোর্টের দিন", perf_paste: "রিপোর্টের সারিগুলো পেস্ট করুন (Excel থেকে কপি করে)", perf_import_help: "Excel থেকে Keeta ড্রাইভার রিপোর্টের সারিগুলো (ড্রাইভার আইডি, নাম, গ্রেড, র‍্যাংকিং, চারটি হার আর Order volume) কপি করে এখানে পেস্ট করুন, অথবা CSV ফাইল দিন। Order volume গতকাল পর্যন্ত এই মাসের মোট অর্ডার হিসেবে বসবে। প্রথমে Keeta আইডি, না মিললে নাম দিয়ে কর্মী মেলানো হয়।",
   perf_nothing: "রিপোর্টের কোনো সারি পাওয়া যায়নি। ড্রাইভার আইডি আর শতাংশগুলোসহ সারি কপি করুন।", perf_unmatched: "মেলেনি", perf_unmatched_help: "এই ড্রাইভাররা এখনো কর্মচারী তালিকায় নেই। তাদের Keeta আইডিসহ যোগ করে আবার আমদানি করুন।",
@@ -2986,7 +2986,7 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   u_title: "الراتب الشهري", u_extra_title: "Unrank · سعر الطلب الإضافي حسب التقييم", u_fuel_title: "Unrank · بدل الوقود والخصومات",
   uMin: "الحد الأدنى للطلبات (أقل منه تحدده الشركة)", uRate: "لكل طلب (380–499)", uT1: "بداية المستوى 2", uB1: "راتب المستوى 2", uT2: "بداية المستوى 3", uB2: "راتب المستوى 3",
   ex1A: "فوق 500 · A", ex1B: "فوق 500 · B", ex1C: "فوق 500 · C", ex2A: "فوق 600 · A", ex2B: "فوق 600 · B", ex2C: "فوق 600 · C",
-  uFuelLow: "وقود لكل طلب (380–499)", uFuelHigh: "وقود لكل طلب (500+)", absence: "خصم لكل وردية غياب",
+  fuelPer: "وقود لكل طلب (1–1000)", absence: "خصم لكل وردية غياب",
   u_note: "تقييم D وأقل من 380 طلب: تحدد الشركة الراتب يدوياً في الرواتب. بدل الوقود منفصل عن الراتب: يُصرف الوفر نقداً ويُخصم الزائد.", jahezId: "Keeta Courier ID", pf_grade: "المستوى", pf_rank: "نسبة التصنيف", pf_forced: "التعيين الإجباري", pf_ontime: "التوصيل في الموعد", pf_complete: "اكتمال الطلبات", pf_early: "لم يضغط تم التسليم مبكراً",
   sg_badge: "تسجيل ذاتي", sg_hint: "سجّل السائق من التطبيق واختار رقمه السري. أضف Courier ID والمركبة ونوع الراتب عبر تعديل ثم وافق.", perf_import: "استيراد تقرير كيتا", perf_file: "ملف التقرير (Excel أو CSV)", perf_file_help: "ارفع تقرير أداء كيتا مباشرة من Excel ‏(.xlsx). تتم مطابقة السائقين عبر Courier ID، فلا حاجة لعمود الاسم.", perf_xlsx_off: "لم يُحمّل قارئ Excel — تحقق من الإنترنت وأعد الفتح، أو الصق الصفوف بالأسفل.", perf_file_err: "تعذّرت قراءة الملف. استخدم ملف .xlsx من كيتا أو الصق الصفوف.", perf_day: "يوم التقرير", perf_paste: "الصق صفوف التقرير (انسخها من Excel)", perf_import_help: "انسخ صفوف تقرير سائقي كيتا من Excel (المعرف، الاسم، المستوى، نسبة التصنيف والنسب الأربع) والصقها هنا أو ارفع ملف CSV. تتم المطابقة بمعرف كيتا ثم بالاسم.",
   perf_nothing: "لم يتم العثور على صفوف. انسخ الصفوف مع المعرف والنسب.", perf_unmatched: "غير مطابق", perf_unmatched_help: "هؤلاء السائقون غير موجودين في الموظفين. أضفهم بمعرف كيتا ثم أعد الاستيراد.",
