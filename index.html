@@ -88,6 +88,7 @@ label.f.check{flex-direction:row;align-items:center;text-transform:none;font-siz
 .kpi.alert{border-color:color-mix(in srgb,var(--bad) 45%,var(--line));background:var(--bad-soft)}
 .grid2{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px}
 .dash-col{display:flex;flex-direction:column;gap:16px;min-width:0}
+.ordd-star{background:color-mix(in srgb,var(--gold) 16%,transparent)}
 .dash-rows{display:flex;flex-direction:column}
 .dr{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
 .dr:last-child{border-bottom:0}
@@ -469,7 +470,7 @@ function toast(msg){ const el = document.createElement("div"); el.className = "t
 
 /* ───────── state ───────── */
 const state = {
-  staff: {}, claimlog: {}, duty: {}, presence: {}, fuel: {}, fuelDraft: {}, fuelMonth: "", pinreq: {}, payroll: {}, curMonthDocs: [], invoice: {}, profDraft: {}, profMonth: "", pq: "", mode: "admin", myId: null, appTab: "home", appSlip: null, previewId: "",
+  staff: {}, claimlog: {}, duty: {}, presence: {}, fuel: {}, fuelDraft: {}, fuelMonth: "", pinreq: {}, payroll: {}, curMonthDocs: [], invoice: {}, profDraft: {}, profMonth: "", pq: "", ordd: {}, orddKey: "", oq: "", mode: "admin", myId: null, appTab: "home", appSlip: null, previewId: "",
   emp: {}, fines: {}, adv: {}, rules: { ...DEFAULT_RULES },
   todayDoc: null, opsDoc: null, monthDocs: [], payDoc: null, dailyAll: {}, totals: {},
   opsDate: todayKey(), opsMonth: monthKey(), payMonth: monthKey(),
@@ -480,12 +481,12 @@ let db = null, downloads = null, unsubOps = null, unsubMonth = null;
 const payDoc = () => state.payroll[state.payMonth] ?? null;
 
 /* ───────── routing ───────── */
-const VIEWS = ["dashboard","employees","target","perf","operations","fuel","dues","payroll","bank","reports","activity","bin","app","rules","profit","admins"]; /* "map" hidden for now — add it back to re-enable location monitoring */
+const VIEWS = ["dashboard","employees","target","perf","operations","orddetail","fuel","dues","payroll","bank","reports","activity","bin","app","rules","profit","admins"]; /* "map" hidden for now — add it back to re-enable location monitoring */
 const SUB_VIEWS = ["target","perf"];
 /* pages a read-only Viewer must not see (they can still read reports and move through dates) */
 const VIEWER_HIDE = ["activity"];
 const allowedViews = () => (typeof auth !== "undefined" && auth.role === "VIEWER") ? VIEWS.filter(v => !VIEWER_HIDE.includes(v)) : VIEWS;
-const NAV_ICON = { dashboard:"📊", employees:"👥", target:"🎯", perf:"📈", operations:"📦", fuel:"⛽", dues:"🧾", payroll:"💰", bank:"🏦", reports:"📣", activity:"🕘", bin:"🗑", app:"📱", rules:"⚖️", profit:"💹", admins:"🛡️", map:"📍" };
+const NAV_ICON = { dashboard:"📊", employees:"👥", target:"🎯", perf:"📈", operations:"📦", orddetail:"📋", fuel:"⛽", dues:"🧾", payroll:"💰", bank:"🏦", reports:"📣", activity:"🕘", bin:"🗑", app:"📱", rules:"⚖️", profit:"💹", admins:"🛡️", map:"📍" };
 const view = () => { const h = location.hash.slice(1); return allowedViews().includes(h) ? h : "dashboard"; };
 window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
 
@@ -527,7 +528,7 @@ function render(){
   if (state.offline) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("offline")}</b></div>`; return; }
   if (!state.ready) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("loading")}</b></div>`; return; }
   const ro = state.canWrite ? "" : `<div class="note warn">${t("readOnly")}</div>`;
-  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, dues: vDues, fuel: vFuel, activity: vActivity, bin: vBinAll, bank: vBank, map: vMap, reports: vReports, profit: vProfit, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
+  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, orddetail: vOrdd, dues: vDues, fuel: vFuel, activity: vActivity, bin: vBinAll, bank: vBank, map: vMap, reports: vReports, profit: vProfit, payroll: vPayroll, app: vAppPreview, rules: vRules, admins: vAdmins }[view()])();
   main.querySelectorAll("[data-needs-write]").forEach(el => { if (!state.canWrite) el.disabled = true; });
   if (!state.canWrite) main.querySelectorAll("input:not([id]),select:not([id]),textarea:not([id]),#rulesForm button,#rulesForm input,[data-roleof]").forEach(el => el.disabled = true);
   if (view() === "map") mountMap();
@@ -1235,6 +1236,103 @@ const fuelEntries = r => { const ps = r?.e ?? []; return [...ps, ...FUEL_P.map((
 const fuelSum = r => fuelEntries(r).reduce((s, x) => s + (+x.a || 0), 0);
 const dd = d => d ? new Date(d + "T12:00:00Z").toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }) : "";
 const fRange = x => x.legacy ? t("fu_p" + x.legacy) : x.f && x.t ? (x.f === x.t ? dd(x.f) : `${dd(x.f)} – ${dd(x.t)}`) : dd(x.f || x.t) || "—";
+/* ───────── Order details: Keeta per-courier task report, uploaded for a date range (admin) ───────── */
+const ORDD_F = [
+  { k: "b", h: "Accepted",            type: "int" },
+  { k: "c", h: "Restaurant arrivals", type: "int" },
+  { k: "d", h: "Delivered",           type: "int", star: true },
+  { k: "e", h: "Large orders done",   type: "int" },
+  { k: "f", h: "Rejected",            type: "int" },
+  { k: "g", h: "Rejected (courier)",  type: "int" },
+  { k: "h", h: "Rejected (auto)",     type: "int" },
+  { k: "i", h: "Cancellation %",      type: "pct" },
+  { k: "j", h: "Completion %",        type: "pct" },
+  { k: "k", h: "On-time %",           type: "pct" },
+  { k: "l", h: "Large on-time %",     type: "pct" },
+  { k: "m", h: "Avg time",            type: "min" },
+  { k: "n", h: "Over 55min %",        type: "pct" },
+  { k: "o", h: "Overdue",             type: "int" },
+  { k: "p", h: "Severely overdue",    type: "int" },
+];
+const ordKey = (from, to) => from + "__" + to;
+const fmtOrd = (v, type) => (v == null || v === "") ? "—" : type === "pct" ? (fmt(v * 100) + "%") : type === "min" ? (fmt(v) + "m") : fmt0(v);
+async function saveOrdd(from, to, rows){ await db.doc("orddetail/" + ordKey(from, to)).set({ from, to, rows, updatedAt: Date.now() }); }
+/* read a Keeta order report (Excel/CSV): map columns by header, keyed by Courier ID (column A) */
+function parseOrderDetails(text){
+  const lines = text.replace(/^﻿/, "").split(/\r?\n/).map(l => l.split(/\t|,|;/).map(c => c.trim().replace(/^"|"$/g, "")));
+  const mapHead = h => { h = h.toLowerCase();
+    if (/courier id/.test(h)) return "id";
+    if (/severely overdue/.test(h)) return "p";
+    if (/overdue order tasks/.test(h)) return "o";
+    if (/over 55|prop\./.test(h)) return "n";
+    if (/avg delivery time/.test(h)) return "m";
+    if (/large order on-time|large.*on-time/.test(h)) return "l";
+    if (/on-time rate/.test(h)) return "k";
+    if (/completion rate/.test(h)) return "j";
+    if (/cancellation/.test(h)) return "i";
+    if (/rejected.*courier/.test(h)) return "g";
+    if (/rejected.*auto/.test(h)) return "h";
+    if (/rejected/.test(h)) return "f";
+    if (/large order tasks completed/.test(h)) return "e";
+    if (/delivered/.test(h)) return "d";
+    if (/restaurant arrivals/.test(h)) return "c";
+    if (/accepted/.test(h)) return "b";
+    return null;
+  };
+  let hi = lines.findIndex(c => c.some(x => /courier id/i.test(x)) && c.some(x => /delivered/i.test(x)));
+  const col = {};
+  if (hi >= 0) lines[hi].forEach((h, idx) => { const k = mapHead(h); if (k && col[k] == null) col[k] = idx; });
+  const byPos = Object.keys(col).length <= 3; // header not found/usable → fall back to fixed A..P order
+  const num = v => { const n = parseFloat(String(v ?? "").replace(/[^\d.\-]/g, "")); return isNaN(n) ? undefined : n; };
+  const keys = ["b", "c", "d", "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p"];
+  const out = [];
+  for (let r = 0; r < lines.length; r++) { if (r === hi) continue; const c = lines[r];
+    const id = (col.id != null ? c[col.id] : c[0]) || c.find(x => /^\d{12,20}$/.test(x));
+    if (!id || !/^\d{12,20}$/.test(id)) continue;
+    const row = {};
+    if (byPos) keys.forEach((k, i) => { const v = num(c[i + 1]); if (v !== undefined) row[k] = v; });
+    else for (const k of keys) if (col[k] != null) { const v = num(c[col[k]]); if (v !== undefined) row[k] = v; }
+    out.push({ id, row });
+  }
+  return out;
+}
+function vOrdd(){
+  const keys = Object.keys(state.ordd).sort((a, b) => b.localeCompare(a));
+  const sel = (state.orddKey && state.ordd[state.orddKey]) ? state.orddKey : (keys[0] || "");
+  const doc = state.ordd[sel], rowsMap = doc?.rows || {};
+  const byJ = {}; for (const [id, e] of Object.entries(state.emp)) if (e.jahezId) byJ[String(e.jahezId)] = id;
+  const q = (state.oq || "").trim().toLowerCase();
+  let entries = Object.entries(rowsMap).map(([cid, m]) => { const eid = byJ[cid]; return { cid, m, eid, name: eid ? (state.emp[eid]?.fullName || cid) : "" }; });
+  entries = entries.filter(x => !q || x.cid.includes(q) || (x.name && x.name.toLowerCase().includes(q)));
+  entries.sort((a, b) => (+b.m.d || 0) - (+a.m.d || 0));
+  const vals = entries.map(x => x.m);
+  const sum = k => vals.reduce((s, r) => s + (+r[k] || 0), 0);
+  const avg = k => { const a = vals.filter(r => r[k] != null); return a.length ? a.reduce((s, r) => s + (+r[k] || 0), 0) / a.length : 0; };
+  const unmatched = entries.filter(x => !x.eid).length;
+  return `
+  <div class="head"><div><h1>📋 ${t("nav_orddetail")}</h1><p>${t("ord_hint")}${doc ? ` · <b>${esc(dmy(doc.from))} – ${esc(dmy(doc.to))}</b>` : ""}</p></div>
+    <div class="tools"><button class="btn" data-act="ordd-import" data-needs-write>${t("ord_import")}</button></div></div>
+  ${keys.length ? `<div class="chips"><span class="sub" style="margin-inline-end:4px">${t("fu_months")}:</span>${keys.map(k => { const d = state.ordd[k]; return `<button class="chip ${k === sel ? "on" : ""}" data-act="ordd-period" data-v="${esc(k)}">${esc(dmy(d.from))} – ${esc(dmy(d.to))}</button>`; }).join("")}</div>` : ""}
+  ${doc ? `<div class="kpis">
+    <div class="kpi"><span>${t("ord_kpi_delivered")}</span><b>${fmt0(sum("d"))}</b><small>${entries.length} ${t("ord_drivers")}</small></div>
+    <div class="kpi"><span>${t("ord_kpi_accepted")}</span><b>${fmt0(sum("b"))}</b><small>${t("ord_kpi_rejected")}: ${fmt0(sum("f"))}</small></div>
+    <div class="kpi"><span>${t("ord_kpi_ontime")}</span><b>${fmt(avg("k") * 100)}%</b><small>${t("ord_kpi_completion")}: ${fmt(avg("j") * 100)}%</small></div>
+    <div class="kpi"><span>${t("ord_avgtime_k")}</span><b>${fmt(avg("m"))}</b><small>min</small></div>
+  </div>` : ""}
+  <div class="filters"><input class="input" id="oq" placeholder="${t("search")}" value="${esc(state.oq || "")}"></div>
+  <section class="panel">${entries.length ? `<div class="scroll"><table>
+    <thead><tr><th>${t("name")}</th><th>Courier ID</th>${ORDD_F.map(f => `<th class="r${f.star ? " ordd-star" : ""}">${f.h}</th>`).join("")}</tr></thead>
+    <tbody>${entries.map(x => `<tr>
+      <td>${x.eid ? `<div style="display:flex;gap:10px;align-items:center">${avatarHtml(state.emp[x.eid]?.photoUrl, x.name, 30)}<div class="name">${esc(x.name)}</div></div>` : `<span class="pill p-mute nodot" title="${t("ord_unmatched")}">${t("ord_unmatched")}</span>`}</td>
+      <td class="mono sub nowrap">${esc(x.cid)}</td>
+      ${ORDD_F.map(f => `<td class="r nowrap${f.star ? " ordd-star" : ""}">${f.star ? `<b>${fmtOrd(x.m[f.k], f.type)}</b>` : fmtOrd(x.m[f.k], f.type)}</td>`).join("")}</tr>`).join("")}</tbody>
+    <tfoot><tr><td><b>${t("fu_total")}</b></td><td></td>${ORDD_F.map(f => `<td class="r${f.star ? " ordd-star" : ""}"><b>${f.type === "int" ? fmt0(sum(f.k)) : f.type === "pct" ? fmt(avg(f.k) * 100) + "%" : fmt(avg(f.k)) + "m"}</b></td>`).join("")}</tr></tfoot>
+    </table></div>` : `<div class="empty"><b>${t("ord_none")}</b></div>`}</section>
+  ${unmatched ? `<p class="sub" style="margin-top:10px">⚠️ ${unmatched} ${t("ord_unmatched_n")}</p>` : ""}
+  <p class="sub" style="margin-top:6px">${t("ord_note")}</p>`;
+}
+document.addEventListener("input", e => { if (e.target.id === "oq") { state.oq = e.target.value; render(); const el = $("#oq"); el.focus(); el.setSelectionRange(el.value.length, el.value.length); } });
+
 function vFuel(){
   const k = state.fuelMonth || monthKey(), orders = monthRows(k);
   const months = [...new Set([monthKey(), ...Object.keys(state.fuel)])].sort().reverse();
@@ -1954,6 +2052,33 @@ document.addEventListener("click", async e => {
           if (Object.keys(patch).length) await saveInvoice(m, patch, true);
           toast(`${t("imported")}: ${Object.keys(patch).length} · ${t("perf_unmatched")}: ${missing.length}`);
           if (missing.length) setTimeout(() => openDialog({ title: t("perf_unmatched"), body: `<p class="full">${t("perf_unmatched_help")}</p><p class="full mono sub">${missing.map(esc).join("<br>")}</p>`, footer: `<button type="button" class="btn" data-close>${t("close")}</button>` }), 60);
+        }});
+      return;
+    }
+
+    if (act === "ordd-period") { state.orddKey = b.dataset.v; render(); return; }
+    if (act === "ordd-import") {
+      const ms = todayKey().slice(0, 7) + "-01";
+      openDialog({ title: t("ord_import"), submit: t("csvImport"),
+        body: `<p class="full sub">${t("ord_imp_help")}</p>
+          <label class="f">${t("fu_from")} *<input class="input" type="date" name="f" value="${ms}" required></label>
+          <label class="f">${t("fu_to")} *<input class="input" type="date" name="t" value="${todayKey()}" required></label>
+          <label class="f full">${t("perf_file")}<input class="input" type="file" accept=".xlsx,.xlsm,.xls,.csv,.txt,text/csv" id="orddFile"></label>
+          <p class="full sub" style="margin:-4px 0 0">${t("perf_file_help")}</p>
+          <label class="f full">${t("perf_paste")} <span class="opt">· ${t("optional")}</span><textarea class="input mono" name="csv" rows="5" placeholder="Courier ID … Delivered …" dir="ltr"></textarea></label>`,
+        onSubmit: async fd => {
+          if (!fd.f || !fd.t) fail(t("required"));
+          if (fd.f > fd.t) fail(t("fu_bad_dates"));
+          let text = fd.csv || ""; const file = $("#orddFile")?.files?.[0];
+          if (file) { try { text = await reportText(file); } catch (e) { fail(e.message === "xlsx-missing" ? t("perf_xlsx_off") : t("perf_file_err")); } }
+          const rowsIn = parseOrderDetails(text);
+          if (!rowsIn.length) fail(t("perf_nothing"));
+          const byJ = {}; for (const [, e] of Object.entries(state.emp)) if (e.jahezId) byJ[String(e.jahezId)] = true;
+          const rows = {}; let miss = 0;
+          for (const r of rowsIn) { rows[r.id] = r.row; if (!byJ[r.id]) miss++; }
+          await saveOrdd(fd.f, fd.t, rows);
+          state.orddKey = ordKey(fd.f, fd.t);
+          toast(`${t("imported")}: ${rowsIn.length}${miss ? ` · ${t("perf_unmatched")}: ${miss}` : ""}`);
         }});
       return;
     }
@@ -2951,7 +3076,7 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   tgt_rank_rule: "380–499 × 3.5 SAR · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C), plus rating price for each extra order.", tgt_unrank_rule: "380–499 orders × 4 SAR · 500+ = 2,500 · 600+ = 3,500, plus A/B/C price for each order above 500 or 600. Fuel allowance is paid separately.",
   tgt_note: "Pay so far uses this month's total orders and excludes fines, advances and fuel. Payroll uses these same settings.",
   perf_hint: "Daily Keeta performance for each driver. Drivers see yesterday and today side by side in their app.", perf_yest: "Yesterday", perf_today: "Today", perf_change: "Orders change",
-  perf_orders: "Orders", perf_hours: "Hours", perf_accept: "Accept %", perf_note: "Every daily report is kept for 12 months. The app always shows the latest two report days, and drivers can open any older day from the calendar.", totalOrders: "Total orders", fuel_month_k: "Fuel this month", dash_profit: "Profit · this month", dash_salaries: "Salaries · this month", dash_no_inv: "Keeta invoice not added", dash_avg: "avg {n}/driver", dash_fleet: "Fleet overview", dash_online: "Online now", dash_paytypes: "Pay types", dash_platforms: "Platforms", dash_grades: "Performance (latest)", dash_target_hit: "Hit 450+ orders", dash_newrp: "New complaints", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
+  perf_orders: "Orders", perf_hours: "Hours", perf_accept: "Accept %", perf_note: "Every daily report is kept for 12 months. The app always shows the latest two report days, and drivers can open any older day from the calendar.", totalOrders: "Total orders", fuel_month_k: "Fuel this month", dash_profit: "Profit · this month", dash_salaries: "Salaries · this month", dash_no_inv: "Keeta invoice not added", dash_avg: "avg {n}/driver", dash_fleet: "Fleet overview", dash_online: "Online now", dash_paytypes: "Pay types", dash_platforms: "Platforms", dash_grades: "Performance (latest)", dash_target_hit: "Hit 450+ orders", dash_newrp: "New complaints", nav_orddetail: "Order details", ord_hint: "Keeta per-courier task report, uploaded for a date range.", ord_import: "Upload order report", ord_imp_help: "Upload the Keeta order report (Excel/CSV) and pick the dates it covers. Drivers are matched by Courier ID. Column D (Delivered) is totalled below.", ord_kpi_delivered: "Delivered (D)", ord_kpi_accepted: "Accepted", ord_kpi_rejected: "Rejected", ord_kpi_ontime: "On-time (avg)", ord_kpi_completion: "Completion", ord_avgtime_k: "Avg delivery time", ord_drivers: "couriers", ord_unmatched: "Not matched", ord_unmatched_n: "courier ID(s) in the file are not linked to any driver.", ord_none: "No order report yet — upload one.", ord_note: "Admin only. Upload this same Keeta report any time with its date range; each range is kept separately and drivers are matched by Courier ID.", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
 Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB LOGISTICS · কর্মচারী ব্যবস্থাপনা", au_email: "ইমেইল", au_pass: "পাসওয়ার্ড",
   au_signin: "লগইন", au_signup: "এডমিন অ্যাকাউন্ট খুলুন", au_forgot: "পাসওয়ার্ড ভুলে গেছেন?", au_have: "অ্যাকাউন্ট আছে? লগইন করুন", au_new: "প্রথমবার? এডমিন অ্যাকাউন্ট খুলুন",
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
@@ -2994,7 +3119,7 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   tgt_rank_rule: "৩৮০–৪৯৯ × ৩.৫ রিয়াল · ৫০০+ = ৩,০০০ / ২,৫০০ / ২,০০০ · ৬০০+ = ৪,২৫০ / ৩,৮০০ / ৩,০০০ (A / B / C), সাথে প্রতি অতিরিক্ত অর্ডারে রেটিং মূল্য।", tgt_unrank_rule: "৩৮০–৪৯৯ অর্ডার × ৪ রিয়াল · ৫০০+ = ২,৫০০ · ৬০০+ = ৩,৫০০, সাথে ৫০০ বা ৬০০-এর বেশি প্রতি অর্ডারে A/B/C মূল্য। জ্বালানি ভাতা আলাদা।",
   tgt_note: "এখন পর্যন্ত বেতন এই মাসের মোট অর্ডার থেকে হিসাব, জরিমানা, অগ্রিম ও পেট্রোল বাদে। বেতন হিসাবেও এই একই নিয়ম ব্যবহার হয়।",
   perf_hint: "প্রত্যেক কর্মীর দৈনিক Keeta পারফরমেন্স। কর্মীরা অ্যাপে গতকাল আর আজ পাশাপাশি দেখবে।", perf_yest: "গতকাল", perf_today: "আজ", perf_change: "অর্ডারের পরিবর্তন",
-  perf_orders: "অর্ডার", perf_hours: "ঘণ্টা", perf_accept: "গ্রহণ %", perf_note: "প্রতিদিনের রিপোর্ট ১২ মাস রাখা থাকে। অ্যাপে সবসময় সর্বশেষ দুই দিনের রিপোর্ট দেখায়, আর ক্যালেন্ডার থেকে কর্মী আগের যেকোনো দিন দেখতে পারে।", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", dash_profit: "লাভ · এই মাস", dash_salaries: "বেতন · এই মাস", dash_no_inv: "কিতা ইনভয়েস দেওয়া হয়নি", dash_avg: "গড় {n}/কর্মী", dash_fleet: "ফ্লিট ওভারভিউ", dash_online: "এখন অনলাইন", dash_paytypes: "বেতনের ধরন", dash_platforms: "প্ল্যাটফর্ম", dash_grades: "পারফরম্যান্স (সর্বশেষ)", dash_target_hit: "৪৫০+ অর্ডার", dash_newrp: "নতুন অভিযোগ", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
+  perf_orders: "অর্ডার", perf_hours: "ঘণ্টা", perf_accept: "গ্রহণ %", perf_note: "প্রতিদিনের রিপোর্ট ১২ মাস রাখা থাকে। অ্যাপে সবসময় সর্বশেষ দুই দিনের রিপোর্ট দেখায়, আর ক্যালেন্ডার থেকে কর্মী আগের যেকোনো দিন দেখতে পারে।", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", dash_profit: "লাভ · এই মাস", dash_salaries: "বেতন · এই মাস", dash_no_inv: "কিতা ইনভয়েস দেওয়া হয়নি", dash_avg: "গড় {n}/কর্মী", dash_fleet: "ফ্লিট ওভারভিউ", dash_online: "এখন অনলাইন", dash_paytypes: "বেতনের ধরন", dash_platforms: "প্ল্যাটফর্ম", dash_grades: "পারফরম্যান্স (সর্বশেষ)", dash_target_hit: "৪৫০+ অর্ডার", dash_newrp: "নতুন অভিযোগ", nav_orddetail: "অর্ডার বিস্তারিত", ord_hint: "কিতার প্রতি-কুরিয়ার টাস্ক রিপোর্ট, তারিখ-পরিসর অনুযায়ী আপলোড।", ord_import: "অর্ডার রিপোর্ট আপলোড", ord_imp_help: "কিতার অর্ডার রিপোর্ট (Excel/CSV) আপলোড করুন ও কোন তারিখ থেকে কোন তারিখ বেছে নিন। Courier ID দিয়ে কর্মী মেলানো হয়। কলাম D (Delivered) নিচে যোগ করা হয়।", ord_kpi_delivered: "ডেলিভারড (D)", ord_kpi_accepted: "গৃহীত", ord_kpi_rejected: "বাতিল", ord_kpi_ontime: "সময়মতো (গড়)", ord_kpi_completion: "সম্পন্নের হার", ord_avgtime_k: "গড় ডেলিভারি সময়", ord_drivers: "কুরিয়ার", ord_unmatched: "মেলেনি", ord_unmatched_n: "টি Courier ID ফাইলে আছে যা কোনো কর্মীর সাথে যুক্ত নয়।", ord_none: "এখনো কোনো অর্ডার রিপোর্ট নেই — আপলোড করুন।", ord_note: "শুধু অ্যাডমিন। এই একই কিতা রিপোর্ট তারিখ-পরিসরসহ যেকোনো সময় আপলোড করুন; প্রতিটি পরিসর আলাদা রাখা হয়, Courier ID দিয়ে কর্মী মেলে।", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
 Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTICS · إدارة الموظفين", au_email: "البريد الإلكتروني", au_pass: "كلمة المرور",
   au_signin: "دخول", au_signup: "إنشاء حساب مشرف", au_forgot: "نسيت كلمة المرور؟", au_have: "لديك حساب؟ سجّل الدخول", au_new: "أول مرة؟ أنشئ حساب المشرف",
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
@@ -3037,7 +3162,7 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   tgt_rank_rule: "380–499 × 3.5 ريال · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C)، مع سعر التقييم لكل طلب إضافي.", tgt_unrank_rule: "380–499 طلب × 4 ريال · 500+ = 2,500 · 600+ = 3,500، مع سعر A/B/C لكل طلب فوق 500 أو 600. بدل الوقود منفصل.",
   tgt_note: "الراتب حتى الآن من إجمالي طلبات الشهر بدون المخالفات والسلف والوقود. الرواتب تستخدم نفس الإعدادات.",
   perf_hint: "الأداء اليومي لكل سائق. يرى السائق أمس واليوم جنباً إلى جنب في تطبيقه.", perf_yest: "أمس", perf_today: "اليوم", perf_change: "تغير الطلبات",
-  perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ كل تقرير يومي 12 شهراً. يعرض التطبيق دائماً آخر يومين، ويمكن للسائق فتح أي يوم سابق من التقويم.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", dash_profit: "الربح · هذا الشهر", dash_salaries: "الرواتب · هذا الشهر", dash_no_inv: "لم تُضف فاتورة كيتا", dash_avg: "متوسط {n}/سائق", dash_fleet: "نظرة عامة على الأسطول", dash_online: "متصل الآن", dash_paytypes: "أنواع الرواتب", dash_platforms: "المنصّات", dash_grades: "الأداء (الأحدث)", dash_target_hit: "450+ طلب", dash_newrp: "شكاوى جديدة", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
+  perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ كل تقرير يومي 12 شهراً. يعرض التطبيق دائماً آخر يومين، ويمكن للسائق فتح أي يوم سابق من التقويم.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", dash_profit: "الربح · هذا الشهر", dash_salaries: "الرواتب · هذا الشهر", dash_no_inv: "لم تُضف فاتورة كيتا", dash_avg: "متوسط {n}/سائق", dash_fleet: "نظرة عامة على الأسطول", dash_online: "متصل الآن", dash_paytypes: "أنواع الرواتب", dash_platforms: "المنصّات", dash_grades: "الأداء (الأحدث)", dash_target_hit: "450+ طلب", dash_newrp: "شكاوى جديدة", nav_orddetail: "تفاصيل الطلبات", ord_hint: "تقرير كيتا لمهام كل مندوب، يُرفع لفترة زمنية.", ord_import: "رفع تقرير الطلبات", ord_imp_help: "ارفع تقرير طلبات كيتا (Excel/CSV) واختر الفترة التي يغطيها. تتم مطابقة المندوبين عبر رقم المندوب. يُجمع العمود D (المُسلَّمة) في الأسفل.", ord_kpi_delivered: "المُسلَّمة (D)", ord_kpi_accepted: "المقبولة", ord_kpi_rejected: "المرفوضة", ord_kpi_ontime: "في الوقت (متوسط)", ord_kpi_completion: "نسبة الإكمال", ord_avgtime_k: "متوسط وقت التوصيل", ord_drivers: "مندوب", ord_unmatched: "غير مطابق", ord_unmatched_n: "رقم مندوب في الملف غير مرتبط بأي سائق.", ord_none: "لا يوجد تقرير طلبات بعد — ارفع واحداً.", ord_note: "للمشرف فقط. ارفع تقرير كيتا نفسه في أي وقت مع فترته؛ تُحفظ كل فترة على حدة، وتتم المطابقة عبر رقم المندوب.", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
 
 const auth = { mode: "signin", msg: "", err: "", busy: false, session: null, role: null, admins: [] };
 function renderAuth(){
@@ -3192,6 +3317,7 @@ async function startAdmin(session){
   db.collection("pinreq").onSnapshot(s => { state.pinreq = docsMap(s); soon(); }, console.warn);
   db.collection("payroll").onSnapshot(s => { state.payroll = docsMap(s); soon(); }, console.warn);
   db.collection("invoice").onSnapshot(s => { state.invoice = docsMap(s); soon(); }, console.warn);
+  db.collection("orddetail").onSnapshot(s => { state.ordd = docsMap(s); soon(); }, console.warn);
   db.collection("daily").onSnapshot(s => { state.dailyAll = docsMap(s); soon(); }, console.warn);
   db.collection("totals").onSnapshot(s => { state.totals = docsMap(s); soon(); }, console.warn);
   db.collection("fuel").onSnapshot(s => { state.fuel = docsMap(s); soon(); }, console.warn);
