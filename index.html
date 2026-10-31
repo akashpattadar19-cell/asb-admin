@@ -475,8 +475,11 @@ const payDoc = () => state.payroll[state.payMonth] ?? null;
 /* ───────── routing ───────── */
 const VIEWS = ["dashboard","employees","target","perf","operations","fuel","dues","payroll","bank","reports","activity","bin","app","rules","profit","admins"]; /* "map" hidden for now — add it back to re-enable location monitoring */
 const SUB_VIEWS = ["target","perf"];
+/* pages a read-only Viewer must not see (they can still read reports and move through dates) */
+const VIEWER_HIDE = ["activity"];
+const allowedViews = () => (typeof auth !== "undefined" && auth.role === "VIEWER") ? VIEWS.filter(v => !VIEWER_HIDE.includes(v)) : VIEWS;
 const NAV_ICON = { dashboard:"📊", employees:"👥", target:"🎯", perf:"📈", operations:"📦", fuel:"⛽", dues:"🧾", payroll:"💰", bank:"🏦", reports:"📣", activity:"🕘", bin:"🗑", app:"📱", rules:"⚖️", profit:"💹", admins:"🛡️", map:"📍" };
-const view = () => { const h = location.hash.slice(1); return VIEWS.includes(h) ? h : "dashboard"; };
+const view = () => { const h = location.hash.slice(1); return allowedViews().includes(h) ? h : "dashboard"; };
 window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); });
 
 /* Avoid wiping a field the admin is typing in when live data arrives */
@@ -492,7 +495,7 @@ function renderShell(){
   document.querySelectorAll("[data-t]").forEach(el => el.textContent = t(el.dataset.t));
   const v = view();
   const pendingN = Object.values(state.emp).filter(e => e.status === "PENDING").length;
-  $("#nav").innerHTML = VIEWS.map(k => `<a href="#${k}" class="${SUB_VIEWS.includes(k) ? "nav-sub" : ""}" ${k===v?'aria-current="page"':""}><span class="nav-l"><span class="nav-ic">${NAV_ICON[k]||"•"}</span><span>${t("nav_"+k)}</span></span>${k==="employees"&&pendingN?`<span class="count">${pendingN}</span>`:""}</a>`).join("") + `<a href="${DRIVER_WEB}" target="_blank" rel="noopener" class="nav-driver"><span class="nav-l"><span class="nav-ic">🚗</span><span>${t("drv_web")}</span></span><span>↗</span></a>`;
+  $("#nav").innerHTML = allowedViews().map(k => `<a href="#${k}" class="${SUB_VIEWS.includes(k) ? "nav-sub" : ""}" ${k===v?'aria-current="page"':""}><span class="nav-l"><span class="nav-ic">${NAV_ICON[k]||"•"}</span><span>${t("nav_"+k)}</span></span>${k==="employees"&&pendingN?`<span class="count">${pendingN}</span>`:""}</a>`).join("") + `<a href="${DRIVER_WEB}" target="_blank" rel="noopener" class="nav-driver"><span class="nav-l"><span class="nav-ic">🚗</span><span>${t("drv_web")}</span></span><span>↗</span></a>`;
   setTimeout(renderShellBadge, 0);
   const langBtns = [["en","EN"],["bn","বাংলা"],["ar","عربي"]].map(([k,l]) => `<button data-lang="${k}" aria-pressed="${k===lang}">${l}</button>`).join("");
   $("#lang").innerHTML = langBtns; $("#langM").innerHTML = langBtns;
