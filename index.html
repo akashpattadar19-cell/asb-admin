@@ -2078,9 +2078,13 @@ document.addEventListener("click", async e => {
           for (const r of rowsIn) { rows[r.id] = r.row; if (!byJ[r.id]) miss++; }
           await saveOrdd(fd.f, fd.t, rows);
           state.orddKey = ordKey(fd.f, fd.t);
-          // Delivered (D) becomes that pay-month's order count → target, payroll, leaderboard and the driver app
-          const mkey = cycleOf(fd.t), allDocs = { ...state.ordd, [ordKey(fd.f, fd.t)]: { from: fd.f, to: fd.t, rows } }, sumByEid = {};
-          for (const d of Object.values(allDocs)) { if (cycleOf(d.to) !== mkey) continue; for (const [cid, row] of Object.entries(d.rows || {})) { const eid = byJ[cid]; if (eid) sumByEid[eid] = (sumByEid[eid] || 0) + (+row.d || 0); } }
+          // Delivered (D) becomes that pay-month's order count → target, payroll, leaderboard and the driver app.
+          // The Keeta report is cumulative, so the MOST RECENT upload for the month sets the count (no summing).
+          const mkey = cycleOf(fd.t);
+          const allDocs = { ...state.ordd, [ordKey(fd.f, fd.t)]: { from: fd.f, to: fd.t, rows, updatedAt: Date.now() } };
+          const inMonth = Object.values(allDocs).filter(d => cycleOf(d.to) === mkey).sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
+          const latest = inMonth[inMonth.length - 1], sumByEid = {};
+          if (latest) for (const [cid, row] of Object.entries(latest.rows || {})) { const eid = byJ[cid]; if (eid) sumByEid[eid] = (+row.d || 0); }
           const tot = { ...(state.totals[mkey]?.rows ?? {}) };
           for (const [eid, oo] of Object.entries(sumByEid)) tot[eid] = { ...(tot[eid] ?? {}), o: Math.round(oo), at: Date.now() };
           await db.doc("totals/" + mkey).set({ ...(state.totals[mkey] ?? {}), month: mkey, rows: tot, updatedAt: Date.now() });
