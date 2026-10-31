@@ -467,6 +467,15 @@ const DEFAULT_RULES = { targetOrders: 450, baseSalary: 2400, bonusPer: 5, penalt
   uMin: 380, uRate: 4, uT1: 500, uB1: 2500, uT2: 600, uB2: 3500, ex1A: 5, ex1B: 4, ex1C: 3, ex2A: 7, ex2B: 6, ex2C: 5, fuelPer: 2, absence: 100,
   rMin: 380, rRate: 3.5, rT1: 500, rB1A: 3000, rB1B: 2500, rB1C: 2000, rT2: 600, rB2A: 4250, rB2B: 3800, rB2C: 3000, rx1A: 6, rx1B: 5, rx1C: 4, rx2A: 8, rx2B: 7, rx2C: 6 };
 const CATS = ["TRAFFIC_VIOLATION","DELAY","MISSING_ITEM","VEHICLE_DAMAGE","OTHER"];
+/* Standard "not valid this month" reasons (from the salary sheet) — shown as a dropdown; free text still allowed */
+const INVALID_REASONS = [
+  "عدم إكمال 26 يوم حضور خلال الشهر  |  Did not complete 26 attendance days in the month",
+  "فشل التحقق من الوجه  |  Face verification failed",
+  "فتح الحساب بالتقاط الصورة داخل السكن  |  Account opened using a photo taken at the residence",
+  "استخدام رقم لوحة مركبة مزوّر  |  Use of a fake vehicle plate number",
+  "حذف الحساب في أول يوم من الشهر وإنشاء حساب جديد  |  Account deleted on the first day of the month and a new one created",
+  "استخدام إقامة (رخصة إقامة) مزوّرة  |  Use of a fake residence permit (Iqama)",
+];
 async function sha(s){ const b = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)); return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join(""); }
 function randomPin(){ let p; do { p = String(crypto.getRandomValues(new Uint32Array(1))[0] % 10000).padStart(4,"0"); } while (/^(\d)\1{3}$|^(0123|1234|2345|3456|4567|5678|6789)$/.test(p)); return p; }
 
@@ -2442,7 +2451,7 @@ document.addEventListener("click", async e => {
       const nf = (k, lbl) => `<label class="f">${lbl}<input class="input num" type="number" step="0.01" name="${k}" value="${a[k] ?? ""}" placeholder="0"></label>`;
       openDialog({ title: `${esc(s.name)} · ${t("pa_adj_t")}`, submit: t("save"),
         body: `<label class="f full chk-f"><label class="chk"><input type="checkbox" name="valid" ${a.valid === false ? "" : "checked"}> ${t("pa_valid")}</label></label>
-          <label class="f full">${t("pa_reason")} <span class="opt">· ${t("optional")}</span><input class="input" name="reason" value="${esc(a.reason || "")}" placeholder="${t("pa_reason_ph")}"></label>
+          <label class="f full">${t("pa_reason")} <span class="opt">· ${t("optional")}</span><input class="input" name="reason" list="invReasons" value="${esc(a.reason || "")}" placeholder="${t("pa_reason_ph")}"><datalist id="invReasons">${INVALID_REASONS.map(r => `<option value="${esc(r)}">`).join("")}</datalist></label>
           ${nf("traffic", t("pa_traffic"))}${nf("accident", t("pa_accident"))}${nf("company", t("pa_company"))}${nf("akash", t("pa_akash"))}${nf("advance", t("pa_advance"))}${nf("keeta", t("pa_keeta"))}${nf("duesBonus", t("pa_bonus_o"))}
           <p class="full sub">${t("pa_adj_note")}</p>`,
         onSubmit: async fd => {
