@@ -89,6 +89,10 @@ label.f.check{flex-direction:row;align-items:center;text-transform:none;font-siz
 .grid2{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:16px}
 .dash-col{display:flex;flex-direction:column;gap:16px;min-width:0}
 .ordd-star{background:color-mix(in srgb,var(--gold) 16%,transparent)}
+.ordd-bad{background:color-mix(in srgb,var(--bad) 13%,transparent);color:var(--bad)}
+.ordd-badh{color:var(--bad)}
+.dash-sec{margin:22px 0 12px;display:flex;align-items:center;gap:10px;font:600 16px var(--f-display)}
+.dash-sec a{margin-inline-start:auto}
 .dash-rows{display:flex;flex-direction:column}
 .dr{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--line)}
 .dr:last-child{border-bottom:0}
@@ -557,39 +561,58 @@ const shortDate = ms => ms ? new Date(ms).toLocaleDateString("en-GB", { timeZone
 const outstandingOf = (coll, empId) => Object.values(coll).filter(x => !x.waived && (!empId || x.employeeId === empId)).reduce((s,x)=>s + (+x.remaining||0), 0);
 
 /* ───────── Dashboard ───────── */
+/* latest order-details report for the current pay month (the cumulative Keeta report) */
+function orddCurrent(){
+  const m = monthKey(), inM = Object.values(state.ordd).filter(d => cycleOf(d.to) === m).sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
+  return inM[inM.length - 1] || null;
+}
+/* company-wide work-quality snapshot from an order-details report (matched drivers only) */
+function orddAgg(doc){
+  const byJ = {}; for (const [id, e] of Object.entries(state.emp)) if (e.jahezId) byJ[String(e.jahezId)] = id;
+  const list = Object.entries(doc?.rows || {}).filter(([cid]) => byJ[cid]).map(([cid, mm]) => ({ eid: byJ[cid], mm }));
+  const rows = list.map(x => x.mm);
+  const sum = k => rows.reduce((s, r) => s + (+r[k] || 0), 0);
+  const avg = k => { const a = rows.filter(r => r[k] != null); return a.length ? a.reduce((s, r) => s + (+r[k] || 0), 0) / a.length : 0; };
+  return { list, n: rows.length, delivered: sum("d"), ontime: avg("k"), completion: avg("j"), cancel: avg("i"), rejected: sum("f"), overdue: sum("o"), severe: sum("p") };
+}
 function vDashboard(){
   const m = monthKey();
   const emps = Object.values(state.emp).filter(e => e.status !== "DELETED");
-  const actE = activeEmps();                       // [[id,e],...] active only
+  const actE = activeEmps();
   const active = actE.length, pend = emps.filter(e=>e.status==="PENDING").length;
   const rows = monthRanked(m), maxO = rows[0]?.o || 1;
   const allRows = Object.values(monthRows(m));
   const orders = allRows.reduce((s,r)=>s+(+r.o||0),0), fuel = allRows.reduce((s,r)=>s+(+r.f||0),0);
   const reportedN = allRows.filter(r=>+r.o>0).length, avg = active ? Math.round(orders/active) : 0;
   const fOut = outstandingOf(state.fines), aOut = outstandingOf(state.adv), dues = r2(fOut + aOut);
-  // salaries we pay + what Keeta invoices this month → company profit
   const net = netByEmp(m), salaries = r2(Object.values(net).reduce((a,b)=>a+(+b||0),0));
   const invTotal = r2(Object.values(state.invoice[m]?.rows || {}).reduce((a,r)=>a+(+r.total||0),0)), hasInv = invTotal > 0, profit = r2(invTotal - salaries);
-  // fleet mix
-  const payMix = { TARGET:0, PER_ORDER:0, FLAT:0 }, platMix = {};
-  actE.forEach(([,e]) => { payMix[e.payType||"TARGET"] = (payMix[e.payType||"TARGET"]||0)+1; const p = e.platform||"Other"; platMix[p]=(platMix[p]||0)+1; });
   const onlineN = actE.filter(([id])=>isOnline(id)).length;
-  const pd = perfDays()[0], prows = pd ? (state.perf[pd]?.rows||{}) : {}, gradeMix = {A:0,B:0,C:0,D:0};
-  Object.values(prows).forEach(r=>{ if (r.g in gradeMix) gradeMix[r.g]++; });
-  const graded = gradeMix.A+gradeMix.B+gradeMix.C+gradeMix.D;
   const target = +state.rules.targetOrders || 450, hit = allRows.filter(r=>(+r.o||0) >= target).length;
   if (!RPT.loaded) loadReports(); const newRp = RPT.newN || 0;
-  const recent = allDues().map(x => [x.id, { ...x, category: x.type }]).sort((a,b)=>String(b[1].date||"").localeCompare(String(a[1].date||""))).slice(0,6);
+  // work-experience snapshot from the latest order-details report
+  const od = orddCurrent(), ag = od ? orddAgg(od) : null, pc = v => fmt((+v || 0) * 100) + "%";
+  const issues = ag ? ag.list.map(x => ({ eid: x.eid, o: +x.mm.o || 0, p: +x.mm.p || 0, f: +x.mm.f || 0, score: (+x.mm.o || 0) + (+x.mm.p || 0) * 2 + (+x.mm.f || 0) }))
+    .filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 7) : [];
   return `
   <div class="head"><div><h1>${t("today")} · ${todayKey()}</h1><p>${t("riyadh")} · ${cycleRange(m)}</p></div><div class="tools"><button class="btn" data-act="notice-new" data-needs-write>📣 ${t("nt_send")}</button><a class="btn gold" href="${DRIVER_WEB}" target="_blank" rel="noopener">${t("drv_web")} ↗</a></div></div>
   <div class="kpis">
-    <a class="kpi" href="#employees" style="color:inherit;text-decoration:none"><span>${t("activeEmp")}</span><b>${active}</b><small>${pend} ${t("pending")}</small></a>
-    <a class="kpi" href="#target" style="color:inherit;text-decoration:none"><span>${t("totalOrders")}</span><b>${fmt0(orders)}</b><small>${t("dash_avg", { n: fmt0(avg) })} · ${reportedN} ${t("reported")}</small></a>
+    <a class="kpi" href="#employees" style="color:inherit;text-decoration:none"><span>${t("activeEmp")}</span><b>${active}</b><small>${onlineN} ${t("dash_online_s")} · ${pend} ${t("pending")}</small></a>
+    <a class="kpi" href="#target" style="color:inherit;text-decoration:none"><span>${t("totalOrders")}</span><b>${fmt0(orders)}</b><small>${t("dash_avg", { n: fmt0(avg) })} · ${hit} ${t("dash_hit_s")}</small></a>
     <a class="kpi" href="#profit" style="color:inherit;text-decoration:none"><span>${t("dash_profit")}</span>${hasInv ? `<b class="${profit<0?"neg":"pos"}">${fmt(profit)}</b><small>${t("sar")}</small>` : `<b class="sub">—</b><small>${t("dash_no_inv")}</small>`}</a>
     <a class="kpi" href="#payroll" style="color:inherit;text-decoration:none"><span>${t("dash_salaries")}</span><b>${fmt(salaries)}</b><small>${t("sar")}</small></a>
     <a class="kpi" href="#fuel" style="color:inherit;text-decoration:none"><span>${t("fuel_month_k")}</span><b>${fmt(fuel)}</b><small>${t("sar")}</small></a>
     <a class="kpi ${dues>0?"alert":""}" href="#dues" style="color:inherit;text-decoration:none"><span>${t("du_left")}</span><b class="${dues>0?"neg":""}">${fmt(dues)}</b><small>${t("sar")}</small></a>
   </div>
+  <h2 class="dash-sec">${t("dash_exp")} ${od ? `<span class="sub" style="font-weight:400">· ${esc(dmy(od.from))} – ${esc(dmy(od.to))}</span>` : ""}<a class="btn ghost sm" href="#orddetail">${t("nav_orddetail")}</a></h2>
+  ${ag ? `<div class="kpis">
+    <div class="kpi"><span>${t("dash_ontime")}</span><b class="${ag.ontime>=0.95?"pos":""}">${pc(ag.ontime)}</b><small>${t("dash_avg_s")}</small></div>
+    <div class="kpi"><span>${t("dash_completion")}</span><b class="${ag.completion>=0.98?"pos":""}">${pc(ag.completion)}</b><small>${t("dash_avg_s")}</small></div>
+    <div class="kpi"><span>${t("dash_cancel")}</span><b class="${ag.cancel>0.02?"neg":""}">${pc(ag.cancel)}</b><small>${t("dash_avg_s")}</small></div>
+    <div class="kpi"><span>${t("dash_rejected")}</span><b class="${ag.rejected?"neg":""}">${fmt0(ag.rejected)}</b><small>${t("dash_total_s")}</small></div>
+    <div class="kpi"><span>${t("dash_overdue")}</span><b class="${ag.overdue?"neg":""}">${fmt0(ag.overdue)}</b><small>${t("dash_total_s")}</small></div>
+    <div class="kpi ${ag.severe?"alert":""}"><span>${t("dash_severe")}</span><b class="${ag.severe?"neg":""}">${fmt0(ag.severe)}</b><small>${t("dash_total_s")}</small></div>
+  </div>` : `<section class="panel"><div class="empty"><b>${t("dash_no_exp")}</b><a class="btn sm" href="#orddetail" style="margin-top:8px">${t("ord_import")}</a></div></section>`}
   <div class="grid2">
     <section class="panel"><h2>${t("leaderboard_m")}<a class="btn ghost sm" href="#target">${t("nav_target")}</a></h2>
       ${rows.length ? `<div class="scroll"><table><thead><tr><th>${t("rank")}</th><th>${t("name")}</th><th class="r">${t("orders")}</th></tr></thead><tbody>
@@ -598,21 +621,16 @@ function vDashboard(){
         <td class="r"><b>${fmt0(r.o)}</b></td></tr>`).join("")}
       </tbody></table></div>` : `<div class="empty"><b>${t("noOrders")}</b>${t("noOrdersHint")}</div>`}
     </section>
-    <div class="dash-col">
-      <section class="panel"><h2>${t("dash_fleet")}</h2>
-        <div class="dash-rows">
-          <div class="dr"><span>${t("dash_online")}</span><div class="dr-v"><span class="pill ${onlineN?"p-good":"p-mute"} nodot">${onlineN} / ${active}</span></div></div>
-          <div class="dr"><span>${t("dash_paytypes")}</span><div class="dr-v"><span class="pill p-info nodot">Rank ${payMix.TARGET}</span><span class="pill p-info nodot">UnRank ${payMix.PER_ORDER}</span><span class="pill p-info nodot">Per Order ${payMix.FLAT}</span></div></div>
-          <div class="dr"><span>${t("dash_platforms")}</span><div class="dr-v">${Object.entries(platMix).map(([p,n])=>`<span class="pill p-mute nodot">${esc(p)} ${n}</span>`).join("") || "—"}</div></div>
-          <div class="dr"><span>${t("dash_grades")}</span><div class="dr-v">${graded ? ["A","B","C","D"].map(g=>`<span class="pill p-mute nodot">${g} ${gradeMix[g]}</span>`).join("") : `<span class="sub">—</span>`}</div></div>
-          <div class="dr"><span>${t("dash_target_hit")}</span><div class="dr-v"><span class="pill ${hit?"p-good":"p-mute"} nodot">${hit}</span></div></div>
-          <a class="dr" href="#reports" style="color:inherit;text-decoration:none"><span>${t("dash_newrp")}</span><div class="dr-v"><span class="pill ${newRp?"p-bad":"p-mute"} nodot">${newRp}</span></div></a>
-        </div>
-      </section>
-      <section class="panel"><h2>${t("du_recent")}<a class="btn ghost sm" href="#dues">${t("nav_dues")}</a></h2>
-        ${recent.length ? `<div class="scroll"><table><tbody>${recent.map(([,f])=>`<tr><td><div class="name">${esc(empName(f.employeeId))}</div><div class="sub">${f.date ? esc(dmy(f.date)) : t("du_nodate")} · ${t(f.category)}</div></td><td class="r nowrap ${f.waived?"sub":"neg"}">${fmt(f.amount)}</td></tr>`).join("")}</tbody></table></div>` : `<div class="empty"><b>${t("noFines")}</b></div>`}
-      </section>
-    </div>
+    <section class="panel"><h2>⚠️ ${t("dash_attention")}</h2>
+      <div class="dash-rows">
+        <a class="dr" href="#employees" style="color:inherit;text-decoration:none"><span>${t("dash_pending")}</span><div class="dr-v"><span class="pill ${pend?"p-warn":"p-mute"} nodot">${pend}</span></div></a>
+        <a class="dr" href="#reports" style="color:inherit;text-decoration:none"><span>${t("dash_newrp")}</span><div class="dr-v"><span class="pill ${newRp?"p-bad":"p-mute"} nodot">${newRp}</span></div></a>
+      </div>
+      ${issues.length ? `<div class="scroll" style="margin-top:8px"><table><thead><tr><th>${t("name")}</th><th class="r">${t("dash_rejected")}</th><th class="r">${t("dash_overdue")}</th><th class="r">${t("dash_severe")}</th></tr></thead><tbody>
+        ${issues.map(x=>`<tr><td><div style="display:flex;gap:10px;align-items:center">${avatarHtml(state.emp[x.eid]?.photoUrl, empName(x.eid), 28)}<div class="name">${esc(empName(x.eid))}</div></div></td>
+          <td class="r">${x.f?`<b class="neg">${x.f}</b>`:"—"}</td><td class="r">${x.o?`<b class="neg">${x.o}</b>`:"—"}</td><td class="r">${x.p?`<b class="neg">${x.p}</b>`:"—"}</td></tr>`).join("")}
+      </tbody></table></div>` : `<div class="empty" style="margin-top:8px"><b>${ag ? t("dash_allgood") : t("dash_no_exp")}</b></div>`}
+    </section>
   </div>`;
 }
 
@@ -1238,21 +1256,21 @@ const dd = d => d ? new Date(d + "T12:00:00Z").toLocaleDateString("en-GB", { day
 const fRange = x => x.legacy ? t("fu_p" + x.legacy) : x.f && x.t ? (x.f === x.t ? dd(x.f) : `${dd(x.f)} – ${dd(x.t)}`) : dd(x.f || x.t) || "—";
 /* ───────── Order details: Keeta per-courier task report, uploaded for a date range (admin) ───────── */
 const ORDD_F = [
-  { k: "b", h: "Accepted",            type: "int" },
-  { k: "c", h: "Restaurant arrivals", type: "int" },
   { k: "d", h: "Delivered",           type: "int", star: true },
+  { k: "b", h: "Accepted",            type: "int" },
   { k: "e", h: "Large orders done",   type: "int" },
-  { k: "f", h: "Rejected",            type: "int" },
-  { k: "g", h: "Rejected (courier)",  type: "int" },
-  { k: "h", h: "Rejected (auto)",     type: "int" },
-  { k: "i", h: "Cancellation %",      type: "pct" },
-  { k: "j", h: "Completion %",        type: "pct" },
+  { k: "c", h: "Restaurant arrivals", type: "int" },
   { k: "k", h: "On-time %",           type: "pct" },
+  { k: "j", h: "Completion %",        type: "pct" },
   { k: "l", h: "Large on-time %",     type: "pct" },
   { k: "m", h: "Avg time",            type: "min" },
-  { k: "n", h: "Over 55min %",        type: "pct" },
-  { k: "o", h: "Overdue",             type: "int" },
-  { k: "p", h: "Severely overdue",    type: "int" },
+  { k: "i", h: "Cancellation %",      type: "pct", bad: true },
+  { k: "f", h: "Rejected",            type: "int", bad: true },
+  { k: "g", h: "Rejected (courier)",  type: "int", bad: true },
+  { k: "h", h: "Rejected (auto)",     type: "int", bad: true },
+  { k: "n", h: "Over 55min %",        type: "pct", bad: true },
+  { k: "o", h: "Overdue",             type: "int", bad: true },
+  { k: "p", h: "Severely overdue",    type: "int", bad: true },
 ];
 const ordKey = (from, to) => from + "__" + to;
 const fmtOrd = (v, type) => (v == null || v === "") ? "—" : type === "pct" ? (fmt(v * 100) + "%") : type === "min" ? (fmt(v) + "m") : fmt0(v);
@@ -1321,11 +1339,11 @@ function vOrdd(){
   </div>` : ""}
   <div class="filters"><input class="input" id="oq" placeholder="${t("search")}" value="${esc(state.oq || "")}"></div>
   <section class="panel">${entries.length ? `<div class="scroll"><table>
-    <thead><tr><th>${t("name")}</th><th>Courier ID</th>${ORDD_F.map(f => `<th class="r${f.star ? " ordd-star" : ""}">${f.h}</th>`).join("")}</tr></thead>
+    <thead><tr><th>${t("name")}</th><th>Courier ID</th>${ORDD_F.map(f => `<th class="r${f.star ? " ordd-star" : ""}${f.bad ? " ordd-badh" : ""}">${f.h}</th>`).join("")}</tr></thead>
     <tbody>${entries.map(x => `<tr>
       <td>${x.eid ? `<div style="display:flex;gap:10px;align-items:center">${avatarHtml(state.emp[x.eid]?.photoUrl, x.name, 30)}<div class="name">${esc(x.name)}</div></div>` : `<span class="pill p-mute nodot" title="${t("ord_unmatched")}">${t("ord_unmatched")}</span>`}</td>
       <td class="mono sub nowrap">${esc(x.cid)}</td>
-      ${ORDD_F.map(f => `<td class="r nowrap${f.star ? " ordd-star" : ""}">${f.star ? `<b>${fmtOrd(x.m[f.k], f.type)}</b>` : fmtOrd(x.m[f.k], f.type)}</td>`).join("")}</tr>`).join("")}</tbody>
+      ${ORDD_F.map(f => { const bad = f.bad && (+x.m[f.k] || 0) > 0; return `<td class="r nowrap${f.star ? " ordd-star" : ""}${bad ? " ordd-bad" : ""}">${f.star ? `<b>${fmtOrd(x.m[f.k], f.type)}</b>` : bad ? `<b>${fmtOrd(x.m[f.k], f.type)}</b>` : fmtOrd(x.m[f.k], f.type)}</td>`; }).join("")}</tr>`).join("")}</tbody>
     <tfoot><tr><td><b>${t("fu_total")}</b></td><td></td>${ORDD_F.map(f => `<td class="r${f.star ? " ordd-star" : ""}"><b>${f.type === "int" ? fmt0(sum(f.k)) : f.type === "pct" ? fmt(avg(f.k) * 100) + "%" : fmt(avg(f.k)) + "m"}</b></td>`).join("")}</tr></tfoot>
     </table></div>` : `<div class="empty"><b>${t("ord_none")}</b></div>`}</section>
   ${unmatched ? `<p class="sub" style="margin-top:10px">⚠️ ${unmatched} ${t("ord_unmatched_n")}</p>` : ""}
@@ -3087,7 +3105,7 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   tgt_rank_rule: "380–499 × 3.5 SAR · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C), plus rating price for each extra order.", tgt_unrank_rule: "380–499 orders × 4 SAR · 500+ = 2,500 · 600+ = 3,500, plus A/B/C price for each order above 500 or 600. Fuel allowance is paid separately.",
   tgt_note: "Pay so far uses this month's total orders and excludes fines, advances and fuel. Payroll uses these same settings.",
   perf_hint: "Daily Keeta performance for each driver. Drivers see yesterday and today side by side in their app.", perf_yest: "Yesterday", perf_today: "Today", perf_change: "Orders change",
-  perf_orders: "Orders", perf_hours: "Hours", perf_accept: "Accept %", perf_note: "Every daily report is kept for 12 months. The app always shows the latest two report days, and drivers can open any older day from the calendar.", totalOrders: "Total orders", fuel_month_k: "Fuel this month", dash_profit: "Profit · this month", dash_salaries: "Salaries · this month", dash_no_inv: "Keeta invoice not added", dash_avg: "avg {n}/driver", dash_fleet: "Fleet overview", dash_online: "Online now", dash_paytypes: "Pay types", dash_platforms: "Platforms", dash_grades: "Performance (latest)", dash_target_hit: "Hit 450+ orders", dash_newrp: "New complaints", nav_orddetail: "Order details", ord_hint: "Keeta per-courier task report, uploaded for a date range.", ord_import: "Upload order report", ord_imp_help: "Upload the Keeta order report (Excel/CSV) and pick the dates it covers. Drivers are matched by Courier ID. Column D (Delivered) is totalled below.", ord_kpi_delivered: "Delivered (D)", ord_kpi_accepted: "Accepted", ord_kpi_rejected: "Rejected", ord_kpi_ontime: "On-time (avg)", ord_kpi_completion: "Completion", ord_avgtime_k: "Avg delivery time", ord_drivers: "couriers", ord_unmatched: "Not matched", ord_unmatched_n: "courier ID(s) in the file are not linked to any driver.", ord_none: "No order report yet — upload one.", ord_note: "Admin only. Upload this same Keeta report any time with its date range; each range is kept separately and drivers are matched by Courier ID.", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
+  perf_orders: "Orders", perf_hours: "Hours", perf_accept: "Accept %", perf_note: "Every daily report is kept for 12 months. The app always shows the latest two report days, and drivers can open any older day from the calendar.", totalOrders: "Total orders", fuel_month_k: "Fuel this month", dash_profit: "Profit · this month", dash_salaries: "Salaries · this month", dash_no_inv: "Keeta invoice not added", dash_avg: "avg {n}/driver", dash_fleet: "Fleet overview", dash_online: "Online now", dash_paytypes: "Pay types", dash_platforms: "Platforms", dash_grades: "Performance (latest)", dash_target_hit: "Hit 450+ orders", dash_newrp: "New complaints", nav_orddetail: "Order details", ord_hint: "Keeta per-courier task report, uploaded for a date range.", ord_import: "Upload order report", ord_imp_help: "Upload the Keeta order report (Excel/CSV) and pick the dates it covers. Drivers are matched by Courier ID. Column D (Delivered) is totalled below.", ord_kpi_delivered: "Delivered (D)", ord_kpi_accepted: "Accepted", ord_kpi_rejected: "Rejected", ord_kpi_ontime: "On-time (avg)", ord_kpi_completion: "Completion", ord_avgtime_k: "Avg delivery time", ord_drivers: "couriers", ord_unmatched: "Not matched", ord_unmatched_n: "courier ID(s) in the file are not linked to any driver.", ord_none: "No order report yet — upload one.", ord_note: "Admin only. Upload this same Keeta report any time with its date range; each range is kept separately and drivers are matched by Courier ID.", dash_exp: "Work experience", dash_online_s: "online", dash_hit_s: "hit target", dash_ontime: "On-time", dash_completion: "Completion", dash_cancel: "Cancellation", dash_rejected: "Rejected", dash_overdue: "Overdue", dash_severe: "Severely overdue", dash_avg_s: "average", dash_total_s: "total", dash_attention: "Needs attention", dash_pending: "Pending approvals", dash_no_exp: "No order report this month yet", dash_allgood: "No issues 👍", leaderboard_m: "This month's ranking", target_col: "Target", last_upd: "Updated", nothing_changed: "Nothing changed.", sec_person: "Employee", sec_card: "Petrol card", sec_vehicle: "City & vehicle", cardSerial: "Card serial no.", optional: "optional", serial_short: "Serial", vehicleName: "Vehicle name", vehicle: "Vehicle", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "Choose photo", photo_remove: "Remove photo", photo_hint: "A clear face photo. It is cropped to a square automatically.", pw_title: "Change my password", pw_new: "New password", pw_again: "Repeat new password", pw_mismatch: "The two passwords are different.", pw_done: "Password changed.", pw_set: "Set a new password for your admin account." });
 Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB LOGISTICS · কর্মচারী ব্যবস্থাপনা", au_email: "ইমেইল", au_pass: "পাসওয়ার্ড",
   au_signin: "লগইন", au_signup: "এডমিন অ্যাকাউন্ট খুলুন", au_forgot: "পাসওয়ার্ড ভুলে গেছেন?", au_have: "অ্যাকাউন্ট আছে? লগইন করুন", au_new: "প্রথমবার? এডমিন অ্যাকাউন্ট খুলুন",
   au_check: "ইমেইলে পাঠানো নিশ্চিতকরণ লিংকে চাপ দিন, তারপর এখানে ফিরে লগইন করুন।", au_reset_sent: "পাসওয়ার্ড রিসেটের ইমেইল পাঠানো হয়েছে।", au_notadmin: "এই অ্যাকাউন্টটি ASB LOGISTICS-এর এডমিন নয়। সুপার এডমিনকে আপনার ইমেইল যোগ করতে বলুন।",
@@ -3130,7 +3148,7 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   tgt_rank_rule: "৩৮০–৪৯৯ × ৩.৫ রিয়াল · ৫০০+ = ৩,০০০ / ২,৫০০ / ২,০০০ · ৬০০+ = ৪,২৫০ / ৩,৮০০ / ৩,০০০ (A / B / C), সাথে প্রতি অতিরিক্ত অর্ডারে রেটিং মূল্য।", tgt_unrank_rule: "৩৮০–৪৯৯ অর্ডার × ৪ রিয়াল · ৫০০+ = ২,৫০০ · ৬০০+ = ৩,৫০০, সাথে ৫০০ বা ৬০০-এর বেশি প্রতি অর্ডারে A/B/C মূল্য। জ্বালানি ভাতা আলাদা।",
   tgt_note: "এখন পর্যন্ত বেতন এই মাসের মোট অর্ডার থেকে হিসাব, জরিমানা, অগ্রিম ও পেট্রোল বাদে। বেতন হিসাবেও এই একই নিয়ম ব্যবহার হয়।",
   perf_hint: "প্রত্যেক কর্মীর দৈনিক Keeta পারফরমেন্স। কর্মীরা অ্যাপে গতকাল আর আজ পাশাপাশি দেখবে।", perf_yest: "গতকাল", perf_today: "আজ", perf_change: "অর্ডারের পরিবর্তন",
-  perf_orders: "অর্ডার", perf_hours: "ঘণ্টা", perf_accept: "গ্রহণ %", perf_note: "প্রতিদিনের রিপোর্ট ১২ মাস রাখা থাকে। অ্যাপে সবসময় সর্বশেষ দুই দিনের রিপোর্ট দেখায়, আর ক্যালেন্ডার থেকে কর্মী আগের যেকোনো দিন দেখতে পারে।", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", dash_profit: "লাভ · এই মাস", dash_salaries: "বেতন · এই মাস", dash_no_inv: "কিতা ইনভয়েস দেওয়া হয়নি", dash_avg: "গড় {n}/কর্মী", dash_fleet: "ফ্লিট ওভারভিউ", dash_online: "এখন অনলাইন", dash_paytypes: "বেতনের ধরন", dash_platforms: "প্ল্যাটফর্ম", dash_grades: "পারফরম্যান্স (সর্বশেষ)", dash_target_hit: "৪৫০+ অর্ডার", dash_newrp: "নতুন অভিযোগ", nav_orddetail: "অর্ডার বিস্তারিত", ord_hint: "কিতার প্রতি-কুরিয়ার টাস্ক রিপোর্ট, তারিখ-পরিসর অনুযায়ী আপলোড।", ord_import: "অর্ডার রিপোর্ট আপলোড", ord_imp_help: "কিতার অর্ডার রিপোর্ট (Excel/CSV) আপলোড করুন ও কোন তারিখ থেকে কোন তারিখ বেছে নিন। Courier ID দিয়ে কর্মী মেলানো হয়। কলাম D (Delivered) নিচে যোগ করা হয়।", ord_kpi_delivered: "ডেলিভারড (D)", ord_kpi_accepted: "গৃহীত", ord_kpi_rejected: "বাতিল", ord_kpi_ontime: "সময়মতো (গড়)", ord_kpi_completion: "সম্পন্নের হার", ord_avgtime_k: "গড় ডেলিভারি সময়", ord_drivers: "কুরিয়ার", ord_unmatched: "মেলেনি", ord_unmatched_n: "টি Courier ID ফাইলে আছে যা কোনো কর্মীর সাথে যুক্ত নয়।", ord_none: "এখনো কোনো অর্ডার রিপোর্ট নেই — আপলোড করুন।", ord_note: "শুধু অ্যাডমিন। এই একই কিতা রিপোর্ট তারিখ-পরিসরসহ যেকোনো সময় আপলোড করুন; প্রতিটি পরিসর আলাদা রাখা হয়, Courier ID দিয়ে কর্মী মেলে।", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
+  perf_orders: "অর্ডার", perf_hours: "ঘণ্টা", perf_accept: "গ্রহণ %", perf_note: "প্রতিদিনের রিপোর্ট ১২ মাস রাখা থাকে। অ্যাপে সবসময় সর্বশেষ দুই দিনের রিপোর্ট দেখায়, আর ক্যালেন্ডার থেকে কর্মী আগের যেকোনো দিন দেখতে পারে।", totalOrders: "মোট অর্ডার", fuel_month_k: "এই মাসের পেট্রোল", dash_profit: "লাভ · এই মাস", dash_salaries: "বেতন · এই মাস", dash_no_inv: "কিতা ইনভয়েস দেওয়া হয়নি", dash_avg: "গড় {n}/কর্মী", dash_fleet: "ফ্লিট ওভারভিউ", dash_online: "এখন অনলাইন", dash_paytypes: "বেতনের ধরন", dash_platforms: "প্ল্যাটফর্ম", dash_grades: "পারফরম্যান্স (সর্বশেষ)", dash_target_hit: "৪৫০+ অর্ডার", dash_newrp: "নতুন অভিযোগ", nav_orddetail: "অর্ডার বিস্তারিত", ord_hint: "কিতার প্রতি-কুরিয়ার টাস্ক রিপোর্ট, তারিখ-পরিসর অনুযায়ী আপলোড।", ord_import: "অর্ডার রিপোর্ট আপলোড", ord_imp_help: "কিতার অর্ডার রিপোর্ট (Excel/CSV) আপলোড করুন ও কোন তারিখ থেকে কোন তারিখ বেছে নিন। Courier ID দিয়ে কর্মী মেলানো হয়। কলাম D (Delivered) নিচে যোগ করা হয়।", ord_kpi_delivered: "ডেলিভারড (D)", ord_kpi_accepted: "গৃহীত", ord_kpi_rejected: "বাতিল", ord_kpi_ontime: "সময়মতো (গড়)", ord_kpi_completion: "সম্পন্নের হার", ord_avgtime_k: "গড় ডেলিভারি সময়", ord_drivers: "কুরিয়ার", ord_unmatched: "মেলেনি", ord_unmatched_n: "টি Courier ID ফাইলে আছে যা কোনো কর্মীর সাথে যুক্ত নয়।", ord_none: "এখনো কোনো অর্ডার রিপোর্ট নেই — আপলোড করুন।", ord_note: "শুধু অ্যাডমিন। এই একই কিতা রিপোর্ট তারিখ-পরিসরসহ যেকোনো সময় আপলোড করুন; প্রতিটি পরিসর আলাদা রাখা হয়, Courier ID দিয়ে কর্মী মেলে।", dash_exp: "কাজের অভিজ্ঞতা", dash_online_s: "অনলাইন", dash_hit_s: "টার্গেটে", dash_ontime: "সময়মতো", dash_completion: "সম্পন্ন", dash_cancel: "বাতিলের হার", dash_rejected: "প্রত্যাখ্যাত", dash_overdue: "বিলম্বিত", dash_severe: "অতি বিলম্বিত", dash_avg_s: "গড়", dash_total_s: "মোট", dash_attention: "নজর দরকার", dash_pending: "অনুমোদন বাকি", dash_no_exp: "এই মাসে এখনো অর্ডার রিপোর্ট নেই", dash_allgood: "কোনো সমস্যা নেই 👍", leaderboard_m: "এই মাসের র‍্যাংকিং", target_col: "টার্গেট", last_upd: "হালনাগাদ", nothing_changed: "কিছু বদলানো হয়নি।", sec_person: "কর্মী", sec_card: "পেট্রোল কার্ড", sec_vehicle: "সিটি ও গাড়ি", cardSerial: "কার্ডের সিরিয়াল নং", optional: "ঐচ্ছিক", serial_short: "সিরিয়াল", vehicleName: "গাড়ির নাম", vehicle: "গাড়ি", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "ছবি বাছুন", photo_remove: "ছবি মুছুন", photo_hint: "মুখ পরিষ্কার দেখা যায় এমন ছবি দিন। নিজে থেকেই বর্গাকার করে কাটা হবে।", pw_title: "আমার পাসওয়ার্ড বদলান", pw_new: "নতুন পাসওয়ার্ড", pw_again: "নতুন পাসওয়ার্ড আবার লিখুন", pw_mismatch: "দুটি পাসওয়ার্ড মেলেনি।", pw_done: "পাসওয়ার্ড বদলানো হয়েছে।", pw_set: "আপনার এডমিন অ্যাকাউন্টের নতুন পাসওয়ার্ড দিন।" });
 Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTICS · إدارة الموظفين", au_email: "البريد الإلكتروني", au_pass: "كلمة المرور",
   au_signin: "دخول", au_signup: "إنشاء حساب مشرف", au_forgot: "نسيت كلمة المرور؟", au_have: "لديك حساب؟ سجّل الدخول", au_new: "أول مرة؟ أنشئ حساب المشرف",
   au_check: "افتح رابط التأكيد في بريدك ثم عد وسجّل الدخول.", au_reset_sent: "تم إرسال رابط إعادة كلمة المرور.", au_notadmin: "هذا الحساب ليس مشرفاً في ASB LOGISTICS. اطلب من المشرف الرئيسي إضافة بريدك.",
@@ -3173,7 +3191,7 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   tgt_rank_rule: "380–499 × 3.5 ريال · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C)، مع سعر التقييم لكل طلب إضافي.", tgt_unrank_rule: "380–499 طلب × 4 ريال · 500+ = 2,500 · 600+ = 3,500، مع سعر A/B/C لكل طلب فوق 500 أو 600. بدل الوقود منفصل.",
   tgt_note: "الراتب حتى الآن من إجمالي طلبات الشهر بدون المخالفات والسلف والوقود. الرواتب تستخدم نفس الإعدادات.",
   perf_hint: "الأداء اليومي لكل سائق. يرى السائق أمس واليوم جنباً إلى جنب في تطبيقه.", perf_yest: "أمس", perf_today: "اليوم", perf_change: "تغير الطلبات",
-  perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ كل تقرير يومي 12 شهراً. يعرض التطبيق دائماً آخر يومين، ويمكن للسائق فتح أي يوم سابق من التقويم.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", dash_profit: "الربح · هذا الشهر", dash_salaries: "الرواتب · هذا الشهر", dash_no_inv: "لم تُضف فاتورة كيتا", dash_avg: "متوسط {n}/سائق", dash_fleet: "نظرة عامة على الأسطول", dash_online: "متصل الآن", dash_paytypes: "أنواع الرواتب", dash_platforms: "المنصّات", dash_grades: "الأداء (الأحدث)", dash_target_hit: "450+ طلب", dash_newrp: "شكاوى جديدة", nav_orddetail: "تفاصيل الطلبات", ord_hint: "تقرير كيتا لمهام كل مندوب، يُرفع لفترة زمنية.", ord_import: "رفع تقرير الطلبات", ord_imp_help: "ارفع تقرير طلبات كيتا (Excel/CSV) واختر الفترة التي يغطيها. تتم مطابقة المندوبين عبر رقم المندوب. يُجمع العمود D (المُسلَّمة) في الأسفل.", ord_kpi_delivered: "المُسلَّمة (D)", ord_kpi_accepted: "المقبولة", ord_kpi_rejected: "المرفوضة", ord_kpi_ontime: "في الوقت (متوسط)", ord_kpi_completion: "نسبة الإكمال", ord_avgtime_k: "متوسط وقت التوصيل", ord_drivers: "مندوب", ord_unmatched: "غير مطابق", ord_unmatched_n: "رقم مندوب في الملف غير مرتبط بأي سائق.", ord_none: "لا يوجد تقرير طلبات بعد — ارفع واحداً.", ord_note: "للمشرف فقط. ارفع تقرير كيتا نفسه في أي وقت مع فترته؛ تُحفظ كل فترة على حدة، وتتم المطابقة عبر رقم المندوب.", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
+  perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ كل تقرير يومي 12 شهراً. يعرض التطبيق دائماً آخر يومين، ويمكن للسائق فتح أي يوم سابق من التقويم.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", dash_profit: "الربح · هذا الشهر", dash_salaries: "الرواتب · هذا الشهر", dash_no_inv: "لم تُضف فاتورة كيتا", dash_avg: "متوسط {n}/سائق", dash_fleet: "نظرة عامة على الأسطول", dash_online: "متصل الآن", dash_paytypes: "أنواع الرواتب", dash_platforms: "المنصّات", dash_grades: "الأداء (الأحدث)", dash_target_hit: "450+ طلب", dash_newrp: "شكاوى جديدة", nav_orddetail: "تفاصيل الطلبات", ord_hint: "تقرير كيتا لمهام كل مندوب، يُرفع لفترة زمنية.", ord_import: "رفع تقرير الطلبات", ord_imp_help: "ارفع تقرير طلبات كيتا (Excel/CSV) واختر الفترة التي يغطيها. تتم مطابقة المندوبين عبر رقم المندوب. يُجمع العمود D (المُسلَّمة) في الأسفل.", ord_kpi_delivered: "المُسلَّمة (D)", ord_kpi_accepted: "المقبولة", ord_kpi_rejected: "المرفوضة", ord_kpi_ontime: "في الوقت (متوسط)", ord_kpi_completion: "نسبة الإكمال", ord_avgtime_k: "متوسط وقت التوصيل", ord_drivers: "مندوب", ord_unmatched: "غير مطابق", ord_unmatched_n: "رقم مندوب في الملف غير مرتبط بأي سائق.", ord_none: "لا يوجد تقرير طلبات بعد — ارفع واحداً.", ord_note: "للمشرف فقط. ارفع تقرير كيتا نفسه في أي وقت مع فترته؛ تُحفظ كل فترة على حدة، وتتم المطابقة عبر رقم المندوب.", dash_exp: "تجربة العمل", dash_online_s: "متصل", dash_hit_s: "حقق الهدف", dash_ontime: "في الوقت", dash_completion: "الإكمال", dash_cancel: "الإلغاء", dash_rejected: "المرفوضة", dash_overdue: "متأخرة", dash_severe: "متأخرة جداً", dash_avg_s: "متوسط", dash_total_s: "إجمالي", dash_attention: "يحتاج انتباه", dash_pending: "موافقات معلقة", dash_no_exp: "لا يوجد تقرير طلبات هذا الشهر بعد", dash_allgood: "لا توجد مشاكل 👍", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
 
 const auth = { mode: "signin", msg: "", err: "", busy: false, session: null, role: null, admins: [] };
 function renderAuth(){
