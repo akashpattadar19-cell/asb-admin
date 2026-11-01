@@ -630,6 +630,9 @@ function histDetail(a){
 /* ── notices from the office ── */
 const seenAt = () => +store.get("asb-seen-notice") || 0;
 const unreadN = m => (m.notices || []).filter(n => +n.at > seenAt()).length;
+// what has already appeared on the home screen — once seen there it won't float again (the 🔔 list still keeps it)
+const homeSeenAt = () => +store.get("asb-home-seen") || 0;
+function markHomeSeen(m){ const top = Math.max(0, ...(m.notices || []).map(n => +n.at || 0)); if (top > homeSeenAt()) { try { store.set("asb-home-seen", String(top)); } catch {} } }
 function noticeText(n){
   const v = { m: esc(n.month || ""), a: n.amount != null ? fmt(n.amount) : "", d: n.day ? ddate(n.day) : "", s: n.status ? t("rp_" + n.status) : "" };
   const k = { perf: ["nt_perf", "nt_perf_b"], orders: ["nt_orders", "nt_orders_b"], salary: ["nt_salary", "nt_salary_b"], due_new: ["nt_due_new", "nt_due_b"],
@@ -654,7 +657,7 @@ function markNoticesSeen(m){
   if (top > seenAt()) { store.set("asb-seen-notice", String(top)); try { window.ASBAndroid?.markSeen?.(String(top)); } catch {} }
 }
 function homeNotices(m){
-  const fresh = (m.notices || []).filter(n => +n.at > seenAt() && !n.headline).slice(0, 2);
+  const fresh = (m.notices || []).filter(n => +n.at > homeSeenAt() && !n.headline).slice(0, 2);
   return fresh.length ? `<div class="ntc-home">${fresh.map(n => noticeRow(n, true)).join("")}${unreadN(m) > 2 ? `<button class="link" data-sub="notices">${t("nt_all_n", { n: unreadN(m) })} ›</button>` : ""}</div>` : "";
 }
 function subHead(title){ return `<div class="subhead"><button class="back" data-subback>‹ ${t("back")}</button><h2>${title}</h2></div>`; }
@@ -807,7 +810,8 @@ function vTargetPage(m){
 /* a headline/offer the office pinned to the top of home — stays 14 days or until the driver closes it */
 function headlineNotice(m){
   const cut = Date.now() - 14 * 864e5, dis = (store.get("asb-hl-x") || "").split(",");
-  return (m.notices || []).filter(n => n.headline && +n.at > cut && !dis.includes(String(n.id))).sort((a, b) => +b.at - +a.at)[0] || null;
+  // gone once it has been seen on home (or dismissed, or 14 days old)
+  return (m.notices || []).filter(n => n.headline && +n.at > cut && +n.at > homeSeenAt() && !dis.includes(String(n.id))).sort((a, b) => +b.at - +a.at)[0] || null;
 }
 function headlineBanner(m){
   const n = headlineNotice(m); if (!n) return "";
@@ -819,7 +823,9 @@ function vHome(m){
   const p = m.profile, mm = m.month, out = duesOf(m).filter(x => !x.waived).reduce((s, f) => s + (+f.remaining || 0), 0);
   const target = +mm.target || 0, pct = target ? Math.min(100, mm.o / target * 100) : 0, isRank = p.payType !== "PER_ORDER";
   const upd = mm.at ? new Date(mm.at).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { timeZone: "Asia/Riyadh", day: "numeric", month: "short" }) : "";
-  return `${headlineBanner(m)}${homeNotices(m)}
+  const banners = headlineBanner(m) + homeNotices(m);   // build with the current "seen" mark…
+  setTimeout(() => markHomeSeen(m), 1500);              // …then, after it has been on screen a moment, mark it seen so it won't float again
+  return `${banners}
   <section class="card hero">
     <div class="hero-grid">${ava(p.photo, p.fullName, 74, "border-radius:22px;border:3px solid var(--gold)")}
       <div><div class="lbl">${t("rank")}</div>${perfLocked(m) ? `<div class="rank">—</div><div style="font-size:13px;font-weight:600;opacity:.85">🔒 ${t("rank_lock", { n: toGo(m) })}</div>` : `<div class="rank">${mm.rank ? "#" + mm.rank : "—"}</div><div style="font-size:15px;font-weight:600">${mm.rank ? t("of", { n: mm.of }) : t("norank")}</div>`}</div></div>
