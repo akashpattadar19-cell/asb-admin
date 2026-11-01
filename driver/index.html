@@ -606,7 +606,7 @@ const fDay = d => d ? new Date(d + "T12:00:00Z").toLocaleDateString(lang === "ar
 const fRange = x => x.legacy ? t("fu_p" + x.legacy) : x.f && x.t ? (x.f === x.t ? fDay(x.f) : `${fDay(x.f)} – ${fDay(x.t)}`) : fDay(x.f || x.t) || "—";
 function vFuelPage(m){
   const k = m.month.key, f = m.fuel || {}, ents = fEntries(f);
-  const pl = m.plan || {}, o = +m.month.o || 0, allow = pl.flat ? 0 : pl.t1 ? (o < pl.min ? 0 : o * (o < pl.t1 ? pl.fuelLow : pl.fuelHigh)) : 0, diff = allow - (+m.month.f || 0);
+  const pl = m.plan || {}, o = +m.month.o || 0, allow = pl.flat ? 0 : Math.min(o, 1000) * (pl.fuelPer ?? pl.fuelHigh ?? 0), diff = allow - (+m.month.f || 0);
   const hist = (m.hist || []).filter(h => h.f != null || h.fuel);
   return subHead("⛽ " + t("fu_title")) + `
   <section class="card"><div class="lbl" style="color:var(--muted)">${monthName(k)} · ${cycleRange(k)}</div>
@@ -654,9 +654,9 @@ function vPerfPage(m){
 const byG = (v, g) => typeof v === "object" && v ? (v[g] ?? v.C ?? 0) : (+v || 0);
 function uPay(pl, o){
   const g = ["A", "B", "C"].includes(pl.grade) ? pl.grade : "C", ex = k => byG(pl[k], g);
-  if (o < pl.min) return { manual: true, tier: 0 };
-  if (pl.grade === "D" && o >= pl.t1) return { manual: true, tier: o < pl.t2 ? 2 : 3, fuel: o * pl.fuelHigh };
-  const fuel = o * (o < pl.t1 ? pl.fuelLow : pl.fuelHigh);
+  const fuel = pl.flat ? 0 : Math.min(o, 1000) * (pl.fuelPer ?? pl.fuelHigh ?? 0);
+  if (o < pl.min) return { manual: true, tier: 0, fuel };
+  if (pl.grade === "D" && o >= pl.t1) return { manual: true, tier: o < pl.t2 ? 2 : 3, fuel };
   if (o < pl.t1) return { sal: o * pl.rate, tier: 1, fuel };
   if (o < pl.t2) return { sal: ex("b1") + (o - pl.t1) * ex("ex1"), tier: 2, fuel };
   return { sal: ex("b2") + (o - pl.t2) * ex("ex2"), tier: 3, fuel };
@@ -688,8 +688,7 @@ function vUnrank(m){
     ${["A", "B", "C", "D"].map(k => gRow(k, byG(pl.ex1, k), byG(pl.ex2, k))).join("")}</div>
     <p class="muted" style="font-size:13px;margin:10px 0 0">${t("u_my_rating", { g })}${pl.gradeSet ? "" : " " + t("u_rating_src")} ${t(rk ? "r_rating_note" : "u_rating_note")}</p></section>
   <section class="card"><h3>${t("u_fuel_t")}</h3><div class="list">
-    <div class="li"><span class="muted">${fmt0(pl.min)} – ${fmt0(pl.t1 - 1)} ${t("tg_orders")}</span><b>${t("u_per", { r: fmt(pl.fuelLow) })}</b></div>
-    <div class="li"><span class="muted">${fmt0(pl.t1)}+ ${t("tg_orders")}</span><b>${t("u_per", { r: fmt(pl.fuelHigh) })}</b></div>
+    <div class="li"><span class="muted">1 – 1000 ${t("tg_orders")}</span><b>${t("u_per", { r: fmt(pl.fuelPer ?? pl.fuelHigh) })}</b></div>
     <div class="li"><div class="t"><b>${t("u_save")}</b><small>${t("u_save_x")}</small></div></div>
     <div class="li"><div class="t"><b>${t("u_over")}</b><small>${t("u_over_x")}</small></div></div>
   </div></section>
