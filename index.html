@@ -759,15 +759,18 @@ function drawCrop(){
 }
 function clampCrop(){
   const p = photoCrop, w = p.img.width * p.scale, h = p.img.height * p.scale;
-  p.ox = Math.min(0, Math.max(p.F - w, p.ox));
-  p.oy = Math.min(0, Math.max(p.F - h, p.oy));
+  // allow the image to be smaller than the frame (zoom-out shows navy padding around it)
+  p.ox = Math.min(Math.max(0, p.F - w), Math.max(Math.min(0, p.F - w), p.ox));
+  p.oy = Math.min(Math.max(0, p.F - h), Math.max(Math.min(0, p.F - h), p.oy));
 }
 function openCropUI(file){
   const img = new Image();
   img.onload = () => {
     const F = CROP_F, baseScale = F / Math.min(img.width, img.height), scale = baseScale;
+    // minimum zoom = whole photo fits inside the frame (contain), so the face can be made smaller
+    const minZoom = Math.min(img.width, img.height) / Math.max(img.width, img.height);
     photoCrop = { img, F, baseScale, scale, ox: (F - img.width * scale) / 2, oy: (F - img.height * scale) / 2 };
-    $("#empPhotoPrev").innerHTML = `<div class="cropwrap"><canvas id="cropCanvas" width="${F}" height="${F}"></canvas><input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1" aria-label="zoom"><span class="sub">${t("photo_crop_hint")}</span></div>`;
+    $("#empPhotoPrev").innerHTML = `<div class="cropwrap"><canvas id="cropCanvas" width="${F}" height="${F}"></canvas><input type="range" id="cropZoom" min="${minZoom}" max="4" step="0.01" value="1" aria-label="zoom"><span class="sub">${t("photo_crop_hint")}</span></div>`;
     const cv = $("#cropCanvas"); drawCrop();
     let dragging = false, lx = 0, ly = 0;
     const pt = ev => { const r = cv.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; };
@@ -785,7 +788,9 @@ function openCropUI(file){
 async function cropBlob(){
   const p = photoCrop, OUT = 480, k = OUT / p.F;
   const c = document.createElement("canvas"); c.width = c.height = OUT;
-  c.getContext("2d").drawImage(p.img, p.ox * k, p.oy * k, p.img.width * p.scale * k, p.img.height * p.scale * k);
+  const g = c.getContext("2d");
+  g.fillStyle = "#0A2A47"; g.fillRect(0, 0, OUT, OUT);
+  g.drawImage(p.img, p.ox * k, p.oy * k, p.img.width * p.scale * k, p.img.height * p.scale * k);
   return new Promise(ok => c.toBlob(ok, "image/jpeg", 0.86));
 }
 document.addEventListener("change", e => {
