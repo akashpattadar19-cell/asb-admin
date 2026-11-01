@@ -836,15 +836,15 @@ function vHome(m){
         <div class="row" style="font-size:13px;margin-top:6px"><span style="opacity:.8">${isRank ? t("target_r") : t("target_u")}</span><b>${fmt0(mm.o)} / ${fmt0(target)}${mm.o >= target ? " ✓" : ""}</b></div>` : ""}</div></div>
   </section>
   ${optionTiles(m)}
-  <button class="card fuel-card" data-sub="fuel"><div class="row"><h3 style="margin:0">⛽ ${t("fuel_m")}</h3><span class="tile-go">›</span></div>
-    <div class="big" style="font-size:28px;margin-top:6px">${fmt(mm.f)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">${t("sar")}</span></div>
-    ${fEntries(m.fuel).length ? `<div class="fp-mini">${fEntries(m.fuel).slice(-3).map(x => `<span><small>${esc(fRange(x))}</small><b>${fmt(x.a)}</b></span>`).join("")}</div>` : ""}
-  </button>
   ${(() => { const i = m.internet || {}; if (!i.lastPaid && !(+i.amount > 0)) return ""; const nx = i.lastPaid ? addDaysD(i.lastPaid, 28) : "", dl = nx ? dUntil(nx) : null, over = dl != null && dl <= 0; return `
   <section class="card inet-card"><div class="row"><h3 style="margin:0">🌐 ${t("inet_m")}</h3>${nx ? `<span class="pill ${over ? "p-bad" : dl <= 5 ? "p-warn" : "p-good"} nodot">${over ? t("inet_over_d", { n: -dl }) : t("inet_left_d", { n: dl })}</span>` : ""}</div>
     <div class="big" style="font-size:26px;margin-top:6px">${fmt(i.amount || 0)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">${t("sar")}</span></div>
     <div class="inet-rows"><span><small>${t("inet_last_d")}</small><b>${i.lastPaid ? ddate(i.lastPaid) : "—"}</b></span><span><small>${t("inet_next_d")}</small><b class="${over ? "neg" : ""}">${nx ? ddate(nx) : "—"}</b></span></div>
   </section>`; })()}
+  <button class="card fuel-card" data-sub="fuel"><div class="row"><h3 style="margin:0">⛽ ${t("fuel_m")}</h3><span class="tile-go">›</span></div>
+    <div class="big" style="font-size:28px;margin-top:6px">${fmt(mm.f)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">${t("sar")}</span></div>
+    ${fEntries(m.fuel).length ? `<div class="fp-mini">${fEntries(m.fuel).slice(-3).map(x => `<span><small>${esc(fRange(x))}</small><b>${fmt(x.a)}</b></span>`).join("")}</div>` : ""}
+  </button>
   ${out > 0 ? `<button class="alert" data-tab="fines"><span>${t("outstanding")}</span><span class="neg num" style="font-size:18px">${fmt(out)} ${t("sar")}</span></button>` : ""}
   <section class="card"><h3>${t("board")}</h3>${board(m.board)}</section>`;
 }
