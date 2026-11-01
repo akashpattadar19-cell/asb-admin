@@ -277,6 +277,11 @@ dialog::backdrop{background:rgba(5,15,25,.5)}
 .ava{border-radius:50%;object-fit:cover;flex:none;background:var(--sunk);display:inline-block;vertical-align:middle}
 .ava-i{display:inline-grid;place-items:center;background:var(--brand);color:var(--brand-ink);font-weight:700;font-family:var(--f-display)}
 .photo-pick{display:flex;gap:14px;align-items:center}
+.cropwrap{display:flex;flex-direction:column;gap:8px;align-items:center}
+.cropwrap canvas{width:220px;height:220px;border-radius:50%;cursor:grab;touch-action:none;background:#0A2A47;box-shadow:0 0 0 3px var(--brand),0 2px 10px rgba(0,0,0,.25)}
+.cropwrap canvas:active{cursor:grabbing}
+.cropwrap input[type=range]{width:220px}
+.cropwrap .sub{font-size:11px;color:var(--muted);text-align:center;max-width:220px}
 .sec{font:600 13px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--brand);border-bottom:1px solid var(--line);padding:8px 0 4px;margin-top:4px}
 .opt{text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)}
 .seg2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
@@ -362,7 +367,7 @@ en:{brandSub:"Admin panel",loading:"Loading…",
  addEmp:"Add employee",search:"Search name, Iqama, mobile, plate…",allStatus:"All statuses",ACTIVE:"Active",PENDING:"Pending",INACTIVE:"Deactivated",
  name:"Name",nameAr:"Name (Arabic)",iqama:"Resident ID (Iqama)",mobile:"Mobile",city:"City",plate:"Vehicle plate",model:"Vehicle model",card:"Petrol card no.",dailyLimit:"Daily fuel limit",monthlyLimit:"Monthly fuel limit",status:"Status",payType:"Pay type",TARGET:"Target 450 orders · base + bonus",PER_ORDER:"Unrank ladder (380 / 500 / 600)",FLAT:"Every order × his own rate · petrol by company",
  edit:"Edit",approve:"Approve",deactivate:"Deactivate",activate:"Reactivate",resetPin:"Reset PIN",save:"Save",cancel:"Cancel",close:"Close",delete:"Delete",confirm:"Confirm",
- noEmp:"No employees yet",noEmpHint:"Add your first driver with “Add employee”.",empSaved:"Employee saved",
+ noEmp:"No employees yet",noEmpHint:"Add your first driver with “Add employee”.",photo_crop_hint:"Drag the photo to center the face, slider to zoom.",empSaved:"Employee saved",
  pinTitle:"New login PIN",pinText:"Give this PIN to the employee privately. It is shown only once.",
  date:"Date",orders:"Orders",fuel:"Fuel (SAR)",rank:"Rank",saveDay:"Save totals",importCsv:"Import CSV",daySaved:"Saved · rankings updated",
  csvHelp:"CSV columns: residentId,orders,fuel — one row per driver with the month's totals. Upload a file or paste the rows.",csvPaste:"Paste CSV rows",csvImport:"Import",imported:"Imported",skipped:"skipped",
@@ -388,7 +393,7 @@ bn:{brandSub:"এডমিন প্যানেল",loading:"লোড হচ�
  addEmp:"কর্মচারী যোগ করুন",search:"নাম, ইকামা, মোবাইল, প্লেট খুঁজুন…",allStatus:"সব অবস্থা",ACTIVE:"সক্রিয়",PENDING:"অপেক্ষমাণ",INACTIVE:"নিষ্ক্রিয়",
  name:"নাম",nameAr:"নাম (আরবি)",iqama:"রেসিডেন্ট আইডি (ইকামা)",mobile:"মোবাইল",city:"শহর",plate:"গাড়ির প্লেট",model:"গাড়ির মডেল",card:"পেট্রোল কার্ড নং",dailyLimit:"দৈনিক পেট্রোল সীমা",monthlyLimit:"মাসিক পেট্রোল সীমা",status:"অবস্থা",payType:"বেতনের ধরন",TARGET:"৪৫০ অর্ডার টার্গেট · বেসিক + বোনাস",PER_ORDER:"Unrank ধাপ (৩৮০ / ৫০০ / ৬০০)",FLAT:"প্রতি অর্ডার × নিজের রেট · পেট্রোল কোম্পানির",
  edit:"সম্পাদনা",approve:"অনুমোদন",deactivate:"নিষ্ক্রিয় করুন",activate:"আবার সক্রিয়",resetPin:"পিন রিসেট",save:"সংরক্ষণ",cancel:"বাতিল",close:"বন্ধ",delete:"মুছুন",confirm:"নিশ্চিত",
- noEmp:"এখনো কোনো কর্মচারী নেই",noEmpHint:"“কর্মচারী যোগ করুন” দিয়ে প্রথম ড্রাইভার যোগ করুন।",empSaved:"কর্মচারী সংরক্ষিত হয়েছে",
+ noEmp:"এখনো কোনো কর্মচারী নেই",noEmpHint:"“কর্মচারী যোগ করুন” দিয়ে প্রথম ড্রাইভার যোগ করুন।",photo_crop_hint:"মুখ মাঝে আনতে ছবিটি টেনে সরান, জুম করতে স্লাইডার।",empSaved:"কর্মচারী সংরক্ষিত হয়েছে",
  pinTitle:"নতুন লগইন পিন",pinText:"এই পিনটি কর্মচারীকে গোপনে দিন। এটি শুধু একবার দেখানো হবে।",
  date:"তারিখ",orders:"অর্ডার",fuel:"পেট্রোল (রিয়াল)",rank:"র‍্যাংক",saveDay:"মোট সংরক্ষণ",importCsv:"CSV আমদানি",daySaved:"সংরক্ষিত · র‍্যাংকিং হালনাগাদ",
  csvHelp:"CSV কলাম: residentId,orders,fuel — প্রতি ড্রাইভারের মাসের মোট হিসাব এক সারিতে। ফাইল দিন বা সারিগুলো পেস্ট করুন।",csvPaste:"CSV সারি পেস্ট করুন",csvImport:"আমদানি",imported:"আমদানি হয়েছে",skipped:"বাদ গেছে",
@@ -414,7 +419,7 @@ ar:{brandSub:"لوحة الإدارة",loading:"جارٍ التحميل…",
  addEmp:"إضافة موظف",search:"ابحث بالاسم، الإقامة، الجوال، اللوحة…",allStatus:"كل الحالات",ACTIVE:"نشط",PENDING:"معلق",INACTIVE:"موقوف",
  name:"الاسم",nameAr:"الاسم بالعربية",iqama:"رقم الإقامة",mobile:"الجوال",city:"المدينة",plate:"رقم اللوحة",model:"طراز المركبة",card:"رقم بطاقة الوقود",dailyLimit:"حد الوقود اليومي",monthlyLimit:"حد الوقود الشهري",status:"الحالة",payType:"نوع الراتب",TARGET:"هدف 450 طلب · أساسي + حافز",PER_ORDER:"سلم Unrank (380 / 500 / 600)",FLAT:"كل طلب × سعره الخاص · الوقود على الشركة",
  edit:"تعديل",approve:"موافقة",deactivate:"إيقاف",activate:"إعادة تفعيل",resetPin:"إعادة الرقم السري",save:"حفظ",cancel:"إلغاء",close:"إغلاق",delete:"حذف",confirm:"تأكيد",
- noEmp:"لا يوجد موظفون بعد",noEmpHint:"أضف أول سائق من زر «إضافة موظف».",empSaved:"تم حفظ الموظف",
+ noEmp:"لا يوجد موظفون بعد",noEmpHint:"أضف أول سائق من زر «إضافة موظف».",photo_crop_hint:"اسحب الصورة لتوسيط الوجه، والشريط للتكبير.",empSaved:"تم حفظ الموظف",
  pinTitle:"رقم سري جديد",pinText:"سلّم هذا الرقم للموظف بشكل خاص. يظهر مرة واحدة فقط.",
  date:"التاريخ",orders:"الطلبات",fuel:"الوقود (ريال)",rank:"الترتيب",saveDay:"حفظ الإجمالي",importCsv:"استيراد CSV",daySaved:"تم الحفظ · تحدث الترتيب",
  csvHelp:"أعمدة CSV: residentId,orders,fuel — صف لكل سائق بإجمالي الشهر. ارفع ملفاً أو الصق الصفوف.",csvPaste:"الصق صفوف CSV",csvImport:"استيراد",imported:"تم استيراد",skipped:"تم تخطي",
@@ -736,17 +741,57 @@ async function squarePhoto(file){
   c.getContext("2d").drawImage(img, (img.width - side) / 2, (img.height - side) / 2, side, side, 0, 0, S, S);
   return new Promise(ok => c.toBlob(ok, "image/jpeg", 0.86));
 }
-async function uploadPhoto(empId, file){
-  const blob = await squarePhoto(file);
+async function uploadBlob(empId, blob){
   const path = `emp/${empId}-${Date.now()}.jpg`;
   const { error } = await sb.storage.from("photos").upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" });
   if (error) throw error;
   return { photoUrl: sb.storage.from("photos").getPublicUrl(path).data.publicUrl, photoPath: path };
 }
+async function uploadPhoto(empId, file){ return uploadBlob(empId, await squarePhoto(file)); }
+/* interactive square crop: drag to move, slider to zoom, so the face sits in the middle */
+let photoCrop = null;
+const CROP_F = 220;
+function drawCrop(){
+  const p = photoCrop, cv = $("#cropCanvas"); if (!p || !cv) return;
+  const ctx = cv.getContext("2d");
+  ctx.fillStyle = "#0A2A47"; ctx.fillRect(0, 0, p.F, p.F);
+  ctx.drawImage(p.img, p.ox, p.oy, p.img.width * p.scale, p.img.height * p.scale);
+}
+function clampCrop(){
+  const p = photoCrop, w = p.img.width * p.scale, h = p.img.height * p.scale;
+  p.ox = Math.min(0, Math.max(p.F - w, p.ox));
+  p.oy = Math.min(0, Math.max(p.F - h, p.oy));
+}
+function openCropUI(file){
+  const img = new Image();
+  img.onload = () => {
+    const F = CROP_F, baseScale = F / Math.min(img.width, img.height), scale = baseScale;
+    photoCrop = { img, F, baseScale, scale, ox: (F - img.width * scale) / 2, oy: (F - img.height * scale) / 2 };
+    $("#empPhotoPrev").innerHTML = `<div class="cropwrap"><canvas id="cropCanvas" width="${F}" height="${F}"></canvas><input type="range" id="cropZoom" min="1" max="4" step="0.01" value="1" aria-label="zoom"><span class="sub">${t("photo_crop_hint")}</span></div>`;
+    const cv = $("#cropCanvas"); drawCrop();
+    let dragging = false, lx = 0, ly = 0;
+    const pt = ev => { const r = cv.getBoundingClientRect(); return { x: ev.clientX - r.left, y: ev.clientY - r.top }; };
+    cv.addEventListener("pointerdown", ev => { dragging = true; cv.setPointerCapture(ev.pointerId); const q = pt(ev); lx = q.x; ly = q.y; ev.preventDefault(); });
+    cv.addEventListener("pointermove", ev => { if (!dragging) return; const q = pt(ev); photoCrop.ox += q.x - lx; photoCrop.oy += q.y - ly; lx = q.x; ly = q.y; clampCrop(); drawCrop(); });
+    cv.addEventListener("pointerup", () => { dragging = false; });
+    $("#cropZoom").addEventListener("input", ev => {
+      const ns = photoCrop.baseScale * (+ev.target.value), old = photoCrop.scale, cx = photoCrop.F / 2, cy = photoCrop.F / 2;
+      photoCrop.ox = cx - (cx - photoCrop.ox) * (ns / old); photoCrop.oy = cy - (cy - photoCrop.oy) * (ns / old);
+      photoCrop.scale = ns; clampCrop(); drawCrop();
+    });
+  };
+  img.src = URL.createObjectURL(file);
+}
+async function cropBlob(){
+  const p = photoCrop, OUT = 480, k = OUT / p.F;
+  const c = document.createElement("canvas"); c.width = c.height = OUT;
+  c.getContext("2d").drawImage(p.img, p.ox * k, p.oy * k, p.img.width * p.scale * k, p.img.height * p.scale * k);
+  return new Promise(ok => c.toBlob(ok, "image/jpeg", 0.86));
+}
 document.addEventListener("change", e => {
   if (e.target.id !== "empPhoto") return;
   const f = e.target.files?.[0]; if (!f) return;
-  $("#empPhotoPrev").innerHTML = `<img class="ava" src="${URL.createObjectURL(f)}" alt="" style="width:84px;height:84px">`;
+  openCropUI(f);
   const rm = $("#empPhotoRemove"); if (rm) rm.checked = false;
 });
 function empForm(e = {}){
@@ -2029,6 +2074,7 @@ document.addEventListener("click", async e => {
     if (act === "tab") { state.finesTab = b.dataset.v; render(); }
 
     if (act === "emp-new" || act === "emp-edit") {
+      photoCrop = null;
       const cur = id ? state.emp[id] : {};
       openDialog({ title: id ? t("edit") + " · " + esc(cur.fullName) : t("addEmp"), body: empForm(cur), onSubmit: async fd => {
         if (!fd.fullName.trim() || !/^\d{10}$/.test(fd.residentId) || !fd.mobile.trim()) fail(t("required"));
@@ -2048,7 +2094,7 @@ document.addEventListener("click", async e => {
         if (id && fd.residentId !== cur.residentId) data.pinCheck = "";
         const photoFile = $("#empPhoto")?.files?.[0], photoRemove = $("#empPhotoRemove")?.checked;
         const empKey = id || ("e" + uid());
-        if (photoFile) Object.assign(data, await uploadPhoto(empKey, photoFile));
+        if (photoFile) Object.assign(data, photoCrop ? await uploadBlob(empKey, await cropBlob()) : await uploadPhoto(empKey, photoFile));
         else if (photoRemove) Object.assign(data, { photoUrl: "", photoPath: "" });
         if ((photoFile || photoRemove) && cur.photoPath) sb.storage.from("photos").remove([cur.photoPath]).catch(() => {});
         if (id) {
