@@ -470,7 +470,7 @@ const dayBefore = d => new Date(Date.parse(d + "T12:00:00Z") - 864e5).toISOStrin
 const cycleOf = d => { const [y, m, dd] = d.split("-").map(Number); return dd >= 2 ? d.slice(0, 7) : new Date(Date.UTC(y, m - 2, 1)).toISOString().slice(0, 7); };
 const dateMonth = () => cycleOf(dayBefore(todayKey()));
 // the "open" business month: whatever the admin last opened (manual close), else the date-based cycle
-const monthKey = () => (typeof state !== "undefined" && state.curMonth) || dateMonth();
+const monthKey = () => { try { if (state.curMonth) return state.curMonth; } catch (e) {} return dateMonth(); };
 const nextMonthKey = k => { const [y, m] = k.split("-").map(Number); return new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 7); };
 const monthLabel = k => { const [y, m] = k.split("-").map(Number); return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }); };
 const cycleRange = k => { const [y, m] = k.split("-").map(Number), a = new Date(Date.UTC(y, m - 1, 2)), b = new Date(Date.UTC(y, m, 1));
