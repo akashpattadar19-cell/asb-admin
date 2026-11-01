@@ -245,6 +245,15 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .tile[data-sub="perf"] .tile-ic{background:linear-gradient(135deg,#8B6CF0,#2F6FD6);box-shadow:0 6px 14px rgba(76,90,220,.35)}
 .tile[data-sub="target"] .tile-ic{background:linear-gradient(135deg,#F7B531,#EE6A1F);box-shadow:0 6px 14px rgba(238,106,31,.3)}
 .tile[data-sub="ordd"] .tile-ic{background:linear-gradient(135deg,#2FB67C,#149B7F);box-shadow:0 6px 14px rgba(20,155,127,.3)}
+.tile[data-sub="history"] .tile-ic{background:linear-gradient(135deg,#5B7089,#38495E);box-shadow:0 6px 14px rgba(56,73,94,.3)}
+.hist-co{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:2px 0 4px}
+.hist-row{display:flex;align-items:center;gap:12px;width:100%;text-align:start}
+.hist-row .hr-mo{flex:1;min-width:0}
+.hist-notice{background:var(--sunk);border-radius:12px;padding:10px 12px;font-size:13px;margin:2px 0 12px}
+.pf-lock{text-align:center;padding:14px 8px}
+.pf-lock-ic{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:16px;background:var(--sunk);color:var(--muted);margin-bottom:6px}
+.pf-lock-ic svg{width:26px;height:26px}
+.pf-lock b{font:600 17px var(--f-display)}
 .od-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .od-cell{background:var(--sunk);border-radius:12px;padding:10px 12px}
 .od-cell small{color:var(--muted);font-size:12px;display:block;margin-bottom:2px}
@@ -308,7 +317,7 @@ en:{su_no_acc:"New driver?",su_make:"Create account",su_title:"Create account",s
  locked:"Too many wrong tries. Try again in {n} minutes or ask your supervisor.",offline:"No internet connection. Check your data or Wi-Fi.",expired:"Please sign in again.",deactivated:"Your account is not active. Contact your supervisor.",
  home:"Home",fines:"Fines",salary:"Salary",profile:"Profile",duty_ACTIVE:"Active",duty_ON_DUTY:"On duty",duty_OFFLINE:"Offline",
  of:"of {n} drivers",orders_today:"Orders today",
- fuel:"Fuel today",left:"left",limit:"Daily limit",fuel_month:"This month",nocard:"No petrol card assigned",od_tile: "Order details", od_none: "No report yet", od_delivered: "delivered", od_accepted: "Accepted", od_ontime: "On-time", od_completion: "Completion", od_avgtime: "Avg time", od_rejected: "Rejected", od_overdue: "Overdue", od_cancel: "Cancellation", od_rej_courier: "Rejected (you)", od_rej_auto: "Rejected (auto)", od_severe: "Severely overdue", od_large_ontime: "Large on-time", od_work: "Your work", od_mistakes: "Mistakes to improve", od_mistakes_hint: "Fewer of these means better ratings and fewer deductions.", sl_grade: "Grade", sl_invalid: "Not valid this month", sl_earn: "Earnings", sl_base: "Basic salary", sl_extra: "Extra orders", sl_additional: "Additional", sl_bonus_o: "Dues & bonus", sl_due: "Total due", sl_petrol: "Petrol", sl_petrol_total: "Total petrol", sl_petrol_k: "Petrol deduction / refund", sl_traffic: "Traffic violation", sl_accident: "Accident", sl_company: "Company deduction", sl_akash: "Supervisor deduction", sl_advance: "Advance deduction", sl_keeta: "Keeta deduction", sl_totded: "Total deductions", sar:"SAR",
+ fuel:"Fuel today",left:"left",limit:"Daily limit",fuel_month:"This month",nocard:"No petrol card assigned",hist_tile: "History", hist_n: "{n} saved", hist_none_s: "No reports yet", hist_title: "Past months", hist_none: "No saved month reports yet. They appear here after the office closes a month.", rank_lock: "After 100 orders · {n} to go", pf_lock: "Unlocks at 100 orders · {n} to go", pf_lock_t: "Performance starts at 100 orders", pf_lock_b: "Keeta shows your grade and rank only after 100 orders this month. You have {o} — {n} to go.", od_tile: "Order details", od_none: "No report yet", od_delivered: "delivered", od_accepted: "Accepted", od_ontime: "On-time", od_completion: "Completion", od_avgtime: "Avg time", od_rejected: "Rejected", od_overdue: "Overdue", od_cancel: "Cancellation", od_rej_courier: "Rejected (you)", od_rej_auto: "Rejected (auto)", od_severe: "Severely overdue", od_large_ontime: "Large on-time", od_work: "Your work", od_mistakes: "Mistakes to improve", od_mistakes_hint: "Fewer of these means better ratings and fewer deductions.", sl_grade: "Grade", sl_invalid: "Not valid this month", sl_earn: "Earnings", sl_base: "Basic salary", sl_extra: "Extra orders", sl_additional: "Additional", sl_bonus_o: "Dues & bonus", sl_due: "Total due", sl_petrol: "Petrol", sl_petrol_total: "Total petrol", sl_petrol_k: "Petrol deduction / refund", sl_traffic: "Traffic violation", sl_accident: "Accident", sl_company: "Company deduction", sl_akash: "Supervisor deduction", sl_advance: "Advance deduction", sl_keeta: "Keeta deduction", sl_totded: "Total deductions", sar:"SAR",
  outstanding_old:"Outstanding fines",you:"You",
  fines_out:"Outstanding",fines_paid:"Already deducted",fine_list:"Fines",nofines:"No fines. Keep it up!",waived:"Waived",paid:"Recovered",remaining:"Remaining",per_month:"per month",
  advances:"Advances",deduct_hist:"Monthly deductions",none:"Nothing yet",
@@ -323,7 +332,7 @@ bn:{su_no_acc:"নতুন কর্মী?",su_make:"অ্যাকাউন�
  locked:"অনেকবার ভুল হয়েছে। {n} মিনিট পরে চেষ্টা করুন বা সুপারভাইজারকে বলুন।",offline:"ইন্টারনেট সংযোগ নেই। ডাটা বা Wi-Fi দেখুন।",expired:"আবার লগইন করুন।",deactivated:"আপনার অ্যাকাউন্ট চালু নেই। সুপারভাইজারের সাথে যোগাযোগ করুন।",
  home:"হোম",fines:"জরিমানা",salary:"বেতন",profile:"প্রোফাইল",duty_ACTIVE:"সক্রিয়",duty_ON_DUTY:"ডিউটিতে",duty_OFFLINE:"অফলাইন",
  of:"{n} জনের মধ্যে",orders_today:"আজকের অর্ডার",
- fuel:"আজকের পেট্রোল",left:"বাকি",limit:"দৈনিক সীমা",fuel_month:"এই মাসে",nocard:"পেট্রোল কার্ড দেওয়া হয়নি",od_tile: "অর্ডার বিস্তারিত", od_none: "এখনো রিপোর্ট নেই", od_delivered: "ডেলিভারড", od_accepted: "গৃহীত", od_ontime: "সময়মতো", od_completion: "সম্পন্ন", od_avgtime: "গড় সময়", od_rejected: "বাতিল", od_overdue: "বিলম্বিত", od_cancel: "বাতিলের হার", od_rej_courier: "প্রত্যাখ্যান (আপনি)", od_rej_auto: "প্রত্যাখ্যান (অটো)", od_severe: "অতি বিলম্বিত", od_large_ontime: "বড় অর্ডার সময়মতো", od_work: "আপনার কাজ", od_mistakes: "যে ভুলগুলো শুধরাতে হবে", od_mistakes_hint: "এগুলো যত কম, রেটিং তত ভালো ও কর্তন তত কম।", sl_grade: "গ্রেড", sl_invalid: "এই মাসে অবৈধ", sl_earn: "আয়", sl_base: "বেসিক বেতন", sl_extra: "অতিরিক্ত অর্ডার", sl_additional: "অতিরিক্ত", sl_bonus_o: "বকেয়া ও বোনাস", sl_due: "মোট প্রাপ্য", sl_petrol: "পেট্রোল", sl_petrol_total: "মোট পেট্রোল", sl_petrol_k: "পেট্রোল কর্তন / ফেরত", sl_traffic: "ট্রাফিক জরিমানা", sl_accident: "দুর্ঘটনা", sl_company: "কোম্পানি কর্তন", sl_akash: "সুপারভাইজার কর্তন", sl_advance: "অগ্রিম কর্তন", sl_keeta: "কিতা কর্তন", sl_totded: "মোট কর্তন", sar:"রিয়াল",
+ fuel:"আজকের পেট্রোল",left:"বাকি",limit:"দৈনিক সীমা",fuel_month:"এই মাসে",nocard:"পেট্রোল কার্ড দেওয়া হয়নি",hist_tile: "আগের মাস", hist_n: "{n} মাস সেভ", hist_none_s: "রিপোর্ট নেই", hist_title: "আগের মাসের রিপোর্ট", hist_none: "এখনো কোনো মাসের রিপোর্ট সেভ হয়নি। অফিস মাস ক্লোজ করলে এখানে দেখা যাবে।", rank_lock: "১০০ অর্ডারের পর · আর {n} বাকি", pf_lock: "১০০ অর্ডারে খুলবে · আর {n} বাকি", pf_lock_t: "১০০ অর্ডারের পর Performance শুরু", pf_lock_b: "কিতা এই মাসে ১০০ অর্ডারের পরেই আপনার গ্রেড ও র‍্যাঙ্ক দেখায়। আপনার হয়েছে {o}টি — আর {n}টি বাকি।", od_tile: "অর্ডার বিস্তারিত", od_none: "এখনো রিপোর্ট নেই", od_delivered: "ডেলিভারড", od_accepted: "গৃহীত", od_ontime: "সময়মতো", od_completion: "সম্পন্ন", od_avgtime: "গড় সময়", od_rejected: "বাতিল", od_overdue: "বিলম্বিত", od_cancel: "বাতিলের হার", od_rej_courier: "প্রত্যাখ্যান (আপনি)", od_rej_auto: "প্রত্যাখ্যান (অটো)", od_severe: "অতি বিলম্বিত", od_large_ontime: "বড় অর্ডার সময়মতো", od_work: "আপনার কাজ", od_mistakes: "যে ভুলগুলো শুধরাতে হবে", od_mistakes_hint: "এগুলো যত কম, রেটিং তত ভালো ও কর্তন তত কম।", sl_grade: "গ্রেড", sl_invalid: "এই মাসে অবৈধ", sl_earn: "আয়", sl_base: "বেসিক বেতন", sl_extra: "অতিরিক্ত অর্ডার", sl_additional: "অতিরিক্ত", sl_bonus_o: "বকেয়া ও বোনাস", sl_due: "মোট প্রাপ্য", sl_petrol: "পেট্রোল", sl_petrol_total: "মোট পেট্রোল", sl_petrol_k: "পেট্রোল কর্তন / ফেরত", sl_traffic: "ট্রাফিক জরিমানা", sl_accident: "দুর্ঘটনা", sl_company: "কোম্পানি কর্তন", sl_akash: "সুপারভাইজার কর্তন", sl_advance: "অগ্রিম কর্তন", sl_keeta: "কিতা কর্তন", sl_totded: "মোট কর্তন", sar:"রিয়াল",
  outstanding_old:"বকেয়া জরিমানা",you:"আপনি",
  fines_out:"বকেয়া",fines_paid:"কাটা হয়েছে",fine_list:"জরিমানা",nofines:"কোনো জরিমানা নেই। এভাবেই চালিয়ে যান!",waived:"মাফ",paid:"আদায় হয়েছে",remaining:"বাকি",per_month:"প্রতি মাসে",
  advances:"অগ্রিম",deduct_hist:"মাসিক কর্তন",none:"এখনো কিছু নেই",
@@ -338,7 +347,7 @@ ar:{su_no_acc:"سائق جديد؟",su_make:"إنشاء حساب",su_title:"إن
  locked:"محاولات خاطئة كثيرة. حاول بعد {n} دقيقة أو راجع المشرف.",offline:"لا يوجد اتصال بالإنترنت.",expired:"سجّل الدخول مرة أخرى.",deactivated:"حسابك غير مفعل. راجع المشرف.",
  home:"الرئيسية",fines:"المخالفات",salary:"الراتب",profile:"ملفي",duty_ACTIVE:"نشط",duty_ON_DUTY:"في العمل",duty_OFFLINE:"غير متصل",
  of:"من {n} سائق",orders_today:"طلبات اليوم",
- fuel:"وقود اليوم",left:"متبقي",limit:"الحد اليومي",fuel_month:"هذا الشهر",nocard:"لا توجد بطاقة وقود",od_tile: "تفاصيل الطلبات", od_none: "لا يوجد تقرير بعد", od_delivered: "مُسلَّمة", od_accepted: "المقبولة", od_ontime: "في الوقت", od_completion: "الإكمال", od_avgtime: "متوسط الوقت", od_rejected: "المرفوضة", od_overdue: "متأخرة", od_cancel: "الإلغاء", od_rej_courier: "مرفوضة (أنت)", od_rej_auto: "مرفوضة (تلقائي)", od_severe: "متأخرة جداً", od_large_ontime: "الطلبات الكبيرة في الوقت", od_work: "عملك", od_mistakes: "أخطاء يجب تحسينها", od_mistakes_hint: "كلما قلّت، تحسّن تقييمك وقلّت الخصومات.", sl_grade: "المستوى", sl_invalid: "غير صالح هذا الشهر", sl_earn: "الإيرادات", sl_base: "الراتب الأساسي", sl_extra: "الطلبات الإضافية", sl_additional: "الإضافي", sl_bonus_o: "المستحقات والمكافآت", sl_due: "إجمالي المستحق", sl_petrol: "الوقود", sl_petrol_total: "إجمالي الوقود", sl_petrol_k: "خصم / استرداد الوقود", sl_traffic: "مخالفة مرورية", sl_accident: "حادث", sl_company: "خصومات الشركة", sl_akash: "خصم المشرف", sl_advance: "حسم السلف", sl_keeta: "خصومات كيتا", sl_totded: "إجمالي الخصومات", sar:"ريال",
+ fuel:"وقود اليوم",left:"متبقي",limit:"الحد اليومي",fuel_month:"هذا الشهر",nocard:"لا توجد بطاقة وقود",hist_tile: "الأشهر السابقة", hist_n: "{n} محفوظ", hist_none_s: "لا تقارير", hist_title: "الأشهر السابقة", hist_none: "لا توجد تقارير شهرية محفوظة بعد. تظهر هنا بعد أن يُغلق المكتب الشهر.", rank_lock: "بعد 100 طلب · باقي {n}", pf_lock: "يُفتح عند 100 طلب · باقي {n}", pf_lock_t: "يبدأ الأداء عند 100 طلب", pf_lock_b: "تعرض كيتا مستواك ورتبتك بعد 100 طلب هذا الشهر. لديك {o} — باقي {n}.", od_tile: "تفاصيل الطلبات", od_none: "لا يوجد تقرير بعد", od_delivered: "مُسلَّمة", od_accepted: "المقبولة", od_ontime: "في الوقت", od_completion: "الإكمال", od_avgtime: "متوسط الوقت", od_rejected: "المرفوضة", od_overdue: "متأخرة", od_cancel: "الإلغاء", od_rej_courier: "مرفوضة (أنت)", od_rej_auto: "مرفوضة (تلقائي)", od_severe: "متأخرة جداً", od_large_ontime: "الطلبات الكبيرة في الوقت", od_work: "عملك", od_mistakes: "أخطاء يجب تحسينها", od_mistakes_hint: "كلما قلّت، تحسّن تقييمك وقلّت الخصومات.", sl_grade: "المستوى", sl_invalid: "غير صالح هذا الشهر", sl_earn: "الإيرادات", sl_base: "الراتب الأساسي", sl_extra: "الطلبات الإضافية", sl_additional: "الإضافي", sl_bonus_o: "المستحقات والمكافآت", sl_due: "إجمالي المستحق", sl_petrol: "الوقود", sl_petrol_total: "إجمالي الوقود", sl_petrol_k: "خصم / استرداد الوقود", sl_traffic: "مخالفة مرورية", sl_accident: "حادث", sl_company: "خصومات الشركة", sl_akash: "خصم المشرف", sl_advance: "حسم السلف", sl_keeta: "خصومات كيتا", sl_totded: "إجمالي الخصومات", sar:"ريال",
  outstanding_old:"مخالفات مستحقة",you:"أنت",
  fines_out:"مستحق",fines_paid:"تم خصمه",fine_list:"المخالفات",nofines:"لا توجد مخالفات. أحسنت!",waived:"معفى",paid:"مسدد",remaining:"المتبقي",per_month:"شهرياً",
  advances:"السلف",deduct_hist:"الخصومات الشهرية",none:"لا شيء بعد",
@@ -385,8 +394,14 @@ const I = {
   back: '<path d="M15 5l-7 7 7 7"/>',
   chart: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M22 20H2"/>',
   target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/>',
+  archive: '<path d="M3 7.5 4.3 5h15.4L21 7.5"/><rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M9.5 12h5"/>',
+  lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
 };
 const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
+// Keeta only shows Performance & Rank after 100 orders in the month — so the app hides them until then
+const PERF_MIN = 100;
+const perfLocked = m => (+m.month?.o || 0) < PERF_MIN;
+const toGo = m => Math.max(0, PERF_MIN - (+m.month?.o || 0));
 const SHIELD = `<span class="logo-badge"><img src="logo.png" alt="ASB"></span>`;
 const langBtns = () => [["en","EN"],["bn","বাংলা"],["ar","عربي"]].map(([k,l]) => `<button data-lang="${k}" aria-pressed="${k===lang}">${l}</button>`).join("");
 const ava = (url, name, size, extra = "") => url
@@ -490,7 +505,7 @@ function vApp(){
   if (!m) return `<div class="login" style="justify-content:center"><div class="brand">${SHIELD}<div class="spin"></div></div></div>`;
   const p = m.profile;
   const outstanding = duesOf(m).filter(x => !x.waived).reduce((s, f) => s + (+f.remaining || 0), 0);
-  let body = S.sub === "notices" ? vNotices(m) : S.sub === "fuel" ? vFuelPage(m) : S.sub === "changes" ? vChanges() : S.sub === "editp" ? vEditProfile(m) : S.sub === "reports" ? vReports() : S.tab === "home" ? (S.sub === "perf" ? vPerfPage(m) : S.sub === "target" ? vTargetPage(m) : S.sub === "ordd" ? vOrddPage(m) : vHome(m)) : S.tab === "fines" ? vDues(m) : S.tab === "salary" ? (S.slip ? vSlip(m, S.slip) : vSalary(m)) : vProfile(m);
+  let body = S.sub === "notices" ? vNotices(m) : S.sub === "fuel" ? vFuelPage(m) : S.sub === "changes" ? vChanges() : S.sub === "editp" ? vEditProfile(m) : S.sub === "reports" ? vReports() : S.tab === "home" ? (S.sub === "perf" ? vPerfPage(m) : S.sub === "target" ? vTargetPage(m) : S.sub === "ordd" ? vOrddPage(m) : S.sub === "history" ? vHistoryPage(m) : vHome(m)) : S.tab === "fines" ? vDues(m) : S.tab === "salary" ? (S.slip ? vSlip(m, S.slip) : vSalary(m)) : vProfile(m);
   const last = S.lastAt ? new Date(S.lastAt).toLocaleTimeString(lang === "ar" ? "ar-SA" : "en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
   if (window.ASBAndroid?.locStart) {
     if (!p.locOn) { if (!S.locStopped) { S.locStopped = true; try { window.ASBAndroid.locStop && window.ASBAndroid.locStop(); } catch {} } }
@@ -526,11 +541,12 @@ function optionTiles(m){
   const pf = m.perf || {}, D = pf.today || {}, Y = pf.yest || {}, cur = (D.g || D.rp != null) ? D : Y;
   const keys = ["g", "rp", "fa", "ot", "cr", "ne"], up = keys.filter(k => pDelta(k, Y[k], D[k]) > 0).length, down = keys.filter(k => pDelta(k, Y[k], D[k]) < 0).length;
   const mm = m.month, tg = +(m.plan?.target ?? mm.target) || 0, pct = tg ? Math.min(100, mm.o / tg * 100) : 0;
+  const locked = perfLocked(m), nArch = (m.archives || []).length;
   return `<div class="tiles">
     <button class="tile" data-sub="perf">
-      <div class="tile-top">${cur.g ? `<span class="bigg sm ${grCls(cur.g)}">${esc(cur.g)}</span>` : `<span class="tile-ic">${icon("chart")}</span>`}<span class="tile-go">›</span></div>
-      <b>${t("perf")}</b>${cur.date ? `<small class="muted" style="font-size:11.5px">📅 ${ddate(cur.date)}</small>` : ""}
-      <small>${!cur.g && cur.rp == null ? t("pf_none") : up > down ? `<span class="chg up">▲ ${t("pf_up_n", { n: up })}</span>` : down > up ? `<span class="chg down">▼ ${t("pf_down_n", { n: down })}</span>` : t("pf_ok")}</small>
+      <div class="tile-top">${locked ? `<span class="tile-ic">${icon("lock")}</span>` : cur.g ? `<span class="bigg sm ${grCls(cur.g)}">${esc(cur.g)}</span>` : `<span class="tile-ic">${icon("chart")}</span>`}<span class="tile-go">›</span></div>
+      <b>${t("perf")}</b>${!locked && cur.date ? `<small class="muted" style="font-size:11.5px">📅 ${ddate(cur.date)}</small>` : ""}
+      <small>${locked ? `<span class="muted">🔒 ${t("pf_lock", { n: toGo(m) })}</span>` : !cur.g && cur.rp == null ? t("pf_none") : up > down ? `<span class="chg up">▲ ${t("pf_up_n", { n: up })}</span>` : down > up ? `<span class="chg down">▼ ${t("pf_down_n", { n: down })}</span>` : t("pf_ok")}</small>
     </button>
     <button class="tile" data-sub="target">
       <div class="tile-top"><span class="tile-ic">${icon("target")}</span><span class="tile-go">›</span></div>
@@ -542,6 +558,11 @@ function optionTiles(m){
       <div class="tile-top"><span class="tile-ic">${icon("target")}</span><span class="tile-go">›</span></div>
       <b>${t("od_tile")}</b>
       ${m.ordd?.row?.d != null ? `<small><span class="num" style="font-size:15px">${fmt0(m.ordd.row.d)}</span> ${t("od_delivered")}</small>` : `<small class="muted">${t("od_none")}</small>`}
+    </button>
+    <button class="tile" data-sub="history">
+      <div class="tile-top"><span class="tile-ic">${icon("archive")}</span><span class="tile-go">›</span></div>
+      <b>${t("hist_tile")}</b>
+      <small class="muted">${nArch ? t("hist_n", { n: nArch }) : t("hist_none_s")}</small>
     </button></div>`;
 }
 function vOrddPage(m){
@@ -561,6 +582,37 @@ function vOrddPage(m){
       <p class="muted" style="font-size:12.5px;margin:0 0 10px">${t("od_mistakes_hint")}</p>
       <div class="od-grid">${bad.map(c => `<div class="od-cell ${c.warn ? "bad" : ""}"><small>${c.lbl}</small><b>${c.txt}</b></div>`).join("")}</div>
     </section>` : `<section class="card"><div class="empty">${t("od_none")}</div></section>`);
+}
+/* ── Saved past-month reports (closed by the office) ── */
+function vHistoryPage(m){
+  const arr = m.archives || [];
+  if (S.archMonth) { const a = arr.find(x => x.month === S.archMonth); if (a) return histDetail(a); }
+  return `<div class="subhead"><button class="back" data-subback>‹ ${t("back")}</button><h2>${t("hist_title")}</h2></div>` +
+    (arr.length ? arr.map(a => { const r = a.row || {}; return `<button class="card hist-row" data-arch="${esc(a.month)}">
+      <span class="tile-ic" style="background:linear-gradient(135deg,#5B7089,#38495E)">${icon("archive")}</span>
+      <span class="hr-mo"><b>${esc(a.label || a.month)}</b><br><small class="muted"><span class="num">${fmt0(r.o || 0)}</span> ${t("od_delivered")} · <span class="num">${fmt(r.f || 0)}</span> ${t("sar")}</small></span>
+      <span class="tile-go">›</span></button>`; }).join("") : `<section class="card"><div class="empty">${t("hist_none")}</div></section>`);
+}
+function histDetail(a){
+  const r = a.row || {}, pc = v => v == null ? "—" : fmt(v * 100) + "%", od = r.od || null, hasOd = od && Object.keys(od).length;
+  const good = hasOd ? [[t("od_accepted"), fmt0(od.b)], [t("od_ontime"), pc(od.k)], [t("od_completion"), pc(od.j)], [t("od_avgtime"), od.m != null ? fmt(od.m) + "m" : "—"], [t("od_large_ontime"), pc(od.l)]] : [];
+  const bad = hasOd ? [["od_rejected", "f", "int"], ["od_rej_courier", "g", "int"], ["od_rej_auto", "h", "int"], ["od_cancel", "i", "pct"], ["od_overdue", "o", "int"], ["od_severe", "p", "int"]].map(([lbl, k, ty]) => ({ lbl: t(lbl), warn: (+od[k] || 0) > 0, txt: ty === "pct" ? pc(od[k]) : fmt0(od[k]) })) : [];
+  return `<div class="subhead"><button class="back" data-histback>‹ ${t("back")}</button><h2>${esc(a.label || a.month)}</h2></div>`
+    + (a.notice ? `<div class="hist-notice">📣 ${esc(a.notice)}</div>` : "")
+    + `<section class="card"><div class="od-grid">
+        <div class="od-cell"><small>${t("orders_month")}</small><b>${fmt0(r.o || 0)}</b></div>
+        <div class="od-cell"><small>${t("fuel_m")}</small><b>${fmt(r.f || 0)}</b></div>
+        <div class="od-cell"><small>${t("rank")}</small><b>${r.rank ? "#" + r.rank : "—"}</b></div>
+        <div class="od-cell"><small>${t("sl_grade")}</small><b>${r.grade ? esc(r.grade) : "—"}</b></div>
+      </div></section>`
+    + (hasOd ? `<section class="card">
+        <div style="text-align:center;margin:2px 0 12px"><div class="num" style="font-size:38px;line-height:1">${fmt0(od.d)}</div><div class="muted" style="font-size:13px">${t("od_delivered")}</div></div>
+        <h3 style="margin:0 0 8px;font-size:15px">${t("od_work")}</h3>
+        <div class="od-grid">${good.map(([x, y]) => `<div class="od-cell"><small>${x}</small><b>${y}</b></div>`).join("")}</div>
+      </section>
+      <section class="card"><h3 style="margin:0 0 4px;font-size:15px">${t("od_mistakes")}</h3>
+        <div class="od-grid">${bad.map(c => `<div class="od-cell ${c.warn ? "bad" : ""}"><small>${c.lbl}</small><b>${c.txt}</b></div>`).join("")}</div>
+      </section>` : "");
 }
 /* ── notices from the office ── */
 const seenAt = () => +store.get("asb-seen-notice") || 0;
@@ -646,7 +698,7 @@ function vPerfPage(m){
   const cal = S.calOpen ? `<section class="card">${perfCalendar(dates)}<p class="muted" style="font-size:12px;margin:8px 0 0">${t("pf_cal_hint")}</p></section>` : "";
   return `<div class="subhead"><button class="back" data-subback>‹ ${t("back")}</button><h2>${t("perf")}</h2><button class="iconbtn cal-btn ${S.calOpen ? "on" : ""}" data-cal aria-label="Calendar">📅</button></div>` + cal +
     (S.perfDay ? `<div class="pf-past">${t("pf_viewing", { d: longDate(S.perfDay) })} <button class="link" data-platest>${t("pf_latest")} ›</button></div>` : "") +
-    (S.perfDayLoading ? `<section class="card"><div class="spin" style="margin:20px auto;border-color:var(--line);border-top-color:var(--cab-2)"></div></section>` : (perfCard(pf) || `<section class="card"><div class="empty">${t("pf_none")}</div></section>`)) + histPerf(m) + `<section class="card"><h3>${t("pf_what")}</h3><div class="list">
+    (S.perfDayLoading ? `<section class="card"><div class="spin" style="margin:20px auto;border-color:var(--line);border-top-color:var(--cab-2)"></div></section>` : (!S.perfDay && perfLocked(m)) ? `<section class="card"><div class="pf-lock"><span class="pf-lock-ic">${icon("lock")}</span><b>${t("pf_lock_t")}</b><p class="muted" style="margin:6px 0 0">${t("pf_lock_b", { n: toGo(m), o: fmt0(+m.month.o || 0) })}</p></div></section>` : (perfCard(pf) || `<section class="card"><div class="empty">${t("pf_none")}</div></section>`)) + histPerf(m) + `<section class="card"><h3>${t("pf_what")}</h3><div class="list">
     ${[["pf_grade","pf_x_grade"],["pf_rank","pf_x_rank"],["pf_forced","pf_x_forced"],["pf_ontime","pf_x_ontime"],["pf_complete","pf_x_complete"],["pf_early","pf_x_early"]].map(([a, b]) => `<div class="li"><div class="t"><b>${t(a)}</b><small>${t(b)}</small></div></div>`).join("")}</div></section>`;
 }
 /* Rank and Unrank ladder: under 380 or D rating = company decides; 380–499 × price per order;
@@ -757,7 +809,7 @@ function vHome(m){
   return `${headlineBanner(m)}${homeNotices(m)}
   <section class="card hero">
     <div class="hero-grid">${ava(p.photo, p.fullName, 74, "border-radius:22px;border:3px solid var(--gold)")}
-      <div><div class="lbl">${t("rank")}</div><div class="rank">${mm.rank ? "#" + mm.rank : "—"}</div><div style="font-size:15px;font-weight:600">${mm.rank ? t("of", { n: mm.of }) : t("norank")}</div></div></div>
+      <div><div class="lbl">${t("rank")}</div>${perfLocked(m) ? `<div class="rank">—</div><div style="font-size:13px;font-weight:600;opacity:.85">🔒 ${t("rank_lock", { n: toGo(m) })}</div>` : `<div class="rank">${mm.rank ? "#" + mm.rank : "—"}</div><div style="font-size:15px;font-weight:600">${mm.rank ? t("of", { n: mm.of }) : t("norank")}</div>`}</div></div>
     <div class="hero-stats" style="grid-template-columns:1fr">
       <div><div class="row"><div class="lbl">${t("orders_month")}</div>${mm.asOf ? `<div class="lbl asof">📅 ${t("upto", { d: ddate(mm.asOf) })}</div>` : upd ? `<div class="lbl">${t("upd_on", { d: upd })}</div>` : ""}</div>
         <div class="big" style="font-size:44px">${fmt0(mm.o)}</div>
@@ -1139,6 +1191,9 @@ document.addEventListener("click", async e => {
   if (el.dataset.sub === "editp") S.ep = null;
   if (el.dataset.sub === "reports") RP.items = null;
   if (el.dataset.sub === "perf") { S.perfDay = null; S.perfDayData = null; S.calOpen = false; }
+  if (el.dataset.sub === "history") S.archMonth = null;
+  if (el.dataset.arch) { S.archMonth = el.dataset.arch; S.sub = "history"; S.tab = "home"; render(); window.scrollTo(0, 0); return; }
+  if (el.matches("[data-histback]")) { S.archMonth = null; render(); window.scrollTo(0, 0); return; }
   if (el.matches("[data-cal]")) { S.calOpen = !S.calOpen; return render(); }
   if (el.dataset.calm !== undefined) { if (el.dataset.calm) S.calMonth = el.dataset.calm; return render(); }
   if (el.matches("[data-platest]")) { S.perfDay = null; S.perfDayData = null; return render(); }

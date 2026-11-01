@@ -292,6 +292,9 @@ dialog::backdrop{background:rgba(5,15,25,.5)}
 tr.row-new{background:#FFF8E8}
 tr.row-new td{box-shadow:inset 0 0 0 9999px rgba(242,189,69,.08)}
 .pill-new{display:inline-block;font:700 9px var(--f-display);letter-spacing:.06em;background:#D9A441;color:#4A3203;padding:1px 6px;border-radius:999px;vertical-align:middle}
+.monthbar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:0 0 16px;padding:12px 16px;border:1px solid var(--line);background:var(--card);border-radius:12px}
+.monthbar .mb-txt{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline}
+.monthbar .mb-txt b{font:600 16px var(--f-display)}
 .sec{font:600 13px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--brand);border-bottom:1px solid var(--line);padding:8px 0 4px;margin-top:4px}
 .opt{text-transform:none;letter-spacing:0;font-weight:400;color:var(--muted)}
 .seg2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
@@ -377,7 +380,7 @@ en:{brandSub:"Admin panel",loading:"Loading…",
  addEmp:"Add employee",search:"Search name, Iqama, mobile, plate…",allStatus:"All statuses",ACTIVE:"Active",PENDING:"Pending",INACTIVE:"Deactivated",
  name:"Name",nameAr:"Name (Arabic)",iqama:"Resident ID (Iqama)",mobile:"Mobile",city:"City",plate:"Vehicle plate",model:"Vehicle model",card:"Petrol card no.",dailyLimit:"Daily fuel limit",monthlyLimit:"Monthly fuel limit",status:"Status",payType:"Pay type",TARGET:"Target 450 orders · base + bonus",PER_ORDER:"Unrank ladder (380 / 500 / 600)",FLAT:"Every order × his own rate · petrol by company",
  edit:"Edit",approve:"Approve",deactivate:"Deactivate",activate:"Reactivate",resetPin:"Reset PIN",save:"Save",cancel:"Cancel",close:"Close",delete:"Delete",confirm:"Confirm",
- noEmp:"No employees yet",noEmpHint:"Add your first driver with “Add employee”.",photo_crop_hint:"Drag the photo to center the face, slider to zoom.",submit:"Submit",all_reset:"All reset",test_mode:"Test mode — not sent to drivers yet",new_tag:"NEW",fu_draft_hint:"{n} drivers staged. Check the entries below, then Submit to save & notify — or All reset to discard.",fu_staged:"Staged for review",fu_submit_q:"Save fuel for {n} drivers and notify them? This updates the totals payroll uses.",reset_q:"Discard the staged file? Nothing will be saved and drivers will not be notified.",reset_done:"Reset",ord_draft_hint:"{n} couriers staged. Check the table below, then Submit to save & update order counts — or All reset to discard.",ord_submit_q:"Save this report for {n} couriers, set the month's order counts and notify drivers?",perf_draft_hint:"{n} drivers staged for {d}. Check the table below, then Submit to save & notify — or All reset to discard.",perf_submit_q:"Save performance for {n} drivers, update order volumes and notify them?",empSaved:"Employee saved",
+ noEmp:"No employees yet",noEmpHint:"Add your first driver with “Add employee”.",photo_crop_hint:"Drag the photo to center the face, slider to zoom.",submit:"Submit",all_reset:"All reset",test_mode:"Test mode — not sent to drivers yet",new_tag:"NEW",fu_draft_hint:"{n} drivers staged. Check the entries below, then Submit to save & notify — or All reset to discard.",fu_staged:"Staged for review",fu_submit_q:"Save fuel for {n} drivers and notify them? This updates the totals payroll uses.",reset_q:"Discard the staged file? Nothing will be saved and drivers will not be notified.",reset_done:"Reset",ord_draft_hint:"{n} couriers staged. Check the table below, then Submit to save & update order counts — or All reset to discard.",ord_submit_q:"Save this report for {n} couriers, set the month's order counts and notify drivers?",perf_draft_hint:"{n} drivers staged for {d}. Check the table below, then Submit to save & notify — or All reset to discard.",perf_submit_q:"Save performance for {n} drivers, update order volumes and notify them?",mc_title:"Close month & start new",mc_do:"Close & start new",mc_btn:"Close month → start {n}",mc_open:"Open month",mc_auto:"auto (by date)",mc_q:"Save all of {m} as a report and start {n}? Drivers will see {n} from now, and {m} moves to History.",mc_summary:"{n} drivers · {o} orders · {f} SAR fuel will be saved.",mc_notice:"Notice to drivers (optional)",mc_notice_ph:"e.g. October is finalized. November starts today — good luck!",mc_note:"After this, the app shows the new month. New-month Performance & Rank stay hidden until a driver reaches 100 orders (Keeta rule).",mc_push_title:"{m} finalized",mc_done:"Month closed — {n} started",empSaved:"Employee saved",
  pinTitle:"New login PIN",pinText:"Give this PIN to the employee privately. It is shown only once.",
  date:"Date",orders:"Orders",fuel:"Fuel (SAR)",rank:"Rank",saveDay:"Save totals",importCsv:"Import CSV",daySaved:"Saved · rankings updated",
  csvHelp:"CSV columns: residentId,orders,fuel — one row per driver with the month's totals. Upload a file or paste the rows.",csvPaste:"Paste CSV rows",csvImport:"Import",imported:"Imported",skipped:"skipped",
@@ -403,7 +406,7 @@ bn:{brandSub:"এডমিন প্যানেল",loading:"লোড হচ�
  addEmp:"কর্মচারী যোগ করুন",search:"নাম, ইকামা, মোবাইল, প্লেট খুঁজুন…",allStatus:"সব অবস্থা",ACTIVE:"সক্রিয়",PENDING:"অপেক্ষমাণ",INACTIVE:"নিষ্ক্রিয়",
  name:"নাম",nameAr:"নাম (আরবি)",iqama:"রেসিডেন্ট আইডি (ইকামা)",mobile:"মোবাইল",city:"শহর",plate:"গাড়ির প্লেট",model:"গাড়ির মডেল",card:"পেট্রোল কার্ড নং",dailyLimit:"দৈনিক পেট্রোল সীমা",monthlyLimit:"মাসিক পেট্রোল সীমা",status:"অবস্থা",payType:"বেতনের ধরন",TARGET:"৪৫০ অর্ডার টার্গেট · বেসিক + বোনাস",PER_ORDER:"Unrank ধাপ (৩৮০ / ৫০০ / ৬০০)",FLAT:"প্রতি অর্ডার × নিজের রেট · পেট্রোল কোম্পানির",
  edit:"সম্পাদনা",approve:"অনুমোদন",deactivate:"নিষ্ক্রিয় করুন",activate:"আবার সক্রিয়",resetPin:"পিন রিসেট",save:"সংরক্ষণ",cancel:"বাতিল",close:"বন্ধ",delete:"মুছুন",confirm:"নিশ্চিত",
- noEmp:"এখনো কোনো কর্মচারী নেই",noEmpHint:"“কর্মচারী যোগ করুন” দিয়ে প্রথম ড্রাইভার যোগ করুন।",photo_crop_hint:"মুখ মাঝে আনতে ছবিটি টেনে সরান, জুম করতে স্লাইডার।",submit:"সাবমিট",all_reset:"সব রিসেট",test_mode:"টেস্ট মোড — এখনও কর্মীদের কাছে যায়নি",new_tag:"নতুন",fu_draft_hint:"{n} জন ড্রাইভারের তথ্য টেস্টে আছে। নিচের এন্ট্রিগুলো যাচাই করুন — ঠিক থাকলে Submit করলে সেভ হয়ে কর্মীদের কাছে যাবে, ভুল হলে All reset।",fu_staged:"টেস্টের জন্য যোগ হয়েছে",fu_submit_q:"{n} জন ড্রাইভারের ফুয়েল সেভ করে নোটিফিকেশন পাঠাবো? এটি পেরোলের টোটাল আপডেট করবে।",reset_q:"টেস্টে থাকা ফাইলটি বাতিল করবো? কিছুই সেভ হবে না, কর্মীদের কাছেও যাবে না।",reset_done:"রিসেট হয়েছে",ord_draft_hint:"{n} জন কুরিয়ারের তথ্য টেস্টে আছে। নিচের টেবিল যাচাই করুন — ঠিক থাকলে Submit করলে সেভ হয়ে অর্ডার সংখ্যা আপডেট হবে, ভুল হলে All reset।",ord_submit_q:"{n} জন কুরিয়ারের এই রিপোর্ট সেভ করে মাসের অর্ডার সংখ্যা বসিয়ে ড্রাইভারদের নোটিফিকেশন পাঠাবো?",perf_draft_hint:"{d} তারিখের জন্য {n} জন ড্রাইভারের তথ্য টেস্টে আছে। নিচের টেবিল যাচাই করুন — ঠিক থাকলে Submit, ভুল হলে All reset।",perf_submit_q:"{n} জন ড্রাইভারের পারফরম্যান্স সেভ করে অর্ডার সংখ্যা আপডেট করে নোটিফিকেশন পাঠাবো?",empSaved:"কর্মচারী সংরক্ষিত হয়েছে",
+ noEmp:"এখনো কোনো কর্মচারী নেই",noEmpHint:"“কর্মচারী যোগ করুন” দিয়ে প্রথম ড্রাইভার যোগ করুন।",photo_crop_hint:"মুখ মাঝে আনতে ছবিটি টেনে সরান, জুম করতে স্লাইডার।",submit:"সাবমিট",all_reset:"সব রিসেট",test_mode:"টেস্ট মোড — এখনও কর্মীদের কাছে যায়নি",new_tag:"নতুন",fu_draft_hint:"{n} জন ড্রাইভারের তথ্য টেস্টে আছে। নিচের এন্ট্রিগুলো যাচাই করুন — ঠিক থাকলে Submit করলে সেভ হয়ে কর্মীদের কাছে যাবে, ভুল হলে All reset।",fu_staged:"টেস্টের জন্য যোগ হয়েছে",fu_submit_q:"{n} জন ড্রাইভারের ফুয়েল সেভ করে নোটিফিকেশন পাঠাবো? এটি পেরোলের টোটাল আপডেট করবে।",reset_q:"টেস্টে থাকা ফাইলটি বাতিল করবো? কিছুই সেভ হবে না, কর্মীদের কাছেও যাবে না।",reset_done:"রিসেট হয়েছে",ord_draft_hint:"{n} জন কুরিয়ারের তথ্য টেস্টে আছে। নিচের টেবিল যাচাই করুন — ঠিক থাকলে Submit করলে সেভ হয়ে অর্ডার সংখ্যা আপডেট হবে, ভুল হলে All reset।",ord_submit_q:"{n} জন কুরিয়ারের এই রিপোর্ট সেভ করে মাসের অর্ডার সংখ্যা বসিয়ে ড্রাইভারদের নোটিফিকেশন পাঠাবো?",perf_draft_hint:"{d} তারিখের জন্য {n} জন ড্রাইভারের তথ্য টেস্টে আছে। নিচের টেবিল যাচাই করুন — ঠিক থাকলে Submit, ভুল হলে All reset।",perf_submit_q:"{n} জন ড্রাইভারের পারফরম্যান্স সেভ করে অর্ডার সংখ্যা আপডেট করে নোটিফিকেশন পাঠাবো?",mc_title:"মাস ক্লোজ করে নতুন শুরু",mc_do:"ক্লোজ করে নতুন শুরু",mc_btn:"মাস ক্লোজ → {n} শুরু",mc_open:"চলতি মাস",mc_auto:"অটো (তারিখ অনুযায়ী)",mc_q:"{m} মাসের সব তথ্য একটি রিপোর্ট হিসেবে সেভ করে {n} শুরু করবো? এখন থেকে কর্মীরা {n} দেখবে, আর {m} History-তে চলে যাবে।",mc_summary:"{n} জন ড্রাইভার · {o} অর্ডার · {f} SAR ফুয়েল সেভ হবে।",mc_notice:"কর্মীদের জন্য নোটিশ (ঐচ্ছিক)",mc_notice_ph:"যেমন: অক্টোবর চূড়ান্ত হলো। আজ থেকে নভেম্বর শুরু — শুভকামনা!",mc_note:"এরপর অ্যাপ নতুন মাস দেখাবে। নতুন মাসের Performance ও Rank ততক্ষণ লুকানো থাকবে যতক্ষণ না ড্রাইভার ১০০ অর্ডার পূরণ করে (কিতার নিয়ম)।",mc_push_title:"{m} চূড়ান্ত হলো",mc_done:"মাস ক্লোজ — {n} শুরু হলো",empSaved:"কর্মচারী সংরক্ষিত হয়েছে",
  pinTitle:"নতুন লগইন পিন",pinText:"এই পিনটি কর্মচারীকে গোপনে দিন। এটি শুধু একবার দেখানো হবে।",
  date:"তারিখ",orders:"অর্ডার",fuel:"পেট্রোল (রিয়াল)",rank:"র‍্যাংক",saveDay:"মোট সংরক্ষণ",importCsv:"CSV আমদানি",daySaved:"সংরক্ষিত · র‍্যাংকিং হালনাগাদ",
  csvHelp:"CSV কলাম: residentId,orders,fuel — প্রতি ড্রাইভারের মাসের মোট হিসাব এক সারিতে। ফাইল দিন বা সারিগুলো পেস্ট করুন।",csvPaste:"CSV সারি পেস্ট করুন",csvImport:"আমদানি",imported:"আমদানি হয়েছে",skipped:"বাদ গেছে",
@@ -429,7 +432,7 @@ ar:{brandSub:"لوحة الإدارة",loading:"جارٍ التحميل…",
  addEmp:"إضافة موظف",search:"ابحث بالاسم، الإقامة، الجوال، اللوحة…",allStatus:"كل الحالات",ACTIVE:"نشط",PENDING:"معلق",INACTIVE:"موقوف",
  name:"الاسم",nameAr:"الاسم بالعربية",iqama:"رقم الإقامة",mobile:"الجوال",city:"المدينة",plate:"رقم اللوحة",model:"طراز المركبة",card:"رقم بطاقة الوقود",dailyLimit:"حد الوقود اليومي",monthlyLimit:"حد الوقود الشهري",status:"الحالة",payType:"نوع الراتب",TARGET:"هدف 450 طلب · أساسي + حافز",PER_ORDER:"سلم Unrank (380 / 500 / 600)",FLAT:"كل طلب × سعره الخاص · الوقود على الشركة",
  edit:"تعديل",approve:"موافقة",deactivate:"إيقاف",activate:"إعادة تفعيل",resetPin:"إعادة الرقم السري",save:"حفظ",cancel:"إلغاء",close:"إغلاق",delete:"حذف",confirm:"تأكيد",
- noEmp:"لا يوجد موظفون بعد",noEmpHint:"أضف أول سائق من زر «إضافة موظف».",photo_crop_hint:"اسحب الصورة لتوسيط الوجه، والشريط للتكبير.",submit:"إرسال",all_reset:"إعادة ضبط الكل",test_mode:"وضع الاختبار — لم يُرسل للسائقين بعد",new_tag:"جديد",fu_draft_hint:"{n} سائق في وضع الاختبار. راجع الإدخالات أدناه ثم أرسل للحفظ والإشعار، أو أعد ضبط الكل للتجاهل.",fu_staged:"تمت الإضافة للمراجعة",fu_submit_q:"حفظ وقود {n} سائق وإشعارهم؟ سيحدّث هذا إجماليات الرواتب.",reset_q:"تجاهل الملف المرحّلي؟ لن يُحفظ شيء ولن يُشعر السائقون.",reset_done:"تمت إعادة الضبط",ord_draft_hint:"{n} مندوب في وضع الاختبار. راجع الجدول ثم أرسل للحفظ وتحديث عدد الطلبات، أو أعد ضبط الكل.",ord_submit_q:"حفظ هذا التقرير لـ {n} مندوب وتعيين عدد طلبات الشهر وإشعار السائقين؟",perf_draft_hint:"{n} سائق في وضع الاختبار ليوم {d}. راجع الجدول ثم أرسل للحفظ والإشعار، أو أعد ضبط الكل.",perf_submit_q:"حفظ أداء {n} سائق وتحديث عدد الطلبات وإشعارهم؟",empSaved:"تم حفظ الموظف",
+ noEmp:"لا يوجد موظفون بعد",noEmpHint:"أضف أول سائق من زر «إضافة موظف».",photo_crop_hint:"اسحب الصورة لتوسيط الوجه، والشريط للتكبير.",submit:"إرسال",all_reset:"إعادة ضبط الكل",test_mode:"وضع الاختبار — لم يُرسل للسائقين بعد",new_tag:"جديد",fu_draft_hint:"{n} سائق في وضع الاختبار. راجع الإدخالات أدناه ثم أرسل للحفظ والإشعار، أو أعد ضبط الكل للتجاهل.",fu_staged:"تمت الإضافة للمراجعة",fu_submit_q:"حفظ وقود {n} سائق وإشعارهم؟ سيحدّث هذا إجماليات الرواتب.",reset_q:"تجاهل الملف المرحّلي؟ لن يُحفظ شيء ولن يُشعر السائقون.",reset_done:"تمت إعادة الضبط",ord_draft_hint:"{n} مندوب في وضع الاختبار. راجع الجدول ثم أرسل للحفظ وتحديث عدد الطلبات، أو أعد ضبط الكل.",ord_submit_q:"حفظ هذا التقرير لـ {n} مندوب وتعيين عدد طلبات الشهر وإشعار السائقين؟",perf_draft_hint:"{n} سائق في وضع الاختبار ليوم {d}. راجع الجدول ثم أرسل للحفظ والإشعار، أو أعد ضبط الكل.",perf_submit_q:"حفظ أداء {n} سائق وتحديث عدد الطلبات وإشعارهم؟",mc_title:"إغلاق الشهر وبدء جديد",mc_do:"إغلاق وبدء جديد",mc_btn:"إغلاق الشهر ← بدء {n}",mc_open:"الشهر المفتوح",mc_auto:"تلقائي (حسب التاريخ)",mc_q:"حفظ كل بيانات {m} كتقرير وبدء {n}؟ سيرى السائقون {n} من الآن، وينتقل {m} إلى السجل.",mc_summary:"سيُحفظ {n} سائق · {o} طلب · {f} ريال وقود.",mc_notice:"إشعار للسائقين (اختياري)",mc_notice_ph:"مثال: تم إغلاق أكتوبر. يبدأ نوفمبر اليوم — بالتوفيق!",mc_note:"بعد ذلك يعرض التطبيق الشهر الجديد. يبقى أداء ورتبة الشهر الجديد مخفيين حتى يصل السائق إلى 100 طلب (قاعدة كيتا).",mc_push_title:"تم إغلاق {m}",mc_done:"تم إغلاق الشهر — بدأ {n}",empSaved:"تم حفظ الموظف",
  pinTitle:"رقم سري جديد",pinText:"سلّم هذا الرقم للموظف بشكل خاص. يظهر مرة واحدة فقط.",
  date:"التاريخ",orders:"الطلبات",fuel:"الوقود (ريال)",rank:"الترتيب",saveDay:"حفظ الإجمالي",importCsv:"استيراد CSV",daySaved:"تم الحفظ · تحدث الترتيب",
  csvHelp:"أعمدة CSV: residentId,orders,fuel — صف لكل سائق بإجمالي الشهر. ارفع ملفاً أو الصق الصفوف.",csvPaste:"الصق صفوف CSV",csvImport:"استيراد",imported:"تم استيراد",skipped:"تم تخطي",
@@ -465,7 +468,11 @@ const todayKey = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh
    Keeta's report on the 2nd closes the previous cycle. Data shown "today" runs up to yesterday. */
 const dayBefore = d => new Date(Date.parse(d + "T12:00:00Z") - 864e5).toISOString().slice(0, 10);
 const cycleOf = d => { const [y, m, dd] = d.split("-").map(Number); return dd >= 2 ? d.slice(0, 7) : new Date(Date.UTC(y, m - 2, 1)).toISOString().slice(0, 7); };
-const monthKey = () => cycleOf(dayBefore(todayKey()));
+const dateMonth = () => cycleOf(dayBefore(todayKey()));
+// the "open" business month: whatever the admin last opened (manual close), else the date-based cycle
+const monthKey = () => (typeof state !== "undefined" && state.curMonth) || dateMonth();
+const nextMonthKey = k => { const [y, m] = k.split("-").map(Number); return new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 7); };
+const monthLabel = k => { const [y, m] = k.split("-").map(Number); return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" }); };
 const cycleRange = k => { const [y, m] = k.split("-").map(Number), a = new Date(Date.UTC(y, m - 1, 2)), b = new Date(Date.UTC(y, m, 1));
   const f = d => d.toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" }); return `${f(a)} – ${f(b)} ${b.getUTCFullYear()}`; };
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
@@ -498,7 +505,7 @@ function toast(msg){ const el = document.createElement("div"); el.className = "t
 
 /* ───────── state ───────── */
 const state = {
-  staff: {}, claimlog: {}, duty: {}, presence: {}, fuel: {}, fuelDraft: {}, fuelMonth: "", pinreq: {}, payroll: {}, curMonthDocs: [], invoice: {}, profDraft: {}, profMonth: "", pq: "", ordd: {}, orddKey: "", orddDraft: {}, perfDraft: {}, oq: "", expenses: {}, lq: "", xq: "", mode: "admin", myId: null, appTab: "home", appSlip: null, previewId: "",
+  staff: {}, claimlog: {}, duty: {}, presence: {}, fuel: {}, fuelDraft: {}, fuelMonth: "", pinreq: {}, payroll: {}, curMonthDocs: [], invoice: {}, profDraft: {}, profMonth: "", pq: "", ordd: {}, orddKey: "", orddDraft: {}, perfDraft: {}, oq: "", expenses: {}, lq: "", xq: "", curMonth: "", monthly: {}, mode: "admin", myId: null, appTab: "home", appSlip: null, previewId: "",
   emp: {}, fines: {}, adv: {}, rules: { ...DEFAULT_RULES },
   todayDoc: null, opsDoc: null, monthDocs: [], payDoc: null, dailyAll: {}, totals: {},
   opsDate: todayKey(), opsMonth: monthKey(), payMonth: monthKey(),
@@ -599,6 +606,34 @@ function orddAgg(doc){
   const avg = k => { const a = rows.filter(r => r[k] != null); return a.length ? a.reduce((s, r) => s + (+r[k] || 0), 0) / a.length : 0; };
   return { list, n: rows.length, delivered: sum("d"), ontime: avg("k"), completion: avg("j"), cancel: avg("i"), rejected: sum("f"), overdue: sum("o"), severe: sum("p") };
 }
+/* Build one frozen report for a finished month: per-driver orders/fuel, performance, order-details + company totals */
+function buildMonthArchive(m){
+  const [from, to] = cycleBounds(m), mr = monthRows(m);
+  const rankOf = {}; monthRanked(m).forEach(r => { rankOf[r.id] = r.rank; });
+  const inM = Object.values(state.ordd).filter(d => cycleOf(d.to) === m).sort((a, b) => (a.updatedAt || 0) - (b.updatedAt || 0));
+  const odDoc = inM[inM.length - 1] || null;
+  const byJ = {}; for (const [id, e] of Object.entries(state.emp)) if (e.jahezId) byJ[String(e.jahezId)] = id;
+  const odByEid = {}; if (odDoc) for (const [cid, row] of Object.entries(odDoc.rows || {})) { const eid = byJ[cid]; if (eid) odByEid[eid] = row; }
+  const days = perfDays().filter(dk => dk >= from && dk <= to);   // newest first
+  const rows = {};
+  for (const [id, e] of Object.entries(state.emp)) {
+    if (e.status === "DELETED") continue;
+    const o = Math.round(+mr[id]?.o || 0), f = r2(+mr[id]?.f || 0);
+    let pf = null; for (const dk of days) { const pr = state.perf[dk]?.rows?.[id]; if (pr) { pf = pr; break; } }
+    const od = odByEid[id] || null;
+    if (!(o > 0 || f > 0 || pf || od)) continue;
+    const odClean = od ? Object.fromEntries(ORDD_F.map(x => [x.k, od[x.k]]).filter(([, v]) => v != null)) : null;
+    rows[id] = { name: e.fullName || id, photo: e.photoUrl || "", o, f, rank: rankOf[id] || null,
+      grade: pf?.g || "", rp: pf?.rp ?? null, fa: pf?.fa ?? null, ot: pf?.ot ?? null, cr: pf?.cr ?? null, ne: pf?.ne ?? null,
+      od: odClean };
+  }
+  const all = Object.values(rows), ag = odDoc ? orddAgg(odDoc) : null;
+  const company = { orders: all.reduce((s, r) => s + (+r.o || 0), 0), fuel: r2(all.reduce((s, r) => s + (+r.f || 0), 0)),
+    drivers: all.filter(r => +r.o > 0).length,
+    delivered: ag ? ag.delivered : 0, ontime: ag ? ag.ontime : 0, completion: ag ? ag.completion : 0,
+    cancel: ag ? ag.cancel : 0, rejected: ag ? ag.rejected : 0, overdue: ag ? ag.overdue : 0, severe: ag ? ag.severe : 0 };
+  return { month: m, label: monthLabel(m), from, to, closedAt: Date.now(), company, rows };
+}
 function vDashboard(){
   const m = monthKey();
   const emps = Object.values(state.emp).filter(e => e.status !== "DELETED");
@@ -620,6 +655,8 @@ function vDashboard(){
     .filter(x => x.score > 0).sort((a, b) => b.score - a.score).slice(0, 7) : [];
   return `
   <div class="head"><div><h1>${t("today")} · ${todayKey()}</h1><p>${t("riyadh")} · ${cycleRange(m)}</p></div><div class="tools"><button class="btn" data-act="notice-new" data-needs-write>📣 ${t("nt_send")}</button><a class="btn gold" href="${DRIVER_WEB}" target="_blank" rel="noopener">${t("drv_web")} ↗</a></div></div>
+  <div class="monthbar"><div class="mb-txt"><span class="sub">${t("mc_open")}</span><b>${esc(monthLabel(m))}</b><span class="sub">· ${cycleRange(m)}${state.curMonth ? "" : ` · <i>${t("mc_auto")}</i>`}</span></div>
+    <button class="btn gold" data-act="month-close" data-needs-write>📦 ${t("mc_btn", { n: esc(monthLabel(nextMonthKey(m))) })}</button></div>
   <div class="kpis">
     <a class="kpi" href="#employees" style="color:inherit;text-decoration:none"><span>${t("activeEmp")}</span><b>${active}</b><small>${onlineN} ${t("dash_online_s")} · ${pend} ${t("pending")}</small></a>
     <a class="kpi" href="#target" style="color:inherit;text-decoration:none"><span>${t("totalOrders")}</span><b>${fmt0(orders)}</b><small>${t("dash_avg", { n: fmt0(avg) })} · ${hit} ${t("dash_hit_s")}</small></a>
@@ -2176,6 +2213,22 @@ document.addEventListener("click", async e => {
         }});
       return;
     }
+    if (act === "month-close") {
+      const m = monthKey(), nx = nextMonthKey(m), arch = buildMonthArchive(m), nDrivers = Object.keys(arch.rows).length;
+      openDialog({ title: "📦 " + t("mc_title"), submit: t("mc_do"),
+        body: `<p class="full">${t("mc_q", { m: esc(monthLabel(m)), n: esc(monthLabel(nx)) })}</p>
+          <p class="full sub" style="margin:-4px 0 0">${t("mc_summary", { n: nDrivers, o: fmt0(arch.company.orders), f: fmt(arch.company.fuel) })}</p>
+          <label class="f full">${t("mc_notice")} <span class="opt">· ${t("optional")}</span><textarea class="input" name="notice" rows="3" maxlength="500" placeholder="${t("mc_notice_ph")}"></textarea></label>
+          <p class="full sub">⚠️ ${t("mc_note")}</p>`,
+        onSubmit: async fd => {
+          const notice = (fd.notice || "").trim(); if (notice) arch.notice = notice;
+          await db.doc("monthly/" + m).set(arch);
+          await db.doc("config/month").set({ cur: nx, updatedAt: Date.now() });
+          if (notice) await sendNotice("msg", null, { title: t("mc_push_title", { m: monthLabel(m) }), body: notice });
+          toast(t("mc_done", { n: monthLabel(nx) }));
+        }});
+      return;
+    }
     if (act === "emp-del") {
       const e2 = state.emp[id], dues = allDues().filter(x => x.employeeId === id);
       openDialog({ title: t("emp_del_t"), danger: true, submit: t("delete"),
@@ -3670,6 +3723,8 @@ async function startAdmin(session){
   db.collection("payroll").onSnapshot(s => { state.payroll = docsMap(s); soon(); }, console.warn);
   db.collection("invoice").onSnapshot(s => { state.invoice = docsMap(s); soon(); }, console.warn);
   db.collection("orddetail").onSnapshot(s => { state.ordd = docsMap(s); soon(); }, console.warn);
+  db.doc("config/month").onSnapshot(s => { state.curMonth = (s.exists && s.data().cur) || ""; soon(); }, console.warn);
+  db.collection("monthly").onSnapshot(s => { state.monthly = docsMap(s); soon(); }, console.warn);
   db.collection("daily").onSnapshot(s => { state.dailyAll = docsMap(s); soon(); }, console.warn);
   db.collection("totals").onSnapshot(s => { state.totals = docsMap(s); soon(); }, console.warn);
   db.collection("fuel").onSnapshot(s => { state.fuel = docsMap(s); soon(); }, console.warn);
