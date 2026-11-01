@@ -211,6 +211,13 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .ep-f input:focus{outline:none;border-color:var(--cab-2);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 30%,transparent)}
 .ep-f .ep-ro{border:1.5px dashed var(--line);background:transparent;color:var(--muted);border-radius:12px;padding:12px 14px;font:600 16px var(--f-body);width:100%}
 .ep-locknote{font-size:12px;margin:-2px 2px 2px;opacity:.9}
+.ep-f select{border:1.5px solid var(--line);background:var(--sunk);color:var(--ink);border-radius:12px;padding:12px 14px;font:500 16px var(--f-body);width:100%;appearance:none;-webkit-appearance:none}
+.ep-f select:focus{outline:none;border-color:var(--cab-2);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 30%,transparent)}
+.card-wrap{display:flex;align-items:stretch;border:1.5px solid var(--line);background:var(--sunk);border-radius:12px;overflow:hidden}
+.card-wrap .card-pre{display:flex;align-items:center;padding:0 12px;background:color-mix(in srgb,var(--line) 45%,transparent);color:var(--muted);font:600 15px var(--f-body);white-space:nowrap}
+.card-wrap input{border:none;background:transparent;color:var(--ink);padding:12px 14px;font:600 17px var(--f-body);width:100%;letter-spacing:.04em}
+.card-wrap input:focus{outline:none}
+.card-wrap:focus-within{border-color:var(--cab-2);box-shadow:0 0 0 3px color-mix(in srgb,var(--gold) 30%,transparent)}
 .loc-consent{justify-content:center;gap:18px;padding:24px 16px} .loc-list{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:6px;font-size:14.5px}
 .loc-alert{margin-bottom:12px;background:#FFF4E5;border-color:#F0C17A;color:#5A3B00}
 .ph-cam{position:absolute;bottom:-4px;left:calc(50% + 34px);width:36px;height:36px;border-radius:50%;background:var(--gold);display:grid;place-items:center;font-size:17px;box-shadow:0 2px 8px rgba(0,0,0,.25)}
@@ -963,7 +970,8 @@ function vChanges(){
 }
 const ibanFmt = v => String(v || "").replace(/\s/g, "").replace(/(.{4})/g, "$1 ").trim();
 const SA_BANKS = ["Al Rajhi Bank", "Saudi National Bank (SNB)", "Riyad Bank", "Alinma Bank", "Bank Albilad", "Bank AlJazira", "Saudi Awwal Bank (SAB)", "Arab National Bank", "Banque Saudi Fransi", "Saudi Investment Bank", "STC Bank", "D360 Bank"];
-const EP_F = ["mobile", "card", "plate", "vehicleName", "vehicleModel", "city", "bankName", "iban", "accountName"];
+const EP_F = ["mobile", "plate", "vehicleName", "vehicleModel", "city", "bankName", "iban", "accountName"];
+const CARS = ["Suzuki", "Hyundai"];
 function epVal(p, k){ if (S.ep && k in S.ep) return S.ep[k]; return k === "card" ? (p.cardFull || p.card || "") : k === "iban" ? ibanFmt(p.iban) : (p[k] || ""); }
 function vEditProfile(m){
   const p = m.profile, f = (k, label, extra = "") => `<label class="ep-f"><span>${label}</span><input data-ep="${k}" value="${esc(epVal(p, k))}" ${extra}></label>`;
@@ -979,8 +987,8 @@ function vEditProfile(m){
   <section class="card ep">
     ${f("plate", t("plate"), 'style="text-transform:uppercase"')}
     ${f("vehicleName", t("ep_vname"))}
-    ${f("vehicleModel", t("ep_vmodel"))}
-    ${f("card", t("card"))}
+    ${(() => { const cur = epVal(p, "vehicleModel"); return `<label class="ep-f"><span>${t("ep_vmodel")}</span><select data-ep="vehicleModel"><option value="">—</option>${CARS.map(o => `<option ${cur === o ? "selected" : ""}>${o}</option>`).join("")}${cur && !CARS.includes(cur) ? `<option selected>${esc(cur)}</option>` : ""}</select></label>`; })()}
+    ${(() => { const num = (S.ep && "cardnum" in S.ep) ? S.ep.cardnum : String(p.cardFull || p.card || "").replace(/\D/g, ""); return `<label class="ep-f"><span>${t("card")}</span><div class="card-wrap"><span class="card-pre">logistic</span><input data-ep="cardnum" inputmode="numeric" maxlength="2" value="${esc(num)}" placeholder="1–99"></div></label>`; })()}
   </section>
   <section class="card ep"><h3>🏦 ${t("bank_t")}</h3>
     ${f("bankName", t("bank_name"), 'list="epBanks"')}<datalist id="epBanks">${SA_BANKS.map(c => `<option value="${c}">`).join("")}</datalist>
@@ -1160,6 +1168,8 @@ document.addEventListener("click", async e => {
   if (el.matches("[data-epsave]")) {
     const p = S.data?.m?.profile || {}, patch = {};
     for (const k of EP_F) if (S.ep && k in S.ep) patch[k] = S.ep[k];
+    // petrol card: driver edits only the number; the "logistic" prefix is fixed
+    if (S.ep && "cardnum" in S.ep) { const n = String(S.ep.cardnum).replace(/\D/g, "").slice(0, 2); patch.card = n ? ("logistic " + n) : ""; }
     if (!Object.keys(patch).length) { S.sub = null; S.ep = null; return render(); }
     el.disabled = true;
     try {
