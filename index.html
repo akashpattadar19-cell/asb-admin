@@ -527,7 +527,7 @@ const SUB_VIEWS = ["target","perf"];
 /* pages a read-only Viewer must not see (they can still read reports and move through dates) */
 // Every admin can VIEW every page. Edit rights are per-page:
 //   SUPER_ADMIN edits all · VIEWER edits none · SUB_ADMIN edits the pages granted in perms.edit (no perms set = all).
-const allowedViews = () => VIEWS;
+const allowedViews = () => VIEWS.filter(v => v !== "admins" || (typeof auth !== "undefined" && auth.role === "SUPER_ADMIN"));
 const canEditView = v => {
   if (typeof auth === "undefined" || auth.role === "SUPER_ADMIN") return true;
   if (auth.role === "VIEWER") return false;
