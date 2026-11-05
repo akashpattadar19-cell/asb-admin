@@ -99,7 +99,9 @@ label.f.check{flex-direction:row;align-items:center;text-transform:none;font-siz
 .dr>span{font-size:13px;font-weight:600;color:var(--muted)}
 .dr-v{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 a.kpi{display:block}
-.scroll{overflow-x:auto}
+.scroll{overflow-x:auto;scrollbar-width:auto;scrollbar-color:var(--muted) transparent}
+.scroll::-webkit-scrollbar{height:12px}.scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
+.fn-list{display:flex;flex-direction:column;gap:6px}.fn-i{display:flex;gap:10px;align-items:center}.fn-i .name{flex:1}.fneed-panel{margin-bottom:12px;border-color:#D9542B}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:start;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--sunk);white-space:nowrap}
 td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -498,13 +500,17 @@ const DEFAULT_RULES = { targetOrders: 450, baseSalary: 2400, bonusPer: 5, penalt
 const CATS = ["TRAFFIC_VIOLATION","ACCIDENT","COMPANY_DEDUCTION","DELAY","MISSING_ITEM","VEHICLE_DAMAGE","OTHER"];
 /* Payroll columns that are tied to the Dues overview (the other deduction columns — petrol, supervisor, Keeta — are payroll-only) */
 const PAY_LINK = { advance: "ADVANCE", company: "COMPANY_DEDUCTION", accident: "ACCIDENT", traffic: "TRAFFIC_VIOLATION" };
-Object.assign(I18N.en, { ACCIDENT: "Accident", COMPANY_DEDUCTION: "Company deduction",
+Object.assign(I18N.en, { fn_title: "Needs petrol", fn_done: "Done", fn_hint: "Drivers who turned on “Need petrol” in the app", emp_pay: "Payroll", emp_pay_on_t: "Included in payroll — click to leave out", emp_pay_off_t: "Left out of payroll — click to include",
+  pay_add: "Add driver", pay_add_t: "Add a driver to this payroll", pay_add_pick: "Driver left out of payroll", pay_add_none: "Every active driver is already in this payroll.", pay_extra: "added", pay_extra_rm: "Remove from this payroll", pay_scroll: "Scroll the table",
+  ACCIDENT: "Accident", COMPANY_DEDUCTION: "Company deduction",
   du_ledger: "Ledger", du_ledger_t: "Dues ledger — every deduction and reversal", du_ledger_none: "No ledger entries yet", lg_deduct: "Deducted", lg_reverse: "Reversed", lg_cat: "Category", lg_month: "Payroll month",
   du_cats: "By category", du_cat_total: "Total", du_cat_rec: "Deducted", du_cat_left: "Left",
   pa_left: "Left", pa_over: "{n}: {c} deduction {a} is more than the dues left ({l}).", pa_over_pub: "Cannot publish — a deduction is more than the dues left:", pa_unlinked: "PETROL, SUPERVISOR and KEETA deductions come out of salary only — they are not linked to Dues.", pa_linked: "Linked to Dues overview (cannot be more than what is left):",
   pa_already: "This payroll is already published — nothing was deducted twice.", pa_conf_t: "Deductions from Dues overview", pa_conf_none: "No dues deductions in this payroll.", pa_conf_before: "Before", pa_conf_cut: "Deduct", pa_conf_after: "After",
   pa_rev_note: "Deducted dues go back to the Dues overview and the reversal is written in the ledger." });
-Object.assign(I18N.bn, { ACCIDENT: "ACCIDENT", COMPANY_DEDUCTION: "COMPANY DEDUCTION", TRAFFIC_VIOLATION: "TRAFFIC VIOLATION", ADVANCE: "ADVANCE",
+Object.assign(I18N.bn, { fn_title: "পেট্রোল দরকার", fn_done: "হয়েছে", fn_hint: "অ্যাপে যারা “পেট্রোল দরকার” চালু করেছে", emp_pay: "Payroll", emp_pay_on_t: "Payroll-এ আছে — বাদ দিতে চাপুন", emp_pay_off_t: "Payroll-এ নেই — যোগ করতে চাপুন",
+  pay_add: "কর্মী যোগ", pay_add_t: "এই Payroll-এ কর্মী যোগ করুন", pay_add_pick: "Payroll-এর বাইরে থাকা কর্মী", pay_add_none: "সব সক্রিয় কর্মীই এই Payroll-এ আছে।", pay_extra: "যোগ করা", pay_extra_rm: "এই Payroll থেকে সরান", pay_scroll: "টেবিল স্ক্রোল করুন",
+  ACCIDENT: "ACCIDENT", COMPANY_DEDUCTION: "COMPANY DEDUCTION", TRAFFIC_VIOLATION: "TRAFFIC VIOLATION", ADVANCE: "ADVANCE",
   pa_traffic: "TRAFFIC VIOLATION", pa_accident: "ACCIDENT", pa_company: "COMPANY DEDUCTION", pa_akash: "SUPERVISOR DEDUCTION", pa_advance: "ADVANCE DEDUCTION", pa_keeta: "KEETA DEDUCTION", pa_petrolk: "PETROL DEDUCTION (±)",
   du_ledger: "লেনদেন-রেকর্ড", du_ledger_t: "বকেয়ার লেনদেন-রেকর্ড — প্রতিটি কর্তন ও ফেরত", du_ledger_none: "এখনো কোনো লেনদেন-রেকর্ড নেই", lg_deduct: "কাটা হয়েছে", lg_reverse: "ফেরত", lg_cat: "ক্যাটাগরি", lg_month: "পেরোল মাস",
   du_cats: "ক্যাটাগরি অনুযায়ী", du_cat_total: "মোট বকেয়া", du_cat_rec: "এ পর্যন্ত কাটা", du_cat_left: "বাকি",
@@ -512,7 +518,9 @@ Object.assign(I18N.bn, { ACCIDENT: "ACCIDENT", COMPANY_DEDUCTION: "COMPANY DEDUC
   pa_already: "এই পেরোল আগেই Publish হয়েছে — দ্বিতীয়বার কিছু কাটা হয়নি।", pa_conf_t: "Dues Overview থেকে কর্তন", pa_conf_none: "এই পেরোলে বকেয়া থেকে কোনো কর্তন নেই।", pa_conf_before: "আগে বাকি", pa_conf_cut: "কাটা হবে", pa_conf_after: "পরে বাকি",
   pay_reopen: "Unpublish / বাতিল করুন", pay_reopen_q: "{m} মাসের পেরোল বাতিল (Unpublish) করবেন? কর্মীদের অ্যাপ থেকে পে-স্লিপ সরে যাবে, কাটা বকেয়া আবার Dues Overview-এ ফিরে আসবে এবং লেনদেন-রেকর্ডে ‘ফেরত’ হিসেবে লেখা থাকবে। আবার Publish করলে নতুন করে কাটা হবে।",
   pa_rev_note: "কাটা বকেয়া আবার Dues Overview-এ ফিরে যাবে এবং লেনদেন-রেকর্ডে ফেরত লেখা হবে।" });
-Object.assign(I18N.ar, { ACCIDENT: "حادث", COMPANY_DEDUCTION: "خصومات الشركة",
+Object.assign(I18N.ar, { fn_title: "يحتاج وقود", fn_done: "تم", fn_hint: "سائقون فعّلوا «أحتاج وقود» في التطبيق", emp_pay: "الرواتب", emp_pay_on_t: "ضمن الرواتب — اضغط للاستبعاد", emp_pay_off_t: "خارج الرواتب — اضغط للإضافة",
+  pay_add: "إضافة سائق", pay_add_t: "إضافة سائق لهذه الرواتب", pay_add_pick: "سائق خارج الرواتب", pay_add_none: "كل السائقين النشطين ضمن هذه الرواتب.", pay_extra: "مضاف", pay_extra_rm: "إزالة من هذه الرواتب", pay_scroll: "تمرير الجدول",
+  ACCIDENT: "حادث", COMPANY_DEDUCTION: "خصومات الشركة",
   du_ledger: "السجل", du_ledger_t: "سجل المستحقات — كل خصم واسترجاع", du_ledger_none: "لا توجد قيود بعد", lg_deduct: "خُصم", lg_reverse: "أُعيد", lg_cat: "الفئة", lg_month: "شهر الرواتب",
   du_cats: "حسب الفئة", du_cat_total: "الإجمالي", du_cat_rec: "المخصوم", du_cat_left: "المتبقي",
   pa_left: "المتبقي", pa_over: "{n}: خصم {c} {a} أكبر من المتبقي ({l}).", pa_over_pub: "لا يمكن النشر — خصم أكبر من المتبقي:", pa_unlinked: "خصم الوقود والمشرف وكيتا من الراتب فقط وغير مرتبط بالمستحقات.", pa_linked: "مرتبط بالمستحقات (لا يزيد عن المتبقي):",
@@ -535,7 +543,7 @@ function toast(msg){ const el = document.createElement("div"); el.className = "t
 /* ───────── state ───────── */
 const state = {
   staff: {}, claimlog: {}, duty: {}, presence: {}, fuel: {}, fuelDraft: {}, fuelMonth: "", pinreq: {}, payroll: {}, curMonthDocs: [], invoice: {}, profDraft: {}, profMonth: "", pq: "", ordd: {}, orddKey: "", orddDraft: {}, perfDraft: {}, oq: "", expenses: {}, internet: {}, lq: "", xq: "", iq: "", curMonth: "", monthly: {}, mode: "admin", myId: null, appTab: "home", appSlip: null, previewId: "",
-  emp: {}, fines: {}, adv: {}, ledger: {}, rules: { ...DEFAULT_RULES },
+  emp: {}, fines: {}, adv: {}, ledger: {}, fuelneed: {}, rules: { ...DEFAULT_RULES },
   todayDoc: null, opsDoc: null, monthDocs: [], payDoc: null, dailyAll: {}, totals: {},
   opsDate: todayKey(), opsMonth: monthKey(), payMonth: monthKey(),
   opsDraft: {}, adjDraft: {}, q: "", qStatus: "", finesTab: "fines",
@@ -607,6 +615,11 @@ function render(){
 }
 
 /* ───────── derived ───────── */
+const fuelNeedIds = () => Object.entries(state.fuelneed).filter(([id, x]) => x?.on && state.emp[id]?.status === "ACTIVE").sort((a, b) => (+b[1].at || 0) - (+a[1].at || 0)).map(([id]) => id);
+const fuelNeedPanel = () => { const ids = fuelNeedIds(); if (!ids.length) return "";
+  return `<section class="panel fneed-panel"><h2 class="dash-sec" style="margin:0 0 8px">⛽ ${t("fn_title")} · ${ids.length}</h2><p class="sub" style="margin:0 0 8px">${t("fn_hint")}</p><div class="fn-list">${ids.map(id => `<div class="fn-i">${avatarHtml(state.emp[id].photoUrl, state.emp[id].fullName, 28)}<span class="name">${esc(state.emp[id].fullName)}</span><span class="sub">${esc(agoTxt(+state.fuelneed[id].at || Date.now()))}</span><button class="btn ghost sm" data-act="fneed-done" data-id="${id}" data-needs-write>✓ ${t("fn_done")}</button></div>`).join("")}</div></section>`; };
+const payExtra = () => payDoc()?.extra ?? [];
+const payEmps = () => activeEmps().filter(([id, e]) => e.inPayroll !== false || payExtra().includes(id));
 const activeEmps = () => Object.entries(state.emp).filter(([,e]) => e.status === "ACTIVE").sort((a,b)=>a[1].fullName.localeCompare(b[1].fullName));
 function ranked(doc){
   const rows = Object.entries(doc?.rows ?? {}).filter(([id]) => state.emp[id]).map(([id, r]) => ({ id, o: +r.o || 0, f: +r.f || 0 }))
@@ -711,6 +724,7 @@ function vDashboard(){
     <div class="kpi"><span>${t("dash_overdue")}</span><b class="${ag.overdue?"neg":""}">${fmt0(ag.overdue)}</b><small>${t("dash_total_s")}</small></div>
     <div class="kpi ${ag.severe?"alert":""}"><span>${t("dash_severe")}</span><b class="${ag.severe?"neg":""}">${fmt0(ag.severe)}</b><small>${t("dash_total_s")}</small></div>
   </div>` : `<section class="panel"><div class="empty"><b>${t("dash_no_exp")}</b><a class="btn sm" href="#orddetail" style="margin-top:8px">${t("ord_import")}</a></div></section>`}
+  ${fuelNeedPanel()}
   ${(() => { const il = inetList(), due = il.filter(x => inetStatus(x) === "due"), soon = il.filter(x => inetStatus(x) === "soon"); if (!due.length && !soon.length) return "";
     return `<h2 class="dash-sec">🌐 ${t("nav_internet")}<a class="btn ghost sm" href="#internet">${t("nav_internet")}</a></h2>
     <section class="panel"><div class="scroll"><table><thead><tr><th>${t("name")}</th><th>${t("inet_next")}</th><th class="r">${t("inet_left")}</th><th>${t("status")}</th></tr></thead><tbody>
@@ -778,8 +792,8 @@ function vEmployees(){
   const act = all.filter(([,e]) => e.status === "ACTIVE"), noPin = act.filter(([,e]) => !e.pinCheck).length;
   const chip = (label, n, key, val) => `<button class="chip ${state[key] === val ? "on" : ""}" data-act="emp-chip" data-k="${key}" data-v="${esc(val)}"><b>${n}</b> ${label}</button>`;
   const row = ([id, e]) => `<tr class="${e.status === "INACTIVE" ? "dim" : ""}">
-      <td style="min-width:220px"><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 40)}<div style="min-width:0"><div class="name">${esc(e.fullName)}</div>
-        <div class="sub" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${platPill(e.platform)}${e.delegateStatus ? `<span class="pill ${e.delegateStatus === "Disabled" ? "p-bad" : "p-ok"}">${t("ds_" + e.delegateStatus)}</span>` : ""}${e.fullNameAr ? `<span dir="rtl">${esc(e.fullNameAr)}</span>` : ""}</div></div></div></td>
+      <td style="min-width:220px"><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 40)}<div style="min-width:0"><div class="name">${esc(e.fullName)}${state.fuelneed[id]?.on ? ` <span class="pill p-warn nodot" title="${t("fn_hint")}">⛽ ${t("fn_title")}</span>` : ""}</div>
+        <div class="sub" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${e.status === "ACTIVE" ? `<button class="rk-sw ${e.inPayroll !== false ? "on" : ""}" role="switch" aria-checked="${e.inPayroll !== false}" data-act="emp-pay" data-id="${id}" data-needs-write title="${t(e.inPayroll !== false ? "emp_pay_on_t" : "emp_pay_off_t")}"><i></i><span>${t("emp_pay")}</span></button>` : ""}${platPill(e.platform)}${e.delegateStatus ? `<span class="pill ${e.delegateStatus === "Disabled" ? "p-bad" : "p-ok"}">${t("ds_" + e.delegateStatus)}</span>` : ""}${e.fullNameAr ? `<span dir="rtl">${esc(e.fullNameAr)}</span>` : ""}</div></div></div></td>
       <td class="mono nowrap">${esc(e.residentId)}${e.jahezId ? `<div class="sub" title="${t("jahezId")}">K: ${esc(e.jahezId)}</div>` : ""}</td>
       <td class="nowrap mono">${e.mobile ? `<a class="tel" href="tel:${esc(e.mobile)}">${esc(e.mobile)}</a>` : `<span class="sub">${t("none")}</span>`}</td>
       <td class="nowrap">${plateChip(e.plate)}<div class="sub" style="margin-top:3px">${esc(vehicleText(e)) || ""}</div></td>
@@ -1692,6 +1706,7 @@ function vFuel(){
     </div></div>
   ${draft ? `<div class="draftbar"><div class="db-txt"><b>🧪 ${t("test_mode")}</b><span>${t("fu_draft_hint", { n: Object.keys(state.fuelDraft.rows).length })}</span></div>
     <div class="db-act"><button class="btn danger" data-act="fuel-reset" data-needs-write>↺ ${t("all_reset")}</button><button class="btn ok" data-act="fuel-submit" data-needs-write>✓ ${t("submit")}</button></div></div>` : ""}
+  ${fuelNeedPanel()}
   <div class="chips"><span class="sub" style="margin-inline-end:4px">${t("fu_months")}:</span>${months.map(m => `<button class="chip ${m === k ? "on" : ""}" data-act="fuel-month" data-v="${m}"><b>${m}</b> · ${cycleRange(m)}</button>`).join("")}</div>
   <div class="kpis">
     <div class="kpi"><span>${t("fu_total")} · ${cycleRange(k)}</span><b>${fmt(all)}</b><small>${t("sar")} · ${nEnt} ${t("fu_entries")}</small></div>
@@ -2190,7 +2205,7 @@ function computePayroll(){
   const manual = {};
   for (const [kind, map] of [["fine", state.fines], ["adv", state.adv]]) for (const x of Object.values(map)) for (const h of x.history ?? [])
     if (h.src === "manual" && !h.cash && h.month === m) { const k = (manual[x.employeeId] ??= { fine: 0, adv: 0 }); k[kind] = r2(k[kind] + (+h.amount || 0)); }
-  return activeEmps().map(([id, e]) => {
+  return payEmps().map(([id, e]) => {
     const orders = tot[id]?.o ?? 0, fuelSpent = r2(tot[id]?.f ?? 0);
     const a = { ...(savedAdj[id] ?? {}), ...(state.adjDraft[id] ?? {}) };
     const pg = payGrade(id, e), pay = payFor(e, orders, pg.g);
@@ -2257,7 +2272,7 @@ function vPayroll(){
       <button class="btn ghost" data-act="pay-import" data-needs-write>⬆ ${t("pay_import")}</button>
       ${published?`<button class="btn ghost" data-act="pay-reopen" data-needs-write>${t("pay_reopen")}</button>`:""}
       ${payDoc()?`<button class="btn ghost danger-t" data-act="pay-delete" data-needs-write>${t("pay_del")}</button>`:""}
-      ${published?"":`<button class="btn ghost" data-act="adj-save" data-needs-write>${t("saveAdj")}</button><button class="btn gold" data-act="pay-publish" data-needs-write ${slips.length?"":"disabled"}>${t("publish")}</button>`}
+      ${published?"":`<button class="btn ghost" data-act="pay-add" data-needs-write>+ ${t("pay_add")}</button><button class="btn ghost" data-act="adj-save" data-needs-write>${t("saveAdj")}</button><button class="btn gold" data-act="pay-publish" data-needs-write ${slips.length?"":"disabled"}>${t("publish")}</button>`}
     </div></div>
   ${(() => { const ms = Object.values(state.payroll).filter(p => p.month).sort((a, b) => b.month.localeCompare(a.month));
     return ms.length ? `<div class="chips"><span class="sub" style="margin-inline-end:4px">${t("pay_saved")}:</span>${ms.map(p => `<button class="chip ${p.month === state.payMonth ? "on" : ""}" data-act="pay-month" data-v="${esc(p.month)}"><b>${esc(p.month)}</b> ${p.status === "PUBLISHED" ? t("published") : t("draft")}</button>`).join("")}</div>` : ""; })()}
@@ -2267,11 +2282,11 @@ function vPayroll(){
     <div class="kpi"><span>${t("pa_totded")}</span><b>${fmt(sum("sded"))}</b><small>${t("sar")}</small></div>
     <div class="kpi"><span>${t("net")}</span><b>${fmt(sum("net"))}</b><small>${t("sar")}</small></div>
   </div>
-  <p class="sub" style="margin:-6px 0 10px">${t("pa_tbl_note")}</p>
+  <div style="display:flex;gap:8px;align-items:center;margin:-6px 0 10px;flex-wrap:wrap"><p class="sub" style="margin:0;flex:1;min-width:200px">${t("pa_tbl_note")}</p><span class="sub">${t("pay_scroll")}</span><button class="btn ghost sm" data-act="tbl-scroll" data-dir="-1" aria-label="left">◀</button><button class="btn ghost sm" data-act="tbl-scroll" data-dir="1" aria-label="right">▶</button></div>
   <section class="panel">${slips.length ? `<div class="scroll"><table>
     <thead><tr><th>${t("name")}</th><th class="r">${t("orders")}</th><th class="r">${t("pa_base")}</th><th class="r">${t("pa_additional")}</th><th class="r">${t("pa_due")}</th><th class="r">${t("pa_petrol")}</th><th class="r">${t("pa_petrolk")}</th><th class="r ordd-badh">${t("pa_traffic")}</th><th class="r ordd-badh">${t("pa_accident")}</th><th class="r ordd-badh">${t("pa_company")}</th><th class="r ordd-badh">${t("pa_akash")}</th><th class="r ordd-badh">${t("pa_advance")}</th><th class="r ordd-badh">${t("pa_keeta")}</th><th class="r">${t("pa_bonus_o")}</th><th class="r">${t("pa_totded")}</th><th class="r">${t("net")}</th><th></th></tr></thead>
     <tbody>${slips.map(s => { const ded = k => { const L = s.lk?.[k], D = published ? (s.dues || []).find(z => z.cat === PAY_LINK[k]) : null; const sub = PAY_LINK[k] ? (published ? (D ? `<div class="sub">${t("pa_left")} ${fmt(D.after)}</div>` : "") : (L && (L.left > 0 || +s[k]) ? `<div class="sub" ${L.over ? 'style="color:var(--bad)"' : ""}>${t("pa_left")} ${fmt(L.left)}${L.over ? " ⚠" : ""}</div>` : "")) : ""; return `<td class="r nowrap${+s[k] ? " ordd-bad" : ""}">${+s[k] ? "−" + fmt(s[k]) : fmt(0)}${sub}</td>`; }; const due = s.due != null ? s.due : r2((+s.base || 0) + (+s.bonus || 0)); const extraDed = r2((+s.fineDed || 0) + (+s.advDed || 0) + (+s.shortfall || 0) + (+s.absDed || 0) + (+s.incent || 0) + (+s.overtime || 0)); return `<tr>
-      <td><div class="name">${esc(state.emp[s.id]?.fullName || s.name)}${s.valid === false ? ` <span class="pill p-bad nodot" title="${esc(s.reason || "")}">${t("pa_invalid")}</span>` : ""}${!state.emp[s.id] ? ` <span class="pill p-mute nodot">${t("pay_gone")}</span>` : ""}</div><div class="sub">${rkPill(s.payType)}${s.grade ? ` <span class="grade sm ${gradeCls(s.grade)}" title="${t("pg_col")}">${s.grade}</span>` : ""}${s.manual ? ` <span class="pill p-warn nodot">${t(s.manual === "gradeD" ? "pay_manual_d" : "pay_manual_low")}</span>` : ""}${extraDed ? ` <span class="pill p-mute nodot" title="${t("incent")}/${t("overtime")}/${t("fineDed")}/${t("advDed")}/${t("shortfall")}/${t("abs_col")}">±${fmt(extraDed)}</span>` : ""}</div></td>
+      <td><div class="name">${esc(state.emp[s.id]?.fullName || s.name)}${!published && payExtra().includes(s.id) ? ` <span class="pill p-info nodot">+ ${t("pay_extra")}</span><button class="btn ghost sm" data-act="pay-unextra" data-id="${esc(s.id)}" data-needs-write title="${t("pay_extra_rm")}">✕</button>` : ""}${s.valid === false ? ` <span class="pill p-bad nodot" title="${esc(s.reason || "")}">${t("pa_invalid")}</span>` : ""}${!state.emp[s.id] ? ` <span class="pill p-mute nodot">${t("pay_gone")}</span>` : ""}</div><div class="sub">${rkPill(s.payType)}${s.grade ? ` <span class="grade sm ${gradeCls(s.grade)}" title="${t("pg_col")}">${s.grade}</span>` : ""}${s.manual ? ` <span class="pill p-warn nodot">${t(s.manual === "gradeD" ? "pay_manual_d" : "pay_manual_low")}</span>` : ""}${extraDed ? ` <span class="pill p-mute nodot" title="${t("incent")}/${t("overtime")}/${t("fineDed")}/${t("advDed")}/${t("shortfall")}/${t("abs_col")}">±${fmt(extraDed)}</span>` : ""}</div></td>
       <td class="r">${fmt0(s.orders)}</td>
       <td class="r nowrap">${fmt(s.base)}</td>
       <td class="r nowrap ${s.bonus ? "pos" : ""}">${fmt(s.bonus)}${s.extraOrders ? `<div class="sub">${fmt0(s.extraOrders)}×${fmt(s.extraRate)}</div>` : ""}</td>
@@ -2583,6 +2598,18 @@ document.addEventListener("click", async e => {
     }
 
     if (act === "emp-rank") { const e0 = state.emp[id] || {}, cur = ((e0.payType === "FLAT" ? e0.payTypePrev : e0.payType) || "TARGET") === "TARGET"; await db.doc("employees/" + id).update({ payType: cur ? "PER_ORDER" : "TARGET", updatedAt: Date.now() }); toast(t(cur ? "rk_set_off" : "rk_set_on", { n: state.emp[id]?.fullName ?? "" })); return; }
+    if (act === "emp-pay") { const e0 = state.emp[id] || {}; await db.doc("employees/" + id).update({ inPayroll: e0.inPayroll === false, updatedAt: Date.now() }); return; }
+    if (act === "fneed-done") { await db.doc("fuelneed/" + id).set({ on: false, at: Date.now() }); return; }
+    if (act === "tbl-scroll") { const sc = document.querySelector(".panel .scroll"); if (sc) sc.scrollBy({ left: (+b.dataset.dir) * Math.max(240, sc.clientWidth * 0.7), behavior: "smooth" }); return; }
+    if (act === "pay-add") {
+      const left = activeEmps().filter(([id, e]) => e.inPayroll === false && !payExtra().includes(id));
+      if (!left.length) { toast(t("pay_add_none")); return; }
+      openDialog({ title: t("pay_add_t"), submit: t("pay_add"),
+        body: `<label class="f full">${t("pay_add_pick")} *<select class="input" name="eid" required><option value="">${t("selectEmp")}</option>${left.map(([id, e]) => `<option value="${id}">${esc(e.fullName)} — ${esc(e.residentId)}</option>`).join("")}</select></label>`,
+        onSubmit: async fd => { if (!fd.eid) fail(t("required")); await db.doc("payroll/" + state.payMonth).set({ ...(payDoc() ?? {}), month: state.payMonth, status: "DRAFT", extra: [...payExtra(), fd.eid], updatedAt: Date.now() }); } });
+      return;
+    }
+    if (act === "pay-unextra") { await db.doc("payroll/" + state.payMonth).set({ ...(payDoc() ?? {}), month: state.payMonth, status: "DRAFT", extra: payExtra().filter(x => x !== id), updatedAt: Date.now() }); return; }
     if (act === "emp-status") { await db.doc("employees/" + id).update({ status: b.dataset.v, updatedAt: Date.now() }); }
 
     if (act === "emp-pin") {
@@ -2865,7 +2892,7 @@ document.addEventListener("click", async e => {
       openDialog({ title: t("pay_reopen"), body: `<p class="full">${t("pay_reopen_q", { m })}</p>`, submit: t("pay_reopen"), onSubmit: async () => {
         await giveBackDues(m, null, "payroll unpublished");
         const d = payDoc();
-        await db.doc("payroll/" + m).set({ month: m, status: "DRAFT", adj: d?.adj ?? {}, updatedAt: Date.now() });
+        await db.doc("payroll/" + m).set({ month: m, status: "DRAFT", adj: d?.adj ?? {}, ...(d?.extra ? { extra: d.extra } : {}), updatedAt: Date.now() });
         toast(t("pay_reopened"));
       }});
       return;
@@ -2964,7 +2991,7 @@ document.addEventListener("click", async e => {
           const adj = { ...(payDoc()?.adj ?? {}) };
           for (const s of slips) adj[s.id] = s.adj;
           const dues = {}; for (const r of plan.rows) (dues[r.id] ??= []).push({ cat: r.cat, before: r.before, amt: r.amt, after: r.after });
-          await db.doc("payroll/" + m).set({ month: m, status: "PUBLISHED", publishedAt: Date.now(), adj, rules: state.rules,
+          await db.doc("payroll/" + m).set({ month: m, status: "PUBLISHED", publishedAt: Date.now(), adj, rules: state.rules, ...(payDoc()?.extra ? { extra: payDoc().extra } : {}),
             slips: slips.map(({ adj, planned, lk, ...rest }) => ({ ...rest, adj, planned, ...(dues[rest.id] ? { dues: dues[rest.id] } : {}) })) });
           await sendNotice("salary", slips.map(s => s.id), { month: m });
           state.adjDraft = {}; toast(t("publishedOk"));
@@ -3960,6 +3987,7 @@ async function startAdmin(session){
   db.collection("employees").onSnapshot(s => { state.emp = docsMap(s); done(); soon(); }, console.warn);
   db.collection("fines").onSnapshot(s => { state.fines = docsMap(s); done(); soon(); }, console.warn);
   db.collection("advances").onSnapshot(s => { state.adv = docsMap(s); done(); soon(); }, console.warn);
+  db.collection("fuelneed").onSnapshot(s => { state.fuelneed = docsMap(s); soon(); }, console.warn);
   db.collection("ledger").onSnapshot(s => { state.ledger = docsMap(s); soon(); }, console.warn);
   db.collection("expense").onSnapshot(s => { state.expenses = docsMap(s); soon(); }, console.warn);
   db.collection("internet").onSnapshot(s => { state.internet = docsMap(s); soon(); }, console.warn);

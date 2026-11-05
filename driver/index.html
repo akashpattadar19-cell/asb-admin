@@ -108,7 +108,7 @@ button{cursor:pointer}
 .card .plate i span{color:var(--card)}
 .plate em{font-style:normal;padding:0 6px}
 .iconbtn{width:40px;height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.25);background:none;color:inherit;display:grid;place-items:center;flex:none}
-.iconbtn svg{width:20px;height:20px}
+.iconbtn svg{width:18px;height:18px}
 .bellbtn{position:relative}
 .bell-n{position:absolute;top:-5px;inset-inline-end:-5px;min-width:18px;height:18px;padding:0 4px;border-radius:9px;background:#E5484D;color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;border:2px solid var(--cab,#0A2A47)}
 .ntc-list,.ntc-home{display:flex;flex-direction:column;gap:8px}
@@ -119,7 +119,7 @@ button{cursor:pointer}
 .ntc-ic{color:#fff}
 .ntc-ic.k-perf{background:linear-gradient(135deg,#8B6CF0,#2F6FD6)} .ntc-ic.k-orders{background:linear-gradient(135deg,#F7B531,#EE6A1F)}
 .ntc-ic.k-salary{background:linear-gradient(135deg,#2BC48A,#13895A)} .ntc-ic.k-due{background:linear-gradient(135deg,#F59E5B,#E5484D)} .ntc-ic.k-fuel{background:linear-gradient(135deg,#22B8CF,#1C7ED6)} .ntc-ic.k-msg{background:linear-gradient(135deg,#3B82F6,#1E4FA8)}
-.ntc-ic svg{width:20px;height:20px}
+.ntc-ic svg{width:18px;height:18px}
 .ntc-t{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
 .ntc-t b{font-weight:700} .ntc-t small{color:var(--muted);font-size:13px} .ntc-t em{font-style:normal;color:var(--muted);font-size:12px}
 .iconbtn.busy svg{animation:sp 1s linear infinite}
@@ -243,6 +243,10 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
   background:rgba(58,42,5,.14);color:#3A2A05;font-size:13px;cursor:pointer;display:grid;place-items:center;z-index:2}
 .ch-askbox{margin-top:10px;display:flex;flex-direction:column;gap:8px} .ch-askbox textarea{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px;font:inherit;background:var(--sunk);color:var(--ink)}
 .fuel-card{display:block;width:100%;text-align:start;color:inherit;font:inherit;border:1px solid var(--line)}
+.sw{display:inline-flex;align-items:center;gap:8px;padding:6px 10px 6px 12px;border-radius:999px;border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--muted);background:var(--sunk);cursor:pointer}
+.sw i{width:34px;height:20px;border-radius:10px;background:var(--line);position:relative;transition:background .15s}
+.sw i::after{content:"";position:absolute;top:2px;inset-inline-start:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:inset-inline-start .15s}
+.sw.on{color:#fff;background:#D9542B;border-color:#D9542B}.sw.on i{background:rgba(255,255,255,.35)}.sw.on i::after{inset-inline-start:16px}
 .fp-mini{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
 .inet-rows{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .inet-rows span{display:flex;flex-direction:column;gap:2px}
@@ -265,7 +269,7 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .hist-notice{background:var(--sunk);border-radius:12px;padding:10px 12px;font-size:13px;margin:2px 0 12px}
 .pf-lock{text-align:center;padding:14px 8px}
 .pf-lock-ic{display:inline-grid;place-items:center;width:52px;height:52px;border-radius:16px;background:var(--sunk);color:var(--muted);margin-bottom:6px}
-.pf-lock-ic svg{width:26px;height:26px}
+.pf-lock-ic svg{width:23px;height:23px}
 .pf-lock b{font:600 17px var(--f-display)}
 .od-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .od-cell{background:var(--sunk);border-radius:12px;padding:10px 12px}
@@ -273,7 +277,7 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .od-cell b{font:600 18px var(--f-display)}
 .od-cell.bad{background:var(--bad-soft)}
 .od-cell.bad small,.od-cell.bad b{color:var(--bad)}
-.tile-ic svg{width:24px;height:24px}
+.tile-ic svg{width:21px;height:21px}
 .tile-go{font-size:22px;color:var(--muted)}
 .tile b{font:600 18px var(--f-display);letter-spacing:.02em}
 .tile small{color:var(--muted);font-size:13px}
@@ -305,7 +309,7 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .empty{text-align:center;color:var(--muted);padding:26px 10px}
 .nav{position:fixed;left:0;right:0;bottom:0;z-index:10;background:var(--card);border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(4,1fr);padding:6px max(6px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(6px,env(safe-area-inset-left,0px));box-shadow:0 -8px 26px -12px rgba(10,33,57,.22)}
 .nav button{position:relative;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;padding:6px 0;font-size:11.5px;font-weight:600;color:var(--muted)}
-.nav button svg{width:46px;height:30px;padding:4px 11px;border-radius:12px;color:var(--c);transition:background .15s,color .15s}
+.nav button svg{width:38px;height:28px;padding:4px 9px;border-radius:12px;color:var(--c);transition:background .15s,color .15s}
 .nav button[data-tab="home"]{--c:#2F6FD6} .nav button[data-tab="fines"]{--c:#EA7A1B} .nav button[data-tab="salary"]{--c:#16A06A} .nav button[data-tab="profile"]{--c:#7C5CE0}
 .nav button[aria-current="page"]{color:var(--ink)}
 .nav button[aria-current="page"] svg{color:#fff;background:var(--c);box-shadow:0 4px 12px color-mix(in srgb,var(--c) 45%,transparent)}
@@ -334,7 +338,7 @@ en:{su_no_acc:"New driver?",su_make:"Create account",su_title:"Create account",s
  outstanding_old:"Outstanding fines",you:"You",
  fines_out:"Outstanding",fines_paid:"Already deducted",fine_list:"Fines",nofines:"No fines. Keep it up!",waived:"Waived",paid:"Recovered",remaining:"Remaining",per_month:"per month",
  advances:"Advances",deduct_hist:"Monthly deductions",none:"Nothing yet",
- TRAFFIC_VIOLATION:"Traffic violation",ACCIDENT:"Accident",COMPANY_DEDUCTION:"Company deduction",du_cats:"My dues by type",du_c_tot:"Total",du_c_rec:"Deducted",du_c_left:"Left",du_payroll:"Payroll",DELAY:"Delay",MISSING_ITEM:"Missing item",VEHICLE_DAMAGE:"Vehicle damage",OTHER:"Other",
+ TRAFFIC_VIOLATION:"Traffic violation",ACCIDENT:"Accident",fneed:"Need petrol",fneed_on:"Office will see you need petrol",fneed_off:"Petrol request turned off",COMPANY_DEDUCTION:"Company deduction",du_cats:"My dues by type",du_c_tot:"Total",du_c_rec:"Deducted",du_c_left:"Left",du_payroll:"Payroll",DELAY:"Delay",MISSING_ITEM:"Missing item",VEHICLE_DAMAGE:"Vehicle damage",OTHER:"Other",
  payslips:"Payslips",noslips:"No payslips published yet.",gross:"Gross",deductions:"Deductions",net:"Net pay",orders_n:"{n} orders",earnings:"Earnings",
  base:"Base salary",bonus:"Order bonus",incent:"Bonus",overtime:"Overtime",shortfall:"Order shortfall",fineDed:"Fines",advDed:"Advances",fuelAdj:"Fuel adjustment",other:"Other",
  pdf:"Download PDF",pdf_ok:"Saved to Downloads",pdf_fail:"Could not create the PDF.",back:"Back",
@@ -349,7 +353,7 @@ bn:{su_no_acc:"নতুন কর্মী?",su_make:"অ্যাকাউন�
  outstanding_old:"বকেয়া জরিমানা",you:"আপনি",
  fines_out:"বকেয়া",fines_paid:"কাটা হয়েছে",fine_list:"জরিমানা",nofines:"কোনো জরিমানা নেই। এভাবেই চালিয়ে যান!",waived:"মাফ",paid:"আদায় হয়েছে",remaining:"বাকি",per_month:"প্রতি মাসে",
  advances:"অগ্রিম",deduct_hist:"মাসিক কর্তন",none:"এখনো কিছু নেই",
- TRAFFIC_VIOLATION:"TRAFFIC VIOLATION",ACCIDENT:"ACCIDENT",COMPANY_DEDUCTION:"COMPANY DEDUCTION",du_cats:"আমার বকেয়া (ক্যাটাগরি অনুযায়ী)",du_c_tot:"মোট",du_c_rec:"এ পর্যন্ত কাটা হয়েছে",du_c_left:"বাকি আছে",du_payroll:"পেরোল",DELAY:"দেরি",MISSING_ITEM:"আইটেম হারানো",VEHICLE_DAMAGE:"গাড়ির ক্ষতি",OTHER:"অন্যান্য",
+ TRAFFIC_VIOLATION:"TRAFFIC VIOLATION",ACCIDENT:"ACCIDENT",fneed:"পেট্রোল দরকার",fneed_on:"অফিস দেখতে পাবে আপনার পেট্রোল দরকার",fneed_off:"পেট্রোল অনুরোধ বন্ধ হয়েছে",COMPANY_DEDUCTION:"COMPANY DEDUCTION",du_cats:"আমার বকেয়া (ক্যাটাগরি অনুযায়ী)",du_c_tot:"মোট",du_c_rec:"এ পর্যন্ত কাটা হয়েছে",du_c_left:"বাকি আছে",du_payroll:"পেরোল",DELAY:"দেরি",MISSING_ITEM:"আইটেম হারানো",VEHICLE_DAMAGE:"গাড়ির ক্ষতি",OTHER:"অন্যান্য",
  payslips:"পে-স্লিপ",noslips:"এখনো কোনো পে-স্লিপ প্রকাশ হয়নি।",gross:"মোট আয়",deductions:"কর্তন",net:"নিট বেতন",orders_n:"{n} অর্ডার",earnings:"আয়",
  base:"বেসিক বেতন",bonus:"অর্ডার বোনাস",incent:"বোনাস",overtime:"ওভারটাইম",shortfall:"অর্ডার ঘাটতি",fineDed:"জরিমানা",advDed:"অগ্রিম",fuelAdj:"পেট্রোল সমন্বয়",other:"অন্যান্য",
  pdf:"PDF ডাউনলোড",pdf_ok:"Downloads ফোল্ডারে সেভ হয়েছে",pdf_fail:"PDF তৈরি করা যায়নি।",back:"পেছনে",
@@ -364,7 +368,7 @@ ar:{su_no_acc:"سائق جديد؟",su_make:"إنشاء حساب",su_title:"إن
  outstanding_old:"مخالفات مستحقة",you:"أنت",
  fines_out:"مستحق",fines_paid:"تم خصمه",fine_list:"المخالفات",nofines:"لا توجد مخالفات. أحسنت!",waived:"معفى",paid:"مسدد",remaining:"المتبقي",per_month:"شهرياً",
  advances:"السلف",deduct_hist:"الخصومات الشهرية",none:"لا شيء بعد",
- TRAFFIC_VIOLATION:"مخالفة مرورية",ACCIDENT:"حادث",COMPANY_DEDUCTION:"خصومات الشركة",du_cats:"مستحقاتي حسب النوع",du_c_tot:"الإجمالي",du_c_rec:"المخصوم",du_c_left:"المتبقي",du_payroll:"الرواتب",DELAY:"تأخير",MISSING_ITEM:"صنف مفقود",VEHICLE_DAMAGE:"ضرر بالمركبة",OTHER:"أخرى",
+ TRAFFIC_VIOLATION:"مخالفة مرورية",ACCIDENT:"حادث",fneed:"أحتاج وقود",fneed_on:"سيرى المكتب أنك تحتاج وقوداً",fneed_off:"تم إلغاء طلب الوقود",COMPANY_DEDUCTION:"خصومات الشركة",du_cats:"مستحقاتي حسب النوع",du_c_tot:"الإجمالي",du_c_rec:"المخصوم",du_c_left:"المتبقي",du_payroll:"الرواتب",DELAY:"تأخير",MISSING_ITEM:"صنف مفقود",VEHICLE_DAMAGE:"ضرر بالمركبة",OTHER:"أخرى",
  payslips:"قسائم الراتب",noslips:"لم تُنشر قسائم بعد.",gross:"الإجمالي",deductions:"الخصومات",net:"صافي الراتب",orders_n:"{n} طلب",earnings:"المستحقات",
  base:"الراتب الأساسي",bonus:"حافز الطلبات",incent:"مكافأة",overtime:"إضافي",shortfall:"نقص الطلبات",fineDed:"المخالفات",advDed:"السلف",fuelAdj:"تعديل الوقود",other:"أخرى",
  pdf:"تحميل PDF",pdf_ok:"تم الحفظ في التنزيلات",pdf_fail:"تعذر إنشاء الملف.",back:"رجوع",
@@ -410,7 +414,7 @@ const I = {
   archive: '<path d="M3 7.5 4.3 5h15.4L21 7.5"/><rect x="3" y="7.5" width="18" height="12" rx="2"/><path d="M9.5 12h5"/>',
   lock: '<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
 };
-const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
+const icon = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${I[k]}</svg>`;
 // Keeta only shows Performance & Rank after 100 orders in the month — so the app hides them until then
 const PERF_MIN = 100;
 const perfLocked = m => (+m.month?.o || 0) < PERF_MIN;
@@ -842,7 +846,8 @@ function vHome(m){
     <div class="inet-rows"><span><small>${t("inet_last_d")}</small><b>${i.lastPaid ? ddate(i.lastPaid) : "—"}</b></span><span><small>${t("inet_next_d")}</small><b class="${over ? "neg" : ""}">${nx ? ddate(nx) : "—"}</b></span></div>
   </section>`; })()}
   <button class="card fuel-card" data-sub="fuel"><div class="row"><h3 style="margin:0">⛽ ${t("fuel_m")}</h3><span class="tile-go">›</span></div>
-    <div class="big" style="font-size:28px;margin-top:6px">${fmt(mm.f)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">${t("sar")}</span></div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin-top:6px"><div class="big" style="font-size:28px">${fmt(mm.f)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">${t("sar")}</span></div>
+      <span class="sw ${S.fuelNeed ? "on" : ""}" role="switch" aria-checked="${!!S.fuelNeed}" data-fneed>${t("fneed")}<i></i></span></div>
     ${fEntries(m.fuel).length ? `<div class="fp-mini">${fEntries(m.fuel).slice(-3).map(x => `<span><small>${esc(fRange(x))}</small><b>${fmt(x.a)}</b></span>`).join("")}</div>` : ""}
   </button>
   ${out > 0 ? `<button class="alert" data-tab="fines"><span>${t("outstanding")}</span><span class="neg num" style="font-size:18px">${fmt(out)} ${t("sar")}</span></button>` : ""}
@@ -1094,13 +1099,28 @@ function androidSync(){
   } catch {}
 }
 function toLogin(msg){ try { window.ASBAndroid?.clearSession?.(); } catch {} S.token = null; S.data = null; store.del("asb-token"); S.view = "login"; S.err = msg || ""; S.pin = ""; render(); }
+/* in-app alert: a short double beep + vibration when the office sends something new while the app is open */
+let lastNoticeAt = null, actx = null;
+function beep(){
+  try { if (navigator.vibrate) navigator.vibrate([180, 90, 180]); } catch {}
+  try {
+    actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume();
+    [[880, 0], [1175, .22]].forEach(([f, d]) => { const o = actx.createOscillator(), g = actx.createGain(); o.type = "sine"; o.frequency.value = f; o.connect(g); g.connect(actx.destination);
+      const t0 = actx.currentTime + d; g.gain.setValueAtTime(0.0001, t0); g.gain.exponentialRampToValueAtTime(0.35, t0 + .02); g.gain.exponentialRampToValueAtTime(0.0001, t0 + .3); o.start(t0); o.stop(t0 + .32); });
+  } catch {}
+}
+function alertNew(m){
+  const top = Math.max(0, ...((m && m.notices) || []).map(n => +n.at || 0));
+  if (lastNoticeAt !== null && top > lastNoticeAt) beep();
+  lastNoticeAt = Math.max(lastNoticeAt || 0, top);
+}
 async function refresh(force){
   if (!S.token || S.view !== "app" || (S.refreshing && !force)) return;
   S.refreshing = true; if (S.data) render();
   try {
     const r = await rpc("driver_data", { p_token: S.token });
     if (!r.ok) return toLogin(r.error === "deactivated" ? t("deactivated") : t("expired"));
-    S.data = r; S.lastAt = Date.now(); ping(); androidSync();
+    S.data = r; S.lastAt = Date.now(); if (!S.fuelBusy) S.fuelNeed = !!r.fuelNeed; ping(); androidSync(); alertNew(r.m);
   } catch { if (!S.data) toast(t("offline")); }
   S.refreshing = false; render();
 }
@@ -1159,7 +1179,12 @@ document.addEventListener("input", e => {
   if (k === "residentId" && had !== has) { const pos = e.target.selectionStart; render(); const el = document.querySelector('[data-ep="residentId"]'); el?.focus(); el?.setSelectionRange(pos, pos); }
 });
 document.addEventListener("click", async e => {
-  const el = e.target.closest("button,[data-k]"); if (!el) return;
+  const el = e.target.closest("button,[data-k],[data-fneed]"); if (!el) return;
+  if (el.dataset.fneed !== undefined) {
+    const prev = !!S.fuelNeed; S.fuelNeed = !prev; S.fuelBusy = true; render();
+    try { const r = await rpc("driver_fuel_need", { p_token: S.token, p_on: S.fuelNeed }); if (!r.ok) { S.fuelNeed = prev; toast(t("offline")); } else toast(t(S.fuelNeed ? "fneed_on" : "fneed_off")); } catch { S.fuelNeed = prev; toast(t("offline")); }
+    S.fuelBusy = false; return render();
+  }
   if (el.matches("[data-locok]")) {
     el.disabled = true;
     try { const r = await rpc("driver_loc_consent", { p_token: S.token }); if (!r.ok) { el.disabled = false; return toast(t("offline")); } } catch { el.disabled = false; return toast(t("offline")); }
