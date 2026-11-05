@@ -154,6 +154,7 @@ table.act td{vertical-align:top} .chg-l{white-space:nowrap} .chg-l .old{color:va
 table.fuel .input.num{width:96px} table.fuel tfoot td{border-top:2px solid var(--line);background:var(--sunk,rgba(0,0,0,.03))}
 table.dues tr.due-emp{cursor:pointer} table.dues tr.due-emp:hover td{background:var(--sunk,rgba(0,0,0,.03))}
 table.dues tr.due-emp.open td{background:var(--sunk,rgba(0,0,0,.04));border-bottom:0}
+.catsum{display:flex;gap:8px;flex-wrap:wrap;align-items:stretch;padding:10px 12px 2px 0}.catsum .sub{width:100%}.cs-i{display:flex;flex-direction:column;gap:2px;font-size:12px;border:1px solid var(--line,#e5e7eb);border-radius:10px;padding:8px 10px;background:var(--panel,#fff);min-width:150px}
 table.dues .chev{width:14px;color:var(--muted);font-size:12px}
 table.dues tr.due-items>td{padding:0 0 12px 40px;background:var(--sunk,rgba(0,0,0,.04))}
 table.inner{width:100%;background:var(--card,#fff);border:1px solid var(--line);border-radius:10px}
@@ -494,7 +495,29 @@ const empName = id => state.emp[id]?.fullName ?? "—";
 const DEFAULT_RULES = { targetOrders: 450, baseSalary: 2400, bonusPer: 5, penaltyPer: 10, perThreshold: 400, rateHigh: 2.5, rateLow: 2,
   uMin: 380, uRate: 4, uT1: 500, uB1: 2500, uT2: 600, uB2: 3500, ex1A: 5, ex1B: 4, ex1C: 3, ex2A: 7, ex2B: 6, ex2C: 5, fuelPer: 2, absence: 100,
   rMin: 380, rRate: 3.5, rT1: 500, rB1A: 3000, rB1B: 2500, rB1C: 2000, rT2: 600, rB2A: 4250, rB2B: 3800, rB2C: 3000, rx1A: 6, rx1B: 5, rx1C: 4, rx2A: 8, rx2B: 7, rx2C: 6 };
-const CATS = ["TRAFFIC_VIOLATION","DELAY","MISSING_ITEM","VEHICLE_DAMAGE","OTHER"];
+const CATS = ["TRAFFIC_VIOLATION","ACCIDENT","COMPANY_DEDUCTION","DELAY","MISSING_ITEM","VEHICLE_DAMAGE","OTHER"];
+/* Payroll columns that are tied to the Dues overview (the other deduction columns — petrol, supervisor, Keeta — are payroll-only) */
+const PAY_LINK = { advance: "ADVANCE", company: "COMPANY_DEDUCTION", accident: "ACCIDENT", traffic: "TRAFFIC_VIOLATION" };
+Object.assign(I18N.en, { ACCIDENT: "Accident", COMPANY_DEDUCTION: "Company deduction",
+  du_ledger: "Ledger", du_ledger_t: "Dues ledger — every deduction and reversal", du_ledger_none: "No ledger entries yet", lg_deduct: "Deducted", lg_reverse: "Reversed", lg_cat: "Category", lg_month: "Payroll month",
+  du_cats: "By category", du_cat_total: "Total", du_cat_rec: "Deducted", du_cat_left: "Left",
+  pa_left: "Left", pa_over: "{n}: {c} deduction {a} is more than the dues left ({l}).", pa_over_pub: "Cannot publish — a deduction is more than the dues left:", pa_unlinked: "PETROL, SUPERVISOR and KEETA deductions come out of salary only — they are not linked to Dues.", pa_linked: "Linked to Dues overview (cannot be more than what is left):",
+  pa_already: "This payroll is already published — nothing was deducted twice.", pa_conf_t: "Deductions from Dues overview", pa_conf_none: "No dues deductions in this payroll.", pa_conf_before: "Before", pa_conf_cut: "Deduct", pa_conf_after: "After",
+  pa_rev_note: "Deducted dues go back to the Dues overview and the reversal is written in the ledger." });
+Object.assign(I18N.bn, { ACCIDENT: "ACCIDENT", COMPANY_DEDUCTION: "COMPANY DEDUCTION", TRAFFIC_VIOLATION: "TRAFFIC VIOLATION", ADVANCE: "ADVANCE",
+  pa_traffic: "TRAFFIC VIOLATION", pa_accident: "ACCIDENT", pa_company: "COMPANY DEDUCTION", pa_akash: "SUPERVISOR DEDUCTION", pa_advance: "ADVANCE DEDUCTION", pa_keeta: "KEETA DEDUCTION", pa_petrolk: "PETROL DEDUCTION (±)",
+  du_ledger: "লেনদেন-রেকর্ড", du_ledger_t: "বকেয়ার লেনদেন-রেকর্ড — প্রতিটি কর্তন ও ফেরত", du_ledger_none: "এখনো কোনো লেনদেন-রেকর্ড নেই", lg_deduct: "কাটা হয়েছে", lg_reverse: "ফেরত", lg_cat: "ক্যাটাগরি", lg_month: "পেরোল মাস",
+  du_cats: "ক্যাটাগরি অনুযায়ী", du_cat_total: "মোট বকেয়া", du_cat_rec: "এ পর্যন্ত কাটা", du_cat_left: "বাকি",
+  pa_left: "বাকি", pa_over: "{n}: {c} কর্তন {a} বাকি বকেয়ার ({l}) চেয়ে বেশি।", pa_over_pub: "Publish করা যাবে না — কিছু কর্তন বাকি বকেয়ার চেয়ে বেশি:", pa_unlinked: "PETROL, SUPERVISOR ও KEETA কর্তন শুধু বেতন থেকে কাটা হবে — এগুলো Dues Overview-এর সঙ্গে যুক্ত নয়।", pa_linked: "Dues Overview-এর সঙ্গে যুক্ত (বাকি বকেয়ার বেশি বসানো যাবে না):",
+  pa_already: "এই পেরোল আগেই Publish হয়েছে — দ্বিতীয়বার কিছু কাটা হয়নি।", pa_conf_t: "Dues Overview থেকে কর্তন", pa_conf_none: "এই পেরোলে বকেয়া থেকে কোনো কর্তন নেই।", pa_conf_before: "আগে বাকি", pa_conf_cut: "কাটা হবে", pa_conf_after: "পরে বাকি",
+  pay_reopen: "Unpublish / বাতিল করুন", pay_reopen_q: "{m} মাসের পেরোল বাতিল (Unpublish) করবেন? কর্মীদের অ্যাপ থেকে পে-স্লিপ সরে যাবে, কাটা বকেয়া আবার Dues Overview-এ ফিরে আসবে এবং লেনদেন-রেকর্ডে ‘ফেরত’ হিসেবে লেখা থাকবে। আবার Publish করলে নতুন করে কাটা হবে।",
+  pa_rev_note: "কাটা বকেয়া আবার Dues Overview-এ ফিরে যাবে এবং লেনদেন-রেকর্ডে ফেরত লেখা হবে।" });
+Object.assign(I18N.ar, { ACCIDENT: "حادث", COMPANY_DEDUCTION: "خصومات الشركة",
+  du_ledger: "السجل", du_ledger_t: "سجل المستحقات — كل خصم واسترجاع", du_ledger_none: "لا توجد قيود بعد", lg_deduct: "خُصم", lg_reverse: "أُعيد", lg_cat: "الفئة", lg_month: "شهر الرواتب",
+  du_cats: "حسب الفئة", du_cat_total: "الإجمالي", du_cat_rec: "المخصوم", du_cat_left: "المتبقي",
+  pa_left: "المتبقي", pa_over: "{n}: خصم {c} {a} أكبر من المتبقي ({l}).", pa_over_pub: "لا يمكن النشر — خصم أكبر من المتبقي:", pa_unlinked: "خصم الوقود والمشرف وكيتا من الراتب فقط وغير مرتبط بالمستحقات.", pa_linked: "مرتبط بالمستحقات (لا يزيد عن المتبقي):",
+  pa_already: "تم نشر هذه الرواتب مسبقاً — لم يُخصم شيء مرتين.", pa_conf_t: "الخصم من المستحقات", pa_conf_none: "لا خصم من المستحقات في هذه الرواتب.", pa_conf_before: "قبل", pa_conf_cut: "سيُخصم", pa_conf_after: "بعد",
+  pa_rev_note: "تعود المستحقات المخصومة وتُسجل في السجل." });
 /* Standard "not valid this month" reasons (from the salary sheet) — shown as a dropdown; free text still allowed */
 const INVALID_REASONS = [
   "عدم إكمال 26 يوم حضور خلال الشهر  |  Did not complete 26 attendance days in the month",
@@ -512,7 +535,7 @@ function toast(msg){ const el = document.createElement("div"); el.className = "t
 /* ───────── state ───────── */
 const state = {
   staff: {}, claimlog: {}, duty: {}, presence: {}, fuel: {}, fuelDraft: {}, fuelMonth: "", pinreq: {}, payroll: {}, curMonthDocs: [], invoice: {}, profDraft: {}, profMonth: "", pq: "", ordd: {}, orddKey: "", orddDraft: {}, perfDraft: {}, oq: "", expenses: {}, internet: {}, lq: "", xq: "", iq: "", curMonth: "", monthly: {}, mode: "admin", myId: null, appTab: "home", appSlip: null, previewId: "",
-  emp: {}, fines: {}, adv: {}, rules: { ...DEFAULT_RULES },
+  emp: {}, fines: {}, adv: {}, ledger: {}, rules: { ...DEFAULT_RULES },
   todayDoc: null, opsDoc: null, monthDocs: [], payDoc: null, dailyAll: {}, totals: {},
   opsDate: todayKey(), opsMonth: monthKey(), payMonth: monthKey(),
   opsDraft: {}, adjDraft: {}, q: "", qStatus: "", finesTab: "fines",
@@ -1772,6 +1795,22 @@ function withHistory(amount, history){
   for (const x of history) { left = r2(Math.max(0, left - (+x.amount || 0))); h.push({ ...x, amount: r2(+x.amount || 0), remaining: left }); }
   return { remaining: left, history: h };
 }
+/* per-category totals for one driver: how much is owed, how much was deducted so far, how much is left */
+function catSummaryHtml(list){
+  const cats = ["ADVANCE", "COMPANY_DEDUCTION", "ACCIDENT", "TRAFFIC_VIOLATION"];
+  const rows = cats.map(c => { const l = list.filter(x => x.type === c && !x.waived); const tot = l.reduce((s, x) => s + (+x.amount || 0), 0), left = l.reduce((s, x) => s + dueRemaining(x), 0); return { c, n: l.length, tot, left }; }).filter(r => r.n);
+  if (!rows.length) return "";
+  return `<div class="catsum"><span class="sub">${t("du_cats")}</span>${rows.map(r => `<div class="cs-i"><b>${esc(t(r.c))}</b><span>${t("du_cat_total")} ${fmt(r.tot)}</span><span class="pos">${t("du_cat_rec")} ${fmt(r.tot - r.left)}</span><span class="${r.left > 0 ? "neg" : "pos"}">${t("du_cat_left")} ${r.left > 0 ? fmt(r.left) : t("du_cleared")}</span></div>`).join("")}</div>`;
+}
+function ledgerDialog(){
+  const rows = Object.entries(state.ledger).map(([id, x]) => ({ ...x, id })).filter(x => state.emp[x.employeeId]?.status !== "DELETED")
+    .sort((a, b) => (+b.createdAt || 0) - (+a.createdAt || 0));
+  const body = rows.length ? `<div class="full scroll" style="max-height:60vh"><table class="inner"><thead><tr><th>${t("date")}</th><th>${t("employee")}</th><th>${t("lg_cat")}</th><th>${t("lg_month")}</th><th class="r">${t("amount")}</th><th></th></tr></thead><tbody>${rows.slice(0, 500).map(x => `<tr>
+    <td class="nowrap">${esc(dmy(x.date))}</td><td>${esc(empName(x.employeeId))}</td><td>${esc(t(x.cat))}</td><td class="nowrap">${esc(x.month || "")}</td>
+    <td class="r nowrap ${x.kind === "REVERSE" ? "pos" : "neg"}"><b>${x.kind === "REVERSE" ? "+" : "−"}${fmt(x.amount)}</b></td>
+    <td><span class="pill ${x.kind === "REVERSE" ? "p-warn" : x.reversed ? "p-mute" : "p-good"} nodot">${x.kind === "REVERSE" ? t("lg_reverse") : t("lg_deduct")}</span></td></tr>`).join("")}</tbody></table></div>` : `<p class="full sub">${t("du_ledger_none")}</p>`;
+  openDialog({ title: t("du_ledger_t"), body, footer: `<button type="button" class="btn" data-close>${t("close")}</button>` });
+}
 function vDues(){
   const q = (state.dq || "").trim().toLowerCase(), ft = state.dType || "", fs = state.dStat || "";
   const items = allDues().filter(x => (!ft || x.type === ft) && (!fs || dueStatus(x) === fs)
@@ -1789,7 +1828,7 @@ function vDues(){
   const stPill = x => { const st = dueStatus(x); return st === "waived" ? `<span class="pill p-mute nodot">${t("waived")}</span>` : st === "cleared" ? `<span class="pill p-good nodot">${t("du_cleared")}</span>` : `<b class="neg">${fmt(x.remaining)}</b>`; };
   return `
   <div class="head"><div><h1>${t("nav_dues")}</h1><p>${t("du_hint")}</p></div>
-    <div class="tools"><button class="btn ghost cut-btn" data-act="due-cut" data-needs-write>− ${t("du_cut")}</button><button class="btn" data-act="due-new" data-needs-write>+ ${t("du_new")}</button></div></div>
+    <div class="tools"><button class="btn ghost" data-act="due-ledger">📒 ${t("du_ledger")}</button><button class="btn ghost cut-btn" data-act="due-cut" data-needs-write>− ${t("du_cut")}</button><button class="btn" data-act="due-new" data-needs-write>+ ${t("du_new")}</button></div></div>
   <div class="kpis">
     <div class="kpi"><span>${t("du_total")}</span><b>${fmt(total)}</b><small>${t("sar")}</small></div>
     <div class="kpi"><span>${t("du_recovered")}</span><b class="pos">${fmt(total - left)}</b><small>${t("sar")}</small></div>
@@ -1810,7 +1849,7 @@ function vDues(){
         <td class="r nowrap">${g.left > 0 ? `<b class="neg">${fmt(g.left)}</b>` : `<span class="pill p-good nodot">${t("du_cleared")}</span>`}</td>
         <td class="r nowrap">${fmt(g.monthly)}</td>
         <td class="r"><div class="row-actions" style="justify-content:flex-end">${g.left > 0 ? `<button class="btn ghost sm cut-btn" data-act="due-cut" data-emp="${g.eid}" data-needs-write>− ${t("du_cut")}</button>` : ""}<button class="btn ghost sm" data-act="due-new" data-emp="${g.eid}" data-needs-write>+ ${t("du_add")}</button></div></td></tr>
-      ${isOpen ? `<tr class="due-items"><td colspan="7"><table class="inner"><thead><tr><th>${t("date")}</th><th>${t("du_type")}</th><th>${t("reason")}</th><th class="r">${t("amount")}</th><th class="r">${t("perMonth")}</th><th class="r">${t("remaining")}</th><th>${t("history")}</th><th></th></tr></thead><tbody>
+      ${isOpen ? `<tr class="due-items"><td colspan="7">${catSummaryHtml(g.list)}<table class="inner"><thead><tr><th>${t("date")}</th><th>${t("du_type")}</th><th>${t("reason")}</th><th class="r">${t("amount")}</th><th class="r">${t("perMonth")}</th><th class="r">${t("remaining")}</th><th>${t("history")}</th><th></th></tr></thead><tbody>
         ${g.list.map(x => `<tr>
           <td class="nowrap">${x.date ? esc(dmy(x.date)) : `<span class="pill p-warn nodot">${t("du_nodate")}</span>`}</td>
           <td><span class="pill ${x.type === "ADVANCE" ? "p-warn" : "p-info"} nodot">${t(x.type)}</span></td>
@@ -2100,6 +2139,45 @@ async function cleanupPerf(){
   for (const id of Object.keys(state.perf)) if (id < cut) { try { await db.doc("perf/" + id).delete(); } catch {} }
 }
 
+/* ───────── Payroll ↔ Dues: what a payroll would take from each driver's dues (used by the confirm screen and by Publish itself) ───────── */
+const dueLeftOf = (eid, cat) => r2(openDuesOf(eid).filter(x => x.type === cat).reduce((s, x) => s + dueRemaining(x), 0));
+function dedPlan(slips){
+  const take = {}, over = [], rows = [];
+  for (const s of slips) {
+    const mine = {};
+    for (const [key, cat] of Object.entries(PAY_LINK)) {
+      let left = r2(+s[key] || 0); if (left <= 0) continue;
+      for (const x of openDuesOf(s.id).filter(x => x.type === cat)) {
+        if (left <= 0) break;
+        const tk = r2(Math.min(left, dueRemaining(x))); if (tk <= 0) continue;
+        mine[x.coll + "/" + x.id] = r2((mine[x.coll + "/" + x.id] || 0) + tk); left = r2(left - tk);
+      }
+      if (left > 0.001) over.push({ id: s.id, key, cat, amt: s[key], left: dueLeftOf(s.id, cat) });
+    }
+    for (const p of s.planned ?? []) { const path = (p.kind === "fine" ? "fines/" : "advances/") + p.id; mine[path] = r2((mine[path] || 0) + (+p.amount || 0)); }
+    if (!Object.keys(mine).length) continue;
+    take[s.id] = mine;
+    const byCat = {};
+    for (const [path, amt] of Object.entries(mine)) { const d = dueAt(path); if (d) byCat[d.type] = r2((byCat[d.type] || 0) + amt); }
+    for (const [cat, amt] of Object.entries(byCat)) { const before = dueLeftOf(s.id, cat); rows.push({ id: s.id, name: state.emp[s.id]?.fullName || s.name || s.id, cat, before, amt, after: r2(before - amt) }); }
+  }
+  rows.sort((a, b) => a.name.localeCompare(b.name));
+  return { take, over, rows };
+}
+/* put a payroll's deductions back on the dues and write the reversal in the ledger */
+async function giveBackDues(m, one, why){
+  const today = todayKey(), by = auth.session?.user?.email || "";
+  for (const [coll, map] of [["fines", state.fines], ["advances", state.adv]]) for (const [did, x] of Object.entries(map)) {
+    if (one && x.employeeId !== one) continue;
+    const h = x.history ?? [], gone = h.filter(z => z.month === m && isPayrollEntry(z)); if (!gone.length) continue;
+    for (const z of gone) {
+      await db.doc("ledger/R" + uid()).set({ kind: "REVERSE", employeeId: x.employeeId, cat: coll === "advances" ? "ADVANCE" : (x.category || "OTHER"), dueRef: coll + "/" + did,
+        amount: r2(+z.amount || 0), month: m, date: today, original: z.lid || "", reason: why, by, createdAt: Date.now() });
+      if (z.lid && state.ledger[z.lid]) await db.doc("ledger/" + z.lid).update({ reversed: true, reversedAt: Date.now() });
+    }
+    await db.doc(coll + "/" + did).update(withHistory(+x.amount || 0, h.filter(z => !(z.month === m && isPayrollEntry(z)))));
+  }
+}
 function computePayroll(){
   const R = state.rules, m = state.payMonth;
   const tot = monthRows(m);
@@ -2129,7 +2207,9 @@ function computePayroll(){
     let avail = r2(gross - shortfall - absDed - namedDed + Math.min(0, fuelAdj) + Math.min(0, other));
     const planned = []; let fineDed = manual[id]?.fine || 0, advDed = manual[id]?.adv || 0;
     avail = r2(avail - fineDed - advDed);
-    for (const s of schedules.filter(s => s.employeeId === id)) {
+    // a hand-typed amount in a Dues-linked column replaces the automatic instalment of that category
+    const typedCats = new Set(Object.entries(PAY_LINK).filter(([k]) => (+a[k] || 0) > 0).map(([, c]) => c));
+    for (const s of schedules.filter(s => s.employeeId === id && !typedCats.has(s.kind === "adv" ? "ADVANCE" : (s.category || "OTHER")))) {
       if (avail <= 0) break;
       const take = r2(Math.min(+s.monthly || 0, +s.remaining || 0, avail)); if (take <= 0) continue;
       planned.push({ id: s.id, kind: s.kind, amount: take });
@@ -2137,13 +2217,14 @@ function computePayroll(){
       avail = r2(avail - take);
     }
     const net = Math.max(0, avail);
+    const lk = {}; for (const [k, cat] of Object.entries(PAY_LINK)) { const v = r2(+a[k] || 0), left = dueLeftOf(id, cat); lk[k] = { left, over: v > left + 0.001 }; }
     // sheet-style total deductions: L+M+N+P+Q+R + petrol over-spend + shortfall + absence + dues taken
     const sded = r2(namedDed + Math.max(0, -fuelAdj) + shortfall + absDed + fineDed + advDed);
     return { id, name: e.fullName, residentId: e.residentId, payType: e.payType || "TARGET", orders, fuelSpent,
       base: r2(base), bonus: r2(bonus), due: r2(base + bonus), incent, overtime, shortfall: r2(shortfall), fuelAdj, other, absDed, absShifts: +a.abs || 0, allowance, grade: pg.g, gradeSrc: pg.src, manual: pay.manual || "",
       traffic: r2(traffic), accident: r2(accident), company: r2(company), akash: r2(akash), keeta: r2(keeta), advance: r2(advanceM), duesBonus: r2(duesBonus),
       valid: a.valid !== false, reason: a.reason || "", extraOrders: +a.extraOrders || null, extraRate: +a.extraRate || null,
-      fineDed: r2(fineDed), advDed: r2(advDed), gross, deductions: r2(gross - net), sded, net: r2(net), planned, adj: a };
+      fineDed: r2(fineDed), advDed: r2(advDed), gross, deductions: r2(gross - net), sded, net: r2(net), planned, lk, adj: a };
   });
 }
 
@@ -2189,7 +2270,7 @@ function vPayroll(){
   <p class="sub" style="margin:-6px 0 10px">${t("pa_tbl_note")}</p>
   <section class="panel">${slips.length ? `<div class="scroll"><table>
     <thead><tr><th>${t("name")}</th><th class="r">${t("orders")}</th><th class="r">${t("pa_base")}</th><th class="r">${t("pa_additional")}</th><th class="r">${t("pa_due")}</th><th class="r">${t("pa_petrol")}</th><th class="r">${t("pa_petrolk")}</th><th class="r ordd-badh">${t("pa_traffic")}</th><th class="r ordd-badh">${t("pa_accident")}</th><th class="r ordd-badh">${t("pa_company")}</th><th class="r ordd-badh">${t("pa_akash")}</th><th class="r ordd-badh">${t("pa_advance")}</th><th class="r ordd-badh">${t("pa_keeta")}</th><th class="r">${t("pa_bonus_o")}</th><th class="r">${t("pa_totded")}</th><th class="r">${t("net")}</th><th></th></tr></thead>
-    <tbody>${slips.map(s => { const ded = k => `<td class="r nowrap${+s[k] ? " ordd-bad" : ""}">${+s[k] ? "−" + fmt(s[k]) : fmt(0)}</td>`; const due = s.due != null ? s.due : r2((+s.base || 0) + (+s.bonus || 0)); const extraDed = r2((+s.fineDed || 0) + (+s.advDed || 0) + (+s.shortfall || 0) + (+s.absDed || 0) + (+s.incent || 0) + (+s.overtime || 0)); return `<tr>
+    <tbody>${slips.map(s => { const ded = k => { const L = s.lk?.[k], D = published ? (s.dues || []).find(z => z.cat === PAY_LINK[k]) : null; const sub = PAY_LINK[k] ? (published ? (D ? `<div class="sub">${t("pa_left")} ${fmt(D.after)}</div>` : "") : (L && (L.left > 0 || +s[k]) ? `<div class="sub" ${L.over ? 'style="color:var(--bad)"' : ""}>${t("pa_left")} ${fmt(L.left)}${L.over ? " ⚠" : ""}</div>` : "")) : ""; return `<td class="r nowrap${+s[k] ? " ordd-bad" : ""}">${+s[k] ? "−" + fmt(s[k]) : fmt(0)}${sub}</td>`; }; const due = s.due != null ? s.due : r2((+s.base || 0) + (+s.bonus || 0)); const extraDed = r2((+s.fineDed || 0) + (+s.advDed || 0) + (+s.shortfall || 0) + (+s.absDed || 0) + (+s.incent || 0) + (+s.overtime || 0)); return `<tr>
       <td><div class="name">${esc(state.emp[s.id]?.fullName || s.name)}${s.valid === false ? ` <span class="pill p-bad nodot" title="${esc(s.reason || "")}">${t("pa_invalid")}</span>` : ""}${!state.emp[s.id] ? ` <span class="pill p-mute nodot">${t("pay_gone")}</span>` : ""}</div><div class="sub">${rkPill(s.payType)}${s.grade ? ` <span class="grade sm ${gradeCls(s.grade)}" title="${t("pg_col")}">${s.grade}</span>` : ""}${s.manual ? ` <span class="pill p-warn nodot">${t(s.manual === "gradeD" ? "pay_manual_d" : "pay_manual_low")}</span>` : ""}${extraDed ? ` <span class="pill p-mute nodot" title="${t("incent")}/${t("overtime")}/${t("fineDed")}/${t("advDed")}/${t("shortfall")}/${t("abs_col")}">±${fmt(extraDed)}</span>` : ""}</div></td>
       <td class="r">${fmt0(s.orders)}</td>
       <td class="r nowrap">${fmt(s.base)}</td>
@@ -2757,6 +2838,7 @@ document.addEventListener("click", async e => {
       return;
     }
     if (act === "perf-arc") { state.perfArc = b.dataset.v; render(); return; }
+    if (act === "due-ledger") { ledgerDialog(); return; }
     if (act === "pay-month") { state.payMonth = b.dataset.v; state.adjDraft = {}; subMonth(); render(); return; }
     if (act === "pay-delete" || act === "slip-del") {
       const m = state.payMonth, d = payDoc(), one = act === "slip-del" ? id : null;
@@ -2764,12 +2846,8 @@ document.addEventListener("click", async e => {
       openDialog({ title: one ? t("slip_del") : t("pay_del"), danger: true, submit: t("delete"),
         body: `<p class="full">${one ? t("slip_del_q", { n: esc(who), m }) : t("pay_del_q", { m })}</p>`,
         onSubmit: async () => {
-          // give back dues instalments that this payroll took
-          for (const [coll, map] of [["fines", state.fines], ["advances", state.adv]]) for (const [did, x] of Object.entries(map)) {
-            if (one && x.employeeId !== one) continue;
-            const h = x.history ?? []; if (!h.some(z => z.month === m && isPayrollEntry(z))) continue;
-            await db.doc(coll + "/" + did).update(withHistory(+x.amount || 0, h.filter(z => !(z.month === m && isPayrollEntry(z)))));
-          }
+          // give back the dues this payroll took (and write the reversal in the ledger)
+          await giveBackDues(m, one, one ? "slip deleted" : "payroll deleted");
           if (one) {
             const slips = (d.slips ?? []).filter(x => x.id !== one), adj = { ...(d.adj ?? {}) }; delete adj[one];
             if (slips.length) {
@@ -2785,10 +2863,7 @@ document.addEventListener("click", async e => {
     if (act === "pay-reopen") {
       const m = state.payMonth;
       openDialog({ title: t("pay_reopen"), body: `<p class="full">${t("pay_reopen_q", { m })}</p>`, submit: t("pay_reopen"), onSubmit: async () => {
-        for (const [coll, map] of [["fines", state.fines], ["advances", state.adv]]) for (const [did, x] of Object.entries(map)) {
-          const h = x.history ?? []; if (!h.some(z => z.month === m && isPayrollEntry(z))) continue;
-          await db.doc(coll + "/" + did).update(withHistory(+x.amount || 0, h.filter(z => !(z.month === m && isPayrollEntry(z)))));
-        }
+        await giveBackDues(m, null, "payroll unpublished");
         const d = payDoc();
         await db.doc("payroll/" + m).set({ month: m, status: "DRAFT", adj: d?.adj ?? {}, updatedAt: Date.now() });
         toast(t("pay_reopened"));
@@ -2836,6 +2911,7 @@ document.addEventListener("click", async e => {
       if (pub) { openDialog({ title: `${esc(s.name)} · ${state.payMonth}`, body: slipBreakdownHtml(s), footer: `<button type="button" class="btn" data-close>${t("close")}</button>` }); return; }
       const a = { ...(payDoc()?.adj?.[id] ?? {}), ...(state.adjDraft[id] ?? {}) };
       const nf = (k, lbl) => `<label class="f">${lbl}<input class="input num" type="number" step="0.01" name="${k}" value="${a[k] ?? ""}" placeholder="0"></label>`;
+      const lf = (k, lbl) => { const L = dueLeftOf(id, PAY_LINK[k]); return `<label class="f">${lbl} <span class="opt">· ${t("pa_left")} ${fmt(L)}</span><input class="input num" type="number" step="0.01" min="0" max="${L}" name="${k}" value="${a[k] ?? ""}" placeholder="0"></label>`; };
       openDialog({ title: `${esc(s.name)} · ${t("pa_adj_t")}`, submit: t("save"),
         body: `<label class="f full chk-f"><label class="chk"><input type="checkbox" name="valid" ${a.valid === false ? "" : "checked"}> ${t("pa_valid")}</label></label>
           <label class="f full">${t("pa_reason")} <span class="opt">· ${t("optional")}</span><input class="input" name="reason" list="invReasons" value="${esc(a.reason || "")}" placeholder="${t("pa_reason_ph")}"><datalist id="invReasons">${INVALID_REASONS.map(r => `<option value="${esc(r)}">`).join("")}</datalist></label>
@@ -2845,9 +2921,13 @@ document.addEventListener("click", async e => {
           <div class="full sec">${t("pa_totded")}</div>
           <label class="f">${t("pa_petrolk")} <span class="opt">· ±</span><input class="input num" type="number" step="0.01" name="fuel" value="${a.fuel ?? ""}" placeholder="0"></label>
           <label class="f">${t("abs_col")}<input class="input num" type="number" min="0" step="1" name="abs" value="${a.abs ?? ""}" placeholder="0"></label>
-          ${nf("traffic", t("pa_traffic"))}${nf("accident", t("pa_accident"))}${nf("company", t("pa_company"))}${nf("akash", t("pa_akash"))}${nf("advance", t("pa_advance"))}${nf("keeta", t("pa_keeta"))}
+          <p class="full sub" style="margin:0">${t("pa_linked")}</p>
+          ${lf("advance", t("pa_advance"))}${lf("company", t("pa_company"))}${lf("accident", t("pa_accident"))}${lf("traffic", t("pa_traffic"))}
+          <p class="full sub" style="margin:6px 0 0">${t("pa_unlinked")}</p>
+          ${nf("akash", t("pa_akash"))}${nf("keeta", t("pa_keeta"))}
           <p class="full sub">${t("pa_adj_note")}</p>`,
         onSubmit: async fd => {
+          for (const [k, cat] of Object.entries(PAY_LINK)) { const v = r2(fd[k]), L = dueLeftOf(id, cat); if (v > L + 0.001) fail(t("pa_over", { n: s.name, c: t(cat), a: fmt(v), l: fmt(L) })); }
           const d = (state.adjDraft[id] ??= {});
           for (const k of ["man", "incent", "overtime", "abs", "fuel", "traffic", "accident", "company", "akash", "advance", "keeta", "duesBonus"]) d[k] = fd[k] || "";
           d.valid = fd.valid ? true : false; d.reason = (fd.reason || "").trim();
@@ -2857,24 +2937,38 @@ document.addEventListener("click", async e => {
     }
 
     if (act === "pay-publish") {
-      const m = state.payMonth;
-      openDialog({ title: t("publish"), body: `<p class="full">${t("publishQ", { m })}</p>`, submit: t("publish"), onSubmit: async () => {
-        const slips = computePayroll();
-        // one write per fine/advance doc
-        const per = {};
-        for (const s of slips) for (const p of s.planned) (per[(p.kind === "fine" ? "fines/" : "advances/") + p.id] ??= 0), per[(p.kind === "fine" ? "fines/" : "advances/") + p.id] += p.amount;
-        for (const [path, amt] of Object.entries(per)) {
-          const [coll, did] = path.split("/"); const cur = (coll === "fines" ? state.fines : state.adv)[did];
-          const remaining = r2(Math.max(0, (+cur.remaining || 0) - amt));
-          await db.doc(path).update({ remaining, history: [...(cur.history ?? []), { month: m, amount: r2(amt), remaining, src: "payroll" }] });
-        }
-        const adj = { ...(payDoc()?.adj ?? {}) };
-        for (const s of slips) adj[s.id] = s.adj;
-        await db.doc("payroll/" + m).set({ month: m, status: "PUBLISHED", publishedAt: Date.now(), adj, rules: state.rules,
-          slips: slips.map(({ adj, planned, ...rest }) => ({ ...rest, adj, planned })) });
-        await sendNotice("salary", slips.map(s => s.id), { month: m });
-        state.adjDraft = {}; toast(t("publishedOk"));
-      }});
+      const m = state.payMonth, nm = id => state.emp[id]?.fullName || id;
+      const overTxt = o => t("pa_over", { n: nm(o.id), c: t(o.cat), a: fmt(o.amt), l: fmt(o.left) });
+      const plan0 = dedPlan(computePayroll());
+      const sumTbl = plan0.rows.length ? `<div class="scroll"><table class="inner"><thead><tr><th>${t("name")}</th><th>${t("lg_cat")}</th><th class="r">${t("pa_conf_before")}</th><th class="r">${t("pa_conf_cut")}</th><th class="r">${t("pa_conf_after")}</th></tr></thead><tbody>${plan0.rows.map(r =>
+        `<tr><td>${esc(r.name)}</td><td>${esc(t(r.cat))}</td><td class="r nowrap">${fmt(r.before)}</td><td class="r nowrap neg"><b>−${fmt(r.amt)}</b></td><td class="r nowrap ${r.after <= 0 ? "pos" : ""}">${fmt(r.after)}</td></tr>`).join("")}</tbody></table></div>` : `<p class="sub">${t("pa_conf_none")}</p>`;
+      openDialog({ title: t("publish"), submit: t("publish"),
+        body: `<p class="full">${t("publishQ", { m })}</p>
+          ${plan0.over.length ? `<div class="full" style="color:var(--bad)"><b>${t("pa_over_pub")}</b><br>${plan0.over.map(o => esc(overTxt(o))).join("<br>")}</div>` : ""}
+          <div class="full sec">${t("pa_conf_t")}</div><div class="full">${sumTbl}</div>`,
+        onSubmit: async () => {
+          // never twice: stop if this month is already published
+          const cur0 = await db.doc("payroll/" + m).get();
+          if (cur0.exists && cur0.data().status === "PUBLISHED") fail(t("pa_already"));
+          const slips = computePayroll(), plan = dedPlan(slips);
+          if (plan.over.length) fail(t("pa_over_pub") + " " + plan.over.map(overTxt).join(" · "));
+          const today = todayKey(), by = auth.session?.user?.email || "";
+          for (const [eid, paths] of Object.entries(plan.take)) for (const [path, amt] of Object.entries(paths)) {
+            const [coll, did] = path.split("/"), cur = (coll === "fines" ? state.fines : state.adv)[did]; if (!cur) continue;
+            if ((cur.history ?? []).some(z => z.month === m && isPayrollEntry(z))) continue;   // already taken for this month
+            const before = r2(+cur.remaining || 0), remaining = r2(Math.max(0, before - amt)), lid = "L" + uid();
+            await db.doc("ledger/" + lid).set({ kind: "DEDUCT", employeeId: eid, cat: coll === "advances" ? "ADVANCE" : (cur.category || "OTHER"), dueRef: path,
+              amount: r2(amt), before, after: remaining, month: m, date: today, by, createdAt: Date.now() });
+            await db.doc(path).update({ remaining, history: [...(cur.history ?? []), { month: m, date: today, amount: r2(amt), remaining, src: "payroll", lid }] });
+          }
+          const adj = { ...(payDoc()?.adj ?? {}) };
+          for (const s of slips) adj[s.id] = s.adj;
+          const dues = {}; for (const r of plan.rows) (dues[r.id] ??= []).push({ cat: r.cat, before: r.before, amt: r.amt, after: r.after });
+          await db.doc("payroll/" + m).set({ month: m, status: "PUBLISHED", publishedAt: Date.now(), adj, rules: state.rules,
+            slips: slips.map(({ adj, planned, lk, ...rest }) => ({ ...rest, adj, planned, ...(dues[rest.id] ? { dues: dues[rest.id] } : {}) })) });
+          await sendNotice("salary", slips.map(s => s.id), { month: m });
+          state.adjDraft = {}; toast(t("publishedOk"));
+        }});
     }
 
     if (act === "pay-export") {
@@ -3618,8 +3712,8 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   emp_del_t: "কর্মী মুছুন", emp_del_q: "কর্মীকে প্যানেল ও অ্যাপ থেকে সরিয়ে দেওয়া হবে, তার লগইন আর কাজ করবে না। এটা ফেরানো যাবে না।", emp_del_dues: "তার {n}টি বকেয়ার হিসাবও মুছে যাবে।", emp_deleted: "কর্মী মুছে ফেলা হয়েছে", platform: "কোথায় কাজ করে", pin_set: "পিন দিন", pin_change: "পিন বদলান", pin_missing: "জনের পিন নেই", pin_manual: "পিন (৪ সংখ্যা)", pin_4: "পিন ঠিক ৪ সংখ্যার হতে হবে",
   pin_manual_help: "কর্মীকে যে পিন দিতে চান সেটা লিখুন, অথবা খালি রাখলে নিজে থেকে একটা পিন তৈরি হবে।", pin_title_new: "অ্যাপ লগইনের পিন", no_city: "শহর দেওয়া নেই", emp_n: "জন", all: "সবাই", nav_dues: "বকেয়ার হিসাব", du_hint: "প্রত্যেক কর্মীর সব বকেয়া — জরিমানা, অগ্রিম, গাড়ির ক্ষতি ইত্যাদি। কর্মীর নামে চাপলে প্রতিটি হিসাব দেখা ও বদলানো যাবে।",
   du_new: "নতুন বকেয়া", du_add: "যোগ", du_edit: "বকেয়া সম্পাদনা", du_total: "মোট বকেয়া", du_recovered: "আদায় হয়েছে", du_left: "এখনো বাকি", du_monthly: "প্রতি মাসে কাটা", du_monthly_s: "রিয়াল বেতন থেকে",
-  du_all_types: "সব ধরন", du_all_status: "সব", du_st_open: "বাকি আছে", du_st_cleared: "পরিশোধ হয়েছে", du_st_waived: "মাফ", du_items: "হিসাব", du_type: "ধরন", du_from: "শুরু",
-  du_cleared: "পরিশোধ", du_cash: "নগদ", du_pay: "টাকা জমা", du_pay_help: "বেতনের বাইরে কর্মী যে টাকা ফেরত দিয়েছে (নগদ বা ট্রান্সফার)।", du_saved: "সংরক্ষিত", du_deleted: "মুছে ফেলা হয়েছে",
+  du_all_types: "সব ধরন", du_all_status: "সব", du_st_open: "বাকি আছে", du_st_cleared: "পরিশোধিত", du_st_waived: "মাফ", du_items: "হিসাব", du_type: "ধরন", du_from: "শুরু",
+  du_cleared: "পরিশোধিত", du_cash: "নগদ", du_pay: "টাকা জমা", du_pay_help: "বেতনের বাইরে কর্মী যে টাকা ফেরত দিয়েছে (নগদ বা ট্রান্সফার)।", du_saved: "সংরক্ষিত", du_deleted: "মুছে ফেলা হয়েছে",
   du_del_q: "এই বকেয়াটি পুরোপুরি মুছে ফেলবেন? ফেরানো যাবে না।", du_none: "কোনো বকেয়া নেই", du_none_hint: "অগ্রিম, জরিমানা বা ক্ষতি লিখতে \"নতুন বকেয়া\" চাপুন।", du_monthly_ph: "কিস্তি থেকে নিজে হিসাব",
   du_waive_l: "বাকিটা মাফ", du_hist_t: "কাটা ও জমার হিসাব", du_hist_help: "আগের যেকোনো কাটা বা জমা বদলাতে বা মুছতে পারবেন। সংরক্ষণ করলে বাকি টাকা আবার হিসাব হবে।", du_hist_add: "সারি যোগ",
   ADVANCE: "অগ্রিম", delete: "মুছুন", pay_reopen: "সম্পাদনার জন্য খুলুন", pay_reopen_q: "{m} মাস আবার সম্পাদনার জন্য খুলবেন? কর্মীদের অ্যাপ থেকে পে-স্লিপ সরে যাবে, আর {m} মাসে কাটা বকেয়ার কিস্তি ফেরত যাবে। আবার প্রকাশ করলে নতুন করে কাটা হবে।", pay_reopened: "মাস খোলা হয়েছে — বদলে আবার প্রকাশ করুন", rk_col: "Rank", rk_on_t: "অন = Rank নিয়ে কাজ করছে। চাপলে Unrank হবে।", rk_off_t: "অফ = Rank ছাড়া কাজ করছে। চাপলে Rank হবে।", rk_set_on: "{n} এখন Rank নিয়ে কাজ করছে", rk_set_off: "{n} এখন Rank ছাড়া কাজ করছে (Unrank)",
@@ -3866,6 +3960,7 @@ async function startAdmin(session){
   db.collection("employees").onSnapshot(s => { state.emp = docsMap(s); done(); soon(); }, console.warn);
   db.collection("fines").onSnapshot(s => { state.fines = docsMap(s); done(); soon(); }, console.warn);
   db.collection("advances").onSnapshot(s => { state.adv = docsMap(s); done(); soon(); }, console.warn);
+  db.collection("ledger").onSnapshot(s => { state.ledger = docsMap(s); soon(); }, console.warn);
   db.collection("expense").onSnapshot(s => { state.expenses = docsMap(s); soon(); }, console.warn);
   db.collection("internet").onSnapshot(s => { state.internet = docsMap(s); soon(); }, console.warn);
   db.doc("config/rules").onSnapshot(s => { state.rules = { ...DEFAULT_RULES, ...(s.exists ? s.data() : {}) }; soon(); }, console.warn);
