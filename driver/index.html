@@ -570,6 +570,7 @@ function vApp(){
   const outstanding = duesOf(m).filter(x => !x.waived).reduce((s, f) => s + (+f.remaining || 0), 0);
   let body = S.sub === "notices" ? vNotices(m) : S.sub === "fuel" ? vFuelPage(m) : S.sub === "changes" ? vChanges() : S.sub === "editp" ? vEditProfile(m) : S.sub === "reports" ? vReports() : S.tab === "home" ? (S.sub === "perf" ? vPerfPage(m) : S.sub === "target" ? vTargetPage(m) : S.sub === "ordd" ? vOrddPage(m) : S.sub === "history" ? vHistoryPage(m) : S.sub === "vehicle" ? vVehiclePage() : S.sub === "vcond" ? vCondPage() : vHome(m)) : S.tab === "fines" ? vDues(m) : S.tab === "salary" ? (S.slip ? vSlip(m, S.slip) : vSalary(m)) : vProfile(m);
   const last = S.lastAt ? new Date(S.lastAt).toLocaleTimeString(lang === "ar" ? "ar-SA" : "en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
+  if (S.token && S.langSent !== S.token + lang) { S.langSent = S.token + lang; try { rpc("driver_set_lang", { p_token: S.token, p_lang: lang }).catch(() => { S.langSent = ""; }); } catch {} }
   if (window.ASBAndroid?.locStart) {
     if (!p.locOn) { if (!S.locStopped) { S.locStopped = true; try { window.ASBAndroid.locStop && window.ASBAndroid.locStop(); } catch {} } }
     else if (!p.locConsent) return vLocConsent();
