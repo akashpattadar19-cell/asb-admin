@@ -739,7 +739,7 @@ let db = null, downloads = null, unsubOps = null, unsubMonth = null;
 const payDoc = () => state.payroll[state.payMonth] ?? null;
 
 /* ───────── routing ───────── */
-const VIEWS = ["dashboard","employees","target","perf","operations","orddetail","fuel","dues","loans","internet","vehicles","payroll","bank","reports","activity","bin","app","rules","profit","expenses","admins"]; /* "map" hidden for now — add it back to re-enable location monitoring */
+const VIEWS = ["dashboard","employees","target","perf","operations","orddetail","fuel","dues","loans","internet","vehicles","map","payroll","bank","reports","activity","bin","app","rules","profit","expenses","admins"]; /* "map" hidden for now — add it back to re-enable location monitoring */
 const SUB_VIEWS = ["target","perf"];
 /* pages a read-only Viewer must not see (they can still read reports and move through dates) */
 // Every admin can VIEW every page. Edit rights are per-page:
