@@ -104,7 +104,7 @@ a.kpi{display:block}
 @media print{.scrollfab{display:none}}
 .scroll{overflow-x:auto;scrollbar-width:auto;scrollbar-color:var(--muted) transparent}
 .scroll::-webkit-scrollbar{height:12px}.scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
-.kc .kpi{padding:9px 11px}.kc .kpi b{font-size:20px}.kc .kpi span{font-size:10.5px}.sm-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}.sm-cols h4{margin:0 0 6px;font-size:12px;letter-spacing:.05em;text-transform:uppercase}.sm-ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}.sm-ul li{font-size:12.5px;line-height:1.3;display:flex;flex-direction:column;gap:1px}.dsub-h{margin:10px 2px 4px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#6b7a8a)}.fn-list{display:flex;flex-direction:column;gap:6px}.fn-i{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--line,#e5e7eb)}.fn-pic{width:72px;height:54px;object-fit:cover;border-radius:8px;cursor:zoom-in;border:1px solid var(--line,#ccc)}.fn-big{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:10px;cursor:zoom-out}.fn-big img{max-width:100%;max-height:100%;border-radius:8px}.fn-i .name{flex:1}.fneed-panel{margin-bottom:12px;border-color:#D9542B}
+.kc .kpi{padding:9px 11px}.kc .kpi b{font-size:20px}.kc .kpi span{font-size:10.5px}.dpair{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,460px),1fr));gap:14px;align-items:start;margin-top:4px}.dcol{min-width:0}.dcol .grid2{grid-template-columns:1fr}.sm-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}.sm-cols h4{margin:0 0 6px;font-size:12px;letter-spacing:.05em;text-transform:uppercase}.sm-ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}.sm-ul li{font-size:12.5px;line-height:1.3;display:flex;flex-direction:column;gap:1px}.dsub-h{margin:10px 2px 4px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#6b7a8a)}.fn-list{display:flex;flex-direction:column;gap:6px}.fn-i{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--line,#e5e7eb)}.fn-pic{width:72px;height:54px;object-fit:cover;border-radius:8px;cursor:zoom-in;border:1px solid var(--line,#ccc)}.fn-big{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:10px;cursor:zoom-out}.fn-big img{max-width:100%;max-height:100%;border-radius:8px}.fn-i .name{flex:1}.fneed-panel{margin-bottom:12px;border-color:#D9542B}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:start;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--sunk);white-space:nowrap}
 td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -764,9 +764,11 @@ function vDashboard(){
   </div>
   ${summary}
   ${fuelNeedPanel()}
+  <div class="dpair"><div class="dcol">
   <h2 class="dash-sec">📈 ${t("dash_perf")} ${pd ? `<span class="sub" style="font-weight:400">· ${esc(dmy(pd))}${pyd ? ` · ${t("perf_vs")} ${esc(dmy(pyd))}` : ""}</span>` : ""}<a class="btn ghost sm" href="#perf">${t("nav_perf")}</a></h2>
   ${pl.length ? `<div class="grade-sum" style="margin-bottom:8px">${GRADES.slice(0, 4).map(g => `<span class="gs"><span class="grade ${gradeCls(g)}">${g}</span><b>${pl.filter(x => x.r.g === g).length}</b></span>`).join("")}</div>
   <div class="kpis kc">${PERF_F.filter(([k]) => k !== "g").map(([k, l]) => { const v = pavg(k, "r"); return v == null ? "" : `<div class="kpi"><span>${t(l)}</span><b>${fmt(v)}%</b><small>${t("dash_avg_s")}</small>${pdelta(k)}</div>`; }).join("")}</div>
+  </div><div class="dcol">
   <h2 class="dash-sec">📦 ${t("dash_exp")} ${od ? `<span class="sub" style="font-weight:400">· ${esc(dmy(od.from))} – ${esc(dmy(od.to))}</span>` : ""}<a class="btn ghost sm" href="#orddetail">${t("nav_orddetail")}</a></h2>
   ${ag ? `<div class="dsub-h">${t("dash_od_work")}</div>
   <div class="kpis kc">${K(t("dash_od_deliv"), fmt0(ag.delivered), "pos", t("dash_total_s"))}${K("Accepted", fmt0(sK("b")), "", t("dash_total_s"))}${K("Large orders done", fmt0(sK("e")), "", t("dash_total_s"))}${K("Restaurant arrivals", fmt0(sK("c")), "", t("dash_total_s"))}</div>
@@ -775,6 +777,7 @@ function vDashboard(){
   <div class="dsub-h">${t("dash_od_problems")}</div>
   <div class="kpis kc">${K(t("dash_cancel"), pc(ag.cancel), ag.cancel > 2 ? "neg" : "", t("dash_avg_s"))}${K(t("dash_rejected"), fmt0(ag.rejected), ag.rejected ? "neg" : "", fmt0(sK("g")) + " courier · " + fmt0(sK("h")) + " auto")}${K(t("dash_overdue"), fmt0(ag.overdue), ag.overdue ? "neg" : "", t("dash_total_s"))}<div class="kpi ${ag.severe ? "alert" : ""}"><span>${t("dash_severe")}</span><b class="${ag.severe ? "neg" : ""}">${fmt0(ag.severe)}</b><small>${t("dash_total_s")}</small></div></div>
 ` : `<section class="panel"><div class="empty"><b>${t("dash_no_exp")}</b><a class="btn sm" href="#orddetail" style="margin-top:8px">${t("ord_import")}</a></div></section>`}
+  </div></div>
   <div class="grid2">
     <section class="panel"><h2>⭐ ${t("dash_top_perf")}</h2>${perfList(pBest)}</section>
     <section class="panel"><h2>🔻 ${t("dash_low_perf")}</h2>${perfList(pWorst)}</section>
