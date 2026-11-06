@@ -2207,10 +2207,8 @@ function computePayroll(){
   const R = state.rules, m = state.payMonth;
   const tot = monthRows(m);
   const savedAdj = payDoc()?.adj ?? {};
-  const schedules = [
-    ...Object.entries(state.fines).map(([id,x]) => ({ id, kind: "fine", ...x })),
-    ...Object.entries(state.adv).map(([id,x]) => ({ id, kind: "adv", ...x })),
-  ].filter(s => !s.waived && (+s.remaining||0) > 0 && (s.startMonth||"") <= m).sort((a,b)=>(a.createdAt||0)-(b.createdAt||0));
+  // nothing is deducted automatically: deductions are entered by hand at month end
+  const schedules = [];
 
   const manual = {};
   for (const [kind, map] of [["fine", state.fines], ["adv", state.adv]]) for (const x of Object.values(map)) for (const h of x.history ?? [])
