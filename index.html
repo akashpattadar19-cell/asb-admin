@@ -104,7 +104,7 @@ a.kpi{display:block}
 @media print{.scrollfab{display:none}}
 .scroll{overflow-x:auto;scrollbar-width:auto;scrollbar-color:var(--muted) transparent}
 .scroll::-webkit-scrollbar{height:12px}.scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
-.fn-list{display:flex;flex-direction:column;gap:6px}.fn-i{display:flex;gap:10px;align-items:center}.fn-i .name{flex:1}.fneed-panel{margin-bottom:12px;border-color:#D9542B}
+.fn-list{display:flex;flex-direction:column;gap:6px}.fn-i{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:6px 0;border-bottom:1px solid var(--line,#e5e7eb)}.fn-pic{width:72px;height:54px;object-fit:cover;border-radius:8px;cursor:zoom-in;border:1px solid var(--line,#ccc)}.fn-big{position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,.88);display:flex;align-items:center;justify-content:center;padding:10px;cursor:zoom-out}.fn-big img{max-width:100%;max-height:100%;border-radius:8px}.fn-i .name{flex:1}.fneed-panel{margin-bottom:12px;border-color:#D9542B}
 table{width:100%;border-collapse:collapse;font-size:14px}
 th{text-align:start;font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;padding:10px 12px;border-bottom:1px solid var(--line);background:var(--sunk);white-space:nowrap}
 td{padding:9px 12px;border-bottom:1px solid var(--line);vertical-align:middle}
@@ -601,6 +601,7 @@ document.addEventListener("click", e => {
   box.innerHTML = '<button data-fab="up">▲</button><button data-fab="down">▼</button>'; document.body.append(box);
   box.addEventListener("click", e => { const d = e.target.closest("[data-fab]")?.dataset.fab; if (!d) return; const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight); window.scrollTo({ top: d === "up" ? 0 : h, behavior: "smooth" }); });
   window.__fabT = () => { box.firstChild.title = t("up"); box.lastChild.title = t("down"); }; })();
+document.addEventListener("click", e => { const im = e.target.closest("[data-fnpic]"); if (!im) return; const o = document.createElement("div"); o.className = "fn-big"; o.innerHTML = `<img src="${im.src}" alt="">`; o.onclick = () => o.remove(); document.body.append(o); });
 function render(){ window.__fabT && window.__fabT();
   if (state.mode === "employee") return renderEmployee();
   const h = location.hash.slice(1);
@@ -625,7 +626,7 @@ function render(){ window.__fabT && window.__fabT();
 /* ───────── derived ───────── */
 const fuelNeedIds = () => Object.entries(state.fuelneed).filter(([id, x]) => x?.on && state.emp[id]?.status === "ACTIVE").sort((a, b) => (+b[1].at || 0) - (+a[1].at || 0)).map(([id]) => id);
 const fuelNeedPanel = () => { const ids = fuelNeedIds(); if (!ids.length) return "";
-  return `<section class="panel fneed-panel"><h2 class="dash-sec" style="margin:0 0 8px">⛽ ${t("fn_title")} · ${ids.length}</h2><p class="sub" style="margin:0 0 8px">${t("fn_hint")}</p><div class="fn-list">${ids.map(id => `<div class="fn-i">${avatarHtml(state.emp[id].photoUrl, state.emp[id].fullName, 28)}<span class="name">${esc(state.emp[id].fullName)}${state.emp[id].plate ? ` <span class="sub">${esc(state.emp[id].plate)}</span>` : ""}</span>${state.emp[id].card ? `<button class="btn ghost sm mono" data-act="copy-card" data-v="${esc(state.emp[id].card)}" title="${t("fn_copy")}">📋 ${esc(state.emp[id].card)}</button>` : ""}<span class="sub">${esc(agoTxt(+state.fuelneed[id].at || Date.now()))}</span><button class="btn ghost sm" data-act="fneed-done" data-id="${id}" data-needs-write>✓ ${t("fn_done")}</button><button class="btn ghost sm" data-act="fneed-na" data-id="${id}" data-needs-write>✕ ${t("fn_na")}</button></div>`).join("")}</div></section>`; };
+  return `<section class="panel fneed-panel"><h2 class="dash-sec" style="margin:0 0 8px">⛽ ${t("fn_title")} · ${ids.length}</h2><p class="sub" style="margin:0 0 8px">${t("fn_hint")}</p><div class="fn-list">${ids.map(id => `<div class="fn-i">${state.fuelneed[id].photo ? `<img class="fn-pic" src="${state.fuelneed[id].photo}" data-fnpic alt="meter">` : ""}${avatarHtml(state.emp[id].photoUrl, state.emp[id].fullName, 28)}<span class="name">${esc(state.emp[id].fullName)}${state.emp[id].plate ? ` <span class="sub">${esc(state.emp[id].plate)}</span>` : ""}</span>${state.emp[id].card ? `<button class="btn ghost sm mono" data-act="copy-card" data-v="${esc(state.emp[id].card)}" title="${t("fn_copy")}">📋 ${esc(state.emp[id].card)}</button>` : ""}<span class="sub">${esc(agoTxt(+state.fuelneed[id].at || Date.now()))}</span><button class="btn ghost sm" data-act="fneed-done" data-id="${id}" data-needs-write>✓ ${t("fn_done")}</button><button class="btn ghost sm" data-act="fneed-na" data-id="${id}" data-needs-write>✕ ${t("fn_na")}</button></div>`).join("")}</div></section>`; };
 const payExtra = () => payDoc()?.extra ?? [];
 const payEmps = () => activeEmps().filter(([id, e]) => e.inPayroll !== false || payExtra().includes(id));
 const activeEmps = () => Object.entries(state.emp).filter(([,e]) => e.status === "ACTIVE").sort((a,b)=>a[1].fullName.localeCompare(b[1].fullName));
