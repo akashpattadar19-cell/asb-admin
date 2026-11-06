@@ -352,6 +352,15 @@ main{padding-top:10px;gap:9px}
 .nav button{font-size:10.5px;padding:4px 0}
 .pill{font-size:11px;padding:1px 8px}
 .top{padding-bottom:10px}
+.podium{margin:2px 0 0;gap:6px}
+.pod{gap:2px}.pod b{font-size:12px}.pod .num{font-size:16px}
+.pod-ph .medal{width:20px;height:20px;font-size:11px;bottom:-4px;inset-inline-end:-4px}
+.pod1 .step{height:26px}.pod2 .step{height:18px}.pod3 .step{height:12px}.step{margin-top:2px}
+.list .li{padding:6px 0;font-size:13px}
+.inet-card{padding:9px 12px}
+.inet-card h3{font-size:12px}
+.inet-card .big{font-size:17px!important;margin-top:2px!important}
+.inet-rows{margin-top:5px;gap:6px}.inet-rows small{font-size:10.5px}.inet-rows b{font-size:12.5px}
 </style>
 <script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 </head><body>
@@ -891,7 +900,6 @@ function vHome(m){
       ${S.fuelRes ? `<span class="sw ${S.fuelRes === "approved" ? "on" : ""}" style="opacity:.85" data-fneed>🔒 ${t(S.fuelRes === "approved" ? "fres_ok" : "fres_na")}</span>` : `<span class="sw ${S.fuelNeed ? "on" : ""}" ${S.working === false ? 'style="opacity:.4"' : ""} role="switch" aria-checked="${!!S.fuelNeed}" data-fneed>${t("fneed")}<i></i></span>`}</div>
     ${fEntries(m.fuel).length ? `<div class="fp-mini">${fEntries(m.fuel).slice(-3).map(x => `<span><small>${esc(fRange(x))}</small><b>${fmt(x.a)}</b></span>`).join("")}</div>` : ""}
   </button>
-  ${out > 0 ? `<button class="alert" data-tab="fines"><span>${t("outstanding")}</span><span class="neg num" style="font-size:18px">${fmt(out)} ${t("sar")}</span></button>` : ""}
   <section class="card"><h3>${t("board")}</h3>${board(m.board)}</section>`;
 }
 const GR = ["A", "B", "C", "D", "-"];
@@ -939,9 +947,9 @@ function board(list){
   const pod = top.slice(0, 3), rest = top.slice(3);
   const order = pod.length === 3 ? [pod[1], pod[0], pod[2]] : pod.length === 2 ? [pod[1], pod[0]] : pod;
   const col = r => { const pos = top.indexOf(r); return `<div class="pod pod${pos + 1} ${r.me ? "pod-me" : ""}">
-      <div class="pod-ph">${ava(r.p, r.n, pos === 0 ? 76 : 60)}<span class="medal m${Math.min(r.r, 3)}">${r.r}</span></div>
+      <div class="pod-ph">${ava(r.p, r.n, pos === 0 ? 52 : 40)}<span class="medal m${Math.min(r.r, 3)}">${r.r}</span></div>
       <b>${esc(r.n)}${r.me ? ` · ${t("you")}` : ""}</b>${r.o != null ? `<span class="num">${fmt0(r.o)}</span>` : `<span class="num" style="opacity:.3">—</span>`}<div class="step"></div></div>`; };
-  const row = r => `<div class="li ${r.me ? "me" : ""}"><div style="display:flex;gap:12px;align-items:center;min-width:0"><span class="medal">${r.r}</span>${ava(r.p, r.n, 38)}<b>${esc(r.n)}</b>${r.me ? `<span class="pill p-info">${t("you")}</span>` : ""}</div>${r.o != null ? `<span class="num" style="font-size:18px">${fmt0(r.o)}</span>` : ""}</div>`;
+  const row = r => `<div class="li ${r.me ? "me" : ""}"><div style="display:flex;gap:12px;align-items:center;min-width:0"><span class="medal">${r.r}</span>${ava(r.p, r.n, 30)}<b>${esc(r.n)}</b>${r.me ? `<span class="pill p-info">${t("you")}</span>` : ""}</div>${r.o != null ? `<span class="num" style="font-size:18px">${fmt0(r.o)}</span>` : ""}</div>`;
   return `<div class="podium">${order.map(col).join("")}</div>
     ${rest.length ? `<div class="list">${rest.map(row).join("")}</div>` : ""}
     ${mine ? `<div class="gap">···</div><div class="list">${row(mine)}</div>` : ""}`;
@@ -1233,7 +1241,7 @@ async function camOpen(){
   document.body.append(ov);
   try {
     if (!navigator.mediaDevices?.getUserMedia) throw 0;
-    cam.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 1280 } }, audio: false });
+    cam.stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" }, width: { ideal: 800 }, height: { ideal: 600 }, frameRate: { ideal: 24 } }, audio: false });
     const v = document.getElementById("camV"); v.srcObject = cam.stream; await v.play().catch(() => {});
   } catch { ov.querySelector(".cv").innerHTML = `<div class="msg">${t("cam_err")}</div>`; ov.querySelector('[data-cam="snap"]').style.display = "none"; }
 }
@@ -1244,7 +1252,7 @@ document.addEventListener("click", async e => {
   if (k === "x") return camStop();
   if (k === "snap") {
     const v = document.getElementById("camV"); if (!v?.videoWidth) return;
-    const sc = Math.min(1, 960 / v.videoWidth), c = document.createElement("canvas"); c.width = Math.round(v.videoWidth * sc); c.height = Math.round(v.videoHeight * sc);
+    const sc = Math.min(1, 800 / v.videoWidth), c = document.createElement("canvas"); c.width = Math.round(v.videoWidth * sc); c.height = Math.round(v.videoHeight * sc);
     c.getContext("2d").drawImage(v, 0, 0, c.width, c.height);
     let q = 0.72, data = c.toDataURL("image/jpeg", q); while (data.length > 200000 && q > 0.3) { q -= 0.1; data = c.toDataURL("image/jpeg", q); }
     cam.data = data; const im = document.getElementById("camI"); im.src = data; im.hidden = false; v.hidden = true;
