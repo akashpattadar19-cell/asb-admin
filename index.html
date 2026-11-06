@@ -99,6 +99,9 @@ label.f.check{flex-direction:row;align-items:center;text-transform:none;font-siz
 .dr>span{font-size:13px;font-weight:600;color:var(--muted)}
 .dr-v{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
 a.kpi{display:block}
+.scrollfab{position:fixed;inset-inline-end:10px;bottom:90px;z-index:40;display:flex;flex-direction:column;gap:8px}
+.scrollfab button{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--ink);box-shadow:0 2px 10px rgba(0,0,0,.25);font-size:15px;cursor:pointer;opacity:.9}
+@media print{.scrollfab{display:none}}
 .scroll{overflow-x:auto;scrollbar-width:auto;scrollbar-color:var(--muted) transparent}
 .scroll::-webkit-scrollbar{height:12px}.scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:8px;border:3px solid transparent;background-clip:padding-box}
 .fn-list{display:flex;flex-direction:column;gap:6px}.fn-i{display:flex;gap:10px;align-items:center}.fn-i .name{flex:1}.fneed-panel{margin-bottom:12px;border-color:#D9542B}
@@ -500,7 +503,7 @@ const DEFAULT_RULES = { targetOrders: 450, baseSalary: 2400, bonusPer: 5, penalt
 const CATS = ["TRAFFIC_VIOLATION","ACCIDENT","COMPANY_DEDUCTION","DELAY","MISSING_ITEM","VEHICLE_DAMAGE","OTHER"];
 /* Payroll columns that are tied to the Dues overview (the other deduction columns — petrol, supervisor, Keeta — are payroll-only) */
 const PAY_LINK = { advance: "ADVANCE", company: "COMPANY_DEDUCTION", accident: "ACCIDENT", traffic: "TRAFFIC_VIOLATION" };
-Object.assign(I18N.en, { fn_title: "Needs petrol", fn_done: "Done", fn_hint: "Drivers who turned on “Need petrol” in the app", emp_pay: "Payroll", emp_pay_on_t: "Included in payroll — click to leave out", emp_pay_off_t: "Left out of payroll — click to include",
+Object.assign(I18N.en, { wk_on: "Working", wk_off: "Not working", up: "Scroll to top", down: "Scroll to bottom", fn_title: "Needs petrol", fn_done: "Done", fn_hint: "Drivers who turned on “Need petrol” in the app", emp_pay: "Payroll", emp_pay_on_t: "Included in payroll — click to leave out", emp_pay_off_t: "Left out of payroll — click to include",
   pay_add: "Add driver", pay_add_t: "Add a driver to this payroll", pay_add_pick: "Driver left out of payroll", pay_add_none: "Every active driver is already in this payroll.", pay_extra: "added", pay_extra_rm: "Remove from this payroll", pay_scroll: "Scroll the table",
   ACCIDENT: "Accident", COMPANY_DEDUCTION: "Company deduction",
   du_ledger: "Ledger", du_ledger_t: "Dues ledger — every deduction and reversal", du_ledger_none: "No ledger entries yet", lg_deduct: "Deducted", lg_reverse: "Reversed", lg_cat: "Category", lg_month: "Payroll month",
@@ -508,7 +511,7 @@ Object.assign(I18N.en, { fn_title: "Needs petrol", fn_done: "Done", fn_hint: "Dr
   pa_left: "Left", pa_over: "{n}: {c} deduction {a} is more than the dues left ({l}).", pa_over_pub: "Cannot publish — a deduction is more than the dues left:", pa_unlinked: "PETROL, SUPERVISOR and KEETA deductions come out of salary only — they are not linked to Dues.", pa_linked: "Linked to Dues overview (cannot be more than what is left):",
   pa_already: "This payroll is already published — nothing was deducted twice.", pa_conf_t: "Deductions from Dues overview", pa_conf_none: "No dues deductions in this payroll.", pa_conf_before: "Before", pa_conf_cut: "Deduct", pa_conf_after: "After",
   pa_rev_note: "Deducted dues go back to the Dues overview and the reversal is written in the ledger." });
-Object.assign(I18N.bn, { fn_title: "পেট্রোল দরকার", fn_done: "হয়েছে", fn_hint: "অ্যাপে যারা “পেট্রোল দরকার” চালু করেছে", emp_pay: "Payroll", emp_pay_on_t: "Payroll-এ আছে — বাদ দিতে চাপুন", emp_pay_off_t: "Payroll-এ নেই — যোগ করতে চাপুন",
+Object.assign(I18N.bn, { wk_on: "কাজ করছে", wk_off: "কাজ করছে না", up: "উপরে যান", down: "নিচে যান", fn_title: "পেট্রোল দরকার", fn_done: "হয়েছে", fn_hint: "অ্যাপে যারা “পেট্রোল দরকার” চালু করেছে", emp_pay: "Payroll", emp_pay_on_t: "Payroll-এ আছে — বাদ দিতে চাপুন", emp_pay_off_t: "Payroll-এ নেই — যোগ করতে চাপুন",
   pay_add: "কর্মী যোগ", pay_add_t: "এই Payroll-এ কর্মী যোগ করুন", pay_add_pick: "Payroll-এর বাইরে থাকা কর্মী", pay_add_none: "সব সক্রিয় কর্মীই এই Payroll-এ আছে।", pay_extra: "যোগ করা", pay_extra_rm: "এই Payroll থেকে সরান", pay_scroll: "টেবিল স্ক্রোল করুন",
   ACCIDENT: "ACCIDENT", COMPANY_DEDUCTION: "COMPANY DEDUCTION", TRAFFIC_VIOLATION: "TRAFFIC VIOLATION", ADVANCE: "ADVANCE",
   pa_traffic: "TRAFFIC VIOLATION", pa_accident: "ACCIDENT", pa_company: "COMPANY DEDUCTION", pa_akash: "SUPERVISOR DEDUCTION", pa_advance: "ADVANCE DEDUCTION", pa_keeta: "KEETA DEDUCTION", pa_petrolk: "PETROL DEDUCTION (±)",
@@ -518,7 +521,7 @@ Object.assign(I18N.bn, { fn_title: "পেট্রোল দরকার", fn_d
   pa_already: "এই পেরোল আগেই Publish হয়েছে — দ্বিতীয়বার কিছু কাটা হয়নি।", pa_conf_t: "Dues Overview থেকে কর্তন", pa_conf_none: "এই পেরোলে বকেয়া থেকে কোনো কর্তন নেই।", pa_conf_before: "আগে বাকি", pa_conf_cut: "কাটা হবে", pa_conf_after: "পরে বাকি",
   pay_reopen: "Unpublish / বাতিল করুন", pay_reopen_q: "{m} মাসের পেরোল বাতিল (Unpublish) করবেন? কর্মীদের অ্যাপ থেকে পে-স্লিপ সরে যাবে, কাটা বকেয়া আবার Dues Overview-এ ফিরে আসবে এবং লেনদেন-রেকর্ডে ‘ফেরত’ হিসেবে লেখা থাকবে। আবার Publish করলে নতুন করে কাটা হবে।",
   pa_rev_note: "কাটা বকেয়া আবার Dues Overview-এ ফিরে যাবে এবং লেনদেন-রেকর্ডে ফেরত লেখা হবে।" });
-Object.assign(I18N.ar, { fn_title: "يحتاج وقود", fn_done: "تم", fn_hint: "سائقون فعّلوا «أحتاج وقود» في التطبيق", emp_pay: "الرواتب", emp_pay_on_t: "ضمن الرواتب — اضغط للاستبعاد", emp_pay_off_t: "خارج الرواتب — اضغط للإضافة",
+Object.assign(I18N.ar, { wk_on: "يعمل", wk_off: "لا يعمل", up: "إلى الأعلى", down: "إلى الأسفل", fn_title: "يحتاج وقود", fn_done: "تم", fn_hint: "سائقون فعّلوا «أحتاج وقود» في التطبيق", emp_pay: "الرواتب", emp_pay_on_t: "ضمن الرواتب — اضغط للاستبعاد", emp_pay_off_t: "خارج الرواتب — اضغط للإضافة",
   pay_add: "إضافة سائق", pay_add_t: "إضافة سائق لهذه الرواتب", pay_add_pick: "سائق خارج الرواتب", pay_add_none: "كل السائقين النشطين ضمن هذه الرواتب.", pay_extra: "مضاف", pay_extra_rm: "إزالة من هذه الرواتب", pay_scroll: "تمرير الجدول",
   ACCIDENT: "حادث", COMPANY_DEDUCTION: "خصومات الشركة",
   du_ledger: "السجل", du_ledger_t: "سجل المستحقات — كل خصم واسترجاع", du_ledger_none: "لا توجد قيود بعد", lg_deduct: "خُصم", lg_reverse: "أُعيد", lg_cat: "الفئة", lg_month: "شهر الرواتب",
@@ -593,7 +596,12 @@ document.addEventListener("click", e => {
   render();
 });
 
-function render(){
+/* floating up / down buttons on the side of the page */
+(() => { const box = document.createElement("div"); box.className = "scrollfab";
+  box.innerHTML = '<button data-fab="up">▲</button><button data-fab="down">▼</button>'; document.body.append(box);
+  box.addEventListener("click", e => { const d = e.target.closest("[data-fab]")?.dataset.fab; if (!d) return; const h = Math.max(document.documentElement.scrollHeight, document.body.scrollHeight); window.scrollTo({ top: d === "up" ? 0 : h, behavior: "smooth" }); });
+  window.__fabT = () => { box.firstChild.title = t("up"); box.lastChild.title = t("down"); }; })();
+function render(){ window.__fabT && window.__fabT();
   if (state.mode === "employee") return renderEmployee();
   const h = location.hash.slice(1);
   if (h === "driver") { try { localStorage.setItem("asb-view", "driver"); } catch {} }
@@ -792,7 +800,7 @@ function vEmployees(){
   const act = all.filter(([,e]) => e.status === "ACTIVE"), noPin = act.filter(([,e]) => !e.pinCheck).length;
   const chip = (label, n, key, val) => `<button class="chip ${state[key] === val ? "on" : ""}" data-act="emp-chip" data-k="${key}" data-v="${esc(val)}"><b>${n}</b> ${label}</button>`;
   const row = ([id, e]) => `<tr class="${e.status === "INACTIVE" ? "dim" : ""}">
-      <td style="min-width:220px"><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 40)}<div style="min-width:0"><div class="name"><button class="rk-sw ${e.isActive !== false ? "on" : ""}" role="switch" aria-checked="${e.isActive !== false}" data-act="emp-work" data-id="${id}" data-needs-write><i></i><span>${e.isActive !== false ? "কাজ করছে" : "কাজ করছে না"}</span></button> ${esc(e.fullName)}${state.fuelneed[id]?.on ? ` <span class="pill p-warn nodot" title="${t("fn_hint")}">⛽ ${t("fn_title")}</span>` : ""}</div>
+      <td style="min-width:220px"><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 40)}<div style="min-width:0"><div class="name"><button class="rk-sw ${e.isActive !== false ? "on" : ""}" role="switch" aria-checked="${e.isActive !== false}" data-act="emp-work" data-id="${id}" data-needs-write><i></i><span>${t(e.isActive !== false ? "wk_on" : "wk_off")}</span></button> ${esc(e.fullName)}${state.fuelneed[id]?.on ? ` <span class="pill p-warn nodot" title="${t("fn_hint")}">⛽ ${t("fn_title")}</span>` : ""}</div>
         <div class="sub" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${e.status === "ACTIVE" ? `<button class="rk-sw ${e.inPayroll !== false ? "on" : ""}" role="switch" aria-checked="${e.inPayroll !== false}" data-act="emp-pay" data-id="${id}" data-needs-write title="${t(e.inPayroll !== false ? "emp_pay_on_t" : "emp_pay_off_t")}"><i></i><span>${t("emp_pay")}</span></button>` : ""}${platPill(e.platform)}${e.delegateStatus ? `<span class="pill ${e.delegateStatus === "Disabled" ? "p-bad" : "p-ok"}">${t("ds_" + e.delegateStatus)}</span>` : ""}${e.fullNameAr ? `<span dir="rtl">${esc(e.fullNameAr)}</span>` : ""}</div></div></div></td>
       <td class="mono nowrap">${esc(e.residentId)}${e.jahezId ? `<div class="sub" title="${t("jahezId")}">K: ${esc(e.jahezId)}</div>` : ""}</td>
       <td class="nowrap mono">${e.mobile ? `<a class="tel" href="tel:${esc(e.mobile)}">${esc(e.mobile)}</a>` : `<span class="sub">${t("none")}</span>`}</td>
@@ -812,8 +820,8 @@ function vEmployees(){
   <div class="head"><div><h1>${t("nav_employees")}</h1><p>${all.length} · ${act.length} ${t("ACTIVE")}</p></div>
     <div class="tools"><button class="btn ghost" data-act="notice-new" data-needs-write>📣 ${t("nt_send")}</button><button class="btn" data-act="emp-new" data-needs-write>+ ${t("addEmp")}</button></div></div>
   ${(()=>{const req=all.filter(([id,e])=>(state.pinreq[id]?.at||0)>(e.pinResetAt||0));return req.length?`<div class="note warn"><b>${t("pin_req")}:</b> ${req.map(([id,e])=>`<button class="btn ghost sm" data-act="emp-pin" data-id="${id}" data-needs-write style="margin:4px 4px 0 0">${esc(e.fullName)} · ${t("pin_change")}</button>`).join("")}</div>`:""})()}
-  <div class="chips"><b>কাজ করছে: ${act.filter(([, e]) => e.isActive !== false).length} | কাজ করছে না: ${act.filter(([, e]) => e.isActive === false).length}</b>
-    ${[["", "সব"], ["1", "কাজ করছে"], ["0", "কাজ করছে না"]].map(([v, l]) => `<button class="chip ${(state.qWork || "") === v ? "on" : ""}" data-act="emp-chip" data-k="qWork" data-v="${v}">${l}</button>`).join("")}</div>
+  <div class="chips"><b>${t("wk_on")}: ${act.filter(([, e]) => e.isActive !== false).length} | ${t("wk_off")}: ${act.filter(([, e]) => e.isActive === false).length}</b>
+    ${[["", t("all")], ["1", t("wk_on")], ["0", t("wk_off")]].map(([v, l]) => `<button class="chip ${(state.qWork || "") === v ? "on" : ""}" data-act="emp-chip" data-k="qWork" data-v="${v}">${l}</button>`).join("")}</div>
   <div class="chips">
     ${chip(t("all"), all.length, "qCity", "")}
     ${cities.filter(Boolean).map(c => chip(esc(c), all.filter(([,e]) => e.city === c).length, "qCity", c)).join("")}
