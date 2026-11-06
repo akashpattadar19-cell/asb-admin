@@ -15,7 +15,7 @@ No secrets are stored in this file. Never paste service keys, passwords or token
 The Supabase anon key inside the code is public by design. Security = RLS + token-checked functions.
 
 ## Data model (Supabase)
-- Generic table `docs(coll text, id text, data jsonb)`: employees, payroll, totals, daily, fuel, perf, orddetail, fines, advances, ledger, fuelneed, internet, monthly (archives), notices, config (rules, month, settings), expense, invoice, duty, presence …
+- Generic table `docs(coll text, id text, data jsonb)`: employees, payroll, totals, daily, fuel, perf, orddetail, fines, advances, ledger, fuelneed, vehicle (cars: accidents, service, repair, replacement car), internet, monthly (archives), notices, config (rules, month, settings), expense, invoice, duty, presence …
 - `admins(email, role, name, perms jsonb)`; roles SUPER_ADMIN / SUB_ADMIN / VIEWER. Sub-admin edit limits (`perms.edit`) are enforced in the UI only; VIEWER writes are blocked in the DB (`can_write()`).
 - Other tables: driver_sessions, audit_log, audit_questions, admin_logins, login_attempts, loc_last.
 - RLS is on everywhere. `docs` is admin-only. Anon has no table access. **Drivers only use RPCs** that check a PIN session token: `driver_login`, `driver_data` (returns everything a driver sees), `driver_update_profile`, `driver_notice_peek`, `driver_fuel_need`, `driver_set_duty`, `driver_audit`, … Admin RPCs: `admin_set_login`, `admin_delete_notice`, `audit_delete`, `admin_backup`, `my_admin_role`.
