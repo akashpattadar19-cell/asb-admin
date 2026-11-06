@@ -9,7 +9,7 @@
 <title>ASB Admin Panel</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Hind+Siliguri:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Barlow+Semi+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Hind+Siliguri:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
 <style>
 /* Layout: fixed left rail of sections (top scroller on phones) + one working surface; tables are the main object */
 :root{
@@ -356,6 +356,106 @@ tr.row-new td{box-shadow:inset 0 0 0 9999px rgba(242,189,69,.08)}
 .preview-wrap{display:grid;grid-template-columns:auto minmax(0,1fr);gap:24px;align-items:start}
 .steps{margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:10px}
 @media (max-width:860px){.preview-wrap{grid-template-columns:1fr}.phone-frame{margin:0 auto}}
+
+/* ===== Theme v2 — clean light dashboard (white cards, soft borders, violet accent) ===== */
+:root{
+  --bg:#F3F4F9; --surface:#FFFFFF; --card:#FFFFFF; --sunk:#F7F8FC; --ink:#1B2236; --muted:#7A8196; --line:#E8EAF2;
+  --brand:#6D28D9; --brand-ink:#FFFFFF; --brand-soft:#F1EBFD; --gold:#F5A524; --gold-soft:#FEF3DC;
+  --good:#16A34A; --good-soft:#E6F6EC; --warn:#D97706; --warn-soft:#FEF1DC; --bad:#DC2626; --bad-soft:#FDEBEB; --info:#2563EB; --info-soft:#E8F0FE;
+  --f-body:"Inter","IBM Plex Sans","Hind Siliguri","IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-display:var(--f-body); --r:14px;
+}
+:lang(bn){--f-body:"Inter","Hind Siliguri",system-ui,sans-serif}
+:lang(ar){--f-body:"Inter","IBM Plex Sans Arabic",system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0F1220; --surface:#171B2E; --card:#171B2E; --sunk:#1C2136; --ink:#E7EAF6; --muted:#97A0BC; --line:#262C45;
+  --brand:#A78BFA; --brand-ink:#0F1220; --brand-soft:#262046; --gold:#F5B94A; --gold-soft:#33280F;
+  --good:#4ADE80; --good-soft:#12301F; --warn:#FBBF24; --warn-soft:#33280F; --bad:#F87171; --bad-soft:#3A1715; --info:#7DB0FF; --info-soft:#132B42}}
+:root[data-theme="dark"]{
+  --bg:#0F1220; --surface:#171B2E; --card:#171B2E; --sunk:#1C2136; --ink:#E7EAF6; --muted:#97A0BC; --line:#262C45;
+  --brand:#A78BFA; --brand-ink:#0F1220; --brand-soft:#262046; --gold:#F5B94A; --gold-soft:#33280F;
+  --good:#4ADE80; --good-soft:#12301F; --warn:#FBBF24; --warn-soft:#33280F; --bad:#F87171; --bad-soft:#3A1715; --info:#7DB0FF; --info-soft:#132B42}
+body{font-size:14.5px;letter-spacing:0}
+/* sidebar: white, text-only page names */
+.rail{background:var(--surface);color:var(--ink);border-inline-end:1px solid var(--line)}
+.brand b{font:700 17px/1.15 var(--f-body);letter-spacing:.01em;color:var(--ink)}
+.brand small{opacity:1;color:var(--muted)}
+.mark{box-shadow:none;border:1px solid var(--line)}
+.nav{gap:1px;overflow-y:auto;scrollbar-width:thin;flex:1;min-height:0}
+.nav a{color:var(--muted);opacity:1;font-weight:500;font-size:14px;padding:9px 14px;border-radius:10px}
+.nav a:hover{background:var(--sunk);color:var(--ink)}
+.nav a[aria-current="page"]{background:var(--brand-soft);color:var(--brand);font-weight:600}
+.nav a.nav-driver{background:none;color:var(--brand);border:1px dashed color-mix(in srgb,var(--brand) 45%,transparent);margin-top:10px}
+.nav-ic{display:none!important}
+.nav a.nav-sub{padding-inline-start:26px;font-size:13.5px}
+.nav .count{background:var(--brand);color:#fff}
+.lang button{border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+.lang button[aria-pressed="true"]{background:var(--brand);border-color:var(--brand);color:#fff}
+.rail-foot{border-top:1px solid var(--line);margin-top:8px;color:var(--muted)}
+/* top bar */
+.col{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:0;z-index:15;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px max(28px,env(safe-area-inset-right,0px)) 14px max(28px,env(safe-area-inset-left,0px));background:var(--surface);border-bottom:1px solid var(--line)}
+.topbar b{font:600 17px var(--f-body)}
+.topbar .tb-r{display:flex;align-items:center;gap:10px;color:var(--muted);font-size:13px}
+.topbar .tb-date{padding:6px 12px;border:1px solid var(--line);border-radius:10px;background:var(--sunk)}
+main{padding-block:22px 60px;padding-left:max(24px,env(safe-area-inset-left,0px));padding-right:max(24px,env(safe-area-inset-right,0px))}
+/* headings, buttons, inputs */
+.head h1{font:700 24px/1.2 var(--f-body);letter-spacing:-.01em}
+.head p{color:var(--muted)}
+.btn{background:var(--brand);color:#fff;border-radius:10px;font-weight:600;padding:8px 16px}
+.btn:hover{filter:none;background:color-mix(in srgb,var(--brand) 88%,#000)}
+.btn.ghost{background:var(--surface);color:var(--ink);border-color:var(--line)}
+.btn.ghost:hover{background:var(--sunk)}
+.btn.gold{background:var(--brand-soft);color:var(--brand)}
+.btn.danger{background:var(--bad);color:#fff}
+.input,select.input,textarea.input{border-radius:10px;border-color:var(--line);background:var(--surface)}
+.input:focus{border-color:var(--brand);box-shadow:0 0 0 3px color-mix(in srgb,var(--brand) 16%,transparent)}
+label.f{text-transform:none;letter-spacing:0;font-size:12.5px;font-weight:500}
+:focus-visible{outline-color:var(--brand)}
+/* cards */
+.panel,.kpi,.note,.gs,.cs-i,table.inner{border-radius:var(--r)}
+.panel{border:1px solid var(--line);box-shadow:0 1px 2px rgba(20,24,50,.03)}
+.panel h2{font:600 15px var(--f-body);letter-spacing:0;padding:15px 18px;color:var(--ink)}
+.kpis{gap:14px}
+.kpi{padding:16px 18px;border:1px solid var(--line);box-shadow:0 1px 2px rgba(20,24,50,.03)}
+.kpi span{text-transform:none;letter-spacing:0;font-size:13px;font-weight:500;color:var(--muted)}
+.kpi b{font:600 26px/1.25 var(--f-body);letter-spacing:-.01em;margin-top:4px}
+.kc .kpi{padding:11px 13px}.kc .kpi b{font-size:19px}.kc .kpi span{font-size:11.5px}
+.dash-sec{font:600 15px var(--f-body);margin:20px 0 12px;color:var(--ink)}
+.dpair{gap:16px}
+/* tables */
+table{font-size:13.5px}
+th{background:transparent;color:var(--muted);font-size:11.5px;font-weight:600;letter-spacing:.07em;border-bottom:1px solid var(--line);padding:12px 14px}
+td{padding:11px 14px;border-bottom:1px solid var(--line)}
+tbody tr:hover td{background:var(--sunk)}
+tr.clk:hover{background:var(--sunk)}
+/* badges */
+.pill{border-radius:99px;padding:3px 10px;font-size:12px}
+.chip{border-radius:99px}.chip.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.grade{border-radius:9px}
+.rank.r1{background:var(--brand);color:#fff}
+.bar{height:7px;border-radius:99px;background:var(--sunk)}.bar span{border-radius:99px;background:var(--brand)}
+.dmbar .dm-lbl{font:600 15px var(--f-body)}
+.topbar .lang button{flex:none;padding:5px 11px;font-size:12.5px;border-radius:8px}
+.panel>.dash-rows{padding:2px 18px 8px}
+.panel>.dash-rows .dr:first-child{padding-top:10px}
+.dmpop button.dm-m.cur{background:var(--brand);color:#fff}
+dialog{border-radius:16px;box-shadow:0 20px 60px rgba(20,24,50,.25)}
+.dlg-h h3{font:600 18px var(--f-body)}
+.toast{border-radius:12px}
+.monthbar{border-radius:var(--r);background:var(--surface)}
+.monthbar .mb-txt b{font:600 16px var(--f-body)}
+@media (max-width:860px){
+  .app{grid-template-columns:minmax(0,1fr)}
+  body::before{background:var(--surface)!important}
+  .rail{border-inline-end:0;border-bottom:1px solid var(--line)}
+  .topbar{display:none}
+  .menu-btn{border:1px solid var(--line);background:var(--sunk);color:var(--ink)}
+  .mobile-tools .out-btn{border:1px solid var(--line);background:var(--surface);color:var(--ink)}
+  .nav a{padding:10px 12px}
+  main{padding-block:16px 60px;padding-left:max(14px,env(safe-area-inset-left,0px));padding-right:max(14px,env(safe-area-inset-right,0px))}
+  .head h1{font-size:21px}
+}
 </style>
 <script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 
@@ -373,9 +473,12 @@ tr.row-new td{box-shadow:inset 0 0 0 9999px rgba(242,189,69,.08)}
       <div id="who" style="opacity:.75"></div><button class="btn ghost sm" data-signout-admin style="background:none;color:inherit;border-color:currentColor"><span data-t="au_signout">Sign out</span></button>
     </div>
   </aside>
+  <div class="col">
+    <header class="topbar"><b id="tbTitle"></b><div class="tb-r"><span class="tb-date" id="tbDate"></span><div class="lang" id="langT"></div></div></header>
   <main id="main">
     <div class="empty" style="padding-top:80px"><b data-t="loading">Loading…</b></div>
   </main>
+  </div>
 </div>
 <div id="emp" hidden></div>
 <dialog id="dlg"></dialog>
@@ -599,10 +702,11 @@ function renderShell(){
   const v = view();
   const pendingN = Object.values(state.emp).filter(e => e.status === "PENDING").length;
   $("#nav").innerHTML = allowedViews().map(k => `<a href="#${k}" class="${SUB_VIEWS.includes(k) ? "nav-sub" : ""}" ${k===v?'aria-current="page"':""}><span class="nav-l"><span class="nav-ic">${NAV_ICON[k]||"•"}</span><span>${t("nav_"+k)}</span></span>${k==="employees"&&pendingN?`<span class="count">${pendingN}</span>`:""}</a>`).join("") + `<a href="${DRIVER_WEB}" target="_blank" rel="noopener" class="nav-driver"><span class="nav-l"><span class="nav-ic">🚗</span><span>${t("drv_web")}</span></span><span>↗</span></a>`;
+  { const tt = $("#tbTitle"); if (tt) tt.textContent = t("nav_" + v); const td = $("#tbDate"); if (td) td.textContent = new Date().toLocaleDateString(lang === "bn" ? "bn-BD" : lang === "ar" ? "ar-SA" : "en-GB", { weekday: "short", day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Riyadh" }); }
   { const cu = $("#menuCur"); if (cu) cu.textContent = (NAV_ICON[v] || "") + " " + t("nav_" + v); }
   setTimeout(renderShellBadge, 0);
   const langBtns = [["en","EN"],["bn","বাংলা"],["ar","عربي"]].map(([k,l]) => `<button data-lang="${k}" aria-pressed="${k===lang}">${l}</button>`).join("");
-  $("#lang").innerHTML = langBtns; $("#langM").innerHTML = langBtns;
+  $("#lang").innerHTML = langBtns; $("#langM").innerHTML = langBtns; { const lt = $("#langT"); if (lt) lt.innerHTML = langBtns; }
 }
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-lang]"); if (!b) return;
