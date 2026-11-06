@@ -43,3 +43,6 @@ The Supabase anon key inside the code is public by design. Security = RLS + toke
 2. In a new Claude account: connect the GitHub and Supabase connectors (sign in as the owner), clone `asb-admin` and `asb-driver-app`, and say: "Read CLAUDE.md and continue the ASB project".
 3. If Supabase is ever lost: create a project, run `schema_sql` from a backup file, restore `docs` and `admins` with Admins page → "Restore from backup" (or upsert the JSON), then put the new project URL and anon key into `index.html`, `driver/index.html` and the APK `NoticeJob.java`, and redeploy.
 4. Keep these safe yourself: the GitHub login, the Supabase login, a recent backup file, and the APK signing key (`app/asb-release.jks` in the private APK repo) — without that key new APKs cannot update installed ones.
+
+## Publishing a new APK to drivers
+After the CI build for a push to `main` succeeds, run `bash /home/claude/publish_apk.sh "notes"` (copies the release APK to the public site `app/ASB-Driver.apk` and bumps `app/version.json`). The installed app checks that file on every open/resume (every 20 s at most) and shows a mandatory "Update" dialog when its versionCode is lower.
