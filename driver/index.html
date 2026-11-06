@@ -919,13 +919,10 @@ function vDues(m){
   return `
   <div class="two"><div class="card"><div class="lbl">${t("du_left")}</div><div class="big neg">${fmt(out)}</div><div class="muted" style="font-size:13px">${t("sar")}</div></div>
     <div class="card"><div class="lbl">${t("du_paid")}</div><div class="big pos">${fmt(Math.max(0, total - out))}</div><div class="muted" style="font-size:13px">${t("sar")}</div></div></div>
-  ${(() => { const cs = ["ADVANCE", "COMPANY_DEDUCTION", "ACCIDENT", "TRAFFIC_VIOLATION"].map(c => { const l = live.filter(x => x.k === c); const tot = l.reduce((s, x) => s + (+x.amount || 0), 0), left = l.reduce((s, x) => s + (+x.remaining || 0), 0); return { c, n: l.length, tot, left: Math.min(left, tot) }; }).filter(r => r.n);
-    return cs.length ? `<section class="card"><h3>${t("du_cats")}</h3><div class="list">${cs.map(r => `<div class="li" style="align-items:flex-start"><div class="t"><b>${t(r.c)}</b><small>${t("du_c_tot")} ${fmt(r.tot)} · ${t("du_c_rec")} ${fmt(r.tot - r.left)}</small></div><div class="v">${r.left > 0 ? `<div class="neg num" style="font-size:18px">${fmt(r.left)}</div><small class="muted">${t("du_c_left")}</small>` : `<span class="pill p-good">${t("paid")}</span>`}</div></div>`).join("")}</div></section>` : ""; })()}
-  ${monthly > 0 ? `<section class="card" style="padding-block:12px"><div class="row"><span class="muted">${t("du_monthly")}</span><b class="num" style="font-size:18px">${fmt(monthly)} ${t("sar")}</b></div></section>` : ""}
   <section class="card"><h3>${t("du_list")}</h3>
     ${all.length ? `<div class="list">${all.map(x => `<div class="li" style="align-items:flex-start"><div class="t"><b>${t(x.k)}</b><small>${x.date ? esc(dmy(x.date)) : "—"}${x.reason ? " · " + esc(x.reason) : ""}</small></div>
       <div class="v"><div class="num" style="font-size:18px;${x.waived ? "text-decoration:line-through" : ""}">${fmt(x.amount)}</div>
-      ${x.waived ? `<span class="pill p-mute">${t("waived")}</span>` : x.remaining <= 0 ? `<span class="pill p-good">${t("paid")}</span>` : `<small class="neg">${t("remaining")} ${fmt(x.remaining)}</small>${+x.monthly ? `<br><small class="muted">${fmt(x.monthly)} ${t("per_month")}</small>` : ""}`}</div></div>`).join("")}</div>`
+      ${x.waived ? `<span class="pill p-mute">${t("waived")}</span>` : x.remaining <= 0 ? `<span class="pill p-good">${t("paid")}</span>` : `<small class="neg">${t("remaining")} ${fmt(x.remaining)}</small>`}</div></div>`).join("")}</div>`
     : `<div class="empty">${t("du_none")}</div>`}
   </section>
   <section class="card"><h3>${t("deduct_hist")}</h3>
