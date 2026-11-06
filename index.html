@@ -517,6 +517,16 @@ dialog{border-radius:16px;box-shadow:0 20px 60px rgba(20,24,50,.25)}
 @media (max-width:860px){.nav-ic{width:30px;height:30px}.nav-ic svg{width:18px;height:18px}.dcol{padding:14px}}
 
 .mk-stop b{display:block;background:#E8590C;color:#fff;border-radius:11px;font:700 11px/22px system-ui;text-align:center;border:2px solid #fff;box-shadow:0 1px 4px #0005;white-space:nowrap}
+
+/* Theme v5: Employees and Payroll fit the page width on desktop (no sideways scroll) */
+@media(min-width:900px){
+ table.emps th,table.emps td{padding-inline:6px;font-size:12.5px} table.emps th{white-space:normal}
+ table.emps .row-actions{flex-wrap:wrap;white-space:normal;gap:4px}
+ table.emps td:first-child{max-width:190px}
+ table.pay th,table.pay td{padding:7px 3px;font-size:11px;line-height:1.25} table.pay th{white-space:normal;vertical-align:bottom;word-break:normal;letter-spacing:0;text-transform:none;font-size:10.5px;font-weight:600}
+ table.pay .input.num{width:46px;min-width:0;padding:5px 3px;font-size:11px} table.pay td *{min-width:0} table.pay .row-actions{flex-wrap:wrap}
+ table.pay td:first-child{max-width:130px;white-space:normal}
+}
 </style>
 <script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 
@@ -2783,7 +2793,7 @@ function vPayroll(){
     <div class="kpi"><span>${t("net")}</span><b>${fmt(sum("net"))}</b><small>${t("sar")}</small></div>
   </div>
   <div style="display:flex;gap:8px;align-items:center;margin:-6px 0 10px;flex-wrap:wrap"><p class="sub" style="margin:0;flex:1;min-width:200px">${t("pa_tbl_note")}</p><span class="sub">${t("pay_scroll")}</span><button class="btn ghost sm" data-act="tbl-scroll" data-dir="-1" aria-label="left">◀</button><button class="btn ghost sm" data-act="tbl-scroll" data-dir="1" aria-label="right">▶</button></div>
-  <section class="panel">${slips.length ? `<div class="scroll"><table>
+  <section class="panel">${slips.length ? `<div class="scroll"><table class="pay">
     <thead><tr><th>${t("name")}</th><th class="r">${t("orders")}</th><th class="r">${t("pa_base")}</th><th class="r">${t("pa_additional")}</th><th class="r">${t("pa_due")}</th><th class="r">${t("pa_petrol")}</th><th class="r">${t("pa_petrolk")}</th><th class="r ordd-badh">${t("pa_traffic")}</th><th class="r ordd-badh">${t("pa_accident")}</th><th class="r ordd-badh">${t("pa_company")}</th><th class="r ordd-badh">${t("pa_akash")}</th><th class="r ordd-badh">${t("pa_advance")}</th><th class="r ordd-badh">${t("pa_keeta")}</th><th class="r">${t("pa_bonus_o")}</th><th class="r">${t("pa_totded")}</th><th class="r">${t("net")}</th><th></th></tr></thead>
     <tbody>${slips.map(s => { const ded = k => { const L = s.lk?.[k]; const sub = !published && L?.over ? `<div class="sub" style="color:var(--bad)">⚠</div>` : ""; return `<td class="r nowrap${+s[k] ? " ordd-bad" : ""}">${+s[k] ? "−" + fmt(s[k]) : fmt(0)}${sub}</td>`; }; const due = s.due != null ? s.due : r2((+s.base || 0) + (+s.bonus || 0)); const extraDed = r2((+s.fineDed || 0) + (+s.advDed || 0) + (+s.shortfall || 0) + (+s.absDed || 0) + (+s.incent || 0) + (+s.overtime || 0)); return `<tr>
       <td><div class="name">${esc(state.emp[s.id]?.fullName || s.name)}${!published && payExtra().includes(s.id) ? ` <span class="pill p-info nodot">+ ${t("pay_extra")}</span><button class="btn ghost sm" data-act="pay-unextra" data-id="${esc(s.id)}" data-needs-write title="${t("pay_extra_rm")}">✕</button>` : ""}${s.valid === false ? ` <span class="pill p-bad nodot" title="${esc(s.reason || "")}">${t("pa_invalid")}</span>` : ""}${!state.emp[s.id] ? ` <span class="pill p-mute nodot">${t("pay_gone")}</span>` : ""}</div><div class="sub">${rkPill(s.payType)}${s.grade ? ` <span class="grade sm ${gradeCls(s.grade)}" title="${t("pg_col")}">${s.grade}</span>` : ""}${s.manual ? ` <span class="pill p-warn nodot">${t(s.manual === "gradeD" ? "pay_manual_d" : "pay_manual_low")}</span>` : ""}${extraDed ? ` <span class="pill p-mute nodot" title="${t("incent")}/${t("overtime")}/${t("fineDed")}/${t("advDed")}/${t("shortfall")}/${t("abs_col")}">±${fmt(extraDed)}</span>` : ""}</div></td>
