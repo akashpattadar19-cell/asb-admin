@@ -4030,11 +4030,12 @@ function adminSignOut(){
 }
 document.addEventListener("click", e => { if (e.target.closest("[data-signout-admin]")) adminSignOut(); });
 
-let started = false;
+let started = false, starting = false;
 async function startAdmin(session){
   auth.session = session;
+  if (started || starting) return; starting = true;
   const { data: role, error } = await sb.rpc("my_admin_role");
-  if (error || !role) { auth.err = t("au_notadmin"); await sb.auth.signOut(); return renderAuth(); }
+  if (error || !role) { starting = false; auth.err = t("au_notadmin"); await sb.auth.signOut(); return renderAuth(); }
   auth.role = role;
   try { const em = (session.user?.email || "").toLowerCase(); const { data: me } = await sb.from("admins").select("perms").eq("email", em).limit(1); auth.perms = (me && me[0] && me[0].perms) || null; } catch { auth.perms = null; }
   if (started) return; started = true;
@@ -4082,11 +4083,14 @@ async function startAdmin(session){
 async function boot(){
   const { data } = await sb.auth.getSession();
   sb.auth.onAuthStateChange((ev, session) => {
-    if (ev === "SIGNED_OUT") { if (!signingOut && started) { started = false; adminSignOut(); } return; }
+    if (ev === "SIGNED_OUT") { if (!signingOut && started) { started = false; starting = false; adminSignOut(); } return; }
     if (ev === "PASSWORD_RECOVERY") { location.hash = "admins"; setTimeout(() => { toast(t("pw_set")); $("#pwNew")?.focus(); }, 1500); }
-    if (session && (ev === "SIGNED_IN" || ev === "INITIAL_SESSION")) startAdmin(session);
+    // never call supabase from inside this callback directly (auth-lock deadlock → endless Loading…)
+    if (session && (ev === "SIGNED_IN" || ev === "INITIAL_SESSION")) setTimeout(() => startAdmin(session), 0);
   });
-  if (data.session) startAdmin(data.session); else renderAuth();
+  if (data.session) setTimeout(() => startAdmin(data.session), 0); else renderAuth();
+  // watchdog: if the panel is still loading after 12 s, reload once automatically
+  setTimeout(() => { if (data.session && !state.ready) { let n = 0; try { n = +sessionStorage.getItem("asb-wd") || 0; sessionStorage.setItem("asb-wd", n + 1); } catch {} if (n < 2) location.reload(); } else { try { sessionStorage.removeItem("asb-wd"); } catch {} } }, 12000);
 }
 boot();
 </script>
