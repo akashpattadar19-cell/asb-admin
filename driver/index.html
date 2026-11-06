@@ -1255,7 +1255,8 @@ document.addEventListener("click", async e => {
   if (k === "ok" && cam.data) {
     b.disabled = true; b.textContent = "…";
     try {
-      const r = await rpc("driver_fuel_need", { p_token: S.token, p_on: true, p_photo: cam.data });
+      const ac = new AbortController(), to = setTimeout(() => ac.abort(), 40000); let r;
+      try { const resp = await fetch(`${SB_URL}/functions/v1/fuel-photo`, { method: "POST", signal: ac.signal, headers: { apikey: SB_KEY, Authorization: "Bearer " + SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ token: S.token, photo: cam.data }) }); r = await resp.json(); } finally { clearTimeout(to); }
       if (r.ok) { S.fuelNeed = true; camStop(); toast(t("fneed_on")); S.fuelBusy = false; return render(); }
       if (r.error === "locked") { camStop(); S.fuelRes = S.fuelRes || "approved"; toast(t("fres_lock")); return render(); }
       b.disabled = false; b.textContent = "✓"; toast(t("cam_fail"));
