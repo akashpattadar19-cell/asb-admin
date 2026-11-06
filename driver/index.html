@@ -847,7 +847,7 @@ function vHome(m){
   </section>`; })()}
   <button class="card fuel-card" data-sub="fuel"><div class="row"><h3 style="margin:0">⛽ ${t("fuel_m")}</h3><span class="tile-go">›</span></div>
     <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin-top:6px"><div class="big" style="font-size:28px">${fmt(mm.f)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">${t("sar")}</span></div>
-      <span class="sw ${S.fuelNeed ? "on" : ""}" role="switch" aria-checked="${!!S.fuelNeed}" data-fneed>${t("fneed")}<i></i></span></div>
+      <span class="sw ${S.fuelNeed ? "on" : ""}" ${S.working === false ? 'style="opacity:.4"' : ""} role="switch" aria-checked="${!!S.fuelNeed}" data-fneed>${t("fneed")}<i></i></span></div>
     ${fEntries(m.fuel).length ? `<div class="fp-mini">${fEntries(m.fuel).slice(-3).map(x => `<span><small>${esc(fRange(x))}</small><b>${fmt(x.a)}</b></span>`).join("")}</div>` : ""}
   </button>
   ${out > 0 ? `<button class="alert" data-tab="fines"><span>${t("outstanding")}</span><span class="neg num" style="font-size:18px">${fmt(out)} ${t("sar")}</span></button>` : ""}
@@ -1120,7 +1120,7 @@ async function refresh(force){
   try {
     const r = await rpc("driver_data", { p_token: S.token });
     if (!r.ok) return toLogin(r.error === "deactivated" ? t("deactivated") : t("expired"));
-    S.data = r; S.lastAt = Date.now(); if (!S.fuelBusy) S.fuelNeed = !!r.fuelNeed; ping(); androidSync(); alertNew(r.m);
+    S.data = r; S.lastAt = Date.now(); S.working = r.working !== false; if (!S.fuelBusy) S.fuelNeed = !!r.fuelNeed; ping(); androidSync(); alertNew(r.m);
   } catch { if (!S.data) toast(t("offline")); }
   S.refreshing = false; render();
 }
@@ -1181,6 +1181,7 @@ document.addEventListener("input", e => {
 document.addEventListener("click", async e => {
   const el = e.target.closest("button,[data-k],[data-fneed]"); if (!el) return;
   if (el.dataset.fneed !== undefined) {
+    if (S.working === false) return toast("আপনি এখন কাজ করছেন না — পেট্রোল অনুরোধ বন্ধ");
     const prev = !!S.fuelNeed; S.fuelNeed = !prev; S.fuelBusy = true; render();
     try { const r = await rpc("driver_fuel_need", { p_token: S.token, p_on: S.fuelNeed }); if (!r.ok) { S.fuelNeed = prev; toast(t("offline")); } else toast(t(S.fuelNeed ? "fneed_on" : "fneed_off")); } catch { S.fuelNeed = prev; toast(t("offline")); }
     S.fuelBusy = false; return render();

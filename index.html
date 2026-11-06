@@ -783,7 +783,7 @@ function vEmployees(){
     (!state.qCity || (e.city || "") === state.qCity) &&
     (!state.qPlat || (e.platform || "") === state.qPlat) &&
     (!state.qPin || !e.pinCheck) &&
-    (!state.qOn || isOnline(id)) &&
+    (!state.qOn || isOnline(id)) && (!state.qWork || (state.qWork === "1") === (e.isActive !== false)) &&
     (!q || [e.fullName,e.fullNameAr,e.residentId,e.jahezId,e.mobile,e.plate,e.card,e.cardSerial,e.city,e.vehicleName,e.vehicleModel,e.platform].some(v => String(v??"").toLowerCase().includes(q)))
   ).sort((a,b) => (a[1].status==="PENDING"?-1:0)-(b[1].status==="PENDING"?-1:0) || String(a[1].fullName).localeCompare(String(b[1].fullName)));
   const cityN = c => all.filter(([,e]) => (e.city || "") === c).length;
@@ -792,7 +792,7 @@ function vEmployees(){
   const act = all.filter(([,e]) => e.status === "ACTIVE"), noPin = act.filter(([,e]) => !e.pinCheck).length;
   const chip = (label, n, key, val) => `<button class="chip ${state[key] === val ? "on" : ""}" data-act="emp-chip" data-k="${key}" data-v="${esc(val)}"><b>${n}</b> ${label}</button>`;
   const row = ([id, e]) => `<tr class="${e.status === "INACTIVE" ? "dim" : ""}">
-      <td style="min-width:220px"><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 40)}<div style="min-width:0"><div class="name">${esc(e.fullName)}${state.fuelneed[id]?.on ? ` <span class="pill p-warn nodot" title="${t("fn_hint")}">⛽ ${t("fn_title")}</span>` : ""}</div>
+      <td style="min-width:220px"><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 40)}<div style="min-width:0"><div class="name"><button class="rk-sw ${e.isActive !== false ? "on" : ""}" role="switch" aria-checked="${e.isActive !== false}" data-act="emp-work" data-id="${id}" data-needs-write><i></i><span>${e.isActive !== false ? "কাজ করছে" : "কাজ করছে না"}</span></button> ${esc(e.fullName)}${state.fuelneed[id]?.on ? ` <span class="pill p-warn nodot" title="${t("fn_hint")}">⛽ ${t("fn_title")}</span>` : ""}</div>
         <div class="sub" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${e.status === "ACTIVE" ? `<button class="rk-sw ${e.inPayroll !== false ? "on" : ""}" role="switch" aria-checked="${e.inPayroll !== false}" data-act="emp-pay" data-id="${id}" data-needs-write title="${t(e.inPayroll !== false ? "emp_pay_on_t" : "emp_pay_off_t")}"><i></i><span>${t("emp_pay")}</span></button>` : ""}${platPill(e.platform)}${e.delegateStatus ? `<span class="pill ${e.delegateStatus === "Disabled" ? "p-bad" : "p-ok"}">${t("ds_" + e.delegateStatus)}</span>` : ""}${e.fullNameAr ? `<span dir="rtl">${esc(e.fullNameAr)}</span>` : ""}</div></div></div></td>
       <td class="mono nowrap">${esc(e.residentId)}${e.jahezId ? `<div class="sub" title="${t("jahezId")}">K: ${esc(e.jahezId)}</div>` : ""}</td>
       <td class="nowrap mono">${e.mobile ? `<a class="tel" href="tel:${esc(e.mobile)}">${esc(e.mobile)}</a>` : `<span class="sub">${t("none")}</span>`}</td>
@@ -812,6 +812,8 @@ function vEmployees(){
   <div class="head"><div><h1>${t("nav_employees")}</h1><p>${all.length} · ${act.length} ${t("ACTIVE")}</p></div>
     <div class="tools"><button class="btn ghost" data-act="notice-new" data-needs-write>📣 ${t("nt_send")}</button><button class="btn" data-act="emp-new" data-needs-write>+ ${t("addEmp")}</button></div></div>
   ${(()=>{const req=all.filter(([id,e])=>(state.pinreq[id]?.at||0)>(e.pinResetAt||0));return req.length?`<div class="note warn"><b>${t("pin_req")}:</b> ${req.map(([id,e])=>`<button class="btn ghost sm" data-act="emp-pin" data-id="${id}" data-needs-write style="margin:4px 4px 0 0">${esc(e.fullName)} · ${t("pin_change")}</button>`).join("")}</div>`:""})()}
+  <div class="chips"><b>কাজ করছে: ${act.filter(([, e]) => e.isActive !== false).length} | কাজ করছে না: ${act.filter(([, e]) => e.isActive === false).length}</b>
+    ${[["", "সব"], ["1", "কাজ করছে"], ["0", "কাজ করছে না"]].map(([v, l]) => `<button class="chip ${(state.qWork || "") === v ? "on" : ""}" data-act="emp-chip" data-k="qWork" data-v="${v}">${l}</button>`).join("")}</div>
   <div class="chips">
     ${chip(t("all"), all.length, "qCity", "")}
     ${cities.filter(Boolean).map(c => chip(esc(c), all.filter(([,e]) => e.city === c).length, "qCity", c)).join("")}
@@ -2598,6 +2600,7 @@ document.addEventListener("click", async e => {
     }
 
     if (act === "emp-rank") { const e0 = state.emp[id] || {}, cur = ((e0.payType === "FLAT" ? e0.payTypePrev : e0.payType) || "TARGET") === "TARGET"; await db.doc("employees/" + id).update({ payType: cur ? "PER_ORDER" : "TARGET", updatedAt: Date.now() }); toast(t(cur ? "rk_set_off" : "rk_set_on", { n: state.emp[id]?.fullName ?? "" })); return; }
+    if (act === "emp-work") { await db.doc("employees/" + id).update({ isActive: state.emp[id]?.isActive === false, updatedAt: Date.now() }); return; }
     if (act === "emp-pay") { const e0 = state.emp[id] || {}; await db.doc("employees/" + id).update({ inPayroll: e0.inPayroll === false, updatedAt: Date.now() }); return; }
     if (act === "fneed-done") { await db.doc("fuelneed/" + id).set({ on: false, at: Date.now() }); return; }
     if (act === "tbl-scroll") { const sc = document.querySelector(".panel .scroll"); if (sc) sc.scrollBy({ left: (+b.dataset.dir) * Math.max(240, sc.clientWidth * 0.7), behavior: "smooth" }); return; }
