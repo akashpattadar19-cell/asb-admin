@@ -629,7 +629,7 @@ function optionTiles(m){
 }
 function vOrddPage(m){
   const od = m.ordd || {}, r = od.row || {}, has = r && Object.keys(r).length;
-  const pc = v => v == null ? "—" : fmt(v * 100) + "%";
+  const pc = v => v == null ? "—" : fmt(v) + "%";
   const good = has ? [[t("od_accepted"), fmt0(r.b)], [t("od_ontime"), pc(r.k)], [t("od_completion"), pc(r.j)], [t("od_avgtime"), r.m != null ? fmt(r.m) + "m" : "—"], [t("od_large_ontime"), pc(r.l)]] : [];
   const bad = has ? [["od_rejected", "f", "int"], ["od_rej_courier", "g", "int"], ["od_rej_auto", "h", "int"], ["od_cancel", "i", "pct"], ["od_overdue", "o", "int"], ["od_severe", "p", "int"]].map(([lbl, k, ty]) => ({ lbl: t(lbl), warn: (+r[k] || 0) > 0, txt: ty === "pct" ? pc(r[k]) : fmt0(r[k]) })) : [];
   return `<div class="subhead"><button class="back" data-subback>‹ ${t("back")}</button><h2>${t("od_tile")}</h2></div>` +
@@ -656,7 +656,7 @@ function vHistoryPage(m){
       <span class="tile-go">›</span></button>`; }).join("") : `<section class="card"><div class="empty">${t("hist_none")}</div></section>`);
 }
 function histDetail(a){
-  const r = a.row || {}, pc = v => v == null ? "—" : fmt(v * 100) + "%", od = r.od || null, hasOd = od && Object.keys(od).length;
+  const r = a.row || {}, pc = v => v == null ? "—" : fmt(v) + "%", od = r.od || null, hasOd = od && Object.keys(od).length;
   const good = hasOd ? [[t("od_accepted"), fmt0(od.b)], [t("od_ontime"), pc(od.k)], [t("od_completion"), pc(od.j)], [t("od_avgtime"), od.m != null ? fmt(od.m) + "m" : "—"], [t("od_large_ontime"), pc(od.l)]] : [];
   const bad = hasOd ? [["od_rejected", "f", "int"], ["od_rej_courier", "g", "int"], ["od_rej_auto", "h", "int"], ["od_cancel", "i", "pct"], ["od_overdue", "o", "int"], ["od_severe", "p", "int"]].map(([lbl, k, ty]) => ({ lbl: t(lbl), warn: (+od[k] || 0) > 0, txt: ty === "pct" ? pc(od[k]) : fmt0(od[k]) })) : [];
   return `<div class="subhead"><button class="back" data-histback>‹ ${t("back")}</button><h2>${esc(a.label || a.month)}</h2></div>`
