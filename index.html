@@ -3182,9 +3182,9 @@ document.addEventListener("click", async e => {
       return;
     }
     if (act === "tg-save") {
-      const token = ($("#tgToken").value || "").trim(), chat = ($("#tgChat").value || "").trim(), on = $("#tgOn").checked;
+      const token = ($("#tgToken").value || "").trim(), on = $("#tgOn").checked; let chat = ($("#tgChat").value || "").trim(); if (/^100\d{10}$/.test(chat)) chat = "-" + chat;
       if (on && (!/^\d+:[\w-]{20,}$/.test(token) || !/^-?\d+$/.test(chat))) { toast(t("required")); return; }
-      const achat = ($("#tgaChat")?.value || "").trim();
+      let achat = ($("#tgaChat")?.value || "").trim(); if (/^100\d{10}$/.test(achat)) achat = "-" + achat;   // group IDs start with -100
       if (achat && !/^-?\d+$/.test(achat)) { toast(t("required")); return; }
       await db.doc("config/telegram").set({ token, chat, on, updatedAt: Date.now() });
       await db.doc("config/tgalerts").set({ chat: achat, updatedAt: Date.now() }); toast(t("adjSaved")); return;
