@@ -495,6 +495,26 @@ dialog{border-radius:16px;box-shadow:0 20px 60px rgba(20,24,50,.25)}
 .km b span.dec,.kpi b span.dec,.dec{display:inline!important;margin:0!important;font-size:inherit!important;color:var(--muted);opacity:.65;text-transform:none;letter-spacing:0}
 .kpi b .dec,.km b .dec{font-weight:400}
 @media (max-width:860px){.kbox{flex-wrap:wrap}.km{flex:1 1 130px}.km b{font-size:22px}.rail{width:auto}.nav-ic{width:26px;height:26px}}
+
+/* ===== Theme v4 — tighter layout, bigger nav icons ===== */
+.dpair{align-items:stretch;gap:16px;margin:4px 0 16px}
+.dcol{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px 18px 18px;box-shadow:0 1px 2px rgba(20,24,50,.03)}
+.dcol .dash-sec{margin:0 0 12px;flex-wrap:wrap}
+.dcol .dash-sec a{margin-inline-start:auto}
+.dcol .kpis{margin-bottom:12px}
+.dcol .kc .kpi{border-radius:12px;box-shadow:none;background:var(--sunk)}
+.dcol .dsub-h{margin:14px 0 6px}
+.dcol>.panel{border:0;box-shadow:none}
+.grid2{align-items:start}
+.dcol .dash-rows .dr{padding:8px 0}
+.dash-sec{margin:16px 0 10px}
+.nav a{padding:6px 10px;gap:12px;font-size:14.5px}
+.nav-ic{width:36px;height:36px}
+.nav-ic svg{width:21px;height:21px;stroke-width:1.6}
+.nav a.nav-sub .nav-ic{width:30px;height:30px}.nav a.nav-sub .nav-ic svg{width:17px;height:17px}
+.tb-ib{width:44px;height:44px}.tb-ib svg,.tb-search svg,.tb-user svg{width:21px;height:21px}
+.tb-av{width:42px;height:42px}
+@media (max-width:860px){.nav-ic{width:30px;height:30px}.nav-ic svg{width:18px;height:18px}.dcol{padding:14px}}
 </style>
 <script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 
@@ -976,6 +996,8 @@ function vDashboard(){
   <h2 class="dash-sec">📈 ${t("dash_perf")} ${pd ? `<span class="sub" style="font-weight:400">· ${esc(dmy(pd))}${pyd ? ` · ${t("perf_vs")} ${esc(dmy(pyd))}` : ""}</span>` : ""}<a class="btn ghost sm" href="#perf">${t("nav_perf")}</a></h2>
   ${pl.length ? `<div class="grade-sum" style="margin-bottom:8px">${GRADES.slice(0, 4).map(g => `<span class="gs"><span class="grade ${gradeCls(g)}">${g}</span><b>${pl.filter(x => x.r.g === g).length}</b></span>`).join("")}</div>
   <div class="kpis kc">${PERF_F.filter(([k]) => k !== "g").map(([k, l]) => { const v = pavg(k, "r"); return v == null ? "" : `<div class="kpi"><span>${t(l)}</span><b>${fmt(v)}%</b><small>${t("dash_avg_s")}</small>${pdelta(k)}</div>`; }).join("")}</div>
+  <div class="dsub-h">⭐ ${t("dash_top_perf")}</div>${perfList(pBest)}
+  ${pWorst.length ? `<div class="dsub-h">🔻 ${t("dash_low_perf")}</div>${perfList(pWorst)}` : ""}
 ` : `<section class="panel"><div class="empty"><b>${t("dash_no_perf")}</b><a class="btn sm" href="#perf" style="margin-top:8px">${t("perf_import")}</a></div></section>`}
   </div><div class="dcol">
   <h2 class="dash-sec">📦 ${t("dash_exp")} ${od ? `<span class="sub" style="font-weight:400">· ${esc(dmy(od.from))} – ${esc(dmy(od.to))}</span>` : ""}<a class="btn ghost sm" href="#orddetail">${t("nav_orddetail")}</a></h2>
@@ -988,10 +1010,6 @@ function vDashboard(){
 ` : `<section class="panel"><div class="empty"><b>${t("dash_no_exp")}</b><a class="btn sm" href="#orddetail" style="margin-top:8px">${t("ord_import")}</a></div></section>`}
   </div></div>
   ${fuelNeedPanel()}
-  ${pl.length ? `  <div class="grid2">
-    <section class="panel"><h2>⭐ ${t("dash_top_perf")}</h2>${perfList(pBest)}</section>
-    <section class="panel"><h2>🔻 ${t("dash_low_perf")}</h2>${perfList(pWorst)}</section>
-  </div>` : ""}
   <div class="grid2">
     <section class="panel"><h2>${t("leaderboard_m")}<a class="btn ghost sm" href="#target">${t("nav_target")}</a></h2>
       ${rows.length ? `<div class="scroll"><table><thead><tr><th>${t("rank")}</th><th>${t("name")}</th><th class="r">${t("orders")}</th></tr></thead><tbody>
