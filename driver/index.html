@@ -636,6 +636,11 @@ const seenAt = () => +store.get("asb-seen-notice") || 0;
 const unreadN = m => (m.notices || []).filter(n => +n.at > seenAt()).length;
 // what has already appeared on the home screen — once seen there it won't float again (the 🔔 list still keeps it)
 const homeSeenAt = () => +store.get("asb-home-seen") || 0;
+/* a new notice stays on the home screen until the driver actually touches the screen; only then (after a few seconds) it counts as seen */
+function armHomeSeen(){
+  if (S._arm || !(S.data.m.notices || []).some(n => +n.at > homeSeenAt())) return; S._arm = true;
+  document.addEventListener("pointerdown", () => { setTimeout(() => { S._arm = false; if (S.data) { markHomeSeen(S.data.m); render(); } }, 4000); }, { once: true });
+}
 function markHomeSeen(m){ const top = Math.max(0, ...(m.notices || []).map(n => +n.at || 0)); if (top > homeSeenAt()) { try { store.set("asb-home-seen", String(top)); } catch {} } }
 function noticeText(n){
   const v = { m: esc(n.month || ""), a: n.amount != null ? fmt(n.amount) : "", d: n.day ? ddate(n.day) : "", s: n.status ? t("rp_" + n.status) : "" };
@@ -828,7 +833,7 @@ function vHome(m){
   const target = +mm.target || 0, pct = target ? Math.min(100, mm.o / target * 100) : 0, isRank = p.payType !== "PER_ORDER";
   const upd = mm.at ? new Date(mm.at).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { timeZone: "Asia/Riyadh", day: "numeric", month: "short" }) : "";
   const banners = headlineBanner(m) + homeNotices(m);   // build with the current "seen" mark…
-  setTimeout(() => markHomeSeen(m), 1500);              // …then, after it has been on screen a moment, mark it seen so it won't float again
+  armHomeSeen();              // …then, after it has been on screen a moment, mark it seen so it won't float again
   return `${banners}
   <section class="card hero">
     <div class="hero-grid">${ava(p.photo, p.fullName, 74, "border-radius:22px;border:3px solid var(--gold)")}
@@ -1099,6 +1104,7 @@ function toLogin(msg){ try { window.ASBAndroid?.clearSession?.(); } catch {} S.t
 /* in-app alert: a short double beep + vibration when the office sends something new while the app is open */
 let lastNoticeAt = null, actx = null;
 function beep(){
+  try { if (window.ASBAndroid && window.ASBAndroid.beep) { window.ASBAndroid.beep(); return; } } catch {}
   try { if (navigator.vibrate) navigator.vibrate([180, 90, 180]); } catch {}
   try {
     actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === "suspended") actx.resume();
