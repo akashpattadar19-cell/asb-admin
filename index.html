@@ -439,7 +439,7 @@ tr.clk:hover{background:var(--sunk)}
 .topbar .lang button{flex:none;padding:5px 11px;font-size:12.5px;border-radius:8px}
 .panel>.dash-rows{padding:2px 18px 8px}
 .panel>.dash-rows .dr:first-child{padding-top:10px}
-.dmpop button.dm-m.cur{background:var(--brand);color:#fff}
+.dmpop button.dm-m.cur{background:var(--brand);color:#fff}.dmpop button.dm-m.has:not(.cur){box-shadow:inset 0 -3px 0 var(--gold,#F5A623)}.dmpop button.dm-m:disabled{opacity:.35}.dmbar.mp{display:inline-flex;vertical-align:middle}
 dialog{border-radius:16px;box-shadow:0 20px 60px rgba(20,24,50,.25)}
 .dlg-h h3{font:600 18px var(--f-body)}
 .toast{border-radius:12px}
@@ -1034,6 +1034,25 @@ function dmPicker(sel){
   const pop = state.dashCal ? `<div class="dmpop"><div class="dm-y"><button class="btn ghost sm" data-act="dm-year" data-d="-1">‹</button><span>${yr}</span><button class="btn ghost sm" data-act="dm-year" data-d="1">›</button></div><div class="dm-g">${Array.from({ length: 12 }, (_, k) => { const key = yr + "-" + String(k + 1).padStart(2, "0"); const has = keys.includes(key); return `<button class="dm-m ${key === sel ? "cur" : ""}" data-act="dm-pick" data-m="${key}" ${has ? "" : "disabled"}>${new Date(Date.UTC(yr, k, 1)).toLocaleDateString(lang === "bn" ? "bn-BD" : lang === "ar" ? "ar-SA" : "en-GB", { month: "short", timeZone: "UTC" })}</button>`; }).join("")}</div></div>` : "";
   return `<div class="dmbar"><button class="btn ghost sm" data-act="dm-step" data-d="1" ${i >= keys.length - 1 ? "disabled" : ""}>‹</button><span class="dm-lbl">${esc(monthLabel(sel))}</span><button class="btn ghost sm" data-act="dm-step" data-d="-1" ${i <= 0 ? "disabled" : ""}>›</button><button class="btn sm" data-act="dm-cal">📅 ${t("dm_cal")}</button>${sel !== cur ? `<button class="btn gold sm" data-act="dm-pick" data-m="${cur}">${t("dm_back")}</button>` : ""}${pop}</div>`;
 }
+/* shared month calendar: ‹ Month › 📅 popup. sel "" = all months (when opts.all) */
+Object.assign(I18N.en, { mp_all: "All months" }); Object.assign(I18N.bn, { mp_all: "সব মাস" }); Object.assign(I18N.ar, { mp_all: "كل الشهور" });
+const MP_HOOK = { opsMonth: 1, payMonth: 1, profMonth: 1, fuelMonth: 1 };
+const mShift = (m, d) => { const [y, mo] = m.split("-").map(Number), x = new Date(Date.UTC(y, mo - 1 + d, 1)); return x.getUTCFullYear() + "-" + String(x.getUTCMonth() + 1).padStart(2, "0"); };
+function mpick(id, sel, opts = {}){
+  const cur = monthKey(), open = state.mpOpen === id, yr = state.mpYear || +(sel || cur).slice(0, 4), known = new Set(dmKeys()), top = mShift(cur, 1);
+  const loc = lang === "bn" ? "bn-BD" : lang === "ar" ? "ar-SA" : "en-GB";
+  const pop = open ? `<div class="dmpop"><div class="dm-y"><button class="btn ghost sm" data-act="mp-year" data-d="-1">‹</button><span>${yr}</span><button class="btn ghost sm" data-act="mp-year" data-d="1">›</button></div><div class="dm-g">${Array.from({ length: 12 }, (_, k) => { const key = yr + "-" + String(k + 1).padStart(2, "0"); return `<button class="dm-m ${key === sel ? "cur" : ""} ${known.has(key) ? "has" : ""}" data-act="mp-pick" data-id="${id}" data-m="${key}" ${key > top ? "disabled" : ""}>${new Date(Date.UTC(yr, k, 1)).toLocaleDateString(loc, { month: "short", timeZone: "UTC" })}</button>`; }).join("")}</div></div>` : "";
+  const base = sel || cur;
+  return `<div class="dmbar mp" style="margin:0"><button class="btn ghost sm" data-act="mp-step" data-id="${id}" data-m="${mShift(base, -1)}">‹</button><button class="btn sm dm-lbl-b" data-act="mp-cal" data-id="${id}">📅 ${sel ? esc(monthLabel(sel)) : t("mp_all")}</button><button class="btn ghost sm" data-act="mp-step" data-id="${id}" data-m="${mShift(base, 1)}" ${base >= top ? "disabled" : ""}>›</button>${opts.all && sel ? `<button class="btn ghost sm" data-act="mp-pick" data-id="${id}" data-m="">${t("mp_all")}</button>` : ""}${!opts.all && sel !== cur ? `<button class="btn gold sm" data-act="mp-pick" data-id="${id}" data-m="${cur}">${t("dm_back")}</button>` : ""}${pop}</div>`;
+}
+function mpApply(id, m){
+  state.mpOpen = ""; state.mpYear = 0;
+  if (MP_HOOK[id]) { const i = document.createElement("input"); i.id = id; i.value = m; i.hidden = true; document.body.append(i); i.dispatchEvent(new Event("change", { bubbles: true })); i.remove(); return; }
+  state[id] = m;
+  if (id === "actMonth") { ACT.loaded = false; ACT.list = []; }
+  if (id === "rpMonth") { RPT.loaded = false; RPT.list = []; }
+  render();
+}
 function dashPast(m){
   const arch = state.monthly?.[m], target = +state.rules.targetOrders || 450;
   let rows;
@@ -1383,7 +1402,7 @@ function vOperations(){
   return `
   <div class="head"><div><h1>${t("nav_operations")}</h1><p>${t("opsHint")}</p></div>
     <div class="tools">
-      <input class="input" type="month" id="opsMonth" value="${m}" style="width:auto">
+      ${mpick("opsMonth", m)}
       <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${PAY_TYPES.map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
       <button class="btn ghost" data-act="csv" data-needs-write>${t("importCsv")}</button>
       <button class="btn" data-act="save-day" data-needs-write>${t("saveDay")}</button>
@@ -1596,7 +1615,7 @@ function vProfit(){
   const tProfit = r2(tInv - tSal), margin = tInv ? (tProfit / tInv * 100) : 0;
   return `
   <div class="head"><div><h1>💹 ${t("nav_profit")}</h1><p>${t("pr_hint")}</p></div>
-    <div class="tools"><input class="input" type="month" id="profMonth" value="${m}" style="width:auto">
+    <div class="tools">${mpick("profMonth", m)}
       <button class="btn ghost" data-act="prof-import" data-needs-write>${t("pr_import")}</button>
       <button class="btn ghost" data-act="prof-csv">⬇ CSV</button>
       <button class="btn" data-act="prof-save" data-needs-write>${t("save")}</button></div></div>
@@ -1712,7 +1731,7 @@ async function loadActivity(){
   if (ACT.loading) return; ACT.loading = true;
   try {
     const [l, q] = await Promise.all([
-      sb.from("audit_log").select("*").order("at", { ascending: false }).limit(400),
+      (() => { let r = sb.from("audit_log").select("*").order("at", { ascending: false }); const am = state.actMonth; r = am ? r.gte("at", am + "-01T00:00:00Z").lt("at", mShift(am, 1) + "-01T00:00:00Z").limit(1500) : r.limit(400); return r; })(),
       sb.from("audit_questions").select("*").order("asked_at", { ascending: false }).limit(300)]);
     ACT.list = l.data ?? []; ACT.qs = q.data ?? []; ACT.loaded = true;
     ACT.openQ = ACT.qs.filter(x => !x.answer).length;
@@ -1736,7 +1755,7 @@ const RPT = { list: [], loaded: false, loading: false, newN: 0 };
 const RP_CATS = ["SALARY", "DUES", "PETROL", "VEHICLE", "ORDERS", "APP", "OTHER"];
 async function loadReports(){
   if (RPT.loading) return; RPT.loading = true;
-  try { const { data } = await sb.from("reports").select("*").order("at", { ascending: false }).limit(500); RPT.list = data ?? []; RPT.loaded = true; RPT.newN = RPT.list.filter(x => x.status === "NEW").length; }
+  try { const rm = state.rpMonth; let rq = sb.from("reports").select("*").order("at", { ascending: false }); rq = rm ? rq.gte("at", rm + "-01T00:00:00Z").lt("at", mShift(rm, 1) + "-01T00:00:00Z").limit(1500) : rq.limit(500); const { data } = await rq; RPT.list = data ?? []; RPT.loaded = true; if (!rm) RPT.newN = RPT.list.filter(x => x.status === "NEW").length; }
   finally { RPT.loading = false; }
   renderShellBadge(); if (view() === "reports") render();
 }
@@ -1752,7 +1771,7 @@ function vReports(){
     <div class="tools"><button class="btn ghost" data-act="rp-reload">↻ ${t("act_reload")}</button></div></div>
   <div class="chips">${[["", t("tg_all_s"), RPT.list.length], ["NEW", t("rp_NEW_a"), n("NEW")], ["PENDING", t("rp_PENDING"), n("PENDING")], ["APPROVED", t("rp_APPROVED"), n("APPROVED")], ["REJECTED", t("rp_REJECTED"), n("REJECTED")]]
     .map(([k, l, c]) => `<button class="chip ${fs === k ? "on" : ""}" data-act="rp-filter" data-v="${k}"><b>${c}</b> ${l}</button>`).join("")}</div>
-  <div class="filters"><input class="input" id="rpQ" placeholder="${t("search")}" value="${esc(state.rpQ || "")}"></div>
+  <div class="filters">${mpick("rpMonth", state.rpMonth || "", { all: true })}<input class="input" id="rpQ" placeholder="${t("search")}" value="${esc(state.rpQ || "")}"></div>
   ${list.length ? `<div class="rp-grid">${list.map(x => { const e = state.emp[x.emp_id] || {}; return `<section class="panel rp-card ${x.status === "NEW" ? "is-new" : ""}">
     <div class="rp-top"><div style="display:flex;gap:10px;align-items:center;min-width:0">${avatarHtml(e.photoUrl, e.fullName, 36)}<div style="min-width:0"><div class="name">${esc(e.fullName || x.emp_id)}</div><div class="sub">${esc(e.residentId || "")} · ${when(x.at)}</div></div></div>${rpPill(x.status)}</div>
     <div class="rp-cat">${t("rpc_" + (x.category || "OTHER"))}</div>
@@ -1779,7 +1798,7 @@ function vActivity(){
   return `
   <div class="head"><div><h1>${t("nav_activity")}</h1><p>${t("act_hint")}</p></div>
     <div class="tools">${sup && list.length ? `<button class="btn ghost danger-t" data-act="act-del-shown">${t("act_del_shown", { n: Math.min(300, list.length) })}</button>` : ""}<button class="btn ghost" data-act="act-reload">↻ ${t("act_reload")}</button></div></div>
-  <div class="filters">
+  <div class="filters">${mpick("actMonth", state.actMonth || "", { all: true })}
     <input class="input" id="aEmp" placeholder="${t("act_search")}" value="${esc(state.aEmp || "")}">
     <select class="input" id="aAdmin"><option value="">${t("act_all_admins")}</option>${actors.map(a => `<option value="${esc(a)}" ${fa === a ? "selected" : ""}>${esc(adminName(a))}</option>`).join("")}</select>
     <select class="input" id="aColl"><option value="">${t("act_all_kinds")}</option>${colls.map(c => `<option value="${c}" ${fc === c ? "selected" : ""}>${t(c)}</option>`).join("")}</select>
@@ -1957,8 +1976,8 @@ function parseOrderDetails(text){
 }
 function vOrdd(){
   const draft = state.orddDraft?.rows ? state.orddDraft : null;
-  const keys = Object.keys(state.ordd).sort((a, b) => b.localeCompare(a));
-  const sel = draft ? draft.key : ((state.orddKey && state.ordd[state.orddKey]) ? state.orddKey : (keys[0] || ""));
+  const om = state.orddMonth || "", keys = Object.keys(state.ordd).sort((a, b) => b.localeCompare(a)).filter(k => !om || (String(state.ordd[k]?.from || "").slice(0, 7) <= om && String(state.ordd[k]?.to || "").slice(0, 7) >= om));
+  const sel = draft ? draft.key : ((state.orddKey && keys.includes(state.orddKey)) ? state.orddKey : (keys[0] || ""));
   const doc = draft ? { from: draft.from, to: draft.to, rows: draft.rows } : state.ordd[sel], rowsMap = doc?.rows || {};
   const byJ = {}; for (const [id, e] of Object.entries(state.emp)) if (e.jahezId) byJ[String(e.jahezId)] = id;
   const q = (state.oq || "").trim().toLowerCase();
@@ -1971,7 +1990,7 @@ function vOrdd(){
   const unmatched = entries.filter(x => !x.eid).length;
   return `
   <div class="head"><div><h1>📋 ${t("nav_orddetail")}</h1><p>${t("ord_hint")}${doc ? ` · <b>${esc(dmy(doc.from))} – ${esc(dmy(doc.to))}</b>` : ""}</p></div>
-    <div class="tools"><button class="btn" data-act="ordd-import" data-needs-write>${t("ord_import")}</button></div></div>
+    <div class="tools">${mpick("orddMonth", om, { all: true })}<button class="btn" data-act="ordd-import" data-needs-write>${t("ord_import")}</button></div></div>
   ${draft ? `<div class="draftbar"><div class="db-txt"><b>🧪 ${t("test_mode")}</b><span>${t("ord_draft_hint", { n: draft.n })}</span></div>
     <div class="db-act"><button class="btn danger" data-act="ordd-reset" data-needs-write>↺ ${t("all_reset")}</button><button class="btn ok" data-act="ordd-submit" data-needs-write>✓ ${t("submit")}</button></div></div>` : ""}
   ${!draft && keys.length ? `<div class="chips"><span class="sub" style="margin-inline-end:4px">${t("fu_months")}:</span>${keys.map(k => { const d = state.ordd[k]; return `<button class="chip ${k === sel ? "on" : ""}" data-act="ordd-period" data-v="${esc(k)}">${esc(dmy(d.from))} – ${esc(dmy(d.to))}</button>`; }).join("")}</div>` : ""}
@@ -2035,14 +2054,15 @@ const inetList = () => Object.entries(state.internet).map(([id, x]) => ({ ...x, 
   .filter(x => state.emp[x.employeeId]?.status === "ACTIVE");
 function vInternet(){
   const q = (state.iq || "").trim().toLowerCase();
-  const list = inetList().filter(x => !q || String(state.emp[x.employeeId]?.fullName || "").toLowerCase().includes(q))
+  const im = state.inetMonth || "";
+  const list = inetList().filter(x => (!im || String(x.lastPaid || "").slice(0, 7) === im || (x.history || []).some(h => String(h.date || "").slice(0, 7) === im)) && (!q || String(state.emp[x.employeeId]?.fullName || "").toLowerCase().includes(q)))
     .sort((a, b) => { const r = { due: 0, soon: 1, new: 2, ok: 3 }; const sa = inetStatus(a), sb = inetStatus(b); return (r[sa] - r[sb]) || (daysUntil(inetNext(a)) ?? 1e9) - (daysUntil(inetNext(b)) ?? 1e9); });
   const dueN = list.filter(x => inetStatus(x) === "due").length, soonN = list.filter(x => inetStatus(x) === "soon").length;
   const monthly = list.reduce((s, x) => s + (+x.amount || 0), 0);
   const stPill = st => st === "due" ? `<span class="pill p-bad nodot">${t("inet_due")}</span>` : st === "soon" ? `<span class="pill p-warn nodot">${t("inet_soon")}</span>` : st === "new" ? `<span class="pill p-mute nodot">${t("inet_new")}</span>` : `<span class="pill p-good nodot">${t("inet_ok")}</span>`;
   return `
   <div class="head"><div><h1>🌐 ${t("nav_internet")}</h1><p>${t("inet_hint")}</p></div>
-    <div class="tools"><button class="btn" data-act="inet-new" data-needs-write>+ ${t("inet_add")}</button></div></div>
+    <div class="tools">${mpick("inetMonth", im, { all: true })}<button class="btn" data-act="inet-new" data-needs-write>+ ${t("inet_add")}</button></div></div>
   <div class="kpis">
     <div class="kpi"><span>${t("inet_enrolled")}</span><b>${list.length}</b><small>${t("inet_drivers")}</small></div>
     <div class="kpi ${dueN ? "alert" : ""}"><span>${t("inet_due")}</span><b class="${dueN ? "neg" : ""}">${dueN}</b><small>${t("inet_due_s")}</small></div>
@@ -2288,13 +2308,14 @@ function srDialog(vid){
 /* ───────── Company expenses: the company's own spending — admin only, never shown to drivers ───────── */
 function vExpenses(){
   const q = (state.xq || "").trim().toLowerCase();
-  const list = Object.entries(state.expenses).map(([id, x]) => ({ ...x, id })).filter(x => !q || [x.place, x.reason].some(v => String(v || "").toLowerCase().includes(q)))
+  const xm = state.expMonth || "";
+  const list = Object.entries(state.expenses).map(([id, x]) => ({ ...x, id })).filter(x => (!xm || String(x.date || "").slice(0, 7) === xm) && (!q || [x.place, x.reason].some(v => String(v || "").toLowerCase().includes(q))))
     .sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || (b.createdAt || 0) - (a.createdAt || 0));
   const m = todayKey().slice(0, 7), total = list.reduce((s, x) => s + (+x.amount || 0), 0);
   const thisMonth = list.filter(x => String(x.date || "").slice(0, 7) === m).reduce((s, x) => s + (+x.amount || 0), 0);
   return `
   <div class="head"><div><h1>💸 ${t("nav_expenses")}</h1><p>${t("exp_hint")}</p></div>
-    <div class="tools"><button class="btn ghost" data-act="exp-csv">⬇ CSV</button><button class="btn" data-act="exp-new" data-needs-write>+ ${t("exp_add")}</button></div></div>
+    <div class="tools">${mpick("expMonth", xm, { all: true })}<button class="btn ghost" data-act="exp-csv">⬇ CSV</button><button class="btn" data-act="exp-new" data-needs-write>+ ${t("exp_add")}</button></div></div>
   <div class="kpis">
     <div class="kpi"><span>${t("exp_this_month")}</span><b class="${thisMonth ? "neg" : ""}">${fmt(thisMonth)}</b><small>${t("sar")}</small></div>
     <div class="kpi"><span>${t("exp_total")}</span><b>${fmt(total)}</b><small>${t("sar")} · ${list.length}</small></div>
@@ -2340,7 +2361,7 @@ function vFuel(){
   return `
   <div class="head"><div><h1>${t("nav_fuel")}</h1><p>${t("fu_hint2")}</p></div>
     <div class="tools">
-      <input class="input" type="month" id="fuelMonth" value="${k}" style="width:auto">
+      ${mpick("fuelMonth", k)}
       <button class="btn ghost" data-act="fuel-import" data-needs-write>${t("fu_import")}</button>
       <button class="btn" data-act="fuel-add" data-needs-write>+ ${t("fu_add")}</button>
     </div></div>
@@ -2468,7 +2489,8 @@ function ledgerDialog(){
 }
 function vDues(){
   const q = (state.dq || "").trim().toLowerCase(), ft = state.dType || "", fs = state.dStat || "";
-  const items = allDues().filter(x => (!ft || x.type === ft) && (!fs || dueStatus(x) === fs)
+  const dm = state.duMonth || "", inMonth = x => String(x.date || "").slice(0, 7) === dm || x.startMonth === dm || (x.history || []).some(h => (h.month || String(h.date || "").slice(0, 7)) === dm);
+  const items = allDues().filter(x => (!dm || inMonth(x)) && (!ft || x.type === ft) && (!fs || dueStatus(x) === fs)
     && (!q || [empName(x.employeeId), state.emp[x.employeeId]?.residentId, x.reason].some(v => String(v ?? "").toLowerCase().includes(q))));
   const live = allDues().filter(x => !x.waived);
   const total = live.reduce((s, x) => s + (+x.amount || 0), 0), left = live.reduce((s, x) => s + dueRemaining(x), 0);
@@ -2489,7 +2511,7 @@ function vDues(){
     <div class="kpi"><span>${t("du_recovered")}</span><b class="pos">${fmt(total - left)}</b><small>${t("sar")}</small></div>
     <div class="kpi"><span>${t("du_left")}</span><b class="neg">${fmt(left)}</b><small>${t("sar")}</small></div>
   </div>
-  <div class="filters">
+  <div class="filters">${mpick("duMonth", dm, { all: true })}
     <input class="input" id="dq" placeholder="${t("search")}" value="${esc(state.dq || "")}">
     <select class="input" id="dType"><option value="">${t("du_all_types")}</option>${DUE_TYPES.map(c => `<option value="${c}" ${ft === c ? "selected" : ""}>${t(c)}</option>`).join("")}</select>
     <select class="input" id="dStat"><option value="">${t("du_all_status")}</option>${["open","cleared","waived"].map(c => `<option value="${c}" ${fs === c ? "selected" : ""}>${t("du_st_" + c)}</option>`).join("")}</select>
@@ -2714,8 +2736,8 @@ function perfCell(k, y, v){
 }
 function vPerf(){
   const draft = state.perfDraft?.day ? state.perfDraft : null;
-  const days = perfDays(), arc = days.includes(state.perfArc) ? state.perfArc : "";
-  const td = draft ? draft.day : (arc || days[0] || ""), yd = draft ? (days.filter(d => d < draft.day)[0] || days[0] || "") : (days[days.indexOf(td) + 1] || "");
+  const dAll = perfDays(), pm = state.perfMonth || "", days = pm ? dAll.filter(d => d.startsWith(pm)) : dAll, arc = days.includes(state.perfArc) ? state.perfArc : "";
+  const td = draft ? draft.day : (arc || days[0] || ""), yd = draft ? (dAll.filter(d => d < draft.day)[0] || dAll[0] || "") : (dAll[dAll.indexOf(td) + 1] || "");
   const T = draft ? { ...(state.perf[td]?.rows ?? {}), ...draft.rows } : (state.perf[td]?.rows ?? {}), Y = state.perf[yd]?.rows ?? {};
   const q = state.q.trim().toLowerCase();
   const emps = activeEmps().filter(([id, e]) => (!state.qType || (e.payType || "TARGET") === state.qType) && (!state.qGrade || (T[id]?.g ?? "") === state.qGrade)
@@ -2724,7 +2746,7 @@ function vPerf(){
   const counts = GRADES.map(g => [g, Object.values(T).filter(r => r.g === g).length]);
   return `
   <div class="head"><div><h1>${t("nav_perf")}</h1><p>${t("perf_hint")}</p></div>
-    <div class="tools">
+    <div class="tools">${mpick("perfMonth", pm, { all: true })}
       <button class="btn" data-act="perf-import" data-needs-write>${t("perf_import")}</button>
     </div></div>
   ${draft ? `<div class="draftbar"><div class="db-txt"><b>🧪 ${t("test_mode")}</b><span>${t("perf_draft_hint", { n: draft.n, d: esc(dmy(draft.day)) })}</span></div>
@@ -2903,7 +2925,7 @@ function vPayroll(){
   return `
   <div class="head"><div><h1>${t("nav_payroll")}</h1><p>${published?t("lockedNote"):t("payHint")}</p></div>
     <div class="tools">
-      <input class="input" type="month" id="payMonth" value="${state.payMonth}" style="width:auto">
+      ${mpick("payMonth", state.payMonth)}
       <span class="pill ${published?"p-good":"p-warn"}">${published?t("published"):t("draft")}</span>
       <button class="btn ghost" data-act="pay-export">⬇ ${t("exportCsv")}</button>
       <button class="btn ghost" data-act="pay-import" data-needs-write>⬆ ${t("pay_import")}</button>
@@ -3277,6 +3299,9 @@ document.addEventListener("click", async e => {
       } catch { toast(t("dbErr")); }
       return;
     }
+    if (act === "mp-cal") { state.mpOpen = state.mpOpen === b.dataset.id ? "" : b.dataset.id; state.mpYear = 0; render(); return; }
+    if (act === "mp-year") { state.mpYear = (state.mpYear || +monthKey().slice(0, 4)) + (+b.dataset.d); render(); return; }
+    if (act === "mp-pick" || act === "mp-step") { mpApply(b.dataset.id, b.dataset.m); return; }
     if (act === "dm-cal") { state.dashCal = !state.dashCal; state.dashY = 0; render(); return; }
     if (act === "dm-year") { const cur = state.dashY || +(state.dashM || monthKey()).slice(0, 4); state.dashY = cur + (+b.dataset.d); render(); return; }
     if (act === "dm-pick") { state.dashM = b.dataset.m === monthKey() ? "" : b.dataset.m; state.dashCal = false; state.dashY = 0; render(); return; }
