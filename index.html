@@ -640,6 +640,10 @@ html[data-skin="lav"] .lang button[aria-pressed="true"]{background:#6A3FE0}
 html[data-skin="lav"] .scrollfab button{background:#fff;color:#2A1D5C}
 html[data-skin="lav"] .nav a.nav-driver,html[data-skin="lav"] .nav a.nav-driver *{color:#2A1A00!important}
 html[data-skin="lav"] .nav a[aria-current="page"] .nav-ic,html[data-skin="lav"] .nav a[aria-current="page"] .nav-ic *{color:#6A3FE0!important}
+html[data-skin="lav"]::before,html[data-skin="lav"] .panel::before,html[data-skin="lav"] .kgrp::before,html[data-skin="lav"] .dcol::before{filter:brightness(0) invert(.25) sepia(1) hue-rotate(230deg) saturate(6)}
+html[data-skin="lav"]::before{opacity:.5}
+html[data-skin="lav"] .panel::before,html[data-skin="lav"] .kgrp::before,html[data-skin="lav"] .dcol::before{opacity:.75}
+html[data-skin="lav"] .panel,html[data-skin="lav"] .kgrp,html[data-skin="lav"] .dcol{background:linear-gradient(160deg,rgba(255,255,255,.82),rgba(243,237,255,.82))!important}
 </style>
 <script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 

@@ -479,6 +479,13 @@ html[data-skin="lav"] .tgc-pill textarea{color:#2A1D5C}
 html[data-skin="lav"] .tgc-in{background:linear-gradient(180deg,transparent,rgba(227,214,255,.8))}
 html[data-skin="lav"] .tgc-send{background:linear-gradient(145deg,#B48CFF,#6A3FE0);color:#fff}
 html[data-skin="lav"] .toast{background:#2A1D5C;color:#fff}
+
+.thm-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 10px;border-radius:14px;background:var(--glass);border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--ink)}
+.thm-row>div{display:flex;gap:6px}
+.thm-row button{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:4px 10px;font-size:12px;font-weight:600}
+.thm-row button[aria-pressed="true"]{background:linear-gradient(145deg,#aaf8ff,#32c4ee);color:#04304a;border-color:transparent}
+html[data-skin="lav"] .thm-row button[aria-pressed="true"]{background:linear-gradient(145deg,#B48CFF,#6A3FE0);color:#fff}
+html[data-skin="lav"] body::before{filter:brightness(0) invert(.25) sepia(1) hue-rotate(230deg) saturate(6);opacity:.5}
 </style>
 <script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 </head><body>
@@ -994,6 +1001,12 @@ function headlineBanner(m){
   return `<div class="hl-wrap"><button class="hl" data-sub="notices"><span class="hl-ic">📢</span><span class="hl-txt"><b>${title}</b>${body ? `<small>${body}</small>` : ""}</span></button>
     <button class="hl-x" data-hlx="${esc(String(n.id))}" aria-label="×">✕</button></div>`;
 }
+function themeRow(){
+  const cur = document.documentElement.dataset.skin || "water";
+  const tt = ({en:"Theme",bn:"থিম",ar:"المظهر"})[lang];
+  const nm = { water: ({en:"Water",bn:"ওয়াটার",ar:"مائي"})[lang], lav: ({en:"Lavender",bn:"ল্যাভেন্ডার",ar:"بنفسجي"})[lang] };
+  return `<div class="thm-row"><span>🎨 ${tt}</span><div>${[["water","🌊"],["lav","💜"]].map(([k,i]) => `<button data-skin="${k}" aria-pressed="${cur===k}">${i} ${nm[k]}</button>`).join("")}</div></div>`;
+}
 function vHome(m){
   const p = m.profile, mm = m.month, out = duesOf(m).filter(x => !x.waived).reduce((s, f) => s + (+f.remaining || 0), 0);
   const target = +mm.target || 0, pct = target ? Math.min(100, mm.o / target * 100) : 0, isRank = p.payType !== "PER_ORDER";
@@ -1010,11 +1023,7 @@ function vHome(m){
         <div class="big" style="font-size:44px">${fmt0(mm.o)}</div></div></div>
   </section>
   ${optionTiles(m)}
-  ${(() => { const i = m.internet || {}; if (!i.lastPaid && !(+i.amount > 0)) return ""; const nx = i.lastPaid ? addDaysD(i.lastPaid, 28) : "", dl = nx ? dUntil(nx) : null, over = dl != null && dl <= 0; return `
-  <section class="card inet-card"><div class="row"><h3 style="margin:0">🌐 ${t("inet_m")}</h3>${nx ? `<span class="pill ${over ? "p-bad" : dl <= 5 ? "p-warn" : "p-good"} nodot">${over ? t("inet_over_d", { n: -dl }) : t("inet_left_d", { n: dl })}</span>` : ""}</div>
-    <div class="big" style="font-size:26px;margin-top:6px">${fmt(i.amount || 0)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">${t("sar")}</span></div>
-    <div class="inet-rows"><span><small>${t("inet_last_d")}</small><b>${i.lastPaid ? ddate(i.lastPaid) : "—"}</b></span><span><small>${t("inet_next_d")}</small><b class="${over ? "neg" : ""}">${nx ? ddate(nx) : "—"}</b></span></div>
-  </section>`; })()}
+  ${themeRow()}
   <button class="card fuel-card" data-sub="fuel"><div class="row"><h3 style="margin:0">⛽ ${t("fuel_m")}</h3><span class="tile-go">›</span></div>
     <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:8px;margin-top:6px"><div class="big" style="font-size:28px">${fmt(mm.f)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">${t("sar")}</span></div>
       ${S.fuelRes ? `<span class="sw ${S.fuelRes === "approved" ? "on" : ""}" style="opacity:.85" data-fneed>🔒 ${t(S.fuelRes === "approved" ? "fres_ok" : "fres_na")}</span>` : `<span class="sw ${S.fuelNeed ? "on" : ""}" ${S.working === false ? 'style="opacity:.4"' : ""} role="switch" aria-checked="${!!S.fuelNeed}" data-fneed>${t("fneed")}<i></i></span>`}</div>
@@ -1023,7 +1032,12 @@ function vHome(m){
   </button>
   <section class="card"><h3>${t("board")}</h3>${board(m.board)}</section>
   <div class="tiles"><button class="tile" data-sub="vehicle"><div class="tile-top"><span class="tile-ic" style="font-size:16px">🚗</span><span class="tile-go">›</span></div><b>${t("vh_tile")}</b><small class="muted">${(S.data?.vehicles || [])[0]?.plate ? `<span class="num">${esc(S.data.vehicles[0].plate)}</span>` : t("vh_none")}</small></button>
-    <button class="tile" data-sub="vcond"><div class="tile-top"><span class="tile-ic" style="font-size:16px">📸</span><span class="tile-go">›</span></div><b>${t("vc_title")}</b><small class="muted">${t("vc_sub")}${(S.data?.vconds || []).length ? " · " + (S.data.vconds || []).length : ""}</small></button></div>`;
+    <button class="tile" data-sub="vcond"><div class="tile-top"><span class="tile-ic" style="font-size:16px">📸</span><span class="tile-go">›</span></div><b>${t("vc_title")}</b><small class="muted">${t("vc_sub")}${(S.data?.vconds || []).length ? " · " + (S.data.vconds || []).length : ""}</small></button></div>
+${(() => { const i = m.internet || {}; if (!i.lastPaid && !(+i.amount > 0)) return ""; const nx = i.lastPaid ? addDaysD(i.lastPaid, 28) : "", dl = nx ? dUntil(nx) : null, over = dl != null && dl <= 0; return `
+  <section class="card inet-card"><div class="row"><h3 style="margin:0">🌐 ${t("inet_m")}</h3>${nx ? `<span class="pill ${over ? "p-bad" : dl <= 5 ? "p-warn" : "p-good"} nodot">${over ? t("inet_over_d", { n: -dl }) : t("inet_left_d", { n: dl })}</span>` : ""}</div>
+    <div class="big" style="font-size:26px;margin-top:6px">${fmt(i.amount || 0)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">${t("sar")}</span></div>
+    <div class="inet-rows"><span><small>${t("inet_last_d")}</small><b>${i.lastPaid ? ddate(i.lastPaid) : "—"}</b></span><span><small>${t("inet_next_d")}</small><b class="${over ? "neg" : ""}">${nx ? ddate(nx) : "—"}</b></span></div>
+  </section>`; })()}`;
 }
 const GR = ["A", "B", "C", "D", "-"];
 const grCls = g => ({ A: "g-a", B: "g-b", C: "g-c", D: "g-d" }[g] || "g-x");
@@ -1382,7 +1396,6 @@ function vProfile(m){
   <section class="card"><h3>🏦 ${t("bank_t")}</h3>${p.iban ? `<div class="list">${row(t("bank_name"), esc(p.bankName || "—"))}${row(t("iban"), `<span class="num" style="font-size:14px">${esc(ibanFmt(p.iban))}</span>`)}${p.accountName ? row(t("acc_name"), esc(p.accountName)) : ""}</div>` : `<div class="muted">${t("bank_none")}</div>`}</section>
   <button class="btn gold" data-sub="editp" style="width:100%">✏️ ${t("ep_edit")}</button>
   <section class="card"><h3>${t("language")}</h3><div class="seg" style="grid-template-columns:repeat(3,1fr)">${[["en","English"],["bn","বাংলা"],["ar","العربية"]].map(([k,l]) => `<button data-lang="${k}" aria-pressed="${k===lang}">${l}</button>`).join("")}</div></section>
-  <section class="card"><h3>${({en:"Theme",bn:"থিম",ar:"المظهر"})[lang]}</h3><div class="seg" style="grid-template-columns:repeat(2,1fr)">${[["water","🌊 "+({en:"Water",bn:"ওয়াটার",ar:"مائي"})[lang]],["lav","💜 "+({en:"Lavender",bn:"ল্যাভেন্ডার",ar:"بنفسجي"})[lang]]].map(([k,l]) => `<button data-skin="${k}" aria-pressed="${(document.documentElement.dataset.skin||"water")===k}">${l}</button>`).join("")}</div></section>
   <button class="card fuel-card" data-sub="reports" style="display:flex;align-items:center;gap:12px"><span class="ntc-ic k-due">${icon("fines")}</span><span style="flex:1"><b>${t("rp_title")}</b><br><small class="muted">${t("rp_tile")}</small></span><span class="tile-go">›</span></button>
   <button class="card fuel-card" data-sub="changes" style="display:flex;align-items:center;gap:12px"><span class="ntc-ic k-msg">${icon("bell")}</span><span style="flex:1"><b>${t("ch_title")}</b><br><small class="muted">${t("ch_tile")}</small></span><span class="tile-go">›</span></button>
   <div class="muted" style="text-align:center;font-size:13.5px">${t("pin_hint")}</div>
