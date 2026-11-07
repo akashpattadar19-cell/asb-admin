@@ -584,6 +584,12 @@ body::after{animation:none}
 .panel,.kgrp{position:relative;isolation:isolate}
 .panel::before,.kgrp::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;background:var(--wm) right -24px bottom -20px/min(46%,230px) auto no-repeat;opacity:.4}
 .kgrp{background:var(--glass);border:1px solid rgba(170,240,255,.4);border-radius:16px}
+
+/* v4: dashboard columns + nested KPIs see-through so the logo shows */
+.dcol{background:var(--glass)!important;border:1px solid rgba(170,240,255,.4);border-radius:16px;position:relative;isolation:isolate}
+.dcol::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;background:var(--wm) right -24px bottom -20px/min(46%,230px) auto no-repeat;opacity:.4}
+.kpi,.dcol .kpi,.kgrp .kpi,.panel .kpi{background:rgba(5,30,54,.32)!important}
+.nav a.nav-driver,.nav a.nav-driver *{color:#2A1A00!important}
 </style>
 <script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 
