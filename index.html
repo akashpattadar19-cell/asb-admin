@@ -590,6 +590,18 @@ body::after{animation:none}
 .dcol::before{content:"";position:absolute;inset:0;border-radius:inherit;z-index:-1;pointer-events:none;background:var(--wm) right -24px bottom -20px/min(46%,230px) auto no-repeat;opacity:.4}
 .kpi,.dcol .kpi,.kgrp .kpi,.panel .kpi{background:rgba(5,30,54,.32)!important}
 .nav a.nav-driver,.nav a.nav-driver *{color:#2A1A00!important}
+
+/* v5: brighter text */
+html:root,html:root[data-theme="light"],html:root[data-theme="dark"]{--ink:#FFFFFF;--muted:#D4EEF8;--line:rgba(190,245,255,.34)}
+body{color:#fff}
+.nav a{opacity:1;color:#EAFBFF}.brand small{opacity:1;color:#D4EEF8}
+.kpi span,label.f,.dr>span,.panel h3,table th,.head p,.dash-sec{color:#D9F1FA!important}
+.kpi small,small,.muted{color:#C9E8F4}
+.input::placeholder,input::placeholder,textarea::placeholder{color:#A9D4E4;opacity:1}
+table td{color:#fff}
+.nav a[aria-current="page"]{color:#03283d}
+.kpi b *,.kpi b small,.kpi b span{color:#CDEBF6!important;opacity:1!important}
+button[aria-pressed="true"],button[aria-pressed="true"] *{color:#03283d!important}
 </style>
 <script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 
