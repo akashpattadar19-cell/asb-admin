@@ -435,6 +435,11 @@ main{padding-bottom:110px}
 .tgc-in{background:linear-gradient(180deg,transparent,rgba(3,22,40,.7))}
 .tgc-pill{background:#0c3556;border:1px solid rgba(170,240,255,.4);box-shadow:0 12px 20px -10px rgba(0,8,30,.8),inset 0 2px 1px rgba(220,255,255,.25)}
 .tgc-send{background:linear-gradient(145deg,#aaf8ff,#32c4ee);color:#04304a;box-shadow:0 0 18px rgba(127,246,255,.6),inset 0 2px 3px rgba(255,255,255,.6)}
+
+/* hero logo: brighter + light float (transform only) */
+.hero .hero-wm{opacity:1!important;filter:brightness(2.1) saturate(1.3);will-change:transform;animation:hwf 7s ease-in-out infinite}
+@keyframes hwf{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.05)}}
+@media (prefers-reduced-motion:reduce){.hero .hero-wm{animation:none}}
 </style>
 <script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 </head><body>
