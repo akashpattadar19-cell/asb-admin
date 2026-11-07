@@ -602,6 +602,44 @@ table td{color:#fff}
 .nav a[aria-current="page"]{color:#03283d}
 .kpi b *,.kpi b small,.kpi b span{color:#CDEBF6!important;opacity:1!important}
 button[aria-pressed="true"],button[aria-pressed="true"] *{color:#03283d!important}
+
+/* ── Admin skin: lavender light ── */
+html[data-skin="lav"]:root,html[data-skin="lav"]:root[data-theme="light"],html[data-skin="lav"]:root[data-theme="dark"]{--bg:#EFE8FF;--surface:#FFFFFF;--card:#FFFFFF;--sunk:#F3EDFF;--ink:#2A1D5C;--muted:#6B5D99;--line:rgba(150,120,230,.3);--brand:#6A3FE0;--brand-ink:#FFFFFF;--brand-soft:#ECE6FF;--gold:#F5A524;--good:#12935C;--good-soft:#DDF5E8;--warn:#B76E00;--warn-soft:#FFF0D6;--bad:#D6453A;--bad-soft:#FDE6E3;--info:#5A3BD0;--info-soft:#ECE6FF;--glass:linear-gradient(160deg,#FFFFFF,#F3EDFF);--rim:inset 0 2px 0 #fff,inset 0 -3px 0 rgba(170,140,240,.2);--shd:0 14px 24px -14px rgba(100,60,210,.4);color-scheme:light}
+html[data-skin="lav"] body{background:linear-gradient(180deg,#E3D6FF,#F6F1FF 45%,#FCFAFF);background-color:#EFE8FF;color:#2A1D5C}
+html[data-skin="lav"] body::after{display:none}
+html[data-skin="lav"]::before{opacity:.12;animation:none;filter:none}
+html[data-skin="lav"] .rail{background:linear-gradient(180deg,#fff,#F3EDFF);color:#2A1D5C;border-inline-end:1px solid rgba(150,120,230,.25);box-shadow:10px 0 24px -16px rgba(100,60,210,.35)}
+html[data-skin="lav"] .nav a{color:#2A1D5C}
+html[data-skin="lav"] .nav a[aria-current="page"]{background:linear-gradient(145deg,#B48CFF,#6A3FE0);color:#fff;box-shadow:0 0 14px rgba(106,63,224,.4),inset 0 2px 2px rgba(255,255,255,.5);animation:none}
+html[data-skin="lav"] .brand small{color:#6B5D99}
+html[data-skin="lav"] .mark{box-shadow:0 6px 14px rgba(100,60,210,.3)}
+html[data-skin="lav"] .panel,html[data-skin="lav"] .kpi,html[data-skin="lav"] .kgrp,html[data-skin="lav"] .dcol,html[data-skin="lav"] dialog,html[data-skin="lav"] .card{background:var(--glass)!important;border:1px solid rgba(255,255,255,.95);box-shadow:var(--shd),var(--rim)}
+html[data-skin="lav"] .kpi{background:rgba(243,237,255,.7)!important;border:1px solid rgba(150,120,230,.2)}
+html[data-skin="lav"] .kpi b,html[data-skin="lav"] .kpi b *{color:#2A1D5C!important;text-shadow:none}
+html[data-skin="lav"] .kpi span,html[data-skin="lav"] label.f,html[data-skin="lav"] .dr>span,html[data-skin="lav"] table th,html[data-skin="lav"] .head p,html[data-skin="lav"] .dash-sec{color:#5B4C8C!important}
+html[data-skin="lav"] .kpi small,html[data-skin="lav"] small,html[data-skin="lav"] .muted{color:#6B5D99}
+html[data-skin="lav"] table td{color:#2A1D5C}
+html[data-skin="lav"] table td,html[data-skin="lav"] table th{border-color:rgba(150,120,230,.2)}
+html[data-skin="lav"] table.emps tr.grp td{background:#F3EDFF}
+html[data-skin="lav"] .btn{background:linear-gradient(145deg,#B48CFF,#6A3FE0);color:#fff}
+html[data-skin="lav"] .btn.gold{background:linear-gradient(145deg,#FFD166,#FFAF1A);color:#2A1A00}
+html[data-skin="lav"] .btn.ghost{background:#fff;color:#2A1D5C;border-color:rgba(150,120,230,.35)}
+html[data-skin="lav"] .btn.danger{background:linear-gradient(145deg,#ff8a7e,#d8473a);color:#fff}
+html[data-skin="lav"] .input,html[data-skin="lav"] select.input,html[data-skin="lav"] textarea.input{background:#fff;border-color:rgba(150,120,230,.35);color:#2A1D5C}
+html[data-skin="lav"] .input::placeholder{color:#9A8CC4}
+html[data-skin="lav"] .chip{background:#fff;border-color:rgba(150,120,230,.3);color:#2A1D5C}
+html[data-skin="lav"] .chip.on{background:linear-gradient(145deg,#B48CFF,#6A3FE0);color:#fff;border-color:#6A3FE0}
+html[data-skin="lav"] .chip.warn{background:#FFF0D6;color:#8A5A00;border-color:#E7B65A}
+html[data-skin="lav"] .chip.online{background:#E7F6EE;color:#14623F;border-color:#9ED6BA}
+html[data-skin="lav"] .pill.p-bad{background:#FDE3E3;color:#A1262B}html[data-skin="lav"] .pill.p-ok{background:#E7F6EE;color:#14623F}
+html[data-skin="lav"] .topbar{background:rgba(255,255,255,.85)}
+html[data-skin="lav"] body,html[data-skin="lav"] .head h1,html[data-skin="lav"] .panel h2{color:#2A1D5C}
+html[data-skin="lav"] button[aria-pressed="true"],html[data-skin="lav"] button[aria-pressed="true"] *{color:#fff!important}
+html[data-skin="lav"] .lang button{color:#2A1D5C;border-color:rgba(150,120,230,.35)}
+html[data-skin="lav"] .lang button[aria-pressed="true"]{background:#6A3FE0}
+html[data-skin="lav"] .scrollfab button{background:#fff;color:#2A1D5C}
+html[data-skin="lav"] .nav a.nav-driver,html[data-skin="lav"] .nav a.nav-driver *{color:#2A1A00!important}
+html[data-skin="lav"] .nav a[aria-current="page"] .nav-ic,html[data-skin="lav"] .nav a[aria-current="page"] .nav-ic *{color:#6A3FE0!important}
 </style>
 <script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 
@@ -864,10 +902,13 @@ function renderShell(){
   { const tt = $("#tbTitle"); if (tt) tt.textContent = t("nav_" + v); const td = $("#tbDate"); if (td) td.textContent = new Date().toLocaleDateString(lang === "bn" ? "bn-BD" : lang === "ar" ? "ar-SA" : "en-GB", { weekday: "short", day: "2-digit", month: "short", year: "numeric", timeZone: "Asia/Riyadh" }); }
   { const cu = $("#menuCur"); if (cu) cu.textContent = (NAV_ICON[v] || "") + " " + t("nav_" + v); }
   setTimeout(renderShellBadge, 0);
-  const langBtns = [["en","EN"],["bn","বাংলা"],["ar","عربي"]].map(([k,l]) => `<button data-lang="${k}" aria-pressed="${k===lang}">${l}</button>`).join("");
+  const langBtns = [["en","EN"],["bn","বাংলা"],["ar","عربي"]].map(([k,l]) => `<button data-lang="${k}" aria-pressed="${k===lang}">${l}</button>`).join("") + `<button data-skin-toggle title="Theme" aria-label="Theme" style="flex:none;padding:4px 9px">🎨</button>`;
   $("#lang").innerHTML = langBtns; $("#langM").innerHTML = langBtns; { const lt = $("#langT"); if (lt) lt.innerHTML = langBtns; }
 }
+try { document.documentElement.dataset.skin = localStorage.getItem("asb-skin") || "water"; } catch {}
 document.addEventListener("click", e => {
+  const sk = e.target.closest("[data-skin-toggle]");
+  if (sk) { const n = document.documentElement.dataset.skin === "lav" ? "water" : "lav"; document.documentElement.dataset.skin = n; try { localStorage.setItem("asb-skin", n); } catch {} return; }
   const b = e.target.closest("[data-lang]"); if (!b) return;
   lang = b.dataset.lang; try { localStorage.setItem("asb-lang", lang); } catch {}
   render();
