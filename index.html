@@ -4,7 +4,42 @@
 <meta name="theme-color" content="#0B3B60">
 <link rel="icon" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
-<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,-apple-system,"Segoe UI",sans-serif}img{max-width:100%}[hidden]{display:none!important}
+/* admin sign-in page */
+#emp:has(.alog){padding:0}
+.alog{min-height:100dvh;background:linear-gradient(135deg,#eef3ff,#f7f9ff 50%,#dde8ff);color:#0f1b33;font-family:"Inter","Hind Siliguri","IBM Plex Sans Arabic",system-ui,sans-serif;position:relative;overflow:hidden;display:flex;flex-direction:column}
+.alog:before{content:"";position:absolute;width:520px;height:520px;left:-6%;top:-8%;background:radial-gradient(circle,rgba(47,107,255,.2),transparent 68%);pointer-events:none}
+.alog:after{content:"";position:absolute;width:560px;height:560px;right:-8%;bottom:-12%;background:radial-gradient(circle,rgba(122,162,255,.3),transparent 68%);pointer-events:none}
+.alog-top{position:relative;z-index:2;display:flex;justify-content:space-between;align-items:center;gap:10px;padding:max(18px,env(safe-area-inset-top,0px)) 4vw 0}
+.alog-tag{font-size:11px;letter-spacing:.26em;color:#5d6b88;display:flex;gap:10px;align-items:center;text-transform:uppercase}.alog-tag i{width:7px;height:7px;border-radius:50%;background:#2f6bff;flex:none}
+.alog .p-lang button{border:1px solid rgba(47,107,255,.35);background:#fff;color:#2f6bff;border-radius:8px;padding:3px 9px;font-size:12px;cursor:pointer}
+.alog-wrap{position:relative;z-index:1;flex:1;display:grid;grid-template-columns:1.2fr .8fr;align-items:center;gap:4vw;padding:2vh 5vw 4vh 4vw}
+.alog-mid{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:26px;text-align:center}
+.alog-lg{position:relative;width:min(46vh,340px);height:min(46vh,340px);animation:alFl 6s ease-in-out infinite}
+.alog-lg img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 14px 14px rgba(20,50,120,.3))}
+.alog-lg .rg{position:absolute;inset:0;margin:auto;border-radius:50%;border:2px solid rgba(47,107,255,.4);transform:rotateX(72deg)}
+.alog-lg .rg.a{width:124%;height:124%;animation:alRz 14s linear infinite}
+.alog-lg .rg.b{width:104%;height:104%;border-style:dashed;border-color:rgba(47,107,255,.28);animation:alRz 22s linear infinite reverse}
+@keyframes alRz{to{transform:rotateX(72deg) rotateZ(360deg)}}@keyframes alFl{50%{transform:translateY(-14px) scale(1.03)}}
+.alog-mid h1{margin:0;font:900 min(5vh,40px)/1 "Inter",system-ui,sans-serif;letter-spacing:-.02em;white-space:nowrap;background:linear-gradient(90deg,#13264f,#2f6bff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.alog-card{background:rgba(255,255,255,.86);border:1px solid rgba(47,107,255,.18);border-radius:26px;padding:34px;box-shadow:0 30px 70px rgba(20,50,120,.16);display:flex;flex-direction:column;gap:2px;width:100%;max-width:440px;justify-self:end}
+.alog-sec{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.2em;color:#5d6b88;text-transform:uppercase}.alog-sec b{color:#2f6bff;font-weight:600}
+.alog-card h2{font:800 34px/1.1 "Inter","Hind Siliguri","IBM Plex Sans Arabic",sans-serif;letter-spacing:-.02em;margin:16px 0 4px}
+.alog-s{color:#5d6b88;font-size:14px;margin:0 0 10px}
+.alog-card label{display:flex;flex-direction:column;gap:8px;font-size:11px;letter-spacing:.2em;color:#5d6b88;margin-top:12px;text-transform:uppercase}
+.alog-in{background:#f1f5fc;border:1px solid rgba(47,107,255,.2);border-radius:14px;padding:15px 16px;font:15px "Inter",system-ui,sans-serif;color:#0f1b33;letter-spacing:0;outline:none;width:100%}
+.alog-in:focus{border-color:#2f6bff;box-shadow:0 0 0 3px rgba(47,107,255,.15)}
+.alog-btn{margin-top:20px;background:linear-gradient(90deg,#2f6bff,#6f9bff);color:#fff;border:0;border-radius:999px;padding:16px;font:800 13px "Inter",system-ui,sans-serif;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;box-shadow:0 10px 24px rgba(47,107,255,.35)}
+.alog-btn:disabled{opacity:.6}
+.alog-links{display:flex;flex-direction:column;align-items:center;gap:2px;margin-top:12px}
+.alog-links button{background:none;border:0;color:#5d6b88;font:13px "Inter",system-ui,sans-serif;padding:6px;cursor:pointer}
+.alog-err{color:#c0392b;font-size:13px;margin:10px 0 0}.alog-note{background:#e8f0ff;color:#1f3f8f;border-radius:12px;padding:10px 12px;font-size:13px;margin-top:10px}
+@media (max-width:860px){.alog-wrap{grid-template-columns:1fr;gap:18px;padding:12px 18px 28px;align-content:start}.alog-lg{width:min(28vh,210px);height:min(28vh,210px)}.alog-lg .rg.a{width:112%;height:112%}.alog-mid{gap:16px}.alog-mid h1{font-size:min(6.2vw,28px)}.alog-card{justify-self:center;padding:24px}.alog-tag{font-size:9px;letter-spacing:.18em}}
+html[lang=bn] .alog *,html[lang=ar] .alog *{letter-spacing:0!important;text-transform:none!important}
+html[lang=bn] .alog-btn{font-size:15px}
+body:has(.alog) .scrollfab{display:none!important}
+@media (prefers-reduced-motion:reduce){.alog-lg,.alog-lg .rg{animation:none}}
+</style>
 </head><body>
 <title>ASB Admin Panel</title>
 <meta name="claude:viewport-fit-sides" content="cover">
@@ -920,6 +955,7 @@ document.addEventListener("click", e => {
   if (sk) { const n = document.documentElement.dataset.skin === "lav" ? "water" : "lav"; document.documentElement.dataset.skin = n; try { localStorage.setItem("asb-skin", n); } catch {} return; }
   const b = e.target.closest("[data-lang]"); if (!b) return;
   lang = b.dataset.lang; try { localStorage.setItem("asb-lang", lang); } catch {}
+  if (document.querySelector(".alog")) { const em = $("#auEmail")?.value; renderAuth(); if (em) $("#auEmail").value = em; return; }
   render();
 });
 
@@ -4617,21 +4653,24 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ كل تقرير يومي 12 شهراً. يعرض التطبيق دائماً آخر يومين، ويمكن للسائق فتح أي يوم سابق من التقويم.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", dash_profit: "الربح · هذا الشهر", dash_salaries: "الرواتب · هذا الشهر", dash_no_inv: "لم تُضف فاتورة كيتا", dash_avg: "متوسط {n}/سائق", dash_fleet: "نظرة عامة على الأسطول", dash_online: "متصل الآن", dash_paytypes: "أنواع الرواتب", dash_platforms: "المنصّات", dash_grades: "الأداء (الأحدث)", dash_target_hit: "450+ طلب", dash_newrp: "شكاوى جديدة", nav_orddetail: "تفاصيل الطلبات", ord_hint: "تقرير كيتا لمهام كل مندوب، يُرفع لفترة زمنية.", ord_import: "رفع تقرير الطلبات", ord_imp_help: "ارفع تقرير طلبات كيتا (Excel/CSV) واختر الفترة التي يغطيها. تتم مطابقة المندوبين عبر رقم المندوب. يُجمع العمود D (المُسلَّمة) في الأسفل.", ord_kpi_delivered: "المُسلَّمة (D)", ord_kpi_accepted: "المقبولة", ord_kpi_rejected: "المرفوضة", ord_kpi_ontime: "في الوقت (متوسط)", ord_kpi_completion: "نسبة الإكمال", ord_avgtime_k: "متوسط وقت التوصيل", ord_drivers: "مندوب", ord_unmatched: "غير مطابق", ord_unmatched_n: "رقم مندوب في الملف غير مرتبط بأي سائق.", ord_none: "لا يوجد تقرير طلبات بعد — ارفع واحداً.", ord_note: "للمشرف فقط. ارفع تقرير كيتا نفسه في أي وقت مع فترته؛ تُحفظ كل فترة على حدة، وتتم المطابقة عبر رقم المندوب.", dash_exp: "تجربة العمل", dash_online_s: "متصل", dash_hit_s: "حقق الهدف", dash_ontime: "في الوقت", dash_completion: "الإكمال", dash_cancel: "الإلغاء", dash_rejected: "المرفوضة", dash_overdue: "متأخرة", dash_severe: "متأخرة جداً", dash_avg_s: "متوسط", dash_total_s: "إجمالي", dash_attention: "يحتاج انتباه", dash_pending: "موافقات معلقة", dash_no_exp: "لا يوجد تقرير طلبات هذا الشهر بعد", dash_allgood: "لا توجد مشاكل 👍", pa_adj_t: "الخصومات والمكافآت", pa_view: "عرض التفاصيل", pa_valid: "صالح هذا الشهر", pa_reason: "سبب عدم الصلاحية", pa_reason_ph: "مثال: استخدام رقم اللوحة", pa_adj_note: "تُضاف إلى قسيمة الراتب. الوقود والأساسي والإضافي تُحسب تلقائياً.", pa_invalid: "غير صالح هذا الشهر", pa_base: "الراتب الأساسي", pa_additional: "الإضافي", pa_due: "إجمالي المستحق", pa_petrol: "إجمالي الوقود", pa_petrolk: "خصم/استرداد الوقود", pa_traffic: "مخالفة مرورية", pa_accident: "حادث", pa_company: "خصومات الشركة", pa_akash: "خصم المشرف", pa_advance: "حسم السلف", pa_keeta: "خصومات كيتا", pa_bonus_o: "المستحقات والمكافآت", pa_totded: "إجمالي الخصومات", pa_tbl_note: "الأساسي والإضافي والوقود تُحسب تلقائياً. اضغط ⚙ لإدخال الخصومات والمكافأة والصلاحية.", pay_import: "اختبار ورفع الكشف", pay_imp_help: "نزّل كشف الرواتب (⬇)، عدّل أعمدة الخصومات/المكافآت (Traffic, Accident, Company, Supervisor, Advance, Keeta, Bonus, Valid, Reason…) في Excel، ثم ارفعه هنا. تتم مطابقة السائقين عبر الإقامة؛ يُفتح الكشف كمسودة بتغييراتك لمراجعته ونشره.", pay_imp_nokey: "يحتاج الملف إلى عمود الإقامة لمطابقة السائقين.", pay_test_t: "اختبار كشف الرواتب", pay_test_sum: "تمت قراءة {n} سائق من الملف.", pay_test_note: "تحقق من الأرقام أدناه. يضيفها Submit إلى الكشف كمسودة؛ ثم اضغط نشر لإرسالها للسائقين. Cancel يلغي كل شيء.", pay_test_submit: "إضافة إلى الكشف", pay_test_done: "أُضيف إلى مسودة الكشف — راجع ثم انشر", nav_loans: "القروض والسلف", loan_hint: "الأموال المُعطاة للسائقين — قروض وسلف. تُضاف إلى مستحقات السائق وتظهر في التطبيق.", loan_add: "منح قرض / سلفة", loan_total_given: "إجمالي المُعطى", loan_outstanding: "المتبقي", loan_none: "لا توجد قروض أو سلف بعد", loan_note: "يُسترد القرض/السلفة من الراتب شهرياً (أو عند السداد). يُحتسب المتبقي في إجمالي المستحقات ويراه السائق في التطبيق.", nav_expenses: "مصاريف الشركة", exp_hint: "إنفاق الشركة نفسها — للمشرف فقط. لا تظهر للسائقين.", exp_add: "إضافة مصروف", exp_edit: "تعديل مصروف", exp_place: "أين / على ماذا", exp_place_ph: "مثال: إصلاح مركبة، إيجار مكتب، وقود", exp_reason_ph: "أي ملاحظة", exp_by: "أضافه", exp_this_month: "هذا الشهر", exp_total: "إجمالي المصاريف", exp_none: "لا توجد مصاريف بعد", exp_note: "للمشرف فقط — لا تظهر مصاريف الشركة في تطبيق السائق أبداً.", exp_del_q: "حذف هذا المصروف بقيمة {a} ريال؟ لا يمكن التراجع.", du_open: "مستحق", du_waived: "مُعفى", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
 
 const auth = { mode: "signin", msg: "", err: "", busy: false, session: null, role: null, perms: null, admins: [] };
+Object.assign(I18N.en, { au_tag: "Employee management · Admin panel", au_secure: "Secure access", au_online: "Online", au_wait: "Your workspace is waiting." });
+Object.assign(I18N.bn, { au_tag: "কর্মচারী ব্যবস্থাপনা · এডমিন প্যানেল", au_secure: "নিরাপদ প্রবেশ", au_online: "অনলাইন", au_wait: "আপনার ওয়ার্কস্পেস অপেক্ষা করছে।" });
+Object.assign(I18N.ar, { au_tag: "إدارة الموظفين · لوحة المشرف", au_secure: "دخول آمن", au_online: "متصل", au_wait: "مساحة عملك بانتظارك." });
 function renderAuth(){
   document.documentElement.lang = lang; document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
   $("#app").hidden = true; const root = $("#emp"); root.hidden = false;
   const up = auth.mode === "signup";
-  root.innerHTML = `<div class="phone full"><div class="p-top" style="justify-content:flex-end"><div class="p-lang">${langMini()}</div></div>
-  <div class="p-login">
-    <div class="mark"><img src="logo.png" alt="ASB"></div>
-    <div><h1>${t("au_title")}</h1><p class="sub" style="margin:4px 0 0">${t("au_sub")}</p></div>
-    <form id="authForm" novalidate style="display:flex;flex-direction:column;gap:12px">
-      <label class="f">${t("au_email")}<input class="input" id="auEmail" type="email" autocomplete="username" required></label>
-      <label class="f">${t("au_pass")}<input class="input" id="auPass" type="password" autocomplete="${up ? "new-password" : "current-password"}" minlength="8" required></label>
-      ${auth.err ? `<p class="err" style="margin:0">${esc(auth.err)}</p>` : ""}${auth.msg ? `<div class="note" style="margin:0">${esc(auth.msg)}</div>` : ""}
-      <button class="btn p-btn" ${auth.busy ? "disabled" : ""}>${up ? t("au_signup") : t("au_signin")}</button>
-      ${up ? "" : `<button type="button" class="btn ghost sm" data-au="forgot" style="align-self:center">${t("au_forgot")}</button>`}
-      <button type="button" class="btn ghost sm" data-au="${up ? "signin" : "signup"}" style="align-self:center">${up ? t("au_have") : t("au_new")}</button>
+  root.innerHTML = `<div class="alog"><div class="alog-top"><span class="alog-tag"><i></i>${t("au_tag")}</span><div class="p-lang">${langMini()}</div></div>
+  <div class="alog-wrap">
+    <div class="alog-mid"><div class="alog-lg"><div class="rg a"></div><div class="rg b"></div><img src="logo.png" alt="ASB"></div><h1>ASB LOGISTICS Company</h1></div>
+    <form id="authForm" class="alog-card" novalidate>
+      <div class="alog-sec"><span>${t("au_secure")}</span><b>● ${t("au_online")}</b></div>
+      <h2>${up ? t("au_signup") : t("au_signin")}</h2><p class="alog-s">${t("au_wait")}</p>
+      <label><span>${t("au_email")}</span><input class="alog-in" id="auEmail" type="email" autocomplete="username" required></label>
+      <label><span>${t("au_pass")}</span><input class="alog-in" id="auPass" type="password" autocomplete="${up ? "new-password" : "current-password"}" minlength="8" required></label>
+      ${auth.err ? `<p class="alog-err">${esc(auth.err)}</p>` : ""}${auth.msg ? `<div class="alog-note">${esc(auth.msg)}</div>` : ""}
+      <button class="alog-btn" ${auth.busy ? "disabled" : ""}>${up ? t("au_signup") : t("au_signin")} →</button>
+      <div class="alog-links">${up ? "" : `<button type="button" data-au="forgot">${t("au_forgot")}</button>`}<button type="button" data-au="${up ? "signin" : "signup"}">${up ? t("au_have") : t("au_new")}</button></div>
     </form>
   </div></div>`;
   try { const em = localStorage.getItem("asb-admin-email"); if (em) $("#auEmail").value = em; } catch {}
