@@ -648,69 +648,6 @@ html[data-skin="lav"] .panel,html[data-skin="lav"] .kgrp,html[data-skin="lav"] .
 html[data-skin="lav"] .kpi{background:rgba(243,237,255,.4)!important}
 @keyframes lgl{0%,100%{transform:translateY(0) scale(1);opacity:.6}50%{transform:translateY(-12px) scale(1.07);opacity:.85}}
 html[data-skin="lav"]::before{animation:lgl 7s ease-in-out infinite}
-
-/* ── NIMBRA skin (demo) ── */
-html[data-skin="nim"]:root,html[data-skin="nim"]:root[data-theme="light"],html[data-skin="nim"]:root[data-theme="dark"]{--bg:#060a12;--surface:#0f172a;--ink:#f1f5f9;--muted:#94a3b8;--line:rgba(148,163,184,.12);--brand:#3b82f6;--brand-soft:rgba(59,130,246,.14);--brand-ink:#f1f5f9;--glass:#0f172a;--rim:0 0 0 transparent;--shd:0 0 0 transparent;color-scheme:dark}
-html[data-skin="nim"] body{background:#060a12;color:#f1f5f9}
-html[data-skin="nim"] body::after{display:none}
-html[data-skin="nim"]::before{opacity:.07;animation:none}
-html[data-skin="nim"] .rail{background:#0a101c;border-inline-end:1px solid rgba(148,163,184,.07);box-shadow:none}
-html[data-skin="nim"] .brand small{color:#64748b}
-html[data-skin="nim"] .mark{box-shadow:none;animation:none;background:rgba(59,130,246,.18)}
-html[data-skin="nim"] .nav a{color:#94a3b8;border-radius:10px;font-weight:500;position:relative;overflow:hidden;transition:all .28s cubic-bezier(.4,0,.2,1)}
-html[data-skin="nim"] .nav a:hover{background:rgba(255,255,255,.04);color:#f1f5f9}
-html[data-skin="nim"] .nav a[aria-current="page"]{background:rgba(59,130,246,.14);color:#60a5fa;box-shadow:none}
-html[data-skin="nim"] .nav a[aria-current="page"]::before{content:"";position:absolute;inset-inline-start:0;top:50%;transform:translateY(-50%);width:3px;height:60%;background:#3b82f6;border-radius:0 4px 4px 0}
-html[data-skin="nim"] .nav a.nav-driver{background:rgba(245,158,11,.14);color:#fbbf24;box-shadow:none}
-html[data-skin="nim"] .panel,html[data-skin="nim"] .kpi,html[data-skin="nim"] .kgrp,html[data-skin="nim"] .dcol,html[data-skin="nim"] .card,html[data-skin="nim"] dialog{background:#0f172a;border:1px solid rgba(148,163,184,.07);border-radius:16px;box-shadow:none;position:relative;transition:background .28s cubic-bezier(.4,0,.2,1),border-color .28s,transform .28s,box-shadow .28s}
-html[data-skin="nim"] .panel::after,html[data-skin="nim"] .kpi::after,html[data-skin="nim"] .kgrp::after,html[data-skin="nim"] .dcol::after,html[data-skin="nim"] .card::after{content:"";position:absolute;inset:0;border-radius:inherit;opacity:0;transition:opacity .28s;pointer-events:none;background:radial-gradient(500px circle at var(--mx,50%) var(--my,50%),rgba(59,130,246,.07),transparent 40%)}
-html[data-skin="nim"] .panel:hover::after,html[data-skin="nim"] .kpi:hover::after,html[data-skin="nim"] .kgrp:hover::after,html[data-skin="nim"] .dcol:hover::after,html[data-skin="nim"] .card:hover::after{opacity:1}
-html[data-skin="nim"] .panel:hover,html[data-skin="nim"] .card:hover{background:#131c2e;border-color:rgba(148,163,184,.14)}
-html[data-skin="nim"] .kpi:hover,html[data-skin="nim"] .kgrp:hover,html[data-skin="nim"] .dcol:hover{background:#131c2e;border-color:rgba(148,163,184,.14);transform:translateY(-3px);box-shadow:0 12px 32px -8px rgba(0,0,0,.45)}
-html[data-skin="nim"] .kpi b{color:#f1f5f9;text-shadow:none;transition:transform .28s}
-html[data-skin="nim"] .kpi:hover b{transform:scale(1.03)}
-html[data-skin="nim"] .kpi span,html[data-skin="nim"] .sub,html[data-skin="nim"] .head p{color:#94a3b8}
-html[data-skin="nim"] .panel h2{border-bottom:1px solid rgba(148,163,184,.1);color:#f1f5f9}
-html[data-skin="nim"] .btn{background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border:1px solid transparent;border-radius:10px;box-shadow:none;font-weight:500;transition:all .28s cubic-bezier(.4,0,.2,1)}
-html[data-skin="nim"] .btn:hover{background:linear-gradient(135deg,#2563eb,#1d4ed8);box-shadow:0 6px 20px rgba(37,99,235,.35);transform:translateY(-1px)}
-html[data-skin="nim"] .btn:active{transform:translateY(0) scale(.97)}
-html[data-skin="nim"] .btn.ghost{background:rgba(255,255,255,.03);border-color:rgba(148,163,184,.1);color:#f1f5f9}
-html[data-skin="nim"] .btn.ghost:hover{background:rgba(255,255,255,.07);border-color:rgba(148,163,184,.18);box-shadow:none}
-html[data-skin="nim"] .btn.gold{background:rgba(245,158,11,.16);color:#fbbf24;border-color:rgba(245,158,11,.3)}
-html[data-skin="nim"] .btn.gold:hover{background:rgba(245,158,11,.26);box-shadow:none}
-html[data-skin="nim"] .btn.danger{background:rgba(239,68,68,.16);color:#f87171;border-color:rgba(239,68,68,.3)}
-html[data-skin="nim"] .btn.danger:hover{background:rgba(239,68,68,.26);box-shadow:none}
-html[data-skin="nim"] .input,html[data-skin="nim"] select.input,html[data-skin="nim"] textarea.input{background:rgba(255,255,255,.04);border:1px solid rgba(148,163,184,.1);border-radius:12px;color:#f1f5f9;transition:all .28s}
-html[data-skin="nim"] .input:focus{outline:none;border-color:rgba(59,130,246,.45);background:rgba(255,255,255,.06);box-shadow:0 0 0 3px rgba(59,130,246,.12)}
-html[data-skin="nim"] .chip{background:rgba(255,255,255,.05);border-color:transparent;color:#94a3b8;transition:all .28s}
-html[data-skin="nim"] .chip:hover{background:rgba(255,255,255,.09);color:#f1f5f9}
-html[data-skin="nim"] .chip.on{background:rgba(59,130,246,.18);color:#60a5fa}
-html[data-skin="nim"] .chip.warn,html[data-skin="nim"] .pill.p-warn{background:rgba(245,158,11,.14);color:#fbbf24}
-html[data-skin="nim"] .chip.online,html[data-skin="nim"] .pill.p-ok{background:rgba(16,185,129,.14);color:#34d399}
-html[data-skin="nim"] .pill.p-bad{background:rgba(239,68,68,.14);color:#f87171}
-html[data-skin="nim"] table th,html[data-skin="nim"] table thead th{color:#64748b;font-size:11.5px;letter-spacing:.04em;text-transform:uppercase;font-weight:600}
-html[data-skin="nim"] table td,html[data-skin="nim"] table th{border-color:rgba(148,163,184,.07)}
-html[data-skin="nim"] table tbody tr{transition:background .2s}
-html[data-skin="nim"] table tbody tr:hover td{background:rgba(255,255,255,.03)}
-html[data-skin="nim"] table.emps tr.grp td{background:rgba(255,255,255,.03);color:#94a3b8}
-html[data-skin="nim"] .dmpop{background:#0f172a;border:1px solid rgba(148,163,184,.14)}
-html[data-skin="nim"] .dmpop button.dm-m{background:rgba(255,255,255,.04);color:#e2e8f0}
-html[data-skin="nim"] .dmpop button.dm-m.cur{background:#3b82f6;color:#fff}
-html[data-skin="nim"] dialog::backdrop{background:rgba(3,6,12,.75)}
-html[data-skin="nim"] .scrollfab button{background:#0f172a;border-color:rgba(148,163,184,.14);color:#e2e8f0}
-html[data-skin="nim"] .menu-btn{background:#0f172a;border:1px solid rgba(148,163,184,.1);color:#f1f5f9;box-shadow:none;transition:all .28s}html[data-skin="nim"] .menu-btn:hover{background:#131c2e}html[data-skin="nim"] body::before{background:#0a101c;border-bottom:1px solid rgba(148,163,184,.07)}
-/* page transition (spring) — replays only when you open another page */
-@keyframes nimUp{from{opacity:0;transform:translateY(18px) scale(.985)}to{opacity:1;transform:none}}
-@keyframes riseIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
-@keyframes slideIn{from{height:0;opacity:0}to{height:60%;opacity:1}}
-main.pg-in>*{animation:nimUp .45s cubic-bezier(.22,1,.36,1) both}
-main.pg-in>*:nth-child(2){animation-delay:.04s}main.pg-in>*:nth-child(3){animation-delay:.09s}main.pg-in>*:nth-child(4){animation-delay:.14s}main.pg-in>*:nth-child(5){animation-delay:.19s}main.pg-in>*:nth-child(n+6){animation-delay:.24s}
-main.pg-in .kpis>*,main.pg-in .panel>*:first-child{animation:riseIn .5s cubic-bezier(.22,1,.36,1) both}
-main.pg-in .kpis>*:nth-child(2){animation-delay:.09s}main.pg-in .kpis>*:nth-child(3){animation-delay:.14s}main.pg-in .kpis>*:nth-child(4){animation-delay:.19s}main.pg-in .kpis>*:nth-child(n+5){animation-delay:.24s}
-html[data-skin="nim"] .nav a[aria-current="page"]::before{animation:slideIn .3s ease}
-html[data-skin="nim"] .nav a .nav-n,html[data-skin="nim"] .nav a .cnt{background:rgba(59,130,246,.2);color:#60a5fa;border-radius:999px;font-weight:600}
-html[data-skin="nim"] .kpi,html[data-skin="nim"] .kgrp,html[data-skin="nim"] .dcol{transition:background .28s,border-color .28s,transform .45s cubic-bezier(.22,1,.36,1),box-shadow .28s}
-html[data-skin="nim"] ::-webkit-scrollbar{width:5px;height:5px}html[data-skin="nim"] ::-webkit-scrollbar-thumb{background:rgba(148,163,184,.18);border-radius:10px}
 </style>
 <script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 
@@ -980,7 +917,7 @@ function renderShell(){
 try { document.documentElement.dataset.skin = localStorage.getItem("asb-skin") || "water"; } catch {}
 document.addEventListener("click", e => {
   const sk = e.target.closest("[data-skin-toggle]");
-  if (sk) { const n = ({ nim: "water", water: "lav", lav: "nim" })[document.documentElement.dataset.skin] || "nim"; document.documentElement.dataset.skin = n; try { localStorage.setItem("asb-skin", n); } catch {} return; }
+  if (sk) { const n = document.documentElement.dataset.skin === "lav" ? "water" : "lav"; document.documentElement.dataset.skin = n; try { localStorage.setItem("asb-skin", n); } catch {} return; }
   const b = e.target.closest("[data-lang]"); if (!b) return;
   lang = b.dataset.lang; try { localStorage.setItem("asb-lang", lang); } catch {}
   render();
@@ -4934,14 +4871,6 @@ async function boot(){
   setTimeout(() => { if (data.session && !state.ready) { let n = 0; try { n = +sessionStorage.getItem("asb-wd") || 0; sessionStorage.setItem("asb-wd", n + 1); } catch {} if (n < 2) location.reload(); } else { try { sessionStorage.removeItem("asb-wd"); } catch {} } }, 12000);
 }
 boot();
-
-/* Nimbra micro-interactions */
-(() => {
-  const m = document.getElementById("main"); let tm;
-  const play = () => { if (!m) return; m.classList.remove("pg-in"); void m.offsetWidth; m.classList.add("pg-in"); clearTimeout(tm); tm = setTimeout(() => m.classList.remove("pg-in"), 900); };
-  window.addEventListener("hashchange", play); setTimeout(play, 400);
-  document.addEventListener("pointermove", e => { const c = e.target.closest && e.target.closest(".panel,.kpi,.kgrp,.dcol,.card"); if (c) { const r = c.getBoundingClientRect(); c.style.setProperty("--mx", (e.clientX - r.left) + "px"); c.style.setProperty("--my", (e.clientY - r.top) + "px"); } }, { passive: true });
-})();
 </script>
 
 </body></html>
