@@ -232,8 +232,11 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .bn-li div{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:14px}.bn-li small{display:block;font-size:12.5px;line-height:1.5;opacity:.92;margin-top:3px}
 .t3home .hero{background:radial-gradient(130% 120% at 85% -20%,#f6c453 0%,#b7791f 45%,#3a2400 100%)!important;box-shadow:0 18px 44px -14px rgba(246,196,83,.55)!important}
 .t3home .hero .rank{color:#fff8dc!important;text-shadow:0 2px 22px rgba(255,220,120,.8)}
-.t3home .hero:after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.28) 50%,transparent 65%);transform:translateX(-120%);animation:t3shine 4s infinite;pointer-events:none}
-@keyframes t3shine{to{transform:translateX(120%)}}
+.eg-ov{position:fixed;z-index:8000;pointer-events:none;overflow:hidden}
+.eg{position:absolute;left:-60px;width:54px;fill:#fff3c4;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5));animation:egfly 3.4s ease-in forwards;opacity:0}
+.eg svg{width:100%;display:block;fill:inherit;animation:egflap .28s ease-in-out infinite alternate;transform-origin:50% 60%}
+@keyframes egfly{0%{opacity:0;transform:translateX(0)}10%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateX(var(--w))}}
+@keyframes egflap{to{transform:scaleY(.55)}}
 .t3-badge{position:absolute;right:14px;bottom:14px;z-index:2;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:16px;background:linear-gradient(135deg,#fff3c4,#f6c453);color:#4a2f00;box-shadow:0 8px 20px rgba(0,0,0,.35);font-size:14px}
 .t3-badge span{font-size:22px;animation:t3bob 2s ease-in-out infinite}.t3-badge em{font-style:normal;font-weight:800;background:#4a2f00;color:#fff3c4;border-radius:8px;padding:1px 7px}
 @keyframes t3bob{50%{transform:translateY(-3px) rotate(-8deg)}}
@@ -1140,6 +1143,26 @@ function bannerCheck(){
   }
 }
 /* Top 3 drivers: a different home (gold) with a permanent crown badge on the rank card */
+
+const EG_SVG = '<svg viewBox="0 0 64 34"><path d="M32 17C27 9 15 5 1 8c11 3 17 9 21 19l6-4 4 8 4-8 6 4c4-10 10-16 21-19C49 5 37 9 32 17z"/><circle cx="32" cy="13" r="2.5"/></svg>';
+let egCtx = null;
+function egSound(){
+  try {
+    egCtx = egCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const c = egCtx, go = () => { for (let i = 0; i < 3; i++) { const t0 = c.currentTime + .05 + i * 0.75, o = c.createOscillator(), f = c.createBiquadFilter(), g = c.createGain(), lfo = c.createOscillator(), lg = c.createGain();
+      o.type = "sawtooth"; o.frequency.setValueAtTime(2600, t0); o.frequency.exponentialRampToValueAtTime(1500, t0 + .25); o.frequency.exponentialRampToValueAtTime(2300, t0 + .5);
+      lfo.frequency.value = 38; lg.gain.value = 140; lfo.connect(lg); lg.connect(o.frequency); f.type = "bandpass"; f.frequency.value = 2200; f.Q.value = 1.2;
+      g.gain.setValueAtTime(0, t0); g.gain.linearRampToValueAtTime(.28, t0 + .06); g.gain.exponentialRampToValueAtTime(.001, t0 + .55);
+      o.connect(f); f.connect(g); g.connect(c.destination); o.start(t0); lfo.start(t0); o.stop(t0 + .6); lfo.stop(t0 + .6); } };
+    if (c.state === "suspended") { c.resume().then(go).catch(() => { document.addEventListener("pointerdown", () => c.resume().then(go), { once: true }); }); } else go();
+  } catch {}
+}
+function eagleFly(){
+  const h = document.querySelector(".t3home .hero"); if (!h || document.getElementById("egOv")) return;
+  const r = h.getBoundingClientRect(), o = document.createElement("div"); o.id = "egOv"; o.className = "eg-ov"; o.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;--w:${r.width + 120}px`;
+  o.innerHTML = [0, 1, 2, 3, 4].map(i => `<div class="eg" style="top:${14 + (i * 37) % 70}%;width:${40 + (i % 3) * 8}px;animation-delay:${i * .35}s">${EG_SVG}</div>`).join("");
+  document.body.append(o); egSound(); setTimeout(() => o.remove(), 5400);
+}
 const t3Line = m => bt("t3p", null, bnDay(m));
 const t3Badge = m => `<div class="t3-badge"><span>👑</span><b>TOP 3</b><em>#${+m.month.rank || 1}</em></div>`;
 function vHome(m){
@@ -1479,7 +1502,7 @@ function vCondPage(){
   return subHead(t("vc_title")) + `<p class="muted" style="font-size:13px;margin:0 4px 10px">${t("vc_hint2")}</p>` + (hasVeh ? card("out") + card("in") : `<section class="card"><div class="muted" style="text-align:center;padding:14px 0">${t("vc_novehicle")}</div></section>`)
     + legacy.map(c => `<section class="card"><div style="display:flex;justify-content:space-between"><b>${t(c.kind === "out" ? "vc_out" : "vc_in")}</b><span class="num">${esc(dmy(c.date))}</span></div>${["ext", "int"].map(k => (c[k] || []).length ? `<div class="muted" style="font-size:12px;margin:8px 0 4px">${t("vc_" + k)}</div><div class="vph">${c[k].map(x => `<img src="${esc(x.url)}" data-zoom loading="lazy" alt="">`).join("")}</div>` : "").join("")}</section>`).join("");
 }
-document.addEventListener("click", e => { const b = e.target.closest("[data-bntest]"); if (b && S.data) { if (b.dataset.bntest === "home") { S.t3force = !S.t3force; render(); return; } document.getElementById("bnOv")?.remove(); bannerShow(S.data.m, b.dataset.bntest); } });
+document.addEventListener("click", e => { if (e.target.closest(".t3home .hero")) eagleFly(); const b = e.target.closest("[data-bntest]"); if (b && S.data) { if (b.dataset.bntest === "home") { S.t3force = !S.t3force; S._eg = 0; render(); return; } document.getElementById("bnOv")?.remove(); bannerShow(S.data.m, b.dataset.bntest); } });
 document.addEventListener("click", async e => {
   const el = e.target.closest("[data-vcadd],[data-vcdel],[data-vcsub]"); if (!el) return;
   const done = async () => { try { await refresh(true); } catch {} render(); };
@@ -1548,6 +1571,7 @@ function render(){
   $("#root").innerHTML = S.view === "login" ? vLogin() : S.view === "signup" ? vSignup() : vApp();
   if (focused !== null && $("#rid")) { $("#rid").focus(); $("#rid").setSelectionRange(focused, focused); }
   try { bannerCheck(); } catch {}
+  try { const m = S.data?.m; if (m && isTop3(m) && !S.sub && S.tab === "home" && !S._eg && !document.getElementById("bnOv")) { S._eg = 1; setTimeout(eagleFly, 400); } } catch {}
 }
 function shiftCard(){
   const d = S.sh; if (!d || !d.ok) return "";
