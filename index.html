@@ -1126,7 +1126,8 @@ const SH = { loaded: false, loading: false, rows: [], key: "" };
 const shDim = m => { const [y, mo] = m.split("-").map(Number); return new Date(Date.UTC(y, mo, 0)).getUTCDate(); };
 async function loadShift(){
   const day = state.shDay || todayKey(), m = day.slice(0, 7); if (SH.loading) return; SH.loading = true;
-  try { const { data } = await sb.from("shifts").select("*").gte("day", m + "-01").lt("day", mShift(m, 1) + "-01").limit(5000); SH.rows = data ?? []; SH.key = m; SH.loaded = true; }
+  try { const { data } = await sb.from("shifts").select("*").gte("day", m + "-01").lt("day", mShift(m, 1) + "-01").limit(5000); SH.rows = data ?? []; SH.key = m; SH.loaded = true;
+    try { const c = await sb.from("docs").select("data").eq("coll", "shift_cfg").eq("id", "main").maybeSingle(); SH.cfg = { sound_s: +c.data?.data?.sound_s || 40, vib_s: +c.data?.data?.vib_s || 180 }; } catch { SH.cfg = SH.cfg || { sound_s: 40, vib_s: 180 }; } }
   finally { SH.loading = false; }
   if (view() === "shift") render();
 }
@@ -1146,6 +1147,9 @@ function vShift(){
   const reg = emps.map(([id, e]) => [e, Object.values(by[id] || {}).filter(r => r.leave).map(r => r.day).sort()]).filter(x => x[1].length);
   return head + `
   <div class="head" style="margin-top:-6px"><div class="tools" style="gap:8px"><button class="btn ghost sm" data-act="sh-step" data-v="-1">‹</button><input class="input" type="date" id="shDay" value="${day}" style="width:auto"><button class="btn ghost sm" data-act="sh-step" data-v="1">›</button></div></div>
+  <section class="panel" style="padding:12px 14px;margin-bottom:12px"><b>🔔 ${t("sh_rules_t")}</b><p class="sub" style="margin:4px 0 8px">${t("sh_rules_h")}</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label class="f">${t("sh_snd_s")}<input class="input" type="number" min="5" max="120" id="shCfgS" value="${(SH.cfg || {}).sound_s || 40}"></label><label class="f">${t("sh_vib_s")}<input class="input" type="number" min="5" max="300" id="shCfgV" value="${(SH.cfg || {}).vib_s || 180}"></label></div>
+    <button class="btn sm" style="margin-top:10px" data-act="sh-cfg">${t("sh_save")}</button></section>
   <details class="panel" style="padding:12px 14px;margin-bottom:12px" open><summary style="cursor:pointer;font-weight:600">➕ ${t("sh_add")}</summary>
     <div style="margin-top:10px">
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label class="f">${t("sh_start")}<input class="input" type="time" id="shS"></label><label class="f">${t("sh_end")}<input class="input" type="time" id="shE"></label>
@@ -1160,6 +1164,7 @@ function vShift(){
 }
 async function shUpsert(rows){ const { error } = await sb.from("shifts").upsert(rows.map(r => ({ ...r, updated_at: new Date().toISOString() })), { onConflict: "emp_id,day" }); if (error) { toast(error.message); return false; } return true; }
 /* shared month calendar: ‹ Month › 📅 popup. sel "" = all months (when opts.all) */
+Object.assign(I18N.en, { sh_rules_t: "Alarm rules", sh_rules_h: "Applies to all drivers (takes effect with the next app update). Sound stops after the seconds below; vibration continues until the driver opens the app or presses a volume key, or until the limit.", sh_snd_s: "Sound (seconds)", sh_vib_s: "Vibration limit (seconds)" }); Object.assign(I18N.bn, { sh_rules_t: "এলার্মের নিয়ম", sh_rules_h: "সব কর্মীর জন্য (পরের অ্যাপ আপডেটের পর কার্যকর হবে)। সাউন্ড নিচের সেকেন্ড পর বন্ধ হবে; ভাইব্রেশন চলবে যতক্ষণ কর্মী অ্যাপে না ঢোকে বা ভলিউম বাটন না চাপে, অথবা সীমা পর্যন্ত।", sh_snd_s: "সাউন্ড (সেকেন্ড)", sh_vib_s: "ভাইব্রেশনের সর্বোচ্চ সীমা (সেকেন্ড)" }); Object.assign(I18N.ar, { sh_rules_t: "قواعد المنبه", sh_rules_h: "لجميع السائقين (يسري مع التحديث القادم). يتوقف الصوت بعد الثواني أدناه؛ ويستمر الاهتزاز حتى يفتح السائق التطبيق أو يضغط زر الصوت أو حتى الحد.", sh_snd_s: "الصوت (ثانية)", sh_vib_s: "حد الاهتزاز (ثانية)" });
 Object.assign(I18N.en, { sh_selall: "Select all", sh_clr: "Clear", sh_by_time: "Today’s shifts by time" }); Object.assign(I18N.bn, { sh_selall: "সবাইকে বাছুন", sh_clr: "মুছুন", sh_by_time: "সময় অনুযায়ী শিফট" }); Object.assign(I18N.ar, { sh_selall: "تحديد الكل", sh_clr: "مسح", sh_by_time: "الورديات حسب الوقت" });
 Object.assign(I18N.en, { mp_all: "All months" }); Object.assign(I18N.bn, { mp_all: "সব মাস" }); Object.assign(I18N.ar, { mp_all: "كل الشهور" });
 const MP_HOOK = { opsMonth: 1, payMonth: 1, profMonth: 1, fuelMonth: 1 };
@@ -3427,6 +3432,8 @@ document.addEventListener("click", async e => {
       return;
     }
     if (act === "sh-step") { const d = new Date((state.shDay || todayKey()) + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + +b.dataset.v); state.shDay = d.toISOString().slice(0, 10); render(); return; }
+    if (act === "sh-cfg") { const a = Math.min(120, Math.max(5, +$("#shCfgS").value || 40)), v = Math.min(300, Math.max(5, +$("#shCfgV").value || 180));
+      const { error } = await sb.from("docs").upsert({ coll: "shift_cfg", id: "main", data: { sound_s: a, vib_s: v }, updated_at: new Date().toISOString() }); if (error) { toast(error.message); return; } SH.cfg = { sound_s: a, vib_s: v }; toast(t("sh_saved")); return; }
     if (act === "sh-selall" || act === "sh-selnone") { document.querySelectorAll(".sh-emp").forEach(x => { x.checked = act === "sh-selall"; }); const c = $("#shCnt"); if (c) c.textContent = act === "sh-selall" ? document.querySelectorAll(".sh-emp").length : 0; return; }
     if (act === "sh-save") {
       const ids = [...document.querySelectorAll(".sh-emp:checked")].map(x => x.value);
