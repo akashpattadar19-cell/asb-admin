@@ -241,6 +241,8 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 @keyframes t3bob{50%{transform:translateY(-3px) rotate(-8deg)}}
 .t3-strip{border-radius:20px;padding:14px 16px;margin-bottom:12px;color:#fff8dc;background:linear-gradient(135deg,#5a3a00,#b7791f);border:1px solid rgba(246,196,83,.6);font-size:13.5px;line-height:1.6}
 .t3-strip b{display:block;font-size:15px;margin-bottom:4px;color:#ffe08a}
+.hm-wrap{display:flex;flex-direction:column;gap:9px}
+.t3home{display:flex;flex-direction:column;gap:9px}
 .t3home .tile{border-color:rgba(246,196,83,.5)!important;box-shadow:0 8px 22px -12px rgba(246,196,83,.6)}
 .t3home .card:not(.hero){border-color:rgba(246,196,83,.28)}
 .pf-top{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;padding:4px 0 12px;border-bottom:1px solid var(--line);margin-bottom:4px}
@@ -1167,7 +1169,7 @@ function vHome(m){
   const banners = headlineBanner(m) + homeNotices(m);   // build with the current "seen" mark…
   armHomeSeen();              // …then, after it has been on screen a moment, mark it seen so it won't float again
   const T3 = isTop3(m);
-  return `<div class="${T3 ? "t3home" : ""}">${T3 ? `<div class="t3-strip"><b>👑 ASB Champion · TOP 3</b>${t3Line(m)}</div>` : ""}${banners}
+  return `<div class="${T3 ? "t3home" : "hm-wrap"}">${T3 ? `<div class="t3-strip"><b>👑 ASB Champion · TOP 3</b>${t3Line(m)}</div>` : ""}${banners}
   <section class="card hero">
     <div class="hero-wm"></div>
     <div class="hero-grid">${ava(p.photo, p.fullName, 60, "border-radius:22px;border:3px solid var(--gold)")}
