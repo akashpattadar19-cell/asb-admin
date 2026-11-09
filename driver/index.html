@@ -233,10 +233,9 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .t3home .hero{background:radial-gradient(130% 120% at 85% -20%,#f6c453 0%,#b7791f 45%,#3a2400 100%)!important;box-shadow:0 18px 44px -14px rgba(246,196,83,.55)!important}
 .t3home .hero .rank{color:#fff8dc!important;text-shadow:0 2px 22px rgba(255,220,120,.8)}
 .eg-ov{position:fixed;z-index:8000;pointer-events:none;overflow:hidden}
-.eg{position:absolute;left:-60px;width:54px;fill:#fff3c4;filter:drop-shadow(0 3px 6px rgba(0,0,0,.5));animation:egfly 3.4s ease-in forwards;opacity:0}
-.eg svg{width:100%;display:block;fill:inherit;animation:egflap .28s ease-in-out infinite alternate;transform-origin:50% 60%}
+.eg{position:absolute;left:-70px;aspect-ratio:1.23;background:var(--wm) center/contain no-repeat;filter:brightness(2.2) contrast(1.3) drop-shadow(0 0 6px rgba(255,235,170,.9));animation:egfly 3.4s ease-in forwards,egflap .45s ease-in-out infinite alternate;opacity:0}
 @keyframes egfly{0%{opacity:0;transform:translateX(0)}10%{opacity:1}85%{opacity:1}100%{opacity:0;transform:translateX(var(--w))}}
-@keyframes egflap{to{transform:scaleY(.55)}}
+@keyframes egflap{to{rotate:-6deg}}
 .t3-badge{position:absolute;right:14px;bottom:14px;z-index:2;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:16px;background:linear-gradient(135deg,#fff3c4,#f6c453);color:#4a2f00;box-shadow:0 8px 20px rgba(0,0,0,.35);font-size:14px}
 .t3-badge span{font-size:22px;animation:t3bob 2s ease-in-out infinite}.t3-badge em{font-style:normal;font-weight:800;background:#4a2f00;color:#fff3c4;border-radius:8px;padding:1px 7px}
 @keyframes t3bob{50%{transform:translateY(-3px) rotate(-8deg)}}
@@ -1160,7 +1159,7 @@ function egSound(){
 function eagleFly(){
   const h = document.querySelector(".t3home .hero"); if (!h || document.getElementById("egOv")) return;
   const r = h.getBoundingClientRect(), o = document.createElement("div"); o.id = "egOv"; o.className = "eg-ov"; o.style.cssText = `left:${r.left}px;top:${r.top}px;width:${r.width}px;height:${r.height}px;--w:${r.width + 120}px`;
-  o.innerHTML = [0, 1, 2, 3, 4].map(i => `<div class="eg" style="top:${14 + (i * 37) % 70}%;width:${40 + (i % 3) * 8}px;animation-delay:${i * .35}s">${EG_SVG}</div>`).join("");
+  o.innerHTML = [0, 1, 2, 3, 4].map(i => `<div class="eg" style="top:${14 + (i * 37) % 70}%;width:${46 + (i % 3) * 8}px;animation-delay:${i * .35}s"></div>`).join("");
   document.body.append(o); egSound(); setTimeout(() => o.remove(), 5400);
 }
 const t3Line = m => bt("t3p", null, bnDay(m));
