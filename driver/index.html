@@ -1004,11 +1004,10 @@ function tgLeaderboard(m){
       <div style="display:flex;gap:10px;align-items:center;min-width:0;flex:1">${ava(r.p, r.n, 36)}<div style="min-width:0;flex:1"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(r.n)}${r.me ? ` · ${t("you")}` : ""}</b>
         ${r.me ? `<div class="tbar2" style="margin-top:6px"><span style="width:${pc}%;${r.o >= r.t ? "background:var(--good)" : ""}"></span></div>` : ""}</div></div>
       ${r.me ? `<div class="v" style="min-width:64px"><div class="num" style="font-size:17px">${fmt0(r.o)}</div><div class="muted" style="font-size:11.5px">${t("tg_done_s")} / ${fmt0(r.t)}</div></div>` : ""}</div>`; };
-  return `<section class="card"><h3>${t("tg_top10")}</h3>
-    ${mePos ? `<div class="tg-mypos"><span>📍 ${t("tg_your_pos")}</span><b>#${mePos} <small>/ ${pool.length}</small></b></div>` : ""}
+  return `<section class="card"><h3>${t("tg_your_pos")}</h3>
+    ${mePos ? `<div class="tg-mypos"><span>📍 ${t("tg_your_pos")}</span><b>#${mePos} <small>/ ${pool.length}</small></b></div>` : `<div class="empty">${t("noboard")}</div>`}
     <div class="seg" style="margin:4px 0 10px">${[["", t("tg_f_all")], ["R", t("rk_r")], ["U", t("rk_u")]].map(([k, l]) => `<button data-tq="${k}" aria-pressed="${(S.tq || "") === k}">${l}</button>`).join("")}</div>
-    ${top10.length ? `<div class="list">${top10.map(trow).join("")}</div>` : `<div class="empty">${t("noboard")}</div>`}
-    ${meOut ? `<div class="gap">···</div><div class="list">${trow(meOut)}</div>` : ""}
+    ${meRow ? `<div class="list">${trow(meRow)}</div>` : ""}
   </section>`;
 }
 function vTargetPage(m){
@@ -1189,7 +1188,6 @@ function vHome(m){
     ${S.fuelNa && !S.fuelNeed && !S.fuelRes ? `<div style="font-size:11.5px;margin-top:6px;color:#C2410C">⚠ ${t("fna_note")}</div>` : ""}
     ${fEntries(m.fuel).length ? `<div class="fp-mini">${fEntries(m.fuel).slice(-3).map(x => `<span><small>${esc(fRange(x))}</small><b>${fmt(x.a)}</b></span>`).join("")}</div>` : ""}
   </button>
-  <section class="card"><h3>${t("board")}</h3>${board(m.board)}</section>
   <div class="tiles"><button class="tile" data-sub="vehicle"><div class="tile-top"><span class="tile-ic" style="font-size:16px">🚗</span><span class="tile-go">›</span></div><b>${t("vh_tile")}</b><small class="muted">${(S.data?.vehicles || [])[0]?.plate ? `<span class="num">${esc(S.data.vehicles[0].plate)}</span>` : t("vh_none")}</small></button>
     <button class="tile" data-sub="vcond"><div class="tile-top"><span class="tile-ic" style="font-size:16px">📸</span><span class="tile-go">›</span></div><b>${t("vc_title")}</b><small class="muted">${t("vc_sub")}${(S.data?.vconds || []).length ? " · " + (S.data.vconds || []).length : ""}</small></button></div>
 ${(() => { const i = m.internet || {}; if (!i.lastPaid && !(+i.amount > 0)) return ""; const nx = i.lastPaid ? addDaysD(i.lastPaid, 28) : "", dl = nx ? dUntil(nx) : null, over = dl != null && dl <= 0; return `
