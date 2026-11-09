@@ -230,6 +230,17 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .bn-gb{width:64px;height:64px;border-radius:20px;background:#fff;color:#c2312f;font:800 36px/64px Inter,sans-serif;margin:0 auto;box-shadow:0 8px 18px rgba(0,0,0,.35)}
 .bn-sub{font-weight:800;font-size:14px;text-align:start;margin:14px 2px 2px}.bn-li{background:rgba(255,255,255,.16);border-radius:14px;padding:10px 12px;margin-top:8px;text-align:start}
 .bn-li div{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:14px}.bn-li small{display:block;font-size:12.5px;line-height:1.5;opacity:.92;margin-top:3px}
+.t3home .hero{background:radial-gradient(130% 120% at 85% -20%,#f6c453 0%,#b7791f 45%,#3a2400 100%)!important;box-shadow:0 18px 44px -14px rgba(246,196,83,.55)!important}
+.t3home .hero .rank{color:#fff8dc!important;text-shadow:0 2px 22px rgba(255,220,120,.8)}
+.t3home .hero:after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 35%,rgba(255,255,255,.28) 50%,transparent 65%);transform:translateX(-120%);animation:t3shine 4s infinite;pointer-events:none}
+@keyframes t3shine{to{transform:translateX(120%)}}
+.t3-badge{position:absolute;right:14px;bottom:14px;z-index:2;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:16px;background:linear-gradient(135deg,#fff3c4,#f6c453);color:#4a2f00;box-shadow:0 8px 20px rgba(0,0,0,.35);font-size:14px}
+.t3-badge span{font-size:22px;animation:t3bob 2s ease-in-out infinite}.t3-badge em{font-style:normal;font-weight:800;background:#4a2f00;color:#fff3c4;border-radius:8px;padding:1px 7px}
+@keyframes t3bob{50%{transform:translateY(-3px) rotate(-8deg)}}
+.t3-strip{border-radius:20px;padding:14px 16px;margin-bottom:12px;color:#fff8dc;background:linear-gradient(135deg,#5a3a00,#b7791f);border:1px solid rgba(246,196,83,.6);font-size:13.5px;line-height:1.6}
+.t3-strip b{display:block;font-size:15px;margin-bottom:4px;color:#ffe08a}
+.t3home .tile{border-color:rgba(246,196,83,.5)!important;box-shadow:0 8px 22px -12px rgba(246,196,83,.6)}
+.t3home .card:not(.hero){border-color:rgba(246,196,83,.28)}
 .pf-top{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;padding:4px 0 12px;border-bottom:1px solid var(--line);margin-bottom:4px}
 .pf-grade{display:flex;gap:10px;align-items:center}
 .bigg{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;font:700 34px var(--f-display);color:#fff}
@@ -1035,66 +1046,82 @@ function themeRow(){
   const cur = document.documentElement.dataset.skin || "water";
   const tt = ({en:"Theme",bn:"থিম",ar:"المظهر"})[lang];
   const nm = { water: ({en:"Water",bn:"ওয়াটার",ar:"مائي"})[lang], lav: ({en:"Lavender",bn:"ল্যাভেন্ডার",ar:"بنفسجي"})[lang] };
-  const bnT = BN_PILOT.test(String(S.data?.m?.profile?.fullName || "")) ? `<div class="thm-row" style="flex-wrap:wrap;gap:6px"><span>🧪 Banner test</span><div>${[["t3","Top3"],["t10","Top10"],["oth","Other"],["warn","C/D"]].map(([k,l]) => `<button data-bntest="${k}">${l}</button>`).join("")}</div></div>` : "";
+  const bnT = BN_PILOT.test(String(S.data?.m?.profile?.fullName || "")) ? `<div class="thm-row" style="flex-wrap:wrap;gap:6px"><span>🧪 Banner test</span><div>${[["t3","Top3"],["t10","Top10"],["oth","Other"],["warn","C/D"],["home","Top3 home"]].map(([k,l]) => `<button data-bntest="${k}">${l}</button>`).join("")}</div></div>` : "";
   return bnT + `<div class="thm-row"><span>🎨 ${tt}</span><div>${[["water","🌊"],["lav","💜"]].map(([k,i]) => `<button data-skin="${k}" aria-pressed="${cur===k}">${i} ${nm[k]}</button>`).join("")}</div></div>`;
 }
 /* ── daily motivation / warning banner (shown after Performance / Order details are published) ── */
 const BN_PILOT = /ALAMIN\s+SHAIKH/i;   // pilot: only this test account sees it until the owner approves
 const BN = {
-  en: { sal:"Assalamu alaikum wa rahmatullah", ok:"Tap outside to close", dua:"May Allah bless your work and your rizq. Insha’Allah you can do it.",
-    t3h:"Congratulations, {n}!", t3p:"By Allah’s grace you are among the TOP 3 drivers of ASB LOGISTICS. Your effort, discipline and honesty inspire the whole team. Keep going, Barakallahu feek.",
-    t10h:"MashaAllah, {n}!", t10p:"You are in the TOP 10 this month. Your steady effort is clear to everyone. A little more and you can reach the Top 3, Insha’Allah.", gap:"Orders to reach Top 3", rk:"Rank",
-    oth:"Thank you, {n}!", othp:"We truly value your interest and hard work. Every order and every day moves you forward. Keep going, the best is still ahead, Insha’Allah.", gr:"Grade",
-    wh:"You need to improve", wp:"Your current grade is {g}. Fix the points below and both your grade and rank will go up, Insha’Allah.", how:"What to do",
-    ord:"Orders this month: {o} of {t}. Remaining {r}, about {d} per day for {days} days.",
+  en: { sal:"Assalamu alaikum wa rahmatullah", ok:"Tap outside to close", rk:"Rank", gr:"Grade", gap:"Orders to reach Top 3", how:"What to do", more:"To improve further",
+    dua:["May Allah bless your work and your rizq. Insha’Allah you can do it.","Work with ihsan and Allah will open the doors of rizq. Keep going.","Be patient and consistent. Allah does not waste the effort of those who do good."],
+    t3h:"Congratulations, {n}!", t3p:["By Allah’s grace you are among the TOP 3 drivers of ASB LOGISTICS. Your effort and discipline inspire the whole team. Barakallahu feek.","MashaAllah, you lead from the front. Keep your honesty and your hard work, and stay on the podium, Insha’Allah.","You are an example for every driver here. Thank you for your effort. May Allah keep you strong."],
+    t10h:"MashaAllah, {n}!", t10p:["You are in the TOP 10 this month. A little more effort and you can reach the Top 3, Insha’Allah.","Your steady work is clear to everyone. The Top 3 is within reach, keep pushing.","Top 10 is a great place. Stay consistent and the podium is next, Insha’Allah."],
+    oth:"Thank you, {n}!", othp:["We truly value your interest and hard work. Every order moves you forward. Keep going, the best is still ahead, Insha’Allah.","Your effort is noticed. Small steps every day make a big result. Keep going.","Thank you for working with us. Stay patient and consistent, and your rank will rise, Insha’Allah."],
+    wh:"You need to improve", whk:"{m} is your weak point", wp:["Your grade is {g}. Fix the points below and your grade and rank will go up, Insha’Allah.","Grade {g} today. These are the exact reasons. Work on them and the result will change, Insha’Allah.","Your grade is {g}. Good drivers get more orders, so let’s fix these together."],
+    dn:"dropped from {a}% to {b}%", lw:"now {b}%", pace:"Your orders are behind the pace needed for the target.",
     fa:"Forced assignment", fa_h:"Accept and finish the orders the system assigns to you.", ot:"On-time delivery", ot_h:"Reach the customer on time. Plan your route and don’t delay.",
     cr:"Order completion", cr_h:"Complete every order you accept. Avoid cancelling.", ne:"Not marked delivered early", ne_h:"Press “Delivered” only after you reach the customer.",
     gen:"Your overall score is low. Be on time, finish every order and follow the app rules." },
-  bn: { sal:"আসসালামু আলাইকুম ওয়া রাহমাতুল্লাহ", ok:"বাইরে ট্যাপ করলে বন্ধ হবে", dua:"আল্লাহ আপনার কাজ ও রিযিকে বরকত দিন। ইনশাআল্লাহ আপনি পারবেন।",
-    t3h:"অভিনন্দন, {n}!", t3p:"আল্লাহর রহমতে আপনি ASB LOGISTICS-এর সেরা ৩ জনের একজন। আপনার পরিশ্রম, নিয়মানুবর্তিতা ও সততা পুরো টিমকে অনুপ্রাণিত করে। এভাবেই চালিয়ে যান, বারাকাল্লাহু ফীক।",
-    t10h:"মাশাআল্লাহ, {n}!", t10p:"এই মাসে আপনি শীর্ষ ১০ জনের মধ্যে আছেন। আপনার নিয়মিত পরিশ্রম সবার চোখে পড়ছে। আর একটু চেষ্টায় ইনশাআল্লাহ সেরা ৩-এ পৌঁছে যাবেন।", gap:"সেরা ৩-এ উঠতে বাকি অর্ডার", rk:"র‍্যাংক",
-    oth:"ধন্যবাদ, {n}!", othp:"আপনার আগ্রহ ও পরিশ্রমকে আমরা সত্যিই মূল্য দিই। প্রতিটি অর্ডার, প্রতিটি দিন আপনাকে এগিয়ে নিচ্ছে। চালিয়ে যান, ইনশাআল্লাহ সামনে আরও ভালো সময়।", gr:"গ্রেড",
-    wh:"আরও উন্নতি দরকার", wp:"আপনার বর্তমান গ্রেড {g}। নিচের বিষয়গুলো ঠিক করলে ইনশাআল্লাহ গ্রেড ও র‍্যাংক দুটোই বাড়বে।", how:"কী করতে হবে",
-    ord:"এই মাসে অর্ডার: {t}-এর মধ্যে {o}। বাকি {r}, আগামী {days} দিনে দিনে প্রায় {d}টি।",
+  bn: { sal:"আসসালামু আলাইকুম ওয়া রাহমাতুল্লাহ", ok:"বাইরে ট্যাপ করলে বন্ধ হবে", rk:"র‍্যাংক", gr:"গ্রেড", gap:"সেরা ৩-এ উঠতে বাকি অর্ডার", how:"কী করতে হবে", more:"আরও ভালো করতে",
+    dua:["আল্লাহ আপনার কাজ ও রিযিকে বরকত দিন। ইনশাআল্লাহ আপনি পারবেন।","সততার সাথে কাজ করুন, আল্লাহ রিযিকের দরজা খুলে দেবেন। চালিয়ে যান।","ধৈর্য ও নিয়মিত থাকুন। যারা ভালো কাজ করে আল্লাহ তাদের পরিশ্রম নষ্ট করেন না।"],
+    t3h:"অভিনন্দন, {n}!", t3p:["আল্লাহর রহমতে আপনি ASB LOGISTICS-এর সেরা ৩ জনের একজন। আপনার পরিশ্রম ও নিয়মানুবর্তিতা পুরো টিমকে অনুপ্রাণিত করে। বারাকাল্লাহু ফীক।","মাশাআল্লাহ, আপনি সামনে থেকে নেতৃত্ব দিচ্ছেন। সততা আর পরিশ্রম ধরে রাখুন, ইনশাআল্লাহ সেরা ৩-এই থাকবেন।","আপনি এখানে সব কর্মীর জন্য উদাহরণ। আপনার পরিশ্রমের জন্য ধন্যবাদ। আল্লাহ আপনাকে শক্তিশালী রাখুন।"],
+    t10h:"মাশাআল্লাহ, {n}!", t10p:["এই মাসে আপনি শীর্ষ ১০ জনের মধ্যে আছেন। আর একটু চেষ্টায় ইনশাআল্লাহ সেরা ৩-এ পৌঁছাবেন।","আপনার নিয়মিত কাজ সবার চোখে পড়ছে। সেরা ৩ আপনার হাতের নাগালে, চালিয়ে যান।","শীর্ষ ১০ দারুণ জায়গা। নিয়মিত থাকলে ইনশাআল্লাহ পরের ধাপ সেরা ৩।"],
+    oth:"ধন্যবাদ, {n}!", othp:["আপনার আগ্রহ ও পরিশ্রমকে আমরা সত্যিই মূল্য দিই। প্রতিটি অর্ডার আপনাকে এগিয়ে নিচ্ছে। চালিয়ে যান, ইনশাআল্লাহ সামনে আরও ভালো সময়।","আপনার চেষ্টা আমরা দেখছি। প্রতিদিনের ছোট ছোট পদক্ষেপই বড় ফল আনে। চালিয়ে যান।","আমাদের সাথে কাজ করার জন্য ধন্যবাদ। ধৈর্য ও নিয়মিত থাকুন, ইনশাআল্লাহ র‍্যাংক বাড়বে।"],
+    wh:"আরও উন্নতি দরকার", whk:"{m} আপনার দুর্বল দিক", wp:["আপনার গ্রেড {g}। নিচের বিষয়গুলো ঠিক করলে ইনশাআল্লাহ গ্রেড ও র‍্যাংক বাড়বে।","আজ গ্রেড {g}। এগুলোই ঠিক কারণ। এগুলোয় কাজ করলে ইনশাআল্লাহ ফল বদলাবে।","আপনার গ্রেড {g}। ভালো কর্মী বেশি অর্ডার পায়, তাই এগুলো একসাথে ঠিক করি।"],
+    dn:"{a}% থেকে নেমে {b}% হয়েছে", lw:"এখন {b}%", pace:"লক্ষ্যে পৌঁছাতে যে গতি দরকার, আপনার অর্ডার তার চেয়ে পিছিয়ে।",
     fa:"বাধ্যতামূলক অ্যাসাইনমেন্ট", fa_h:"সিস্টেম যে অর্ডার দেয় তা গ্রহণ করে শেষ করুন।", ot:"সময়মতো ডেলিভারি", ot_h:"সময়মতো গ্রাহকের কাছে পৌঁছান। রুট ঠিক করে নিন, দেরি করবেন না।",
     cr:"অর্ডার সম্পূর্ণ", cr_h:"যে অর্ডার নেবেন তা শেষ করুন, বাতিল করবেন না।", ne:"আগেভাগে ডেলিভারড চাপেনি", ne_h:"গ্রাহকের কাছে পৌঁছানোর পরই “ডেলিভারড” চাপুন।",
     gen:"আপনার সামগ্রিক স্কোর কম। সময় মানুন, প্রতিটি অর্ডার শেষ করুন এবং অ্যাপের নিয়ম মেনে চলুন।" },
-  ar: { sal:"السلام عليكم ورحمة الله وبركاته", ok:"اضغط خارج البطاقة للإغلاق", dua:"بارك الله في عملك ورزقك. بإذن الله تستطيع.",
-    t3h:"مبروك، {n}!", t3p:"بفضل الله أنت من أفضل ٣ سائقين في ASB LOGISTICS. جهدك وانضباطك وأمانتك يلهمان الفريق كله. واصل، بارك الله فيك.",
-    t10h:"ما شاء الله، {n}!", t10p:"أنت ضمن أفضل ١٠ هذا الشهر. جهدك المستمر واضح للجميع. بقليل من الجهد تصل إلى أفضل ٣ بإذن الله.", gap:"طلبات للوصول إلى أفضل ٣", rk:"الترتيب",
-    oth:"شكراً، {n}!", othp:"نقدّر اهتمامك وجهدك حقاً. كل طلب وكل يوم يقدّمك للأمام. واصل، وبإذن الله القادم أجمل.", gr:"التقدير",
-    wh:"تحتاج إلى تحسين", wp:"تقديرك الحالي {g}. صحّح النقاط التالية وسيرتفع تقديرك وترتيبك بإذن الله.", how:"ماذا تفعل",
-    ord:"طلبات هذا الشهر: {o} من {t}. المتبقي {r}، حوالي {d} يومياً خلال {days} يوماً.",
+  ar: { sal:"السلام عليكم ورحمة الله وبركاته", ok:"اضغط خارج البطاقة للإغلاق", rk:"الترتيب", gr:"التقدير", gap:"طلبات للوصول إلى أفضل ٣", how:"ماذا تفعل", more:"للتحسن أكثر",
+    dua:["بارك الله في عملك ورزقك. بإذن الله تستطيع.","أتقن عملك يفتح الله لك أبواب الرزق. واصل.","اصبر وداوم. الله لا يضيع أجر من أحسن عملاً."],
+    t3h:"مبروك، {n}!", t3p:["بفضل الله أنت من أفضل ٣ سائقين في ASB LOGISTICS. جهدك وانضباطك يلهمان الفريق. بارك الله فيك.","ما شاء الله، أنت في الصدارة. حافظ على أمانتك وجهدك وابقَ على المنصة بإذن الله.","أنت قدوة لكل سائق هنا. شكراً على جهدك. أدامك الله قوياً."],
+    t10h:"ما شاء الله، {n}!", t10p:["أنت ضمن أفضل ١٠ هذا الشهر. بقليل من الجهد تصل إلى أفضل ٣ بإذن الله.","جهدك المستمر واضح للجميع. أفضل ٣ في متناولك، واصل.","أفضل ١٠ مكان رائع. داوم والمنصة هي الخطوة التالية بإذن الله."],
+    oth:"شكراً، {n}!", othp:["نقدّر اهتمامك وجهدك حقاً. كل طلب يقدّمك للأمام. واصل، وبإذن الله القادم أجمل.","جهدك مرئي لنا. خطوات صغيرة كل يوم تصنع نتيجة كبيرة. واصل.","شكراً لعملك معنا. اصبر وداوم وسيرتفع ترتيبك بإذن الله."],
+    wh:"تحتاج إلى تحسين", whk:"{m} هو نقطة ضعفك", wp:["تقديرك {g}. صحّح النقاط التالية وسيرتفع تقديرك وترتيبك بإذن الله.","تقدير اليوم {g}. هذه هي الأسباب بالضبط. اعمل عليها وستتغير النتيجة بإذن الله.","تقديرك {g}. السائق الجيد يحصل على طلبات أكثر، فلنصلح هذه النقاط معاً."],
+    dn:"انخفض من {a}% إلى {b}%", lw:"الآن {b}%", pace:"طلباتك أقل من الوتيرة المطلوبة لبلوغ الهدف.",
     fa:"التعيين الإجباري", fa_h:"اقبل الطلبات التي يعيّنها لك النظام وأكملها.", ot:"التسليم في الوقت", ot_h:"صِل إلى العميل في الوقت. خطّط طريقك ولا تتأخر.",
     cr:"إكمال الطلبات", cr_h:"أكمل كل طلب تقبله وتجنّب الإلغاء.", ne:"عدم التسليم المبكر", ne_h:"اضغط «تم التسليم» بعد وصولك للعميل فقط.",
     gen:"نتيجتك العامة منخفضة. التزم بالوقت وأكمل كل طلب والتزم بقواعد التطبيق." }
 };
-const bt = (k, v) => String((BN[lang] || BN.en)[k] ?? BN.en[k] ?? k).replace(/\{(\w+)\}/g, (_, x) => v && v[x] != null ? v[x] : "");
-function bannerKind(m, force){
-  const cur = ((m.perf || {}).today?.g || (m.perf || {}).today?.rp != null ? m.perf.today : (m.perf || {}).yest) || {};
-  const rk = +m.month?.rank || 0, ranked = m.profile.payType !== "PER_ORDER" && !perfLocked(m) && rk > 0;
-  const warn = cur.g === "C" || cur.g === "D";
-  if (force) return force;
-  if (ranked && rk <= 3) return "t3";
-  if (warn) return "warn";
-  if (ranked && rk <= 10) return "t10";
+const bt = (k, v, i) => { let x = (BN[lang] || BN.en)[k] ?? BN.en[k] ?? k; if (Array.isArray(x)) x = x[(i || 0) % x.length]; return String(x).replace(/\{(\w+)\}/g, (_, y) => v && v[y] != null ? v[y] : ""); };
+const bnDay = m => { const d = Math.floor(Date.parse(todayK() + "T00:00:00Z") / 864e5); let h = 0; for (const c of String(m.profile?.fullName || "")) h = (h * 31 + c.charCodeAt(0)) % 997; return d + h; };   // changes every day, differs per driver
+const bnCur = m => { const pf = m.perf || {}; return (pf.today && (pf.today.g || pf.today.rp != null)) ? pf.today : (pf.yest || {}); };
+const bnRanked = m => m.profile.payType !== "PER_ORDER" && !perfLocked(m) && +m.month?.rank > 0;
+const isTop3 = m => { try { return BN_PILOT.test(String(m.profile?.fullName || "")) && !!(S.t3force || (bnRanked(m) && +m.month.rank <= 3)); } catch { return false; } };
+function bannerKind(m){
+  const cur = bnCur(m), rk = +m.month?.rank || 0;
+  if (bnRanked(m) && rk <= 3) return "t3";
+  if (cur.g === "C" || cur.g === "D") return "warn";
+  if (bnRanked(m) && rk <= 10) return "t10";
   return "oth";
 }
+/* the driver's own weak points, worst first: things that dropped today, then the lowest rates, then order pace */
+function bnIssues(m){
+  const pf = m.perf || {}, cur = bnCur(m), prev = (pf.today && cur === pf.today) ? (pf.yest || {}) : {}, list = [];
+  for (const k of ["fa", "ot", "cr", "ne"]) {
+    if (cur[k] == null || +cur[k] >= 95) continue;
+    const down = prev[k] != null && +cur[k] < +prev[k] - 0.05;
+    list.push({ k, down, score: (95 - +cur[k]) + (down ? 10 : 0), txt: down ? bt("dn", { a: (+prev[k]).toFixed(1), b: (+cur[k]).toFixed(1) }) : bt("lw", { b: (+cur[k]).toFixed(1) }) });
+  }
+  list.sort((a, b) => b.score - a.score);
+  const tg = +(m.plan?.target ?? m.month?.target) || 0, o = +m.month?.o || 0;
+  if (tg && !m.plan?.flat) { const e = new Date(todayK() + "T12:00:00Z"), y = e.getUTCFullYear(), mo = e.getUTCMonth() + (e.getUTCDate() < 2 ? -1 : 0), start = Date.UTC(y, mo, 2, 12), day = Math.max(1, Math.round((e - start) / 864e5)), len = Math.round((Date.UTC(y, mo + 1, 1, 12) - start) / 864e5) + 1;
+    if (o < tg * (day / len) * 0.9) list.push({ k: "pace", score: 1, txt: bt("pace") }); }
+  return list;
+}
+function bnRows(list, max){ return list.slice(0, max).map(x => x.k === "pace" ? `<div class="bn-li"><small>${x.txt}</small></div>` : `<div class="bn-li"><div><span>${bt(x.k)}</span><b>${x.down ? "▼ " : ""}${x.txt}</b></div><small>${bt(x.k + "_h")}</small></div>`).join(""); }
 function bannerHtml(m, kind){
   const p = m.profile, mm = m.month, name = esc((lang === "ar" && p.fullNameAr) ? p.fullNameAr : String(p.fullName || "").split(" ")[0]);
-  const cur = ((m.perf || {}).today?.g || (m.perf || {}).today?.rp != null ? m.perf.today : (m.perf || {}).yest) || {}, rk = +mm.rank || 0, n = fmt0;
-  const head = `<div class="bn-sal">${bt("sal")}</div>`, tail = `<div class="bn-dua">${bt("dua")}</div><div class="bn-hint">${bt("ok")}</div>`;
-  if (kind === "t3") return `<div class="bn-card bn-t3">${head}<div class="bn-med">${["🥇","🥈","🥉"][Math.max(0, rk - 1)] || "🏅"}</div><h2>${bt("t3h", { n: name })}</h2><p>${bt("t3p")}</p><div class="bn-chips"><span>${bt("rk")} #${rk || "—"}</span><span>${n(mm.o)}</span></div>${tail}</div>`;
+  const cur = bnCur(m), rk = +mm.rank || 0, n = fmt0, d = bnDay(m), iss = bnIssues(m);
+  const head = `<div class="bn-sal">${bt("sal")}</div>`, tail = `<div class="bn-dua">${bt("dua", null, d)}</div><div class="bn-hint">${bt("ok")}</div>`;
+  if (kind === "t3") return `<div class="bn-card bn-t3">${head}<div class="bn-med">${["🥇","🥈","🥉"][Math.max(0, rk - 1)] || "🏅"}</div><h2>${bt("t3h", { n: name })}</h2><p>${bt("t3p", null, d)}</p><div class="bn-chips"><span>${bt("rk")} #${rk || "—"}</span><span>${n(mm.o)}</span></div>${tail}</div>`;
   if (kind === "t10") { const b = m.board || [], third = b[2] && b[2].o != null ? Math.max(1, +b[2].o - (+mm.o || 0) + 1) : null;
-    return `<div class="bn-card bn-t10">${head}<div class="bn-med">🏆</div><h2>${bt("t10h", { n: name })}</h2><p>${bt("t10p")}</p><div class="bn-chips"><span>${bt("rk")} #${rk || "—"}</span>${third ? `<span>${bt("gap")}: ${n(third)}</span>` : ""}</div>${tail}</div>`; }
+    return `<div class="bn-card bn-t10">${head}<div class="bn-med">🏆</div><h2>${bt("t10h", { n: name })}</h2><p>${bt("t10p", null, d)}</p><div class="bn-chips"><span>${bt("rk")} #${rk || "—"}</span>${third ? `<span>${bt("gap")}: ${n(third)}</span>` : ""}</div>${iss.length ? `<div class="bn-sub">${bt("more")}</div>${bnRows(iss, 2)}` : ""}${tail}</div>`; }
   if (kind === "warn") {
-    const tg = +(m.plan?.target ?? mm.target) || 0, o = +mm.o || 0, rem = Math.max(0, tg - o);
-    const e = new Date(todayK() + "T12:00:00Z"), endD = new Date(Date.UTC(e.getUTCFullYear(), e.getUTCMonth() + (e.getUTCDate() >= 2 ? 1 : 0), 1, 12)), days = Math.max(1, Math.round((endD - e) / 864e5) + 1);
-    const weak = ["fa", "ot", "cr", "ne"].filter(k => cur[k] != null && +cur[k] < 95).sort((a, b) => cur[a] - cur[b]);
-    const rows = weak.map(k => `<div class="bn-li"><div><span>${bt(k)}</span><b>${(+cur[k]).toFixed(1)}%</b></div><small>${bt(k + "_h")}</small></div>`).join("") || `<div class="bn-li"><small>${bt("gen")}</small></div>`;
-    return `<div class="bn-card bn-warn">${head}<div class="bn-gb ${grCls(cur.g)}x">${esc(cur.g || "-")}</div><h2>${bt("wh")}</h2><p>${bt("wp", { g: esc(cur.g || "-") })}</p>
-      <div class="bn-sub">${bt("how")}</div>${rows}${tg && rem > 0 ? `<div class="bn-li"><small>${bt("ord", { o: n(o), t: n(tg), r: n(rem), d: n(Math.ceil(rem / days)), days })}</small></div>` : ""}${tail}</div>`; }
-  return `<div class="bn-card bn-oth">${head}<div class="bn-med">💚</div><h2>${bt("oth", { n: name })}</h2><p>${bt("othp")}</p><div class="bn-chips">${rk ? `<span>${bt("rk")} #${rk}</span>` : ""}${cur.g && cur.g !== "-" ? `<span>${bt("gr")} ${esc(cur.g)}</span>` : ""}</div>${tail}</div>`;
+    const top = iss.find(x => x.k !== "pace");
+    return `<div class="bn-card bn-warn">${head}<div class="bn-gb">${esc(cur.g || "-")}</div><h2>${top ? bt("whk", { m: bt(top.k) }) : bt("wh")}</h2><p>${bt("wp", { g: esc(cur.g || "-") }, d)}</p>
+      <div class="bn-sub">${bt("how")}</div>${iss.length ? bnRows(iss, 4) : `<div class="bn-li"><small>${bt("gen")}</small></div>`}${tail}</div>`; }
+  return `<div class="bn-card bn-oth">${head}<div class="bn-med">💚</div><h2>${bt("oth", { n: name })}</h2><p>${bt("othp", null, d)}</p><div class="bn-chips">${rk ? `<span>${bt("rk")} #${rk}</span>` : ""}${cur.g && cur.g !== "-" ? `<span>${bt("gr")} ${esc(cur.g)}</span>` : ""}</div>${iss.length ? `<div class="bn-sub">${bt("more")}</div>${bnRows(iss, 2)}` : ""}${tail}</div>`;
 }
 function bannerShow(m, kind){
   if (document.getElementById("bnOv")) return;
@@ -1103,7 +1130,7 @@ function bannerShow(m, kind){
   document.body.append(o);
 }
 function bannerCheck(){
-  const m = S.data?.m; if (!m || S.view !== "app" && S.view !== undefined && S.view !== "home") { /* keep going; only block on missing data */ }
+  const m = S.data?.m;
   if (!m || !BN_PILOT.test(String(m.profile?.fullName || "")) || S.sub || S.tab !== "home" || document.getElementById("bnOv")) return;
   const now = Date.now();
   for (const kind of ["orders", "perf"]) {
@@ -1112,13 +1139,17 @@ function bannerCheck(){
     if (at > (+store.get(key) || 0)) { try { store.set(key, String(at)); } catch {} if (now - at < 30 * 36e5) { bannerShow(m, bannerKind(m)); return; } }
   }
 }
+/* Top 3 drivers: a different home (gold) with a permanent crown badge on the rank card */
+const t3Line = m => bt("t3p", null, bnDay(m));
+const t3Badge = m => `<div class="t3-badge"><span>👑</span><b>TOP 3</b><em>#${+m.month.rank || 1}</em></div>`;
 function vHome(m){
   const p = m.profile, mm = m.month, out = duesOf(m).filter(x => !x.waived).reduce((s, f) => s + (+f.remaining || 0), 0);
   const target = +mm.target || 0, pct = target ? Math.min(100, mm.o / target * 100) : 0, isRank = p.payType !== "PER_ORDER";
   const upd = mm.at ? new Date(mm.at).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { timeZone: "Asia/Riyadh", day: "numeric", month: "short" }) : "";
   const banners = headlineBanner(m) + homeNotices(m);   // build with the current "seen" mark…
   armHomeSeen();              // …then, after it has been on screen a moment, mark it seen so it won't float again
-  return `${banners}
+  const T3 = isTop3(m);
+  return `<div class="${T3 ? "t3home" : ""}">${T3 ? `<div class="t3-strip"><b>👑 ASB Champion · TOP 3</b>${t3Line(m)}</div>` : ""}${banners}
   <section class="card hero">
     <div class="hero-wm"></div>
     <div class="hero-grid">${ava(p.photo, p.fullName, 60, "border-radius:22px;border:3px solid var(--gold)")}
@@ -1126,6 +1157,7 @@ function vHome(m){
     <div class="hero-stats" style="grid-template-columns:1fr">
       <div><div class="row"><div class="lbl">${t("orders_month")}</div>${mm.asOf ? `<div class="lbl asof">📅 ${t("upto", { d: ddate(mm.asOf) })}</div>` : upd ? `<div class="lbl">${t("upd_on", { d: upd })}</div>` : ""}</div>
         <div class="big" style="font-size:44px">${fmt0(mm.o)}</div></div></div>
+    ${T3 ? t3Badge(m) : ""}
   </section>
   ${optionTiles(m)}
   ${shiftCard()}
@@ -1143,7 +1175,7 @@ ${(() => { const i = m.internet || {}; if (!i.lastPaid && !(+i.amount > 0)) retu
   <section class="card inet-card"><div class="row"><h3 style="margin:0">🌐 ${t("inet_m")}</h3>${nx ? `<span class="pill ${over ? "p-bad" : dl <= 5 ? "p-warn" : "p-good"} nodot">${over ? t("inet_over_d", { n: -dl }) : t("inet_left_d", { n: dl })}</span>` : ""}</div>
     <div class="big" style="font-size:26px;margin-top:6px">${fmt(i.amount || 0)} <span class="muted" style="font-size:14px;font-family:var(--f-body)">${t("sar")}</span></div>
     <div class="inet-rows"><span><small>${t("inet_last_d")}</small><b>${i.lastPaid ? ddate(i.lastPaid) : "—"}</b></span><span><small>${t("inet_next_d")}</small><b class="${over ? "neg" : ""}">${nx ? ddate(nx) : "—"}</b></span></div>
-  </section>`; })()}`;
+  </section>`; })()}</div>`;
 }
 const GR = ["A", "B", "C", "D", "-"];
 const grCls = g => ({ A: "g-a", B: "g-b", C: "g-c", D: "g-d" }[g] || "g-x");
@@ -1447,7 +1479,7 @@ function vCondPage(){
   return subHead(t("vc_title")) + `<p class="muted" style="font-size:13px;margin:0 4px 10px">${t("vc_hint2")}</p>` + (hasVeh ? card("out") + card("in") : `<section class="card"><div class="muted" style="text-align:center;padding:14px 0">${t("vc_novehicle")}</div></section>`)
     + legacy.map(c => `<section class="card"><div style="display:flex;justify-content:space-between"><b>${t(c.kind === "out" ? "vc_out" : "vc_in")}</b><span class="num">${esc(dmy(c.date))}</span></div>${["ext", "int"].map(k => (c[k] || []).length ? `<div class="muted" style="font-size:12px;margin:8px 0 4px">${t("vc_" + k)}</div><div class="vph">${c[k].map(x => `<img src="${esc(x.url)}" data-zoom loading="lazy" alt="">`).join("")}</div>` : "").join("")}</section>`).join("");
 }
-document.addEventListener("click", e => { const b = e.target.closest("[data-bntest]"); if (b && S.data) { document.getElementById("bnOv")?.remove(); bannerShow(S.data.m, b.dataset.bntest); } });
+document.addEventListener("click", e => { const b = e.target.closest("[data-bntest]"); if (b && S.data) { if (b.dataset.bntest === "home") { S.t3force = !S.t3force; render(); return; } document.getElementById("bnOv")?.remove(); bannerShow(S.data.m, b.dataset.bntest); } });
 document.addEventListener("click", async e => {
   const el = e.target.closest("[data-vcadd],[data-vcdel],[data-vcsub]"); if (!el) return;
   const done = async () => { try { await refresh(true); } catch {} render(); };
