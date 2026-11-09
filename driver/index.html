@@ -1500,7 +1500,7 @@ function vCondPage(){
   return subHead(t("vc_title")) + `<p class="muted" style="font-size:13px;margin:0 4px 10px">${t("vc_hint2")}</p>` + (hasVeh ? card("out") + card("in") : `<section class="card"><div class="muted" style="text-align:center;padding:14px 0">${t("vc_novehicle")}</div></section>`)
     + legacy.map(c => `<section class="card"><div style="display:flex;justify-content:space-between"><b>${t(c.kind === "out" ? "vc_out" : "vc_in")}</b><span class="num">${esc(dmy(c.date))}</span></div>${["ext", "int"].map(k => (c[k] || []).length ? `<div class="muted" style="font-size:12px;margin:8px 0 4px">${t("vc_" + k)}</div><div class="vph">${c[k].map(x => `<img src="${esc(x.url)}" data-zoom loading="lazy" alt="">`).join("")}</div>` : "").join("")}</section>`).join("");
 }
-document.addEventListener("click", e => { if (e.target.closest(".t3home .hero")) eagleFly(); const b = e.target.closest("[data-bntest]"); if (b && S.data) { if (b.dataset.bntest === "home") { S.t3force = !S.t3force; S._eg = 0; render(); return; } document.getElementById("bnOv")?.remove(); bannerShow(S.data.m, b.dataset.bntest); } });
+document.addEventListener("click", e => { const al = e.target.closest("[data-alp]"); if (al) { const k = al.dataset.alp, sn = alSnd(), vi = alVib(); let ns = k === "snd" ? !sn : sn, nv = k === "vib" ? !vi : vi; if (!ns && !nv) { if (k === "snd") nv = true; else ns = true; } try { store.set("asb-al-snd", ns ? "1" : "0"); store.set("asb-al-vib", nv ? "1" : "0"); } catch {} try { window.ASBAndroid?.alarmPrefs?.(ns, nv); } catch {} render(); return; } if (e.target.closest(".t3home .hero")) eagleFly(); const b = e.target.closest("[data-bntest]"); if (b && S.data) { if (b.dataset.bntest === "home") { S.t3force = !S.t3force; S._eg = 0; render(); return; } document.getElementById("bnOv")?.remove(); bannerShow(S.data.m, b.dataset.bntest); } });
 document.addEventListener("click", async e => {
   const el = e.target.closest("[data-vcadd],[data-vcdel],[data-vcsub]"); if (!el) return;
   const done = async () => { try { await refresh(true); } catch {} render(); };
@@ -1571,6 +1571,8 @@ function render(){
   try { bannerCheck(); } catch {}
   try { const m = S.data?.m; if (m && isTop3(m) && !S.sub && S.tab === "home" && !S._eg && !document.getElementById("bnOv")) { S._eg = 1; setTimeout(eagleFly, 400); } } catch {}
 }
+const AL = { en: { snd: "Sound", vib: "Vibration" }, bn: { snd: "সাউন্ড", vib: "ভাইব্রেশন" }, ar: { snd: "الصوت", vib: "الاهتزاز" } };
+const alSnd = () => store.get("asb-al-snd") !== "0", alVib = () => store.get("asb-al-vib") !== "0";
 function shiftCard(){
   const d = S.sh; if (!d || !d.ok) return "";
   const today = d.today, list = (d.shifts || []).filter(x => x.day >= today && x.start);
@@ -1580,7 +1582,8 @@ function shiftCard(){
   const hm = v => v ? String(v).slice(0, 5) : "";
   return `<section class="card" style="padding:10px 14px"><div class="row" style="align-items:center;gap:8px"><div style="min-width:0"><div class="lbl" style="font-size:11.5px">⏰ ${t("sh_t")}${nx && nx.leave ? ` · 🏖 ${t("sh_leave")}` : nx && nx.off ? ` · 🔕 ${t("sh_alarm_off")}` : ""}</div>
     ${nx ? `<div class="big" style="font-size:20px;margin-top:2px">${dn} · ${hm(nx.start)}${nx.end ? "–" + hm(nx.end) : ""}</div>` : `<div class="muted" style="font-size:13px">${t("sh_none")}</div>`}</div>
-    <div class="muted" style="font-size:12.5px;white-space:nowrap;text-align:end">${t("sh_lv")}<br><b>${d.leave_month}</b> / ${d.allowed}</div></div></section>`;
+    <div class="muted" style="font-size:12.5px;white-space:nowrap;text-align:end">${t("sh_lv")}<br><b>${d.leave_month}</b> / ${d.allowed}</div></div>
+    <div style="display:flex;gap:8px;margin-top:8px">${[["snd", "🔔", alSnd()], ["vib", "📳", alVib()]].map(([k, i, on]) => `<button class="sw ${on ? "on" : ""}" data-alp="${k}" style="flex:1;padding:8px 10px">${i} ${(AL[lang] || AL.en)[k]}</button>`).join("")}</div></section>`;
 }
 async function loadShifts(){
   if (!S.token) return;
@@ -1593,6 +1596,7 @@ function androidSync(){
       due_edit: t("nt_due_edit"), due_paid: t("nt_due_paid", { a: "{a}" }), due_cut: t("nt_due_cut", { a: "{a}" }), report: t("nt_report_n"), loc: t("loc_note"), fuel: t("nt_fuel"), answer: t("nt_answer"), more: t("nt_tap") }));
     A.markSeen(String(seenAt()));
   } catch {}
+  try { A.alarmPrefs && A.alarmPrefs(alSnd(), alVib()); } catch {}
   try { A.shiftSync && A.shiftSync(); } catch {}
 }
 function toLogin(msg){ try { window.ASBAndroid?.clearSession?.(); } catch {} S.token = null; S.data = null; store.del("asb-token"); S.view = "login"; S.err = msg || ""; S.pin = ""; render(); }

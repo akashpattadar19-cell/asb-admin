@@ -1116,7 +1116,7 @@ function vKm(){
 document.addEventListener("change", async e => {
   const el = e.target;
   if (el.id === "shDay") { state.shDay = el.value || todayKey(); render(); return; }
-  if (el.id === "shAll") { const w = $("#shWho"); if (w) w.style.display = el.checked ? "none" : "block"; return; }
+  if (el.classList?.contains("sh-emp")) { const c = $("#shCnt"); if (c) c.textContent = document.querySelectorAll(".sh-emp:checked").length; return; }
   if (el.dataset?.shf) { const id = el.dataset.id, day = state.shDay || todayKey(), st = document.querySelector(`[data-shf=start][data-id="${id}"]`).value, en = document.querySelector(`[data-shf=end][data-id="${id}"]`).value;
     if (!st) { toast(t("sh_pick")); return; }
     if (await shUpsert([{ emp_id: id, day, start_time: st, end_time: en || null }])) { toast(t("sh_saved")); SH.loaded = false; render(); } }
@@ -1146,19 +1146,21 @@ function vShift(){
   const reg = emps.map(([id, e]) => [e, Object.values(by[id] || {}).filter(r => r.leave).map(r => r.day).sort()]).filter(x => x[1].length);
   return head + `
   <div class="head" style="margin-top:-6px"><div class="tools" style="gap:8px"><button class="btn ghost sm" data-act="sh-step" data-v="-1">‹</button><input class="input" type="date" id="shDay" value="${day}" style="width:auto"><button class="btn ghost sm" data-act="sh-step" data-v="1">›</button></div></div>
-  <details class="panel" style="padding:12px 14px;margin-bottom:12px"><summary style="cursor:pointer;font-weight:600">➕ ${t("sh_add")}</summary>
-    <div style="margin-top:10px"><div class="sub" style="margin-bottom:4px">${t("sh_who")}</div>
-    <label style="display:flex;gap:8px;align-items:center;margin:4px 0"><input type="checkbox" id="shAll" checked> ${t("sh_all")}</label>
-    <div id="shWho" style="display:none;max-height:180px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:8px">${emps.map(([id, e]) => `<label style="display:flex;gap:8px;align-items:center;margin:3px 0"><input type="checkbox" class="sh-emp" value="${id}"> ${esc(e.fullName || id)}</label>`).join("")}</div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px"><label class="f">${t("sh_from")}<input class="input" type="date" id="shFrom" value="${day}"></label><label class="f">${t("sh_to")}<input class="input" type="date" id="shTo" value="${day}"></label>
-    <label class="f">${t("sh_start")}<input class="input" type="time" id="shS"></label><label class="f">${t("sh_end")}<input class="input" type="time" id="shE"></label></div>
+  <details class="panel" style="padding:12px 14px;margin-bottom:12px" open><summary style="cursor:pointer;font-weight:600">➕ ${t("sh_add")}</summary>
+    <div style="margin-top:10px">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><label class="f">${t("sh_start")}<input class="input" type="time" id="shS"></label><label class="f">${t("sh_end")}<input class="input" type="time" id="shE"></label>
+    <label class="f">${t("sh_from")}<input class="input" type="date" id="shFrom" value="${day}"></label><label class="f">${t("sh_to")}<input class="input" type="date" id="shTo" value="${day}"></label></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin:12px 0 4px;flex-wrap:wrap"><div class="sub">${t("sh_who")} · <b id="shCnt">0</b>/${emps.length}</div><div style="display:flex;gap:6px"><button class="btn ghost sm" data-act="sh-selall">${t("sh_selall")}</button><button class="btn ghost sm" data-act="sh-selnone">${t("sh_clr")}</button></div></div>
+    <div id="shWho" style="max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:10px;padding:8px">${emps.map(([id, e]) => { const r = (by[id] || {})[day]; return `<label style="display:flex;gap:8px;align-items:center;margin:5px 0"><input type="checkbox" class="sh-emp" value="${id}"> ${esc(e.fullName || id)}${r?.start_time ? ` <span class="sub">(${tm(r.start_time)})</span>` : ""}</label>`; }).join("")}</div>
     <button class="btn" style="margin-top:12px" data-act="sh-save">${t("sh_save")}</button></div></details>
+  ${(() => { const g = {}; for (const [id, e] of emps) { const r = (by[id] || {})[day]; if (r?.start_time && !r.leave) (g[tm(r.start_time)] ??= []).push(e.fullName || id); } const ks = Object.keys(g).sort(); return ks.length ? `<section class="panel" style="padding:12px 14px;margin-bottom:12px"><b>🕗 ${t("sh_by_time")}</b>${ks.map(k => `<div style="padding:7px 0;border-bottom:1px dashed var(--line)"><b>${k}</b> <span class="sub">(${g[k].length})</span><div class="sub">${g[k].map(esc).join(" · ")}</div></div>`).join("")}</section>` : ""; })()}
   ${rows || `<div class="empty">—</div>`}
   <section class="panel" style="padding:12px 14px;margin-top:6px"><b>🏖 ${t("sh_reg")} · ${m}</b><p class="sub" style="margin:4px 0 8px">${t("sh_rule", { n: allowed })}</p>
     ${reg.length ? reg.map(([e, ds]) => `<div style="padding:6px 0;border-bottom:1px dashed var(--line)"><b>${esc(e.fullName)}</b> <span class="sub">(${ds.length}/${allowed})</span><div class="sub">${ds.map(d => dmy(d).slice(0, 5)).join(" · ")}</div></div>`).join("") : `<span class="sub">${t("sh_no_leave")}</span>`}</section>`;
 }
 async function shUpsert(rows){ const { error } = await sb.from("shifts").upsert(rows.map(r => ({ ...r, updated_at: new Date().toISOString() })), { onConflict: "emp_id,day" }); if (error) { toast(error.message); return false; } return true; }
 /* shared month calendar: ‹ Month › 📅 popup. sel "" = all months (when opts.all) */
+Object.assign(I18N.en, { sh_selall: "Select all", sh_clr: "Clear", sh_by_time: "Today’s shifts by time" }); Object.assign(I18N.bn, { sh_selall: "সবাইকে বাছুন", sh_clr: "মুছুন", sh_by_time: "সময় অনুযায়ী শিফট" }); Object.assign(I18N.ar, { sh_selall: "تحديد الكل", sh_clr: "مسح", sh_by_time: "الورديات حسب الوقت" });
 Object.assign(I18N.en, { mp_all: "All months" }); Object.assign(I18N.bn, { mp_all: "সব মাস" }); Object.assign(I18N.ar, { mp_all: "كل الشهور" });
 const MP_HOOK = { opsMonth: 1, payMonth: 1, profMonth: 1, fuelMonth: 1 };
 const mShift = (m, d) => { const [y, mo] = m.split("-").map(Number), x = new Date(Date.UTC(y, mo - 1 + d, 1)); return x.getUTCFullYear() + "-" + String(x.getUTCMonth() + 1).padStart(2, "0"); };
@@ -3425,8 +3427,9 @@ document.addEventListener("click", async e => {
       return;
     }
     if (act === "sh-step") { const d = new Date((state.shDay || todayKey()) + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + +b.dataset.v); state.shDay = d.toISOString().slice(0, 10); render(); return; }
+    if (act === "sh-selall" || act === "sh-selnone") { document.querySelectorAll(".sh-emp").forEach(x => { x.checked = act === "sh-selall"; }); const c = $("#shCnt"); if (c) c.textContent = act === "sh-selall" ? document.querySelectorAll(".sh-emp").length : 0; return; }
     if (act === "sh-save") {
-      const all = $("#shAll")?.checked, ids = all ? Object.entries(state.emp).filter(([, e]) => e.isActive !== false).map(([i]) => i) : [...document.querySelectorAll(".sh-emp:checked")].map(x => x.value);
+      const ids = [...document.querySelectorAll(".sh-emp:checked")].map(x => x.value);
       const f = $("#shFrom").value, to = $("#shTo").value, st = $("#shS").value, en = $("#shE").value;
       if (!ids.length || !f || !to || to < f || !st) { toast(t("sh_pick")); return; }
       const rows = [], d = new Date(f + "T00:00:00Z"), end = new Date(to + "T00:00:00Z");
