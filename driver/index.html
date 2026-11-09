@@ -217,6 +217,19 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .pod1 .step{height:46px;background:color-mix(in srgb,var(--gold) 28%,var(--sunk))}
 .pod2 .step{height:30px}
 .pod3 .step{height:20px}
+.bn-ov{position:fixed;inset:0;z-index:9000;background:rgba(8,20,36,.78);display:flex;align-items:center;justify-content:center;padding:16px;overflow:auto}
+.bn-card{width:100%;max-width:440px;margin:auto;border-radius:28px;padding:22px 20px 16px;color:#fff;text-align:center;position:relative;overflow:hidden;box-shadow:0 24px 60px #0007;animation:bnpop .45s ease}
+@keyframes bnpop{from{transform:scale(.92);opacity:0}}
+.bn-card:before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% -10%,rgba(255,255,255,.3),transparent 60%);pointer-events:none}
+.bn-card>*{position:relative}.bn-sal{font-size:15px;font-weight:700;padding:8px 12px;border-radius:14px;background:rgba(255,255,255,.16);margin-bottom:12px}
+.bn-med{font-size:60px;line-height:1;filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}.bn-card h2{font-size:22px;margin:10px 0 6px;line-height:1.3;color:#fff}.bn-card p{font-size:14.5px;line-height:1.65;opacity:.96}
+.bn-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}.bn-chips span{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:6px 14px;font-weight:700;font-size:13.5px}
+.bn-dua{margin-top:14px;font-size:13.5px;font-weight:600;opacity:.95}.bn-hint{font-size:11.5px;opacity:.75;margin-top:8px}
+.bn-t3{background:linear-gradient(160deg,#3a2400,#b7791f 45%,#f6c453)}.bn-t10{background:linear-gradient(160deg,#0b2a5c,#1769c9 60%,#4fb3ff)}.bn-oth{background:linear-gradient(160deg,#0b4a3a,#14946b 60%,#6fe0b0)}
+.bn-warn{background:linear-gradient(160deg,#4a0d12,#c2312f 60%,#f08a4b);padding:26px 20px 18px;min-height:68vh}
+.bn-gb{width:64px;height:64px;border-radius:20px;background:#fff;color:#c2312f;font:800 36px/64px Inter,sans-serif;margin:0 auto;box-shadow:0 8px 18px rgba(0,0,0,.35)}
+.bn-sub{font-weight:800;font-size:14px;text-align:start;margin:14px 2px 2px}.bn-li{background:rgba(255,255,255,.16);border-radius:14px;padding:10px 12px;margin-top:8px;text-align:start}
+.bn-li div{display:flex;justify-content:space-between;gap:8px;font-weight:700;font-size:14px}.bn-li small{display:block;font-size:12.5px;line-height:1.5;opacity:.92;margin-top:3px}
 .pf-top{display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;padding:4px 0 12px;border-bottom:1px solid var(--line);margin-bottom:4px}
 .pf-grade{display:flex;gap:10px;align-items:center}
 .bigg{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;font:700 34px var(--f-display);color:#fff}
@@ -1022,7 +1035,82 @@ function themeRow(){
   const cur = document.documentElement.dataset.skin || "water";
   const tt = ({en:"Theme",bn:"থিম",ar:"المظهر"})[lang];
   const nm = { water: ({en:"Water",bn:"ওয়াটার",ar:"مائي"})[lang], lav: ({en:"Lavender",bn:"ল্যাভেন্ডার",ar:"بنفسجي"})[lang] };
-  return `<div class="thm-row"><span>🎨 ${tt}</span><div>${[["water","🌊"],["lav","💜"]].map(([k,i]) => `<button data-skin="${k}" aria-pressed="${cur===k}">${i} ${nm[k]}</button>`).join("")}</div></div>`;
+  const bnT = BN_PILOT.test(String(S.data?.m?.profile?.fullName || "")) ? `<div class="thm-row" style="flex-wrap:wrap;gap:6px"><span>🧪 Banner test</span><div>${[["t3","Top3"],["t10","Top10"],["oth","Other"],["warn","C/D"]].map(([k,l]) => `<button data-bntest="${k}">${l}</button>`).join("")}</div></div>` : "";
+  return bnT + `<div class="thm-row"><span>🎨 ${tt}</span><div>${[["water","🌊"],["lav","💜"]].map(([k,i]) => `<button data-skin="${k}" aria-pressed="${cur===k}">${i} ${nm[k]}</button>`).join("")}</div></div>`;
+}
+/* ── daily motivation / warning banner (shown after Performance / Order details are published) ── */
+const BN_PILOT = /ALAMIN\s+SHAIKH/i;   // pilot: only this test account sees it until the owner approves
+const BN = {
+  en: { sal:"Assalamu alaikum wa rahmatullah", ok:"Tap outside to close", dua:"May Allah bless your work and your rizq. Insha’Allah you can do it.",
+    t3h:"Congratulations, {n}!", t3p:"By Allah’s grace you are among the TOP 3 drivers of ASB LOGISTICS. Your effort, discipline and honesty inspire the whole team. Keep going, Barakallahu feek.",
+    t10h:"MashaAllah, {n}!", t10p:"You are in the TOP 10 this month. Your steady effort is clear to everyone. A little more and you can reach the Top 3, Insha’Allah.", gap:"Orders to reach Top 3", rk:"Rank",
+    oth:"Thank you, {n}!", othp:"We truly value your interest and hard work. Every order and every day moves you forward. Keep going, the best is still ahead, Insha’Allah.", gr:"Grade",
+    wh:"You need to improve", wp:"Your current grade is {g}. Fix the points below and both your grade and rank will go up, Insha’Allah.", how:"What to do",
+    ord:"Orders this month: {o} of {t}. Remaining {r}, about {d} per day for {days} days.",
+    fa:"Forced assignment", fa_h:"Accept and finish the orders the system assigns to you.", ot:"On-time delivery", ot_h:"Reach the customer on time. Plan your route and don’t delay.",
+    cr:"Order completion", cr_h:"Complete every order you accept. Avoid cancelling.", ne:"Not marked delivered early", ne_h:"Press “Delivered” only after you reach the customer.",
+    gen:"Your overall score is low. Be on time, finish every order and follow the app rules." },
+  bn: { sal:"আসসালামু আলাইকুম ওয়া রাহমাতুল্লাহ", ok:"বাইরে ট্যাপ করলে বন্ধ হবে", dua:"আল্লাহ আপনার কাজ ও রিযিকে বরকত দিন। ইনশাআল্লাহ আপনি পারবেন।",
+    t3h:"অভিনন্দন, {n}!", t3p:"আল্লাহর রহমতে আপনি ASB LOGISTICS-এর সেরা ৩ জনের একজন। আপনার পরিশ্রম, নিয়মানুবর্তিতা ও সততা পুরো টিমকে অনুপ্রাণিত করে। এভাবেই চালিয়ে যান, বারাকাল্লাহু ফীক।",
+    t10h:"মাশাআল্লাহ, {n}!", t10p:"এই মাসে আপনি শীর্ষ ১০ জনের মধ্যে আছেন। আপনার নিয়মিত পরিশ্রম সবার চোখে পড়ছে। আর একটু চেষ্টায় ইনশাআল্লাহ সেরা ৩-এ পৌঁছে যাবেন।", gap:"সেরা ৩-এ উঠতে বাকি অর্ডার", rk:"র‍্যাংক",
+    oth:"ধন্যবাদ, {n}!", othp:"আপনার আগ্রহ ও পরিশ্রমকে আমরা সত্যিই মূল্য দিই। প্রতিটি অর্ডার, প্রতিটি দিন আপনাকে এগিয়ে নিচ্ছে। চালিয়ে যান, ইনশাআল্লাহ সামনে আরও ভালো সময়।", gr:"গ্রেড",
+    wh:"আরও উন্নতি দরকার", wp:"আপনার বর্তমান গ্রেড {g}। নিচের বিষয়গুলো ঠিক করলে ইনশাআল্লাহ গ্রেড ও র‍্যাংক দুটোই বাড়বে।", how:"কী করতে হবে",
+    ord:"এই মাসে অর্ডার: {t}-এর মধ্যে {o}। বাকি {r}, আগামী {days} দিনে দিনে প্রায় {d}টি।",
+    fa:"বাধ্যতামূলক অ্যাসাইনমেন্ট", fa_h:"সিস্টেম যে অর্ডার দেয় তা গ্রহণ করে শেষ করুন।", ot:"সময়মতো ডেলিভারি", ot_h:"সময়মতো গ্রাহকের কাছে পৌঁছান। রুট ঠিক করে নিন, দেরি করবেন না।",
+    cr:"অর্ডার সম্পূর্ণ", cr_h:"যে অর্ডার নেবেন তা শেষ করুন, বাতিল করবেন না।", ne:"আগেভাগে ডেলিভারড চাপেনি", ne_h:"গ্রাহকের কাছে পৌঁছানোর পরই “ডেলিভারড” চাপুন।",
+    gen:"আপনার সামগ্রিক স্কোর কম। সময় মানুন, প্রতিটি অর্ডার শেষ করুন এবং অ্যাপের নিয়ম মেনে চলুন।" },
+  ar: { sal:"السلام عليكم ورحمة الله وبركاته", ok:"اضغط خارج البطاقة للإغلاق", dua:"بارك الله في عملك ورزقك. بإذن الله تستطيع.",
+    t3h:"مبروك، {n}!", t3p:"بفضل الله أنت من أفضل ٣ سائقين في ASB LOGISTICS. جهدك وانضباطك وأمانتك يلهمان الفريق كله. واصل، بارك الله فيك.",
+    t10h:"ما شاء الله، {n}!", t10p:"أنت ضمن أفضل ١٠ هذا الشهر. جهدك المستمر واضح للجميع. بقليل من الجهد تصل إلى أفضل ٣ بإذن الله.", gap:"طلبات للوصول إلى أفضل ٣", rk:"الترتيب",
+    oth:"شكراً، {n}!", othp:"نقدّر اهتمامك وجهدك حقاً. كل طلب وكل يوم يقدّمك للأمام. واصل، وبإذن الله القادم أجمل.", gr:"التقدير",
+    wh:"تحتاج إلى تحسين", wp:"تقديرك الحالي {g}. صحّح النقاط التالية وسيرتفع تقديرك وترتيبك بإذن الله.", how:"ماذا تفعل",
+    ord:"طلبات هذا الشهر: {o} من {t}. المتبقي {r}، حوالي {d} يومياً خلال {days} يوماً.",
+    fa:"التعيين الإجباري", fa_h:"اقبل الطلبات التي يعيّنها لك النظام وأكملها.", ot:"التسليم في الوقت", ot_h:"صِل إلى العميل في الوقت. خطّط طريقك ولا تتأخر.",
+    cr:"إكمال الطلبات", cr_h:"أكمل كل طلب تقبله وتجنّب الإلغاء.", ne:"عدم التسليم المبكر", ne_h:"اضغط «تم التسليم» بعد وصولك للعميل فقط.",
+    gen:"نتيجتك العامة منخفضة. التزم بالوقت وأكمل كل طلب والتزم بقواعد التطبيق." }
+};
+const bt = (k, v) => String((BN[lang] || BN.en)[k] ?? BN.en[k] ?? k).replace(/\{(\w+)\}/g, (_, x) => v && v[x] != null ? v[x] : "");
+function bannerKind(m, force){
+  const cur = ((m.perf || {}).today?.g || (m.perf || {}).today?.rp != null ? m.perf.today : (m.perf || {}).yest) || {};
+  const rk = +m.month?.rank || 0, ranked = m.profile.payType !== "PER_ORDER" && !perfLocked(m) && rk > 0;
+  const warn = cur.g === "C" || cur.g === "D";
+  if (force) return force;
+  if (ranked && rk <= 3) return "t3";
+  if (warn) return "warn";
+  if (ranked && rk <= 10) return "t10";
+  return "oth";
+}
+function bannerHtml(m, kind){
+  const p = m.profile, mm = m.month, name = esc((lang === "ar" && p.fullNameAr) ? p.fullNameAr : String(p.fullName || "").split(" ")[0]);
+  const cur = ((m.perf || {}).today?.g || (m.perf || {}).today?.rp != null ? m.perf.today : (m.perf || {}).yest) || {}, rk = +mm.rank || 0, n = fmt0;
+  const head = `<div class="bn-sal">${bt("sal")}</div>`, tail = `<div class="bn-dua">${bt("dua")}</div><div class="bn-hint">${bt("ok")}</div>`;
+  if (kind === "t3") return `<div class="bn-card bn-t3">${head}<div class="bn-med">${["🥇","🥈","🥉"][Math.max(0, rk - 1)] || "🏅"}</div><h2>${bt("t3h", { n: name })}</h2><p>${bt("t3p")}</p><div class="bn-chips"><span>${bt("rk")} #${rk || "—"}</span><span>${n(mm.o)}</span></div>${tail}</div>`;
+  if (kind === "t10") { const b = m.board || [], third = b[2] && b[2].o != null ? Math.max(1, +b[2].o - (+mm.o || 0) + 1) : null;
+    return `<div class="bn-card bn-t10">${head}<div class="bn-med">🏆</div><h2>${bt("t10h", { n: name })}</h2><p>${bt("t10p")}</p><div class="bn-chips"><span>${bt("rk")} #${rk || "—"}</span>${third ? `<span>${bt("gap")}: ${n(third)}</span>` : ""}</div>${tail}</div>`; }
+  if (kind === "warn") {
+    const tg = +(m.plan?.target ?? mm.target) || 0, o = +mm.o || 0, rem = Math.max(0, tg - o);
+    const e = new Date(todayK() + "T12:00:00Z"), endD = new Date(Date.UTC(e.getUTCFullYear(), e.getUTCMonth() + (e.getUTCDate() >= 2 ? 1 : 0), 1, 12)), days = Math.max(1, Math.round((endD - e) / 864e5) + 1);
+    const weak = ["fa", "ot", "cr", "ne"].filter(k => cur[k] != null && +cur[k] < 95).sort((a, b) => cur[a] - cur[b]);
+    const rows = weak.map(k => `<div class="bn-li"><div><span>${bt(k)}</span><b>${(+cur[k]).toFixed(1)}%</b></div><small>${bt(k + "_h")}</small></div>`).join("") || `<div class="bn-li"><small>${bt("gen")}</small></div>`;
+    return `<div class="bn-card bn-warn">${head}<div class="bn-gb ${grCls(cur.g)}x">${esc(cur.g || "-")}</div><h2>${bt("wh")}</h2><p>${bt("wp", { g: esc(cur.g || "-") })}</p>
+      <div class="bn-sub">${bt("how")}</div>${rows}${tg && rem > 0 ? `<div class="bn-li"><small>${bt("ord", { o: n(o), t: n(tg), r: n(rem), d: n(Math.ceil(rem / days)), days })}</small></div>` : ""}${tail}</div>`; }
+  return `<div class="bn-card bn-oth">${head}<div class="bn-med">💚</div><h2>${bt("oth", { n: name })}</h2><p>${bt("othp")}</p><div class="bn-chips">${rk ? `<span>${bt("rk")} #${rk}</span>` : ""}${cur.g && cur.g !== "-" ? `<span>${bt("gr")} ${esc(cur.g)}</span>` : ""}</div>${tail}</div>`;
+}
+function bannerShow(m, kind){
+  if (document.getElementById("bnOv")) return;
+  const o = document.createElement("div"); o.id = "bnOv"; o.className = "bn-ov"; o.innerHTML = bannerHtml(m, kind);
+  o.addEventListener("pointerdown", e => { if (e.target === o) { o.remove(); setTimeout(() => bannerCheck(), 250); } });
+  document.body.append(o);
+}
+function bannerCheck(){
+  const m = S.data?.m; if (!m || S.view !== "app" && S.view !== undefined && S.view !== "home") { /* keep going; only block on missing data */ }
+  if (!m || !BN_PILOT.test(String(m.profile?.fullName || "")) || S.sub || S.tab !== "home" || document.getElementById("bnOv")) return;
+  const now = Date.now();
+  for (const kind of ["orders", "perf"]) {
+    const n = (m.notices || []).find(x => x.kind === kind); if (!n) continue;
+    const at = +n.at || 0, key = "asb-bn-" + kind;
+    if (at > (+store.get(key) || 0)) { try { store.set(key, String(at)); } catch {} if (now - at < 30 * 36e5) { bannerShow(m, bannerKind(m)); return; } }
+  }
 }
 function vHome(m){
   const p = m.profile, mm = m.month, out = duesOf(m).filter(x => !x.waived).reduce((s, f) => s + (+f.remaining || 0), 0);
@@ -1359,6 +1447,7 @@ function vCondPage(){
   return subHead(t("vc_title")) + `<p class="muted" style="font-size:13px;margin:0 4px 10px">${t("vc_hint2")}</p>` + (hasVeh ? card("out") + card("in") : `<section class="card"><div class="muted" style="text-align:center;padding:14px 0">${t("vc_novehicle")}</div></section>`)
     + legacy.map(c => `<section class="card"><div style="display:flex;justify-content:space-between"><b>${t(c.kind === "out" ? "vc_out" : "vc_in")}</b><span class="num">${esc(dmy(c.date))}</span></div>${["ext", "int"].map(k => (c[k] || []).length ? `<div class="muted" style="font-size:12px;margin:8px 0 4px">${t("vc_" + k)}</div><div class="vph">${c[k].map(x => `<img src="${esc(x.url)}" data-zoom loading="lazy" alt="">`).join("")}</div>` : "").join("")}</section>`).join("");
 }
+document.addEventListener("click", e => { const b = e.target.closest("[data-bntest]"); if (b && S.data) { document.getElementById("bnOv")?.remove(); bannerShow(S.data.m, b.dataset.bntest); } });
 document.addEventListener("click", async e => {
   const el = e.target.closest("[data-vcadd],[data-vcdel],[data-vcsub]"); if (!el) return;
   const done = async () => { try { await refresh(true); } catch {} render(); };
@@ -1426,6 +1515,7 @@ function render(){
   const focused = document.activeElement?.id === "rid" ? $("#rid").selectionStart : null;
   $("#root").innerHTML = S.view === "login" ? vLogin() : S.view === "signup" ? vSignup() : vApp();
   if (focused !== null && $("#rid")) { $("#rid").focus(); $("#rid").setSelectionRange(focused, focused); }
+  try { bannerCheck(); } catch {}
 }
 function shiftCard(){
   const d = S.sh; if (!d || !d.ok) return "";
