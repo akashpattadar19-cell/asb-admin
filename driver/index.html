@@ -1050,11 +1050,12 @@ function themeRow(){
   const cur = document.documentElement.dataset.skin || "water";
   const tt = ({en:"Theme",bn:"থিম",ar:"المظهر"})[lang];
   const nm = { water: ({en:"Water",bn:"ওয়াটার",ar:"مائي"})[lang], lav: ({en:"Lavender",bn:"ল্যাভেন্ডার",ar:"بنفسجي"})[lang] };
-  const bnT = BN_PILOT.test(String(S.data?.m?.profile?.fullName || "")) ? `<div class="thm-row" style="flex-wrap:wrap;gap:6px"><span>🧪 Banner test</span><div>${[["t3","Top3"],["t10","Top10"],["oth","Other"],["warn","C/D"],["home","Top3 home"]].map(([k,l]) => `<button data-bntest="${k}">${l}</button>`).join("")}</div></div>` : "";
+  const bnT = BN_TEST.test(String(S.data?.m?.profile?.fullName || "")) ? `<div class="thm-row" style="flex-wrap:wrap;gap:6px"><span>🧪 Banner test</span><div>${[["t3","Top3"],["t10","Top10"],["oth","Other"],["warn","C/D"],["home","Top3 home"]].map(([k,l]) => `<button data-bntest="${k}">${l}</button>`).join("")}</div></div>` : "";
   return bnT + `<div class="thm-row"><span>🎨 ${tt}</span><div>${[["water","🌊"],["lav","💜"]].map(([k,i]) => `<button data-skin="${k}" aria-pressed="${cur===k}">${i} ${nm[k]}</button>`).join("")}</div></div>`;
 }
 /* ── daily motivation / warning banner (shown after Performance / Order details are published) ── */
-const BN_PILOT = /ALAMIN\s+SHAIKH/i;   // pilot: only this test account sees it until the owner approves
+const BN_PILOT = /./;   // live for every driver
+const BN_TEST = /ALAMIN\s+SHAIKH/i;   // test buttons only on the owner's test account
 const BN = {
   en: { sal:"Assalamu alaikum wa rahmatullah", ok:"Tap outside to close", rk:"Rank", gr:"Grade", gap:"Orders to reach Top 3", how:"What to do", more:"To improve further",
     dua:["May Allah bless your work and your rizq. Insha’Allah you can do it.","Work with ihsan and Allah will open the doors of rizq. Keep going.","Be patient and consistent. Allah does not waste the effort of those who do good."],
