@@ -715,6 +715,7 @@ html[data-skin="lav"]::before{animation:lgl 7s ease-in-out infinite}
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
 <script>
 /* the panel moved to asblogistics.github.io — old links still work */
@@ -3034,11 +3035,21 @@ function computePayroll(){
     const lk = {}; for (const [k, cat] of Object.entries(PAY_LINK)) { const v = r2(+a[k] || 0), left = dueLeftOf(id, cat); lk[k] = { left, over: v > left + 0.001 }; }
     // sheet-style total deductions: L+M+N+P+Q+R + petrol over-spend + shortfall + absence + dues taken
     const sded = r2(namedDed + Math.max(0, -fuelAdj) + shortfall + absDed + fineDed + advDed);
-    return { id, name: e.fullName, residentId: e.residentId, payType: e.payType || "TARGET", orders, fuelSpent,
+    const slip = { id, name: e.fullName, residentId: e.residentId, payType: e.payType || "TARGET", orders, fuelSpent,
       base: r2(base), bonus: r2(bonus), due: r2(base + bonus), incent, overtime, shortfall: r2(shortfall), fuelAdj, other, absDed, absShifts: +a.abs || 0, allowance, grade: pg.g, gradeSrc: pg.src, manual: pay.manual || "",
       traffic: r2(traffic), accident: r2(accident), company: r2(company), akash: r2(akash), keeta: r2(keeta), advance: r2(advanceM), duesBonus: r2(duesBonus),
       valid: a.valid !== false, reason: a.reason || "", extraOrders: +a.extraOrders || null, extraRate: +a.extraRate || null,
       fineDed: r2(fineDed), advDed: r2(advDed), gross, deductions: r2(gross - net), sded, net: r2(net), planned, lk, adj: a };
+    if (a.sh) { // imported salary sheet: the sheet's own numbers and formulas (H, I=F*G, J, L, U)
+      const h = a.sh, xo = +h.xo || 0, xr = +h.xr || 0, bn = r2(xo * xr), due = h.due != null ? r2(+h.due || 0) : r2((+h.base || 0) + bn), fa = r2((+h.pad || 0) + (+a.fuel || 0));
+      const nd = r2(traffic + accident + company + akash + keeta + advanceM);
+      Object.assign(slip, { orders: +h.o || 0, grade: h.cls || slip.grade, gradeSrc: "sheet", manual: "", base: r2(+h.base || 0), bonus: bn, due, shortfall: 0, fuelSpent: r2(+h.k || 0), fuelAdj: fa,
+        allowance: 0, absDed: 0, absShifts: 0, fineDed: 0, advDed: 0, planned: [], extraOrders: xo || null, extraRate: xr || null, rank: h.rk || "" });
+      slip.sded = r2(nd + Math.max(0, -fa)); slip.deductions = slip.sded;
+      slip.gross = r2(due + duesBonus + incent + overtime + Math.max(0, fa) + Math.max(0, other));
+      slip.net = r2(due + incent + overtime + other + duesBonus + fa - nd);
+    }
+    return slip;
   });
 }
 
@@ -3055,6 +3066,53 @@ function slipBreakdownHtml(s){
     ${+s.duesBonus ? row(t("pa_bonus_o"), s.duesBonus, "pos") : ""}
     ${row(`<b>${t("pa_totded")}</b>`, sded, "neg")}${row(`<b>${t("net")}</b>`, s.net)}
     </div></div>`;
+}
+
+/* ───────── Salary sheet (xlsx) import / same-format export ───────── */
+const MONTHS_EN = ["january","february","march","april","may","june","july","august","september","october","november","december"];
+function paySheetParse(buf){
+  const wb = XLSX.read(new Uint8Array(buf), { type: "array" });
+  const ws = wb.Sheets["Sheet1"] || wb.Sheets[wb.SheetNames[0]];
+  const rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: null });
+  const hi = rows.findIndex(r => r.some(c => /courier\s*id/i.test(String(c ?? ""))));
+  if (hi < 0) return null;
+  let month = "";
+  for (const r of rows.slice(0, hi + 1)) for (const c of r) { const m = /([A-Za-z]+)\s+(\d{4})/.exec(String(c ?? "")); if (m && MONTHS_EN.includes(m[1].toLowerCase())) month = m[2] + "-" + String(MONTHS_EN.indexOf(m[1].toLowerCase()) + 1).padStart(2, "0"); }
+  const out = [], n = v => { const x = parseFloat(v); return isNaN(x) ? 0 : x; };
+  for (let i = hi + 1; i < rows.length; i++) { const r = rows[i], cid = String(r[0] ?? "").replace(/\D/g, ""); if (cid.length < 10) continue;
+    out.push({ row: i + 1, cid, name: r[1], valid: !/غير|invalid/i.test(String(r[2] ?? "")), reason: String(r[21] ?? ""),
+      sh: { due: n(r[9]), cls: String(r[3] ?? ""), o: n(r[4]), xo: n(r[5]), xr: n(r[6]), base: n(r[7]), k: n(r[10]), pad: n(r[11]), rk: String(r[22] ?? "") },
+      adj: { traffic: n(r[12]), accident: n(r[13]), company: n(r[14]), duesBonus: n(r[15]), akash: n(r[16]), advance: n(r[17]), keeta: n(r[18]) }, net: n(r[20]) }); }
+  return { month, rows: out };
+}
+const b64OfBuf = buf => { const u = new Uint8Array(buf); let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+async function paySheetExport(month, slips){
+  const snap = await db.doc("payroll_files/" + month).get(); if (!snap.exists || !window.JSZip) return false;
+  const fd = snap.data(), zip = await JSZip.loadAsync(fd.b64, { base64: true });
+  const wbx = await zip.file("xl/workbook.xml").async("string"), rels = await zip.file("xl/_rels/workbook.xml.rels").async("string");
+  const rid = /<sheet [^>]*name="Sheet1"[^>]*r:id="([^"]+)"/.exec(wbx)?.[1] || /<sheet [^>]*r:id="([^"]+)"/.exec(wbx)[1];
+  const tg = new RegExp('<Relationship [^>]*Id="' + rid + '"[^>]*>').exec(rels)[0].match(/Target="([^"]+)"/)[1];
+  const path = "xl/" + tg.replace(/^\/?(xl\/)?/, ""); let x = await zip.file(path).async("string");
+  const cellRe = ref => new RegExp('<c r="' + ref + '"([^>]*?)(?:/>|>[\\s\\S]*?</c>)');
+  const hasVal = ref => { const m = cellRe(ref).exec(x); return !!m && /<v>|<is>/.test(m[0]); };
+  const sAttr = ref => (cellRe(ref).exec(x)?.[1].match(/s="(\d+)"/) || [])[1];
+  const setNum = (ref, v) => { const st = sAttr(ref); x = x.replace(cellRe(ref), `<c r="${ref}"${st ? ` s="${st}"` : ""} t="n"><v>${v}</v></c>`); };
+  const setStr = (ref, v) => { const st = sAttr(ref), e = String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); x = x.replace(cellRe(ref), `<c r="${ref}"${st ? ` s="${st}"` : ""} t="inlineStr"><is><t>${e}</t></is></c>`); };
+  const setCached = (ref, v) => { x = x.replace(new RegExp('(<c r="' + ref + '"[^>]*>\\s*<f[^>]*>[\\s\\S]*?</f>)<v>[^<]*</v>'), `$1<v>${v}</v>`); };
+  const cachedOf = ref => { const m = new RegExp('<c r="' + ref + '"[^>]*>\\s*<f[^>]*>[\\s\\S]*?</f><v>([^<]*)</v>').exec(x); return m ? parseFloat(m[1]) || 0 : 0; };
+  const byId = Object.fromEntries(slips.map(s => [s.id, s])), numOf = ref => { const m = new RegExp('<c r="' + ref + '"[^>]*>(?:\\s*<f[^>]*>[\\s\\S]*?</f>)?<v>([^<]*)</v>').exec(x); return m ? parseFloat(m[1]) || 0 : 0; };
+  for (const [eid, rn] of Object.entries(fd.rows || {})) { const s = byId[eid]; if (!s) continue;
+    const vals = { K: s.fuelSpent, L: s.fuelAdj, M: s.traffic, N: s.accident, O: s.company, P: s.duesBonus, Q: s.akash, R: s.advance, S: s.keeta };
+    for (const [c, v] of Object.entries(vals)) { const ref = c + rn; if (+v || hasVal(ref)) setNum(ref, r2(+v || 0)); }
+    if (s.reason || hasVal("V" + rn)) setStr("V" + rn, s.reason || "");
+    const J = numOf("J" + rn), T = r2(vals.M + vals.N + vals.O + vals.Q + vals.R + vals.S + Math.max(-vals.L, 0)), U = r2(J + vals.L - vals.M - vals.N - vals.O + vals.P - vals.Q - vals.R - vals.S);
+    setCached("T" + rn, T); setCached("U" + rn, U); }
+  if (fd.r1 && fd.r2) for (const c of "KLMNOPQRSTU") { let sum = 0; for (let r = fd.r1; r <= fd.r2; r++) sum += numOf(c + r); setCached(c + (fd.r2 + 1), r2(sum)); }
+  zip.file(path, x);
+  let wbn = wbx.replace(/<calcPr /, '<calcPr fullCalcOnLoad="1" '); zip.file("xl/workbook.xml", wbn);
+  const blob = await zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", compression: "DEFLATE" });
+  await downloads.save({ filename: fd.name || `ASB_${month}_Salary.xlsx`, data: blob });
+  return true;
 }
 function vPayroll(){
   const published = payDoc()?.status === "PUBLISHED";
@@ -3951,6 +4009,7 @@ document.addEventListener("click", async e => {
     if (act === "pay-export") {
       const published = payDoc()?.status === "PUBLISHED";
       const slips = published ? payDoc().slips : computePayroll();
+      try { if (await paySheetExport(state.payMonth, slips)) return; } catch (x) { console.warn(x); }
       // round-trip sheet: read-only auto columns + editable adjustment columns (keyed by Iqama)
       const EC = [["Iqama", "residentId"], ["Name", "name"], ["Grade", "grade"], ["Orders", "orders"], ["Base", "base"], ["Additional", "bonus"], ["Due", "due"], ["Petrol", "fuelSpent"], ["Petrol_Adj", "fuelAdj"],
         ["Traffic", "@traffic"], ["Accident", "@accident"], ["Company", "@company"], ["Supervisor", "@akash"], ["Advance", "@advance"], ["Keeta", "@keeta"], ["Bonus", "@duesBonus"], ["Incentive", "@incent"], ["Overtime", "@overtime"], ["Absent_Days", "@abs"], ["Petrol_Override", "@fuel"], ["Manual_Base", "@man"], ["Valid", "@valid"], ["Reason", "@reason"],
@@ -3969,6 +4028,33 @@ document.addEventListener("click", async e => {
           <label class="f full">${t("perf_paste")} <span class="opt">· ${t("optional")}</span><textarea class="input mono" name="csv" rows="5" dir="ltr"></textarea></label>`,
         onSubmit: async fd => {
           let text = fd.csv || ""; const file = $("#payFile")?.files?.[0];
+          if (file && /\.(xlsx|xlsm)$/i.test(file.name) && window.XLSX) {
+            const buf = await file.arrayBuffer(); let P = null; try { P = paySheetParse(buf); } catch (e) { console.warn(e); }
+            if (P) {
+              const m = P.month || state.payMonth;
+              if (state.payroll[m]?.status === "PUBLISHED") fail(t("pa_already"));
+              const byJ = {}; for (const [eid, e] of Object.entries(state.emp)) if (e.jahezId) byJ[String(e.jahezId)] = eid;
+              const adjs = {}, rowmap = {}, miss = [], sheetNet = {};
+              for (const r of P.rows) { const eid = byJ[r.cid]; if (!eid) { miss.push(`${r.name} (${r.cid})`); continue; }
+                adjs[eid] = { ...r.adj, valid: r.valid, reason: r.reason, sh: r.sh }; rowmap[eid] = r.row; sheetNet[eid] = r.net; }
+              if (!Object.keys(adjs).length) fail(t("perf_nothing"));
+              state.payMonth = m; state.adjDraft = { ...adjs }; render();
+              const slips = computePayroll(), byId = Object.fromEntries(slips.map(x => [x.id, x]));
+              const ids = Object.keys(adjs), diff = ids.filter(i => byId[i] && Math.abs(byId[i].net - sheetNet[i]) > 0.01);
+              const miss2 = ids.filter(i => !byId[i]);
+              const tbl = `<div class="full scroll" style="max-height:44vh"><table><thead><tr><th>${t("name")}</th><th class="r">Sheet</th><th class="r">${t("net")}</th></tr></thead><tbody>${ids.filter(i => byId[i]).map(i => `<tr><td>${esc(byId[i].name)}</td><td class="r">${fmt(sheetNet[i])}</td><td class="r ${Math.abs(byId[i].net - sheetNet[i]) > 0.01 ? "neg" : ""}">${fmt(byId[i].net)}</td></tr>`).join("")}</tbody></table></div>`;
+              setTimeout(() => openDialog({ title: "🧪 " + t("pay_sheet_t") + " · " + m,
+                body: `<p class="full">✓ ${t("pay_test_sum", { n: ids.length - miss2.length })} · ${t("pay_sheet_notpub")}${miss.length ? ` · <b class="neg">${t("perf_unmatched")}: ${miss.length}</b>` : ""}${diff.length ? ` · <b class="neg">≠ ${diff.length}</b>` : ""}</p>${miss.length ? `<p class="full mono sub">${miss.map(esc).join(", ")}</p>` : ""}${miss2.length ? `<p class="full sub">${t("pay_sheet_out")}: ${miss2.length}</p>` : ""}${tbl}`,
+                footer: `<button type="button" class="btn ghost" data-act="pay-test-cancel">${t("cancel")}</button><button class="btn gold" id="dlgOk">✓ ${t("pay_test_submit")}</button>`,
+                onSubmit: async () => {
+                  const old = state.payroll[m] ?? {};
+                  await db.doc("payroll_files/" + m).set({ b64: b64OfBuf(buf), rows: rowmap, r1: Math.min(...P.rows.map(r => r.row)), r2: Math.max(...P.rows.map(r => r.row)), name: file.name, at: Date.now(), by: auth.session?.user?.email || "" });
+                  await db.doc("payroll/" + m).set({ ...old, month: m, status: "DRAFT", adj: { ...(old.adj ?? {}), ...adjs }, updatedAt: Date.now() });
+                  state.adjDraft = {}; toast(t("pay_test_done"));
+                } }), 70);
+              return;
+            }
+          }
           if (file) { try { text = await reportText(file); } catch (e) { fail(e.message === "xlsx-missing" ? t("perf_xlsx_off") : t("perf_file_err")); } }
           const lines = text.replace(/^﻿/, "").split(/\r?\n/).map(l => l.split(/\t|,|;/).map(c => c.trim().replace(/^"|"$/g, "")));
           let hi = lines.findIndex(c => c.some(x => /iqama|residentid|الإقامة|الاقامة/i.test(x)));
@@ -4758,9 +4844,9 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ كل تقرير يومي 12 شهراً. يعرض التطبيق دائماً آخر يومين، ويمكن للسائق فتح أي يوم سابق من التقويم.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", dash_profit: "الربح · هذا الشهر", dash_salaries: "الرواتب · هذا الشهر", dash_no_inv: "لم تُضف فاتورة كيتا", dash_avg: "متوسط {n}/سائق", dash_fleet: "نظرة عامة على الأسطول", dash_online: "متصل الآن", dash_paytypes: "أنواع الرواتب", dash_platforms: "المنصّات", dash_grades: "الأداء (الأحدث)", dash_target_hit: "450+ طلب", dash_newrp: "شكاوى جديدة", nav_orddetail: "تفاصيل الطلبات", ord_hint: "تقرير كيتا لمهام كل مندوب، يُرفع لفترة زمنية.", ord_import: "رفع تقرير الطلبات", ord_imp_help: "ارفع تقرير طلبات كيتا (Excel/CSV) واختر الفترة التي يغطيها. تتم مطابقة المندوبين عبر رقم المندوب. يُجمع العمود D (المُسلَّمة) في الأسفل.", ord_kpi_delivered: "المُسلَّمة (D)", ord_kpi_accepted: "المقبولة", ord_kpi_rejected: "المرفوضة", ord_kpi_ontime: "في الوقت (متوسط)", ord_kpi_completion: "نسبة الإكمال", ord_avgtime_k: "متوسط وقت التوصيل", ord_drivers: "مندوب", ord_unmatched: "غير مطابق", ord_unmatched_n: "رقم مندوب في الملف غير مرتبط بأي سائق.", ord_none: "لا يوجد تقرير طلبات بعد — ارفع واحداً.", ord_note: "للمشرف فقط. ارفع تقرير كيتا نفسه في أي وقت مع فترته؛ تُحفظ كل فترة على حدة، وتتم المطابقة عبر رقم المندوب.", dash_exp: "تجربة العمل", dash_online_s: "متصل", dash_hit_s: "حقق الهدف", dash_ontime: "في الوقت", dash_completion: "الإكمال", dash_cancel: "الإلغاء", dash_rejected: "المرفوضة", dash_overdue: "متأخرة", dash_severe: "متأخرة جداً", dash_avg_s: "متوسط", dash_total_s: "إجمالي", dash_attention: "يحتاج انتباه", dash_pending: "موافقات معلقة", dash_no_exp: "لا يوجد تقرير طلبات هذا الشهر بعد", dash_allgood: "لا توجد مشاكل 👍", pa_adj_t: "الخصومات والمكافآت", pa_view: "عرض التفاصيل", pa_valid: "صالح هذا الشهر", pa_reason: "سبب عدم الصلاحية", pa_reason_ph: "مثال: استخدام رقم اللوحة", pa_adj_note: "تُضاف إلى قسيمة الراتب. الوقود والأساسي والإضافي تُحسب تلقائياً.", pa_invalid: "غير صالح هذا الشهر", pa_base: "الراتب الأساسي", pa_additional: "الإضافي", pa_due: "إجمالي المستحق", pa_petrol: "إجمالي الوقود", pa_petrolk: "خصم/استرداد الوقود", pa_traffic: "مخالفة مرورية", pa_accident: "حادث", pa_company: "خصومات الشركة", pa_akash: "خصم المشرف", pa_advance: "حسم السلف", pa_keeta: "خصومات كيتا", pa_bonus_o: "المستحقات والمكافآت", pa_totded: "إجمالي الخصومات", pa_tbl_note: "الأساسي والإضافي والوقود تُحسب تلقائياً. اضغط على خانة الخصم أو تعديل الوقود أو المكافأة لتعديلها؛ واضغط على اسم السائق للحافز والوقت الإضافي والغياب والصلاحية.", pay_import: "اختبار ورفع الكشف", pay_imp_help: "نزّل كشف الرواتب (⬇)، عدّل أعمدة الخصومات/المكافآت (Traffic, Accident, Company, Supervisor, Advance, Keeta, Bonus, Valid, Reason…) في Excel، ثم ارفعه هنا. تتم مطابقة السائقين عبر الإقامة؛ يُفتح الكشف كمسودة بتغييراتك لمراجعته ونشره.", pay_imp_nokey: "يحتاج الملف إلى عمود الإقامة لمطابقة السائقين.", pay_test_t: "اختبار كشف الرواتب", pay_test_sum: "تمت قراءة {n} سائق من الملف.", pay_test_note: "تحقق من الأرقام أدناه. يضيفها Submit إلى الكشف كمسودة؛ ثم اضغط نشر لإرسالها للسائقين. Cancel يلغي كل شيء.", pay_test_submit: "إضافة إلى الكشف", pay_test_done: "أُضيف إلى مسودة الكشف — راجع ثم انشر", nav_loans: "القروض والسلف", loan_hint: "الأموال المُعطاة للسائقين — قروض وسلف. تُضاف إلى مستحقات السائق وتظهر في التطبيق.", loan_add: "منح قرض / سلفة", loan_total_given: "إجمالي المُعطى", loan_outstanding: "المتبقي", loan_none: "لا توجد قروض أو سلف بعد", loan_note: "يُسترد القرض/السلفة من الراتب شهرياً (أو عند السداد). يُحتسب المتبقي في إجمالي المستحقات ويراه السائق في التطبيق.", nav_expenses: "مصاريف الشركة", exp_hint: "إنفاق الشركة نفسها — للمشرف فقط. لا تظهر للسائقين.", exp_add: "إضافة مصروف", exp_edit: "تعديل مصروف", exp_place: "أين / على ماذا", exp_place_ph: "مثال: إصلاح مركبة، إيجار مكتب، وقود", exp_reason_ph: "أي ملاحظة", exp_by: "أضافه", exp_this_month: "هذا الشهر", exp_total: "إجمالي المصاريف", exp_none: "لا توجد مصاريف بعد", exp_note: "للمشرف فقط — لا تظهر مصاريف الشركة في تطبيق السائق أبداً.", exp_del_q: "حذف هذا المصروف بقيمة {a} ريال؟ لا يمكن التراجع.", du_open: "مستحق", du_waived: "مُعفى", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
 
 const auth = { mode: "signin", msg: "", err: "", busy: false, session: null, role: null, perms: null, admins: [] };
-Object.assign(I18N.en, { au_tag: "Employee management · Admin panel", au_secure: "Secure access", au_online: "Online", au_wait: "Your workspace is waiting." });
-Object.assign(I18N.bn, { au_tag: "কর্মচারী ব্যবস্থাপনা · এডমিন প্যানেল", au_secure: "নিরাপদ প্রবেশ", au_online: "অনলাইন", au_wait: "আপনার ওয়ার্কস্পেস অপেক্ষা করছে।" });
-Object.assign(I18N.ar, { au_tag: "إدارة الموظفين · لوحة المشرف", au_secure: "دخول آمن", au_online: "متصل", au_wait: "مساحة عملك بانتظارك." });
+Object.assign(I18N.en, { pay_sheet_t: "Salary sheet check", pay_sheet_notpub: "saved as DRAFT, not visible to drivers", pay_sheet_out: "Out of payroll / not active (skipped)", au_tag: "Employee management · Admin panel", au_secure: "Secure access", au_online: "Online", au_wait: "Your workspace is waiting." });
+Object.assign(I18N.bn, { pay_sheet_t: "বেতন শীট যাচাই", pay_sheet_notpub: "ড্রাফট হিসেবে সেভ হবে, কর্মীরা দেখবে না", pay_sheet_out: "পে-রোলের বাইরে / নিষ্ক্রিয় (বাদ)", au_tag: "কর্মচারী ব্যবস্থাপনা · এডমিন প্যানেল", au_secure: "নিরাপদ প্রবেশ", au_online: "অনলাইন", au_wait: "আপনার ওয়ার্কস্পেস অপেক্ষা করছে।" });
+Object.assign(I18N.ar, { pay_sheet_t: "مراجعة كشف الرواتب", pay_sheet_notpub: "يُحفظ كمسودة ولا يراه السائقون", pay_sheet_out: "خارج الرواتب / غير نشط (تم تخطيه)", au_tag: "إدارة الموظفين · لوحة المشرف", au_secure: "دخول آمن", au_online: "متصل", au_wait: "مساحة عملك بانتظارك." });
 function renderAuth(){
   document.documentElement.lang = lang; document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
   $("#app").hidden = true; const root = $("#emp"); root.hidden = false;
