@@ -3108,6 +3108,7 @@ async function paySheetExport(month, slips){
     const J = numOf("J" + rn), T = r2(vals.M + vals.N + vals.O + vals.Q + vals.R + vals.S + Math.max(-vals.L, 0)), U = r2(J + vals.L - vals.M - vals.N - vals.O + vals.P - vals.Q - vals.R - vals.S);
     setCached("T" + rn, T); setCached("U" + rn, U); }
   if (fd.r1 && fd.r2) for (const c of "KLMNOPQRSTU") { let sum = 0; for (let r = fd.r1; r <= fd.r2; r++) sum += numOf(c + r); setCached(c + (fd.r2 + 1), r2(sum)); }
+  x = x.replace(/<col [^>]*min="12"[^>]*\/>/g, m => m.replace('hidden="true"', 'hidden="false"')); // petrol, traffic, accident, company columns are hidden in the template: show them
   zip.file(path, x);
   let wbn = wbx.replace(/<calcPr /, '<calcPr fullCalcOnLoad="1" '); zip.file("xl/workbook.xml", wbn);
   const blob = await zip.generateAsync({ type: "blob", mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", compression: "DEFLATE" });
