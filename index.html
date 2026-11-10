@@ -1003,7 +1003,8 @@ const fuelNeedIds = () => Object.entries(state.fuelneed).filter(([id, x]) => x?.
 const fuelNeedPanel = () => { const ids = fuelNeedIds(); if (!ids.length) return "";
   return `<section class="panel fneed-panel"><h2 class="dash-sec" style="margin:0 0 8px">⛽ ${t("fn_title")} · ${ids.length}</h2><p class="sub" style="margin:0 0 8px">${t("fn_hint")}</p><div class="fn-list">${ids.map(id => `<div class="fn-i">${state.fuelneed[id].photo ? `<img class="fn-pic" src="${state.fuelneed[id].photo}" data-fnpic alt="meter">` : ""}${avatarHtml(state.emp[id].photoUrl, state.emp[id].fullName, 28)}<span class="name">${esc(state.emp[id].fullName)}${state.emp[id].plate ? ` <span class="sub">${esc(state.emp[id].plate)}</span>` : ""}</span>${state.emp[id].card ? `<button class="btn ghost sm mono" data-act="copy-card" data-v="${esc(state.emp[id].card)}" title="${t("fn_copy")}">📋 ${esc(state.emp[id].card)}</button>` : ""}${state.fuelneed[id].tgPhoto ? `<span class="sub">📷 Telegram</span>` : ""}<span class="sub">${esc(agoTxt(+state.fuelneed[id].at || Date.now()))}</span><button class="btn ghost sm" data-act="fneed-done" data-id="${id}" data-needs-write>✓ ${t("fn_done")}</button><button class="btn ghost sm" data-act="fneed-na" data-id="${id}" data-needs-write>✕ ${t("fn_na")}</button></div>`).join("")}</div></section>`; };
 const payExtra = () => payDoc()?.extra ?? [];
-const payEmps = () => activeEmps().filter(([id, e]) => e.inPayroll !== false || payExtra().includes(id));
+const payOut = () => payDoc()?.out ?? [];
+const payEmps = () => activeEmps().filter(([id, e]) => (e.inPayroll !== false || payExtra().includes(id)) && !payOut().includes(id));
 const activeEmps = () => Object.entries(state.emp).filter(([,e]) => e.status === "ACTIVE").sort((a,b)=>a[1].fullName.localeCompare(b[1].fullName));
 function ranked(doc){
   const rows = Object.entries(doc?.rows ?? {}).filter(([id]) => state.emp[id]).map(([id, r]) => ({ id, o: +r.o || 0, f: +r.f || 0 }))
@@ -1167,6 +1168,7 @@ function vShift(){
 }
 async function shUpsert(rows){ const { error } = await sb.from("shifts").upsert(rows.map(r => ({ ...r, updated_at: new Date().toISOString() })), { onConflict: "emp_id,day" }); if (error) { toast(error.message); return false; } return true; }
 /* shared month calendar: ‹ Month › 📅 popup. sel "" = all months (when opts.all) */
+Object.assign(I18N.en, { pay_out_t: "Remove from this month’s payroll", pay_out_l: "Out of payroll", pay_out_back: "Put back", pay_out_ok: "Removed from payroll", pay_in_ok: "Back in payroll" }); Object.assign(I18N.bn, { pay_out_t: "এই মাসের পেরোল থেকে বাদ দিন", pay_out_l: "পেরোলের বাইরে", pay_out_back: "ফেরান", pay_out_ok: "পেরোল থেকে বাদ দেওয়া হয়েছে", pay_in_ok: "আবার পেরোলে যুক্ত হয়েছে" }); Object.assign(I18N.ar, { pay_out_t: "استبعاد من كشف هذا الشهر", pay_out_l: "خارج الرواتب", pay_out_back: "إرجاع", pay_out_ok: "تم الاستبعاد من الرواتب", pay_in_ok: "أُعيد إلى الرواتب" });
 Object.assign(I18N.en, { pay_tap_edit: "Tap to edit", pay_tap_name: "Tap for all adjustments (incentive, overtime, absent days…)" }); Object.assign(I18N.bn, { pay_tap_edit: "এডিট করতে ট্যাপ করুন", pay_tap_name: "সব সমন্বয়ের জন্য ট্যাপ করুন (ইনসেনটিভ, ওভারটাইম, অনুপস্থিতি…)" }); Object.assign(I18N.ar, { pay_tap_edit: "اضغط للتعديل", pay_tap_name: "اضغط لكل التعديلات (حافز، وقت إضافي، غياب…)" });
 Object.assign(I18N.en, { sh_rules_t: "Alarm rules", sh_rules_h: "Applies to all drivers (takes effect with the next app update). Sound stops after the seconds below; vibration continues until the driver opens the app or presses a volume key, or until the limit.", sh_snd_s: "Sound (seconds)", sh_vib_s: "Vibration limit (seconds)" }); Object.assign(I18N.bn, { sh_rules_t: "এলার্মের নিয়ম", sh_rules_h: "সব কর্মীর জন্য (পরের অ্যাপ আপডেটের পর কার্যকর হবে)। সাউন্ড নিচের সেকেন্ড পর বন্ধ হবে; ভাইব্রেশন চলবে যতক্ষণ কর্মী অ্যাপে না ঢোকে বা ভলিউম বাটন না চাপে, অথবা সীমা পর্যন্ত।", sh_snd_s: "সাউন্ড (সেকেন্ড)", sh_vib_s: "ভাইব্রেশনের সর্বোচ্চ সীমা (সেকেন্ড)" }); Object.assign(I18N.ar, { sh_rules_t: "قواعد المنبه", sh_rules_h: "لجميع السائقين (يسري مع التحديث القادم). يتوقف الصوت بعد الثواني أدناه؛ ويستمر الاهتزاز حتى يفتح السائق التطبيق أو يضغط زر الصوت أو حتى الحد.", sh_snd_s: "الصوت (ثانية)", sh_vib_s: "حد الاهتزاز (ثانية)" });
 Object.assign(I18N.en, { sh_selall: "Select all", sh_clr: "Clear", sh_by_time: "Today’s shifts by time" }); Object.assign(I18N.bn, { sh_selall: "সবাইকে বাছুন", sh_clr: "মুছুন", sh_by_time: "সময় অনুযায়ী শিফট" }); Object.assign(I18N.ar, { sh_selall: "تحديد الكل", sh_clr: "مسح", sh_by_time: "الورديات حسب الوقت" });
@@ -3072,6 +3074,7 @@ function vPayroll(){
     </div></div>
   ${(() => { const ms = Object.values(state.payroll).filter(p => p.month).sort((a, b) => b.month.localeCompare(a.month));
     return ms.length ? `<div class="chips"><span class="sub" style="margin-inline-end:4px">${t("pay_saved")}:</span>${ms.map(p => `<button class="chip ${p.month === state.payMonth ? "on" : ""}" data-act="pay-month" data-v="${esc(p.month)}"><b>${esc(p.month)}</b> ${p.status === "PUBLISHED" ? t("published") : t("draft")}</button>`).join("")}</div>` : ""; })()}
+  ${!published && payOut().length ? `<div class="chips" style="margin:0 0 10px"><span class="sub" style="margin-inline-end:4px">⊖ ${t("pay_out_l")}:</span>${payOut().map(i => `<span class="chip" style="gap:6px">${esc(state.emp[i]?.fullName || i)} <button class="btn ghost sm" data-act="pay-in" data-id="${esc(i)}" data-needs-write style="padding:1px 8px">↩ ${t("pay_out_back")}</button></span>`).join("")}</div>` : ""}
   <div class="kpis">
     <div class="kpi"><span>${t("totalOrders")}</span><b>${fmt0(sum("orders"))}</b></div>
     <div class="kpi"><span>${t("pa_due")}</span><b>${fmt(sum("due"))}</b><small>${t("sar")}</small></div>
@@ -3082,7 +3085,7 @@ function vPayroll(){
   <section class="panel">${slips.length ? `<div class="scroll"><table class="pay">
     <thead><tr><th>${t("name")}</th><th class="r">${t("orders")}</th><th class="r">${t("pa_base")}</th><th class="r">${t("pa_additional")}</th><th class="r">${t("pa_due")}</th><th class="r">${t("pa_petrol")}</th><th class="r">${t("pa_petrolk")}</th><th class="r ordd-badh">${t("pa_traffic")}</th><th class="r ordd-badh">${t("pa_accident")}</th><th class="r ordd-badh">${t("pa_company")}</th><th class="r ordd-badh">${t("pa_akash")}</th><th class="r ordd-badh">${t("pa_advance")}</th><th class="r ordd-badh">${t("pa_keeta")}</th><th class="r">${t("pa_bonus_o")}</th><th class="r">${t("pa_totded")}</th><th class="r">${t("net")}</th>${published ? "<th></th>" : ""}</tr></thead>
     <tbody>${slips.map(s => { const ded = k => { const L = s.lk?.[k]; const sub = !published && L?.over ? `<div class="sub" style="color:var(--bad)">⚠</div>` : ""; return `<td class="r nowrap${+s[k] ? " ordd-bad" : ""}${published ? "" : " ed"}"${ed(k, s.id)}>${+s[k] ? "−" + fmt(s[k]) : fmt(0)}${sub}</td>`; }; const due = s.due != null ? s.due : r2((+s.base || 0) + (+s.bonus || 0)); const extraDed = r2((+s.fineDed || 0) + (+s.advDed || 0) + (+s.shortfall || 0) + (+s.absDed || 0) + (+s.incent || 0) + (+s.overtime || 0)); return `<tr>
-      <td class="ed" data-act="pay-adj" data-id="${esc(s.id)}" ${published ? "" : "data-needs-write"} title="${t("pay_tap_name")}"><div class="name">${esc(state.emp[s.id]?.fullName || s.name)}${!published && payExtra().includes(s.id) ? ` <span class="pill p-info nodot">+ ${t("pay_extra")}</span><button class="btn ghost sm" data-act="pay-unextra" data-id="${esc(s.id)}" data-needs-write title="${t("pay_extra_rm")}">✕</button>` : ""}${s.valid === false ? ` <span class="pill p-bad nodot" title="${esc(s.reason || "")}">${t("pa_invalid")}</span>` : ""}${!state.emp[s.id] ? ` <span class="pill p-mute nodot">${t("pay_gone")}</span>` : ""}</div><div class="sub">${rkPill(s.payType)}${s.grade ? ` <span class="grade sm ${gradeCls(s.grade)}" title="${t("pg_col")}">${s.grade}</span>` : ""}${s.manual ? ` <span class="pill p-warn nodot">${t(s.manual === "gradeD" ? "pay_manual_d" : "pay_manual_low")}</span>` : ""}${extraDed ? ` <span class="pill p-mute nodot" title="${t("incent")}/${t("overtime")}/${t("fineDed")}/${t("advDed")}/${t("shortfall")}/${t("abs_col")}">±${fmt(extraDed)}</span>` : ""}</div></td>
+      <td class="ed" data-act="pay-adj" data-id="${esc(s.id)}" ${published ? "" : "data-needs-write"} title="${t("pay_tap_name")}"><div class="name">${esc(state.emp[s.id]?.fullName || s.name)}${!published ? `<button class="btn ghost sm" data-act="pay-out" data-id="${esc(s.id)}" data-needs-write title="${t("pay_out_t")}" style="margin-inline-start:6px;padding:2px 7px">⊖</button>` : ""}${!published && payExtra().includes(s.id) ? ` <span class="pill p-info nodot">+ ${t("pay_extra")}</span><button class="btn ghost sm" data-act="pay-unextra" data-id="${esc(s.id)}" data-needs-write title="${t("pay_extra_rm")}">✕</button>` : ""}${s.valid === false ? ` <span class="pill p-bad nodot" title="${esc(s.reason || "")}">${t("pa_invalid")}</span>` : ""}${!state.emp[s.id] ? ` <span class="pill p-mute nodot">${t("pay_gone")}</span>` : ""}</div><div class="sub">${rkPill(s.payType)}${s.grade ? ` <span class="grade sm ${gradeCls(s.grade)}" title="${t("pg_col")}">${s.grade}</span>` : ""}${s.manual ? ` <span class="pill p-warn nodot">${t(s.manual === "gradeD" ? "pay_manual_d" : "pay_manual_low")}</span>` : ""}${extraDed ? ` <span class="pill p-mute nodot" title="${t("incent")}/${t("overtime")}/${t("fineDed")}/${t("advDed")}/${t("shortfall")}/${t("abs_col")}">±${fmt(extraDed)}</span>` : ""}</div></td>
       <td class="r">${fmt0(s.orders)}</td>
       <td class="r nowrap">${fmt(s.base)}</td>
       <td class="r nowrap ${s.bonus ? "pos" : ""}">${fmt(s.bonus)}${s.extraOrders ? `<div class="sub">${fmt0(s.extraOrders)}×${fmt(s.extraRate)}</div>` : ""}</td>
@@ -3103,18 +3106,21 @@ document.addEventListener("input", e => {
 });
 
 
-/* payroll: tap a column cell to edit it in place */
+/* payroll: tap a column cell to edit that figure (small dialog: works reliably on phones) */
+const PAY_COLLBL = { fuel: "pa_petrolk", traffic: "pa_traffic", accident: "pa_accident", company: "pa_company", akash: "pa_akash", advance: "pa_advance", keeta: "pa_keeta", duesBonus: "pa_bonus_o" };
 document.addEventListener("click", e => {
-  const c = e.target.closest("td[data-ed]"); if (!c || c.querySelector("input")) return;
-  const id = c.dataset.id, k = c.dataset.ed, cur = { ...(payDoc()?.adj?.[id] ?? {}), ...(state.adjDraft[id] ?? {}) }[k] ?? "";
-  c.innerHTML = `<input class="input num" type="number" step="0.01" style="width:70px;text-align:end" value="${esc(String(cur))}" placeholder="0">`;
-  const inp = c.querySelector("input"); inp.focus(); inp.select(); let done = false;
-  const back = () => { const sc = document.querySelector(".scroll"), x = sc ? sc.scrollLeft : 0; render(); const n = document.querySelector(".scroll"); if (n) n.scrollLeft = x; };
-  const commit = () => { if (done) return; done = true; const v = inp.value.trim();
-    if (PAY_LINK[k] && v !== "") { const L = dueLeftOf(id, PAY_LINK[k]), nm = state.emp[id]?.fullName || id; if (r2(v) > L + 0.001) { toast(t("pa_over", { n: nm, c: t(PAY_LINK[k]), a: fmt(r2(v)), l: fmt(L) })); back(); return; } }
-    (state.adjDraft[id] ??= {})[k] = v; back(); };
-  inp.addEventListener("keydown", ev => { if (ev.key === "Enter") commit(); else if (ev.key === "Escape") { done = true; back(); } });
-  inp.addEventListener("blur", commit);
+  const c = e.target.closest("td[data-ed]"); if (!c) return;
+  const id = c.dataset.id, k = c.dataset.ed, nm = state.emp[id]?.fullName || id;
+  const cur = { ...(payDoc()?.adj?.[id] ?? {}), ...(state.adjDraft[id] ?? {}) }[k] ?? "";
+  const L = PAY_LINK[k] ? dueLeftOf(id, PAY_LINK[k]) : null;
+  openDialog({ title: `${esc(nm)} · ${t(PAY_COLLBL[k] || k)}`, submit: t("save"),
+    body: `<label class="f full">${t(PAY_COLLBL[k] || k)}${L != null ? ` <span class="opt">· ${t("pa_left")} ${fmt(L)}</span>` : k === "fuel" ? ` <span class="opt">· ±</span>` : ""}<input class="input num" type="number" step="0.01" ${L != null ? `min="0" max="${L}"` : ""} name="v" value="${esc(String(cur))}" placeholder="0" autofocus></label>`,
+    onSubmit: async fd => {
+      const v = String(fd.v ?? "").trim();
+      if (L != null && v !== "" && r2(v) > L + 0.001) fail(t("pa_over", { n: nm, c: t(PAY_LINK[k]), a: fmt(r2(v)), l: fmt(L) }));
+      (state.adjDraft[id] ??= {})[k] = v;
+      const sc = document.querySelector(".scroll"), x = sc ? sc.scrollLeft : 0; render(); const n2 = document.querySelector(".scroll"); if (n2) n2.scrollLeft = x;
+    }});
 });
 
 /* ───────── Rules ───────── */
@@ -3548,6 +3554,9 @@ document.addEventListener("click", async e => {
         onSubmit: async fd => { if (!fd.eid) fail(t("required")); await db.doc("payroll/" + state.payMonth).set({ ...(payDoc() ?? {}), month: state.payMonth, status: "DRAFT", extra: [...payExtra(), fd.eid], updatedAt: Date.now() }); } });
       return;
     }
+    if (act === "pay-out" || act === "pay-in") {
+      const out = act === "pay-out" ? [...new Set([...payOut(), id])] : payOut().filter(x => x !== id);
+      await db.doc("payroll/" + state.payMonth).set({ ...(payDoc() ?? {}), month: state.payMonth, status: "DRAFT", out, extra: payExtra().filter(x => x !== id || act === "pay-in"), updatedAt: Date.now() }); toast(t(act === "pay-out" ? "pay_out_ok" : "pay_in_ok")); return; }
     if (act === "pay-unextra") { await db.doc("payroll/" + state.payMonth).set({ ...(payDoc() ?? {}), month: state.payMonth, status: "DRAFT", extra: payExtra().filter(x => x !== id), updatedAt: Date.now() }); return; }
     if (act === "emp-status") { await db.doc("employees/" + id).update({ status: b.dataset.v, updatedAt: Date.now() }); }
 
