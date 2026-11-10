@@ -3043,7 +3043,7 @@ function computePayroll(){
     if (a.sh) { // imported salary sheet: the sheet's own numbers and formulas (H, I=F*G, J, L, U)
       const h = a.sh, xo = +h.xo || 0, xr = +h.xr || 0, bn = r2(xo * xr), due = h.due != null ? r2(+h.due || 0) : r2((+h.base || 0) + bn), fa = r2((+h.pad || 0) + (+a.fuel || 0));
       const nd = r2(traffic + accident + company + akash + keeta + advanceM);
-      Object.assign(slip, { orders: +h.o || 0, grade: h.cls || slip.grade, gradeSrc: "sheet", manual: "", base: r2(+h.base || 0), bonus: bn, due, shortfall: 0, fuelSpent: r2(+h.k || 0), fuelAdj: fa,
+      Object.assign(slip, { orders: +h.o || 0, grade: h.cls || slip.grade, gradeSrc: "sheet", manual: "", base: r2(+h.base || 0), bonus: bn, due, shortfall: 0, fuelSpent: +h.k ? r2(+h.k) : slip.fuelSpent, fuelAdj: fa,
         allowance: 0, absDed: 0, absShifts: 0, fineDed: 0, advDed: 0, planned: [], extraOrders: xo || null, extraRate: xr || null, rank: h.rk || "" });
       slip.sded = r2(nd + Math.max(0, -fa)); slip.deductions = slip.sded;
       slip.gross = r2(due + duesBonus + incent + overtime + Math.max(0, fa) + Math.max(0, other));
