@@ -553,6 +553,10 @@ dialog{border-radius:16px;box-shadow:0 20px 60px rgba(20,24,50,.25)}
 
 .mk-stop b{display:block;background:#E8590C;color:#fff;border-radius:11px;font:700 11px/22px system-ui;text-align:center;border:2px solid #fff;box-shadow:0 1px 4px #0005;white-space:nowrap}
 
+.scroll.payscr{max-height:74vh;overflow:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+table.pay thead th{position:sticky;top:0;z-index:3;background:var(--surface)}
+table.pay td:first-child,table.pay th:first-child{position:sticky;inset-inline-start:0;z-index:2;background:var(--surface)}
+table.pay thead th:first-child{z-index:4}
 /* Theme v5: Employees and Payroll fit the page width on desktop (no sideways scroll) */
 @media(min-width:900px){
  table.emps th,table.emps td{padding-inline:6px;font-size:12.5px} table.emps th{white-space:normal}
@@ -562,6 +566,7 @@ dialog{border-radius:16px;box-shadow:0 20px 60px rgba(20,24,50,.25)}
  table.pay .input.num{width:46px;min-width:0;padding:5px 3px;font-size:11px} table.pay td *{min-width:0} table.pay .row-actions{flex-wrap:wrap}
  table.pay td:first-child{max-width:130px;white-space:normal}
  table.pay td.ed{cursor:pointer}
+
  table.pay td.ed:not(:first-child){box-shadow:inset 0 -2px 0 rgba(120,160,220,.45)}
  table.pay td.ed:hover{background:rgba(120,160,220,.14)}
 }
@@ -3016,7 +3021,8 @@ function computePayroll(){
     const traffic = +a.traffic || 0, accident = +a.accident || 0, company = +a.company || 0, akash = +a.akash || 0, keeta = +a.keeta || 0, advanceM = +a.advance || 0, duesBonus = +a.duesBonus || 0;
     const namedDed = r2(traffic + accident + company + akash + keeta + advanceM);
     const allowance = r2(fuelAllowance(e, orders));
-    const fuelAdj = r2((+a.fuel || 0) + allowance - (e.payType === "FLAT" ? 0 : fuelSpent));
+    const hasFS = a.fuelSet !== undefined && a.fuelSet !== null && a.fuelSet !== "";
+    const fuelAdj = hasFS ? r2(+a.fuelSet || 0) : r2((+a.fuel || 0) + allowance - (e.payType === "FLAT" ? 0 : fuelSpent));
     const absDed = r2((+a.abs || 0) * (+R.absence || 0));
     const gross = r2(base + bonus + incent + overtime + duesBonus + Math.max(0, fuelAdj) + Math.max(0, other));
     let avail = r2(gross - shortfall - absDed - namedDed + Math.min(0, fuelAdj) + Math.min(0, other));
@@ -3041,7 +3047,7 @@ function computePayroll(){
       valid: a.valid !== false, reason: a.reason || "", extraOrders: +a.extraOrders || null, extraRate: +a.extraRate || null,
       fineDed: r2(fineDed), advDed: r2(advDed), gross, deductions: r2(gross - net), sded, net: r2(net), planned, lk, adj: a };
     if (a.sh) { // imported salary sheet: the sheet's own numbers and formulas (H, I=F*G, J, L, U)
-      const h = a.sh, xo = +h.xo || 0, xr = +h.xr || 0, bn = r2(xo * xr), due = h.due != null ? r2(+h.due || 0) : r2((+h.base || 0) + bn), sp = +h.k ? r2(+h.k) : slip.fuelSpent, al = e.payType === "FLAT" ? 0 : fuelAllowance(e, +h.o || 0), fa = r2((+h.pad ? +h.pad : r2(al - sp)) + (+a.fuel || 0));
+      const h = a.sh, xo = +h.xo || 0, xr = +h.xr || 0, bn = r2(xo * xr), due = h.due != null ? r2(+h.due || 0) : r2((+h.base || 0) + bn), sp = +h.k ? r2(+h.k) : slip.fuelSpent, al = e.payType === "FLAT" ? 0 : fuelAllowance(e, +h.o || 0), fa = (a.fuelSet !== undefined && a.fuelSet !== null && a.fuelSet !== "") ? r2(+a.fuelSet || 0) : r2((+h.pad ? +h.pad : r2(al - sp)) + (+a.fuel || 0));
       const nd = r2(traffic + accident + company + akash + keeta + advanceM);
       Object.assign(slip, { orders: +h.o || 0, grade: h.cls || slip.grade, gradeSrc: "sheet", manual: "", base: r2(+h.base || 0), bonus: bn, due, shortfall: 0, fuelSpent: sp, fuelAdj: fa,
         allowance: al, absDed: 0, absShifts: 0, fineDed: 0, advDed: 0, planned: [], extraOrders: xo || null, extraRate: xr || null, rank: h.rk || "" });
@@ -3143,7 +3149,7 @@ function vPayroll(){
     <div class="kpi"><span>${t("net")}</span><b>${fmt(sum("net"))}</b><small>${t("sar")}</small></div>
   </div>
   <div style="display:flex;gap:8px;align-items:center;margin:-6px 0 10px;flex-wrap:wrap"><p class="sub" style="margin:0;flex:1;min-width:200px">${t("pa_tbl_note")}</p><span class="sub">${t("pay_scroll")}</span><button class="btn ghost sm" data-act="tbl-scroll" data-dir="-1" aria-label="left">◀</button><button class="btn ghost sm" data-act="tbl-scroll" data-dir="1" aria-label="right">▶</button></div>
-  <section class="panel">${slips.length ? `<div class="scroll"><table class="pay">
+  <section class="panel">${slips.length ? `<div class="scroll payscr"><table class="pay">
     <thead><tr><th>${t("name")}</th><th class="r">${t("orders")}</th><th class="r">${t("pa_base")}</th><th class="r">${t("pa_additional")}</th><th class="r">${t("pa_due")}</th><th class="r">${t("pa_petrol")}</th><th class="r">${t("pa_petrolk")}</th><th class="r ordd-badh">${t("pa_traffic")}</th><th class="r ordd-badh">${t("pa_accident")}</th><th class="r ordd-badh">${t("pa_company")}</th><th class="r ordd-badh">${t("pa_akash")}</th><th class="r ordd-badh">${t("pa_advance")}</th><th class="r ordd-badh">${t("pa_keeta")}</th><th class="r">${t("pa_bonus_o")}</th><th class="r">${t("pa_totded")}</th><th class="r">${t("net")}</th>${published ? "<th></th>" : ""}</tr></thead>
     <tbody>${slips.map(s => { const ded = k => { const L = s.lk?.[k]; const sub = !published && L?.over ? `<div class="sub" style="color:var(--bad)">⚠</div>` : ""; return `<td class="r nowrap${+s[k] ? " ordd-bad" : ""}${published ? "" : " ed"}"${ed(k, s.id)}>${+s[k] ? "−" + fmt(s[k]) : fmt(0)}${sub}</td>`; }; const due = s.due != null ? s.due : r2((+s.base || 0) + (+s.bonus || 0)); const extraDed = r2((+s.fineDed || 0) + (+s.advDed || 0) + (+s.shortfall || 0) + (+s.absDed || 0) + (+s.incent || 0) + (+s.overtime || 0)); return `<tr>
       <td class="ed" data-act="pay-adj" data-id="${esc(s.id)}" ${published ? "" : "data-needs-write"} title="${t("pay_tap_name")}"><div class="name">${esc(state.emp[s.id]?.fullName || s.name)}${!published ? `<button class="btn ghost sm" data-act="pay-out" data-id="${esc(s.id)}" data-needs-write title="${t("pay_out_t")}" style="margin-inline-start:6px;padding:2px 7px">⊖</button>` : ""}${!published && payExtra().includes(s.id) ? ` <span class="pill p-info nodot">+ ${t("pay_extra")}</span><button class="btn ghost sm" data-act="pay-unextra" data-id="${esc(s.id)}" data-needs-write title="${t("pay_extra_rm")}">✕</button>` : ""}${s.valid === false ? ` <span class="pill p-bad nodot" title="${esc(s.reason || "")}">${t("pa_invalid")}</span>` : ""}${!state.emp[s.id] ? ` <span class="pill p-mute nodot">${t("pay_gone")}</span>` : ""}</div><div class="sub">${rkPill(s.payType)}${s.grade ? ` <span class="grade sm ${gradeCls(s.grade)}" title="${t("pg_col")}">${s.grade}</span>` : ""}${s.manual ? ` <span class="pill p-warn nodot">${t(s.manual === "gradeD" ? "pay_manual_d" : "pay_manual_low")}</span>` : ""}${extraDed ? ` <span class="pill p-mute nodot" title="${t("incent")}/${t("overtime")}/${t("fineDed")}/${t("advDed")}/${t("shortfall")}/${t("abs_col")}">±${fmt(extraDed)}</span>` : ""}</div></td>
@@ -3168,18 +3174,36 @@ document.addEventListener("input", e => {
 
 
 /* payroll: tap a column cell to edit that figure (small dialog: works reliably on phones) */
+async function saveAdjDraft(){
+  const adj = { ...(payDoc()?.adj ?? {}) };
+  for (const [eid, a] of Object.entries(state.adjDraft)) {
+    const cur = { ...(adj[eid] ?? {}) };
+    for (const [k, v] of Object.entries(a)) {
+      if (k === "fuelSet") { if (v === "" || v == null) delete cur.fuelSet; else cur.fuelSet = r2(v); }
+      else if (k === "reason") cur.reason = String(v || "");
+      else if (k === "valid") cur.valid = v !== false;
+      else if (k === "sh") cur.sh = v;
+      else cur[k] = (v === "" || v == null) ? 0 : r2(v);
+    }
+    adj[eid] = cur;
+  }
+  await db.doc("payroll/" + state.payMonth).set({ ...(payDoc() ?? {}), month: state.payMonth, status: "DRAFT", adj, updatedAt: Date.now() });
+  state.adjDraft = {};
+}
 const PAY_COLLBL = { fuel: "pa_petrolk", traffic: "pa_traffic", accident: "pa_accident", company: "pa_company", akash: "pa_akash", advance: "pa_advance", keeta: "pa_keeta", duesBonus: "pa_bonus_o" };
 document.addEventListener("click", e => {
   const c = e.target.closest("td[data-ed]"); if (!c) return;
   const id = c.dataset.id, k = c.dataset.ed, nm = state.emp[id]?.fullName || id;
-  const cur = { ...(payDoc()?.adj?.[id] ?? {}), ...(state.adjDraft[id] ?? {}) }[k] ?? "";
+  const kk = k === "fuel" ? "fuelSet" : k, slip0 = computePayroll().find(x => x.id === id);
+  const cur = { ...(payDoc()?.adj?.[id] ?? {}), ...(state.adjDraft[id] ?? {}) }[kk] ?? "";
   const L = PAY_LINK[k] ? dueLeftOf(id, PAY_LINK[k]) : null;
   openDialog({ title: `${esc(nm)} · ${t(PAY_COLLBL[k] || k)}`, submit: t("save"),
-    body: `<label class="f full">${t(PAY_COLLBL[k] || k)}${L != null ? ` <span class="opt">· ${t("pa_left")} ${fmt(L)}</span>` : k === "fuel" ? ` <span class="opt">· ±</span>` : ""}<input class="input num" type="number" step="0.01" ${L != null ? `min="0" max="${L}"` : ""} name="v" value="${esc(String(cur))}" placeholder="0" autofocus></label>`,
+    body: `<label class="f full">${t(PAY_COLLBL[k] || k)}${L != null ? ` <span class="opt">· ${t("pa_left")} ${fmt(L)}</span>` : k === "fuel" ? ` <span class="opt">· ${t("pay_fuel_now")}: ${fmt(slip0?.fuelAdj ?? 0)}</span>` : ""}<input class="input num" type="number" step="0.01" ${L != null ? `min="0" max="${L}"` : ""} name="v" value="${esc(String(cur))}" placeholder="${k === "fuel" ? esc(t("pay_fuel_auto")) : "0"}" autofocus></label>${k === "fuel" ? `<p class="full sub">${t("pay_fuel_help")}</p>` : ""}`,
     onSubmit: async fd => {
       const v = String(fd.v ?? "").trim();
       if (L != null && v !== "" && r2(v) > L + 0.001) fail(t("pa_over", { n: nm, c: t(PAY_LINK[k]), a: fmt(r2(v)), l: fmt(L) }));
-      (state.adjDraft[id] ??= {})[k] = v;
+      (state.adjDraft[id] ??= {})[kk] = v;
+      await saveAdjDraft();
       const sc = document.querySelector(".scroll"), x = sc ? sc.scrollLeft : 0; render(); const n2 = document.querySelector(".scroll"); if (n2) n2.scrollLeft = x;
     }});
 });
@@ -3934,12 +3958,7 @@ document.addEventListener("click", async e => {
       }});
     }
 
-    if (act === "adj-save") {
-      const adj = { ...(payDoc()?.adj ?? {}) };
-      for (const [eid, a] of Object.entries(state.adjDraft)) adj[eid] = { ...(adj[eid] ?? {}), ...Object.fromEntries(Object.entries(a).map(([k,v]) => [k, k === "reason" ? String(v || "") : k === "valid" ? (v !== false) : (v === "" || v == null ? 0 : r2(v))])) };
-      await db.doc("payroll/" + state.payMonth).set({ ...(payDoc() ?? {}), month: state.payMonth, status: "DRAFT", adj, updatedAt: Date.now() });
-      state.adjDraft = {}; toast(t("adjSaved"));
-    }
+    if (act === "adj-save") { await saveAdjDraft(); toast(t("adjSaved")); }
 
     if (act === "pay-adj") {
       const pub = payDoc()?.status === "PUBLISHED";
@@ -4845,9 +4864,9 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   perf_orders: "الطلبات", perf_hours: "الساعات", perf_accept: "القبول %", perf_note: "يُحفظ كل تقرير يومي 12 شهراً. يعرض التطبيق دائماً آخر يومين، ويمكن للسائق فتح أي يوم سابق من التقويم.", totalOrders: "إجمالي الطلبات", fuel_month_k: "وقود هذا الشهر", dash_profit: "الربح · هذا الشهر", dash_salaries: "الرواتب · هذا الشهر", dash_no_inv: "لم تُضف فاتورة كيتا", dash_avg: "متوسط {n}/سائق", dash_fleet: "نظرة عامة على الأسطول", dash_online: "متصل الآن", dash_paytypes: "أنواع الرواتب", dash_platforms: "المنصّات", dash_grades: "الأداء (الأحدث)", dash_target_hit: "450+ طلب", dash_newrp: "شكاوى جديدة", nav_orddetail: "تفاصيل الطلبات", ord_hint: "تقرير كيتا لمهام كل مندوب، يُرفع لفترة زمنية.", ord_import: "رفع تقرير الطلبات", ord_imp_help: "ارفع تقرير طلبات كيتا (Excel/CSV) واختر الفترة التي يغطيها. تتم مطابقة المندوبين عبر رقم المندوب. يُجمع العمود D (المُسلَّمة) في الأسفل.", ord_kpi_delivered: "المُسلَّمة (D)", ord_kpi_accepted: "المقبولة", ord_kpi_rejected: "المرفوضة", ord_kpi_ontime: "في الوقت (متوسط)", ord_kpi_completion: "نسبة الإكمال", ord_avgtime_k: "متوسط وقت التوصيل", ord_drivers: "مندوب", ord_unmatched: "غير مطابق", ord_unmatched_n: "رقم مندوب في الملف غير مرتبط بأي سائق.", ord_none: "لا يوجد تقرير طلبات بعد — ارفع واحداً.", ord_note: "للمشرف فقط. ارفع تقرير كيتا نفسه في أي وقت مع فترته؛ تُحفظ كل فترة على حدة، وتتم المطابقة عبر رقم المندوب.", dash_exp: "تجربة العمل", dash_online_s: "متصل", dash_hit_s: "حقق الهدف", dash_ontime: "في الوقت", dash_completion: "الإكمال", dash_cancel: "الإلغاء", dash_rejected: "المرفوضة", dash_overdue: "متأخرة", dash_severe: "متأخرة جداً", dash_avg_s: "متوسط", dash_total_s: "إجمالي", dash_attention: "يحتاج انتباه", dash_pending: "موافقات معلقة", dash_no_exp: "لا يوجد تقرير طلبات هذا الشهر بعد", dash_allgood: "لا توجد مشاكل 👍", pa_adj_t: "الخصومات والمكافآت", pa_view: "عرض التفاصيل", pa_valid: "صالح هذا الشهر", pa_reason: "سبب عدم الصلاحية", pa_reason_ph: "مثال: استخدام رقم اللوحة", pa_adj_note: "تُضاف إلى قسيمة الراتب. الوقود والأساسي والإضافي تُحسب تلقائياً.", pa_invalid: "غير صالح هذا الشهر", pa_base: "الراتب الأساسي", pa_additional: "الإضافي", pa_due: "إجمالي المستحق", pa_petrol: "إجمالي الوقود", pa_petrolk: "خصم/استرداد الوقود", pa_traffic: "مخالفة مرورية", pa_accident: "حادث", pa_company: "خصومات الشركة", pa_akash: "خصم المشرف", pa_advance: "حسم السلف", pa_keeta: "خصومات كيتا", pa_bonus_o: "المستحقات والمكافآت", pa_totded: "إجمالي الخصومات", pa_tbl_note: "الأساسي والإضافي والوقود تُحسب تلقائياً. اضغط على خانة الخصم أو تعديل الوقود أو المكافأة لتعديلها؛ واضغط على اسم السائق للحافز والوقت الإضافي والغياب والصلاحية.", pay_import: "اختبار ورفع الكشف", pay_imp_help: "نزّل كشف الرواتب (⬇)، عدّل أعمدة الخصومات/المكافآت (Traffic, Accident, Company, Supervisor, Advance, Keeta, Bonus, Valid, Reason…) في Excel، ثم ارفعه هنا. تتم مطابقة السائقين عبر الإقامة؛ يُفتح الكشف كمسودة بتغييراتك لمراجعته ونشره.", pay_imp_nokey: "يحتاج الملف إلى عمود الإقامة لمطابقة السائقين.", pay_test_t: "اختبار كشف الرواتب", pay_test_sum: "تمت قراءة {n} سائق من الملف.", pay_test_note: "تحقق من الأرقام أدناه. يضيفها Submit إلى الكشف كمسودة؛ ثم اضغط نشر لإرسالها للسائقين. Cancel يلغي كل شيء.", pay_test_submit: "إضافة إلى الكشف", pay_test_done: "أُضيف إلى مسودة الكشف — راجع ثم انشر", nav_loans: "القروض والسلف", loan_hint: "الأموال المُعطاة للسائقين — قروض وسلف. تُضاف إلى مستحقات السائق وتظهر في التطبيق.", loan_add: "منح قرض / سلفة", loan_total_given: "إجمالي المُعطى", loan_outstanding: "المتبقي", loan_none: "لا توجد قروض أو سلف بعد", loan_note: "يُسترد القرض/السلفة من الراتب شهرياً (أو عند السداد). يُحتسب المتبقي في إجمالي المستحقات ويراه السائق في التطبيق.", nav_expenses: "مصاريف الشركة", exp_hint: "إنفاق الشركة نفسها — للمشرف فقط. لا تظهر للسائقين.", exp_add: "إضافة مصروف", exp_edit: "تعديل مصروف", exp_place: "أين / على ماذا", exp_place_ph: "مثال: إصلاح مركبة، إيجار مكتب، وقود", exp_reason_ph: "أي ملاحظة", exp_by: "أضافه", exp_this_month: "هذا الشهر", exp_total: "إجمالي المصاريف", exp_none: "لا توجد مصاريف بعد", exp_note: "للمشرف فقط — لا تظهر مصاريف الشركة في تطبيق السائق أبداً.", exp_del_q: "حذف هذا المصروف بقيمة {a} ريال؟ لا يمكن التراجع.", du_open: "مستحق", du_waived: "مُعفى", leaderboard_m: "ترتيب هذا الشهر", target_col: "الهدف", last_upd: "آخر تحديث", nothing_changed: "لا يوجد تغيير.", sec_person: "الموظف", sec_card: "بطاقة الوقود", sec_vehicle: "المدينة والمركبة", cardSerial: "الرقم التسلسلي للبطاقة", optional: "اختياري", serial_short: "تسلسلي", vehicleName: "اسم المركبة", vehicle: "المركبة", rk_TARGET: "Rank + Target", rk_PER_ORDER: "UnRank + Target", rk_FLAT: "Per Order", rk_all: "Rank + Unrank", photo_choose: "اختر صورة", photo_remove: "حذف الصورة", photo_hint: "صورة واضحة للوجه، تُقص مربعة تلقائياً.", pw_title: "تغيير كلمة المرور", pw_new: "كلمة المرور الجديدة", pw_again: "أعد كتابة كلمة المرور", pw_mismatch: "كلمتا المرور غير متطابقتين.", pw_done: "تم تغيير كلمة المرور.", pw_set: "أدخل كلمة مرور جديدة لحساب المشرف." });
 
 const auth = { mode: "signin", msg: "", err: "", busy: false, session: null, role: null, perms: null, admins: [] };
-Object.assign(I18N.en, { pay_sheet_t: "Salary sheet check", pay_sheet_notpub: "saved as DRAFT, not visible to drivers", pay_sheet_out: "Out of payroll / not active (skipped)", au_tag: "Employee management · Admin panel", au_secure: "Secure access", au_online: "Online", au_wait: "Your workspace is waiting." });
-Object.assign(I18N.bn, { pay_sheet_t: "বেতন শীট যাচাই", pay_sheet_notpub: "ড্রাফট হিসেবে সেভ হবে, কর্মীরা দেখবে না", pay_sheet_out: "পে-রোলের বাইরে / নিষ্ক্রিয় (বাদ)", au_tag: "কর্মচারী ব্যবস্থাপনা · এডমিন প্যানেল", au_secure: "নিরাপদ প্রবেশ", au_online: "অনলাইন", au_wait: "আপনার ওয়ার্কস্পেস অপেক্ষা করছে।" });
-Object.assign(I18N.ar, { pay_sheet_t: "مراجعة كشف الرواتب", pay_sheet_notpub: "يُحفظ كمسودة ولا يراه السائقون", pay_sheet_out: "خارج الرواتب / غير نشط (تم تخطيه)", au_tag: "إدارة الموظفين · لوحة المشرف", au_secure: "دخول آمن", au_online: "متصل", au_wait: "مساحة عملك بانتظارك." });
+Object.assign(I18N.en, { pay_fuel_now:"Now", pay_fuel_auto:"auto", pay_fuel_help:"Type the final amount: minus (−) = deduction, plus = refund. Leave empty and save = back to automatic (2.5 × orders − petrol).", pay_sheet_t: "Salary sheet check", pay_sheet_notpub: "saved as DRAFT, not visible to drivers", pay_sheet_out: "Out of payroll / not active (skipped)", au_tag: "Employee management · Admin panel", au_secure: "Secure access", au_online: "Online", au_wait: "Your workspace is waiting." });
+Object.assign(I18N.bn, { pay_fuel_now:"এখন", pay_fuel_auto:"অটো", pay_fuel_help:"চূড়ান্ত অঙ্ক লিখুন: মাইনাস (−) = কর্তন, প্লাস = রিফান্ড। ঘর খালি রেখে সেভ করলে আবার অটোমেটিক হিসাব (২.৫ × অর্ডার − পেট্রোল)।", pay_sheet_t: "বেতন শীট যাচাই", pay_sheet_notpub: "ড্রাফট হিসেবে সেভ হবে, কর্মীরা দেখবে না", pay_sheet_out: "পে-রোলের বাইরে / নিষ্ক্রিয় (বাদ)", au_tag: "কর্মচারী ব্যবস্থাপনা · এডমিন প্যানেল", au_secure: "নিরাপদ প্রবেশ", au_online: "অনলাইন", au_wait: "আপনার ওয়ার্কস্পেস অপেক্ষা করছে।" });
+Object.assign(I18N.ar, { pay_fuel_now:"الآن", pay_fuel_auto:"تلقائي", pay_fuel_help:"اكتب المبلغ النهائي: سالب (−) = خصم، موجب = استرداد. اتركه فارغاً واحفظ للعودة للحساب التلقائي.", pay_sheet_t: "مراجعة كشف الرواتب", pay_sheet_notpub: "يُحفظ كمسودة ولا يراه السائقون", pay_sheet_out: "خارج الرواتب / غير نشط (تم تخطيه)", au_tag: "إدارة الموظفين · لوحة المشرف", au_secure: "دخول آمن", au_online: "متصل", au_wait: "مساحة عملك بانتظارك." });
 function renderAuth(){
   document.documentElement.lang = lang; document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
   $("#app").hidden = true; const root = $("#emp"); root.hidden = false;
