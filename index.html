@@ -2820,11 +2820,13 @@ function fuelAllowance(e, orders){
   return r2(n * (+state.rules.fuelPer || 0));           // one rate per order, Rank/Unrank same
 }
 function vTarget(){
-  const R = state.rules, rows = monthRows(monthKey());
+  const R = state.rules, tm = state.tgtMonth || monthKey(), arch = tm !== monthKey() ? state.monthly?.[tm] : null;
+  const rows = arch?.rows ? Object.fromEntries(Object.entries(arch.rows).map(([id, r]) => [id, { o: +r.o || 0, f: +r.f || 0 }])) : monthRows(tm);
   const emps = activeEmps().filter(([, e]) => !state.qType || (e.payType || "TARGET") === state.qType);
   return `
   <div class="head"><div><h1>${t("nav_target")}</h1><p>${t("tgt_hint2")}</p></div>
     <div class="tools">
+      ${mpick("tgtMonth", tm)}
       <select class="input" id="qType" style="width:auto"><option value="">${t("rk_all")}</option>${PAY_TYPES.map(p=>`<option value="${p}" ${state.qType===p?"selected":""}>${t("rk_"+p)}</option>`).join("")}</select>
       <a class="btn ghost" href="#rules">${t("tgt_defaults")}</a>
       <button class="btn" data-act="tgt-save" data-needs-write>${t("save")}</button>
