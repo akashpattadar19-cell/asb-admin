@@ -226,7 +226,7 @@ main{flex:1;padding:14px max(14px,env(safe-area-inset-right,0px)) 96px max(14px,
 .bn-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:12px}.bn-chips span{background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);border-radius:99px;padding:6px 14px;font-weight:700;font-size:13.5px}
 .bn-dua{margin-top:14px;font-size:13.5px;font-weight:600;opacity:.95}.bn-hint{font-size:11.5px;opacity:.75;margin-top:8px}
 .bn-sura{text-align:center}.bn-li.bn-sura div.bn-ay{display:block;margin:9px 0}.bn-li.bn-sura .bn-aya{display:block;text-align:center}.bn-li.bn-sura .bn-tr{font-size:19px;font-weight:700;line-height:1.7;text-align:center}.bn-aya{font-family:"Amiri","Scheherazade New","Noto Naskh Arabic","Traditional Arabic",serif;font-size:23px;line-height:1.9;font-weight:700;display:block;margin:0}.bn-ay small{margin-top:0}
-.bn-jum{background:linear-gradient(160deg,#06352a,#0f7a55 55%,#d7b24a)}
+.bn-card>.bn-x{position:absolute;top:10px;inset-inline-end:10px;width:34px;height:34px;border-radius:50%;border:0;background:rgba(0,0,0,.28);color:#fff;font-size:16px;line-height:34px;padding:0;z-index:2;cursor:pointer}.bn-card .bn-sal{margin-inline:38px}.bn-jum{background:linear-gradient(160deg,#06352a,#0f7a55 55%,#d7b24a)}
 .bn-t3{background:linear-gradient(160deg,#3a2400,#b7791f 45%,#f6c453)}.bn-t10{background:linear-gradient(160deg,#0b2a5c,#1769c9 60%,#4fb3ff)}.bn-oth{background:linear-gradient(160deg,#0b4a3a,#14946b 60%,#6fe0b0)}
 .bn-warn{background:linear-gradient(160deg,#4a0d12,#c2312f 60%,#f08a4b);padding:26px 20px 18px;min-height:68vh}
 .bn-gb{width:64px;height:64px;border-radius:20px;background:#fff;color:#c2312f;font:800 36px/64px Inter,sans-serif;margin:0 auto;box-shadow:0 8px 18px rgba(0,0,0,.35)}
@@ -1057,7 +1057,7 @@ function themeRow(){
 /* ── daily motivation / warning banner (shown after Performance / Order details are published) ── */
 const BN_PILOT = /./;   // live for every driver
 const BN_TEST = /ALAMIN\s+SHAIKH/i;
-const BN_JUM = BN_TEST;   // Friday banner: owner test account only until approved
+const BN_JUM = BN_PILOT;   // Friday banner live for everyone
 const SURA_AR = ["بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ", "قُلْ هُوَ اللَّهُ أَحَدٌ", "اللَّهُ الصَّمَدُ", "لَمْ يَلِدْ وَلَمْ يُولَدْ", "وَلَمْ يَكُن لَّهُ كُفُوًا أَحَدٌ"];
 const isFri = () => new Date(todayK() + "T00:00:00Z").getUTCDay() === 5;   // test buttons only on the owner's test account
 const BN = {
@@ -1124,40 +1124,43 @@ function bnIssues(m){
     if (o < tg * (day / len) * 0.9) list.push({ k: "pace", score: 1, txt: bt("pace") }); }
   return list;
 }
-function bnRows(list, max){ return list.slice(0, max).map(x => x.k === "pace" ? `<div class="bn-li"><small>${x.txt}</small></div>` : `<div class="bn-li"><div><span>${bt(x.k)}</span><b>${x.down ? "▼ " : ""}${x.txt}</b></div><small>${bt(x.k + "_h")}</small></div>`).join(""); }
-function bannerHtml(m, kind){
+function bnRows(list, max){ return list.slice(0, max).map(x => x.k === "pace" ? `<div class="bn-li"><small>${x.txt}</small></div>` : `<div class="bn-li"><div><span>${bt(x.k)}</span><b>${x.down ? "▼ " : ""}${x.txt}</b></div></div>`).join(""); }
+function bannerHtml(m, kind, part){
+  const sO = part !== "perf", sP = part !== "orders";
+  if (part === "orders" && kind === "warn") kind = (bnRanked(m) && +m.month?.rank <= 10) ? "t10" : "oth";
   const p = m.profile, mm = m.month, name = esc((lang === "ar" && p.fullNameAr) ? p.fullNameAr : String(p.fullName || "").split(" ")[0]);
   const cur = bnCur(m), rk = +mm.rank || 0, n = fmt0, d = bnDay(m), iss = bnIssues(m);
-  const head = `<div class="bn-sal">${bt("sal")}</div>`, tail = `<div class="bn-dua">${bt("dua", null, d * 7 + 5)}</div><div class="bn-hint">${bt("ok")}</div>`;
-  if (kind === "jum") return `<div class="bn-card bn-jum">${head}<div class="bn-med">🕌</div><h2>${bt("jh", { n: name })}</h2><p>${bt("jp", null, Math.floor(d / 7))}</p>${[0, 1].map(i => `<div class="bn-li"><small style="font-size:13.5px;margin:0">${["🤍","🚗"][i]} ${bt("jt", null, i)}</small></div>`).join("")}${suraHtml()}${tail}</div>`;
-  if (kind === "t3") return `<div class="bn-card bn-t3">${head}<div class="bn-med">${["🥇","🥈","🥉"][Math.max(0, rk - 1)] || "🏅"}</div><h2>${bt("t3h", { n: name })}</h2><p>${bt("t3p", null, d)}</p><div class="bn-chips"><span>${bt("rk")} #${rk || "—"}</span><span>${n(mm.o)}</span></div>${tail}</div>`;
+  const head = `<button class="bn-x" data-bnx aria-label="close">✕</button><div class="bn-sal">${bt("sal")}</div>`, tail = ``;
+  const gch = (sP && cur.g && cur.g !== "-") ? `<span>${bt("gr")} ${esc(cur.g)}</span>` : "", ISS = sP ? iss : [];
+  if (kind === "jum") return `<div class="bn-card bn-jum">${head}<div class="bn-med">🕌</div><h2>${bt("jh", { n: name })}</h2><p>${bt("jp", null, Math.floor(d / 7))}</p>${suraHtml()}${tail}</div>`;
+  if (kind === "t3") return `<div class="bn-card bn-t3">${head}<div class="bn-med">${["🥇","🥈","🥉"][Math.max(0, rk - 1)] || "🏅"}</div><h2>${bt("t3h", { n: name })}</h2><p>${bt("t3p", null, d)}</p><div class="bn-chips">${sO ? `<span>${bt("rk")} #${rk || "—"}</span><span>${n(mm.o)}</span>` : ""}${gch}</div>${bnRows(ISS, 2)}${tail}</div>`;
   if (kind === "t10") { const b = m.board || [], third = b[2] && b[2].o != null ? Math.max(1, +b[2].o - (+mm.o || 0) + 1) : null;
-    return `<div class="bn-card bn-t10">${head}<div class="bn-med">🏆</div><h2>${bt("t10h", { n: name })}</h2><p>${bt("t10p", null, d)}</p><div class="bn-chips"><span>${bt("rk")} #${rk || "—"}</span>${third ? `<span>${bt("gap")}: ${n(third)}</span>` : ""}</div>${iss.length ? `<div class="bn-sub">${bt("more")}</div>${bnRows(iss, 2)}` : ""}${tail}</div>`; }
+    return `<div class="bn-card bn-t10">${head}<div class="bn-med">🏆</div><h2>${bt("t10h", { n: name })}</h2><p>${bt("t10p", null, d)}</p><div class="bn-chips">${sO ? `<span>${bt("rk")} #${rk || "—"}</span>${third ? `<span>${bt("gap")}: ${n(third)}</span>` : ""}` : ""}${gch}</div>${ISS.length ? bnRows(ISS, 2) : ""}${tail}</div>`; }
   if (kind === "warn") {
     const top = iss.find(x => x.k !== "pace");
     return `<div class="bn-card bn-warn">${head}<div class="bn-gb">${esc(cur.g || "-")}</div><h2>${top ? bt("whk", { m: bt(top.k) }) : bt("wh")}</h2><p>${bt("wp", { g: esc(cur.g || "-") }, d)}</p>
-      <div class="bn-sub">${bt("how")}</div>${iss.length ? bnRows(iss, 4) : `<div class="bn-li"><small>${bt("gen")}</small></div>`}${tail}</div>`; }
-  return `<div class="bn-card bn-oth">${head}<div class="bn-med">💚</div><h2>${bt("oth", { n: name })}</h2><p>${bt("othp", null, d)}</p><div class="bn-chips">${rk ? `<span>${bt("rk")} #${rk}</span>` : ""}${cur.g && cur.g !== "-" ? `<span>${bt("gr")} ${esc(cur.g)}</span>` : ""}</div>${iss.length ? `<div class="bn-sub">${bt("more")}</div>${bnRows(iss, 2)}` : ""}${tail}</div>`;
+      ${iss.length ? bnRows(iss, 3) : `<div class="bn-li"><small>${bt("gen")}</small></div>`}${tail}</div>`; }
+  return `<div class="bn-card bn-oth">${head}<div class="bn-med">💚</div><h2>${bt("oth", { n: name })}</h2><p>${bt("othp", null, d)}</p><div class="bn-chips">${sO && rk ? `<span>${bt("rk")} #${rk}</span>` : ""}${sO ? `<span>${n(mm.o)}</span>` : ""}${gch}</div>${ISS.length ? bnRows(ISS, 2) : ""}${tail}</div>`;
 }
 function suraHtml(){
   const B = BN[lang] || BN.en, sr = B.sura || BN.en.sura, tr = sr.tr || [], ar = lang === "ar";
   return `<div class="bn-li bn-sura"><div class="bn-sub" style="margin:0 0 6px;text-align:center">📿 ${esc(sr.t)}</div>${(ar ? SURA_AR : tr).map(a => `<div class="bn-ay">${ar ? `<div class="bn-aya" dir="rtl">${a}</div>` : `<div class="bn-tr" style="text-align:center">${esc(a)}</div>`}</div>`).join("")}${sr.me ? `<small style="margin-top:8px;font-style:italic;text-align:center">${esc(sr.me)}</small>` : ""}</div>`;
 }
-function bannerShow(m, kind){
+function bannerShow(m, kind, part){
   if (document.getElementById("bnOv")) return;
-  const o = document.createElement("div"); o.id = "bnOv"; o.className = "bn-ov"; o.innerHTML = bannerHtml(m, kind);
-  o.addEventListener("pointerdown", e => { if (e.target === o) { o.remove(); setTimeout(() => bannerCheck(), 250); } });
+  const o = document.createElement("div"); o.id = "bnOv"; o.className = "bn-ov"; o.innerHTML = bannerHtml(m, kind, part);
+  o.addEventListener("pointerdown", e => { if (e.target === o || e.target.closest("[data-bnx]")) { o.remove(); setTimeout(() => bannerCheck(), 250); } });
   document.body.append(o);
 }
 function bannerCheck(){
   const m = S.data?.m;
   if (!m || !BN_PILOT.test(String(m.profile?.fullName || "")) || S.sub || S.tab !== "home" || document.getElementById("bnOv")) return;
-  if (BN_JUM.test(String(m.profile?.fullName || "")) && isFri() && store.get("asb-bn-jum") !== todayK()) { try { store.set("asb-bn-jum", todayK()); } catch {} bannerShow(m, "jum"); return; }
+  if (BN_JUM.test(String(m.profile?.fullName || "")) && (isFri() || todayK() === "2026-11-11") && store.get("asb-bn-jum") !== todayK()) { try { store.set("asb-bn-jum", todayK()); } catch {} bannerShow(m, "jum"); return; }
   const now = Date.now();
   for (const kind of ["orders", "perf"]) {
     const n = (m.notices || []).find(x => x.kind === kind); if (!n) continue;
     const at = +n.at || 0, key = "asb-bn-" + kind;
-    if (at > (+store.get(key) || 0)) { try { store.set(key, String(at)); } catch {} if (now - at < 30 * 36e5) { bannerShow(m, bannerKind(m)); return; } }
+    if (at > (+store.get(key) || 0)) { try { store.set(key, String(at)); } catch {} if (now - at < 30 * 36e5) { bannerShow(m, bannerKind(m), kind); return; } }
   }
 }
 /* Top 3 drivers: a different home (gold) with a permanent crown badge on the rank card */
