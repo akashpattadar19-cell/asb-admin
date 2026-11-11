@@ -2481,7 +2481,10 @@ const xCat = k => (XCAT_I[k] || "📦") + " " + t("xc_" + (XCAT_I[k] ? k : "othe
 const xSgn = x => (x.kind === "FUND" || x.kind === "RECV") ? 1 : -1;
 const xMe = () => String(auth.session?.user?.email || "").toLowerCase();
 const xIsSuper = () => auth.role === "SUPER_ADMIN";
-const xAccts = () => [{ id: "main", main: true, name: t("xa_main") }, ...Object.entries(state.cacct || {}).map(([id, a]) => ({ ...a, id })).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0))];
+const xAccts = () => { const own = Object.entries(state.cacct || {}).map(([id, a]) => ({ ...a, id })).sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0)), have = new Set(own.map(a => String(a.email || "").toLowerCase()));
+  /* every admin automatically has an account (id "u:email"), unless one was already created for them */
+  const auto = (auth.admins || []).filter(a => a.role !== "VIEWER" && !have.has(String(a.email).toLowerCase())).map(a => ({ id: "u:" + String(a.email).toLowerCase(), email: a.email, auto: true, createdAt: 9e15 }));
+  return [{ id: "main", main: true, name: t("xa_main") }, ...own, ...auto]; };
 const xAcct = id => xAccts().find(a => a.id === id);
 const xAName = id => { const a = xAcct(id); return a ? (a.main ? a.name : (a.name || adminName(a.email))) : "—"; };
 const xMine = () => xAccts().find(a => !a.main && String(a.email || "").toLowerCase() === xMe());
@@ -2522,7 +2525,7 @@ function vExpenses(){
       <div class="xc-h"><b>${a.main ? "🏦" : "👤"} ${esc(xAName(a.id))}</b>${!a.main && a.email ? `<span class="sub">${esc(adminName(a.email))}</span>` : ""}</div>
       <div class="xc-b ${all.close < 0 ? "neg" : ""}">${fmt(all.close)} <small>${t("sar")}</small></div>
       <div class="xc-s"><span class="pos">↓ ${fmt(mm.inn)}</span><span class="neg">↑ ${fmt(mm.out)}</span></div>
-      <div class="xc-a"><button class="btn ghost sm" data-act="x-pdf" data-id="${esc(a.id)}" data-p="w">📄 ${t("xi_wk")}</button><button class="btn ghost sm" data-act="x-pdf" data-id="${esc(a.id)}" data-p="m">📄 ${t("xi_mo")}</button>${sup && !a.main && !used ? `<button class="btn ghost sm danger-t" data-act="x-acct-del" data-id="${esc(a.id)}" data-needs-write>${t("delete")}</button>` : ""}</div></div>`; }).join("");
+      <div class="xc-a"><button class="btn ghost sm" data-act="x-pdf" data-id="${esc(a.id)}" data-p="w">📄 ${t("xi_wk")}</button><button class="btn ghost sm" data-act="x-pdf" data-id="${esc(a.id)}" data-p="m">📄 ${t("xi_mo")}</button>${sup && !a.main && !a.auto && !used ? `<button class="btn ghost sm danger-t" data-act="x-acct-del" data-id="${esc(a.id)}" data-needs-write>${t("delete")}</button>` : ""}</div></div>`; }).join("");
   let list = xTx().filter(x => (!xm || mo(x) === xm) && (!sel || x.acct === sel) && (!q || [x.place, x.note, xAName(x.acct), xAName(x.to)].some(v => String(v || "").toLowerCase().includes(q))));
   if (!sel) list = list.filter(x => x.kind !== "RECV");   /* "all": a transfer is shown once (on the main side) */
   list.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || (b.createdAt || 0) - (a.createdAt || 0));
@@ -2533,7 +2536,7 @@ function vExpenses(){
   return `
   <div class="head"><div><h1>💸 ${t("nav_expenses")}</h1><p>${t("xp_hint")}</p></div>
     <div class="tools">${mpick("expMonth", xm, { all: true })}
-      ${sup ? `<button class="btn ghost" data-act="x-acct-new" data-needs-write>+ ${t("xa_add")}</button><button class="btn ghost" data-act="x-fund" data-needs-write>＋ ${t("xk_fund_b")}</button><button class="btn" data-act="x-send" data-needs-write>➡️ ${t("xk_send_b")}</button>` : ""}
+      ${sup ? `<button class="btn ghost" data-act="x-fund" data-needs-write>＋ ${t("xk_fund_b")}</button><button class="btn" data-act="x-send" data-needs-write>➡️ ${t("xk_send_b")}</button>` : ""}
       ${(sup || mine) ? `<button class="btn" data-act="exp-new" data-needs-write>+ ${t("exp_add")}</button>` : ""}
       <button class="btn ghost" data-act="exp-csv">⬇ CSV</button></div></div>
   <div class="xcards">${cards}</div>
@@ -2669,7 +2672,7 @@ async function xInvoice(acctId, per){
   pages.forEach((p, i) => { const gg = p.getContext("2d"); gg.fillStyle = "#889"; gg.font = `400 19px ${FONT}`; gg.textAlign = "left"; gg.direction = rtl ? "rtl" : "ltr"; gg.textAlign = rtl ? "right" : "left"; gg.fillText("ASB LOGISTICS Services · " + xAName(acctId) + " · " + perLbl, rtl ? R : M, H - 50); gg.textAlign = rtl ? "left" : "right"; gg.fillText(`${i + 1} / ${n}`, rtl ? M : R, H - 50); });
   const d = new J({ unit: "pt", format: "a4" });
   pages.forEach((p, i) => { if (i) d.addPage(); d.addImage(p.toDataURL("image/jpeg", 0.86), "JPEG", 0, 0, 595.28, 841.89); });
-  try { await downloads.save({ filename: `ASB-expenses-${wk ? "week-" + to : per}-${a.main ? "main" : String(a.id).slice(-5)}.pdf`, data: d.output("arraybuffer") }); }
+  try { await downloads.save({ filename: `ASB-expenses-${wk ? "week-" + to : per}-${a.main ? "main" : String(a.id).replace(/[^a-z0-9]/gi, "").slice(-6)}.pdf`, data: d.output("arraybuffer") }); }
   catch (x) { if (x?.code && x.code !== "declined") toast(t("pdf_na")); }
 }
 
@@ -2930,9 +2933,7 @@ function dueDialog(path, empId, onlyAdvance){
       ${onlyAdvance ? `<input type="hidden" name="type" value="ADVANCE">` : `<label class="f">${t("du_type")}<select class="input" name="type">${DUE_TYPES.map(c => `<option value="${c}" ${type === c ? "selected" : ""}>${t(c)}</option>`).join("")}</select></label>`}
       <label class="f">${t("date")}<input class="input" name="date" type="date" value="${esc(x ? (x.date || "") : todayKey())}"></label>
       <label class="f">${t("amount")} *<input class="input" name="amount" type="number" min="0.01" step="0.01" value="${x?.amount ?? ""}" required></label>
-      <label class="f">${t("perMonth")}<input class="input" name="monthly" type="number" min="0" step="0.01" value="${x?.monthly ?? ""}" placeholder="${t("du_monthly_ph")}"></label>
-      <label class="f">${t("startMonth")}<input class="input" name="startMonth" type="month" value="${esc(x?.startMonth ?? monthKey())}"></label>
-      ${x ? `<label class="f chk-f"><span>${t("waived")}</span><label class="chk"><input type="checkbox" name="waived" ${x.waived ? "checked" : ""}> ${t("du_waive_l")}</label></label>` : `<label class="f">${t("instalments")}<input class="input" name="inst" type="number" min="1" max="36" step="1" value="1"></label>`}
+      ${x ? `<label class="f chk-f"><span>${t("waived")}</span><label class="chk"><input type="checkbox" name="waived" ${x.waived ? "checked" : ""}> ${t("du_waive_l")}</label></label>` : ""}
       <label class="f full">${t("reason")}<textarea class="input" name="reason" rows="2">${esc(x?.reason ?? "")}</textarea></label>
       ${!x && onlyAdvance ? xFromSel("xacct") : ""}
       ${x ? `<div class="full sec">${t("du_hist_t")}</div><p class="full sub" style="margin:0">${t("du_hist_help")}</p><div class="full" id="hList">${hist.map(hRow).join("")}</div>
@@ -2944,8 +2945,8 @@ function dueDialog(path, empId, onlyAdvance){
       for (const k of Object.keys(fd)) if (/^ha\d+$/.test(k)) { const i = k.slice(2), amt = r2(fd[k]); const hd = fd["hd" + i] || "", hm = hd ? hd.slice(0, 7) : fd["hm" + i]; if (hm && amt > 0) history.push({ month: hm, ...(hd ? { date: hd } : {}), amount: amt, ...(fd["hc" + i] ? { cash: true } : {}), ...(fd["hs" + i] ? { src: fd["hs" + i] } : {}) }); }
       history.sort((a, b) => (a.date || a.month).localeCompare(b.date || b.month));
       const inst = Math.min(36, Math.max(1, Math.round(+fd.inst || 1)));
-      const monthly = fd.monthly !== "" && fd.monthly != null ? r2(fd.monthly) : r2(Math.ceil(amount / inst * 100) / 100);
-      const rec = { employeeId: fd.employeeId, amount, date: fd.date, reason: (fd.reason || "").trim(), monthly, startMonth: fd.startMonth || monthKey(),
+      const monthly = x?.monthly > 0 ? +x.monthly : amount;
+      const rec = { employeeId: fd.employeeId, amount, date: fd.date, reason: (fd.reason || "").trim(), monthly, startMonth: x?.startMonth || monthKey(),
         waived: !!fd.waived, ...withHistory(amount, x ? history : []), updatedAt: Date.now() };
       if (rec.waived && !x?.waived) rec.waivedAt = Date.now();
       const toColl = fd.type === "ADVANCE" ? "advances" : "fines";
@@ -4137,14 +4138,13 @@ document.addEventListener("click", async e => {
           <label class="f">${t("date")} *<input class="input" name="date" type="date" value="${todayKey()}" required></label>
           ${isFine ? `<label class="f full">${t("category")}<select class="input" name="category">${CATS.map(c=>`<option value="${c}">${t(c)}</option>`).join("")}</select></label>` : ""}
           <label class="f full">${t("reason")}${isFine?" *":""}<textarea class="input" name="reason" rows="2" ${isFine?"required":""}></textarea></label>
-          <label class="f">${t("instalments")}<input class="input" name="inst" type="number" min="1" max="24" step="1" value="1"></label>
-          <label class="f">${t("startMonth")}<input class="input" name="startMonth" type="month" value="${monthKey()}"></label>`,
+`,
         onSubmit: async fd => {
           const amount = r2(fd.amount);
           if (!fd.employeeId || amount <= 0 || !fd.date || (isFine && !fd.reason.trim())) fail(t("required"));
-          const inst = Math.min(24, Math.max(1, Math.round(+fd.inst || 1)));
+          const inst = 1;
           const rec = { employeeId: fd.employeeId, amount, date: fd.date, reason: fd.reason.trim(), monthly: r2(Math.ceil(amount / inst * 100) / 100),
-            remaining: amount, startMonth: fd.startMonth || monthKey(), waived: false, history: [], createdAt: Date.now() };
+            remaining: amount, startMonth: monthKey(), waived: false, history: [], createdAt: Date.now() };
           if (isFine) rec.category = fd.category;
           await db.doc((isFine ? "fines/f" : "advances/a") + uid()).set(rec);
           toast(isFine ? t("fineSaved") : t("advSaved"));
