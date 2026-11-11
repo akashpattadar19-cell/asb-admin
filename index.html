@@ -880,7 +880,7 @@ Object.assign(I18N.en, { v_cond: "Vehicle condition (Out / In photos)", v_cond_a
   ACCIDENT: "Accident", COMPANY_DEDUCTION: "Company deduction",
   du_ledger: "Ledger", du_ledger_t: "Dues ledger — every deduction and reversal", du_ledger_none: "No ledger entries yet", lg_deduct: "Deducted", lg_reverse: "Reversed", lg_cat: "Category", lg_month: "Payroll month",
   du_cats: "By category", du_cat_total: "Total", du_cat_rec: "Deducted", du_cat_left: "Left",
-  pa_left: "Left", pa_over: "{n}: {c} deduction {a} is more than the dues left ({l}).", pa_over_pub: "Cannot publish — a deduction is more than the dues left:", pa_unlinked: "PETROL, SUPERVISOR and KEETA deductions come out of salary only — they are not linked to Dues.", pa_linked: "Linked to Dues overview (cannot be more than what is left):",
+  pa_left: "Left", pa_over: "{n}: {c} deduction {a} is more than the dues left ({l}).", pa_over_pub: "Note: these deductions are more than the dues left. Salary is paid as in the sheet, but only the available dues amount is cut from Dues overview:", pa_unlinked: "PETROL, SUPERVISOR and KEETA deductions come out of salary only — they are not linked to Dues.", pa_linked: "Linked to Dues overview (cannot be more than what is left):",
   pa_already: "This payroll is already published — nothing was deducted twice.", pa_conf_t: "Deductions from Dues overview", pa_conf_none: "No dues deductions in this payroll.", pa_conf_before: "Before", pa_conf_cut: "Deduct", pa_conf_after: "After",
   pa_rev_note: "Deducted dues go back to the Dues overview and the reversal is written in the ledger." });
 Object.assign(I18N.bn, {"pc_st_draft": "কর্মী ছবি তুলছেন", "pc_st_sub": "অনুমোদনের অপেক্ষায়", "pc_st_ok": "অনুমোদিত · লক", "pc_st_reset": "রিসেট — কর্মীকে আবার তুলতে হবে", "pc_approve": "Approve", "pc_reset": "Reset", "pc_reset_q": "এই ছবিগুলো মুছে ফেলবেন? কর্মীকে আবার ছবি তুলতে হবে।", "pc_approve_q": "ছবিগুলো অনুমোদন করবেন? কর্মীর অ্যাপে লক হয়ে যাবে।", "pc_done": "সম্পন্ন", "pc_nopic": "ছবি পাওয়া যায়নি", "tgc_title": "ছবির চ্যানেল (টেলিগ্রাম)", "tgc_hint": "কর্মীদের তোলা গাড়ির ছবি অ্যাপ দ্রুত রাখতে এই টেলিগ্রাম চ্যানেলে জমা থাকবে। একটি প্রাইভেট চ্যানেল খুলুন, বটকে Admin বানান, তারপর চ্যানেলে যেকোনো মেসেজ দিন — নিচে চ্যানেল দেখা যাবে।", "tgc_chat": "চ্যানেল ID (-100 দিয়ে শুরু)", "tgc_found": "পাওয়া চ্যানেল", "tgc_use": "এটি ব্যবহার করুন", "tgc_test": "টেস্ট পাঠান", "tgc_ok": "চ্যানেলে টেস্ট মেসেজ গেছে", "tgc_bad": "পাঠানো যায়নি। বট কি চ্যানেলের Admin?", "tgc_saved": "সংরক্ষিত"});
@@ -895,7 +895,7 @@ Object.assign(I18N.bn, { v_cond: "গাড়ির অবস্থা (Out / I
   pa_traffic: "TRAFFIC VIOLATION", pa_accident: "ACCIDENT", pa_company: "COMPANY DEDUCTION", pa_akash: "SUPERVISOR DEDUCTION", pa_advance: "ADVANCE DEDUCTION", pa_keeta: "KEETA DEDUCTION", pa_petrolk: "PETROL DEDUCTION (±)",
   du_ledger: "লেনদেন-রেকর্ড", du_ledger_t: "বকেয়ার লেনদেন-রেকর্ড — প্রতিটি কর্তন ও ফেরত", du_ledger_none: "এখনো কোনো লেনদেন-রেকর্ড নেই", lg_deduct: "কাটা হয়েছে", lg_reverse: "ফেরত", lg_cat: "ক্যাটাগরি", lg_month: "পেরোল মাস",
   du_cats: "ক্যাটাগরি অনুযায়ী", du_cat_total: "মোট বকেয়া", du_cat_rec: "এ পর্যন্ত কাটা", du_cat_left: "বাকি",
-  pa_left: "বাকি", pa_over: "{n}: {c} কর্তন {a} বাকি বকেয়ার ({l}) চেয়ে বেশি।", pa_over_pub: "Publish করা যাবে না — কিছু কর্তন বাকি বকেয়ার চেয়ে বেশি:", pa_unlinked: "PETROL, SUPERVISOR ও KEETA কর্তন শুধু বেতন থেকে কাটা হবে — এগুলো Dues Overview-এর সঙ্গে যুক্ত নয়।", pa_linked: "Dues Overview-এর সঙ্গে যুক্ত (বাকি বকেয়ার বেশি বসানো যাবে না):",
+  pa_left: "বাকি", pa_over: "{n}: {c} কর্তন {a} বাকি বকেয়ার ({l}) চেয়ে বেশি।", pa_over_pub: "লক্ষ্য করুন: এই কর্তনগুলো বাকি বকেয়ার চেয়ে বেশি। বেতন শীটের মতোই হবে, শুধু Dues overview-তে যতটুকু বকেয়া আছে ততটুকুই কাটা যাবে:", pa_unlinked: "PETROL, SUPERVISOR ও KEETA কর্তন শুধু বেতন থেকে কাটা হবে — এগুলো Dues Overview-এর সঙ্গে যুক্ত নয়।", pa_linked: "Dues Overview-এর সঙ্গে যুক্ত (বাকি বকেয়ার বেশি বসানো যাবে না):",
   pa_already: "এই পেরোল আগেই Publish হয়েছে — দ্বিতীয়বার কিছু কাটা হয়নি।", pa_conf_t: "Dues Overview থেকে কর্তন", pa_conf_none: "এই পেরোলে বকেয়া থেকে কোনো কর্তন নেই।", pa_conf_before: "আগে বাকি", pa_conf_cut: "কাটা হবে", pa_conf_after: "পরে বাকি",
   pay_reopen: "Unpublish / বাতিল করুন", pay_reopen_q: "{m} মাসের পেরোল বাতিল (Unpublish) করবেন? কর্মীদের অ্যাপ থেকে পে-স্লিপ সরে যাবে, কাটা বকেয়া আবার Dues Overview-এ ফিরে আসবে এবং লেনদেন-রেকর্ডে ‘ফেরত’ হিসেবে লেখা থাকবে। আবার Publish করলে নতুন করে কাটা হবে।",
   pa_rev_note: "কাটা বকেয়া আবার Dues Overview-এ ফিরে যাবে এবং লেনদেন-রেকর্ডে ফেরত লেখা হবে।" });
@@ -910,7 +910,7 @@ Object.assign(I18N.ar, { v_cond: "حالة المركبة (صور التسليم
   ACCIDENT: "حادث", COMPANY_DEDUCTION: "خصومات الشركة",
   du_ledger: "السجل", du_ledger_t: "سجل المستحقات — كل خصم واسترجاع", du_ledger_none: "لا توجد قيود بعد", lg_deduct: "خُصم", lg_reverse: "أُعيد", lg_cat: "الفئة", lg_month: "شهر الرواتب",
   du_cats: "حسب الفئة", du_cat_total: "الإجمالي", du_cat_rec: "المخصوم", du_cat_left: "المتبقي",
-  pa_left: "المتبقي", pa_over: "{n}: خصم {c} {a} أكبر من المتبقي ({l}).", pa_over_pub: "لا يمكن النشر — خصم أكبر من المتبقي:", pa_unlinked: "خصم الوقود والمشرف وكيتا من الراتب فقط وغير مرتبط بالمستحقات.", pa_linked: "مرتبط بالمستحقات (لا يزيد عن المتبقي):",
+  pa_left: "المتبقي", pa_over: "{n}: خصم {c} {a} أكبر من المتبقي ({l}).", pa_over_pub: "تنبيه: هذه الخصومات أكبر من المتبقي. يُصرف الراتب كما في الكشف ويُخصم من المتبقي فقط:", pa_unlinked: "خصم الوقود والمشرف وكيتا من الراتب فقط وغير مرتبط بالمستحقات.", pa_linked: "مرتبط بالمستحقات (لا يزيد عن المتبقي):",
   pa_already: "تم نشر هذه الرواتب مسبقاً — لم يُخصم شيء مرتين.", pa_conf_t: "الخصم من المستحقات", pa_conf_none: "لا خصم من المستحقات في هذه الرواتب.", pa_conf_before: "قبل", pa_conf_cut: "سيُخصم", pa_conf_after: "بعد",
   pa_rev_note: "تعود المستحقات المخصومة وتُسجل في السجل." });
 /* Standard "not valid this month" reasons (from the salary sheet) — shown as a dropdown; free text still allowed */
@@ -3223,10 +3223,9 @@ document.addEventListener("click", e => {
   const cur = { ...(payDoc()?.adj?.[id] ?? {}), ...(state.adjDraft[id] ?? {}) }[kk] ?? "";
   const L = PAY_LINK[k] ? dueLeftOf(id, PAY_LINK[k]) : null;
   openDialog({ title: `${esc(nm)} · ${t(PAY_COLLBL[k] || k)}`, submit: t("save"),
-    body: `<label class="f full">${t(PAY_COLLBL[k] || k)}${L != null ? ` <span class="opt">· ${t("pa_left")} ${fmt(L)}</span>` : k === "fuel" ? ` <span class="opt">· ${t("pay_fuel_now")}: ${fmt(slip0?.fuelAdj ?? 0)}</span>` : ""}<input class="input num" type="number" step="0.01" ${L != null ? `min="0" max="${L}"` : ""} name="v" value="${esc(String(cur))}" placeholder="${k === "fuel" ? esc(t("pay_fuel_auto")) : "0"}" autofocus></label>${k === "fuel" ? `<p class="full sub">${t("pay_fuel_help")}</p>` : ""}`,
+    body: `<label class="f full">${t(PAY_COLLBL[k] || k)}${L != null ? ` <span class="opt">· ${t("pa_left")} ${fmt(L)}</span>` : k === "fuel" ? ` <span class="opt">· ${t("pay_fuel_now")}: ${fmt(slip0?.fuelAdj ?? 0)}</span>` : ""}<input class="input num" type="number" step="0.01" ${L != null ? `min="0"` : ""} name="v" value="${esc(String(cur))}" placeholder="${k === "fuel" ? esc(t("pay_fuel_auto")) : "0"}" autofocus></label>${k === "fuel" ? `<p class="full sub">${t("pay_fuel_help")}</p>` : ""}`,
     onSubmit: async fd => {
       const v = String(fd.v ?? "").trim();
-      if (L != null && v !== "" && r2(v) > L + 0.001) fail(t("pa_over", { n: nm, c: t(PAY_LINK[k]), a: fmt(r2(v)), l: fmt(L) }));
       (state.adjDraft[id] ??= {})[kk] = v;
       await saveAdjDraft();
       const sc = document.querySelector(".scroll"), x = sc ? sc.scrollLeft : 0; render(); const n2 = document.querySelector(".scroll"); if (n2) n2.scrollLeft = x;
@@ -4031,8 +4030,7 @@ document.addEventListener("click", async e => {
           const cur0 = await db.doc("payroll/" + m).get();
           if (cur0.exists && cur0.data().status === "PUBLISHED") fail(t("pa_already"));
           const slips = computePayroll(), plan = dedPlan(slips);
-          if (plan.over.length) fail(t("pa_over_pub") + " " + plan.over.map(overTxt).join(" · "));
-          const today = todayKey(), by = auth.session?.user?.email || "";
+                    const today = todayKey(), by = auth.session?.user?.email || "";
           for (const [eid, paths] of Object.entries(plan.take)) for (const [path, amt] of Object.entries(paths)) {
             const [coll, did] = path.split("/"), cur = (coll === "fines" ? state.fines : state.adv)[did]; if (!cur) continue;
             if ((cur.history ?? []).some(z => z.month === m && isPayrollEntry(z))) continue;   // already taken for this month
