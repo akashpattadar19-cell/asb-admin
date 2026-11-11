@@ -1556,6 +1556,10 @@ function vehCard(){
         ${b.given ? row(t("vh_subp"), `<b class="num">${esc(b.plate || "—")}</b>`) + (b.givenDate ? row(t("vh_subg"), esc(dmy(b.givenDate))) : "") + (b.returnDate ? row(t("vh_subr"), esc(dmy(b.returnDate))) : "") : ""}</div>` : ""}
     </section>`; }).join("");
 }
+function bnTestHtml(){
+  const L = { bn: ["🥇 সেরা ৩", "🏆 শীর্ষ ১০", "💚 বাকিরা", "⚠️ উন্নতি (C/D)", "🕌 জুমা"], en: ["🥇 Top 3", "🏆 Top 10", "💚 Others", "⚠️ Improve (C/D)", "🕌 Friday"] }[lang] || ["🥇 Top 3", "🏆 Top 10", "💚 Others", "⚠️ Improve (C/D)", "🕌 Friday"];
+  return `<section class="card"><div style="font-weight:700;margin-bottom:8px">🧪 ${lang === "bn" ? "ব্যানার টেস্ট (শুধু আপনার অ্যাকাউন্টে)" : "Banner test (your account only)"}</div><div style="display:flex;flex-wrap:wrap;gap:8px">${["t3", "t10", "oth", "warn", "jum"].map((k, i) => `<button class="btn ghost" data-bntest="${k}">${L[i]}</button>`).join("")}</div></section>`;
+}
 function vProfile(m){
   const p = m.profile, row = (k, v) => `<div class="li"><span class="muted">${k}</span><span style="text-align:end">${v}</span></div>`;
   return `<section class="card" style="text-align:center"><label class="ph-pick" style="display:flex;justify-content:center;margin-bottom:10px;position:relative;cursor:pointer">${ava(p.photo, p.fullName, 112, "border-radius:32px;border:3px solid var(--gold)")}
@@ -1574,6 +1578,7 @@ function vProfile(m){
   <button class="card fuel-card" data-sub="reports" style="display:flex;align-items:center;gap:12px"><span class="ntc-ic k-due">${icon("fines")}</span><span style="flex:1"><b>${t("rp_title")}</b><br><small class="muted">${t("rp_tile")}</small></span><span class="tile-go">›</span></button>
   <button class="card fuel-card" data-sub="changes" style="display:flex;align-items:center;gap:12px"><span class="ntc-ic k-msg">${icon("bell")}</span><span style="flex:1"><b>${t("ch_title")}</b><br><small class="muted">${t("ch_tile")}</small></span><span class="tile-go">›</span></button>
   <div class="muted" style="text-align:center;font-size:13.5px">${t("pin_hint")}</div>
+  ${BN_TEST.test(String(m.profile?.fullName || "")) ? bnTestHtml() : ""}
   <button class="btn ghost" data-signout>${t("signout")}</button>`;
 }
 
@@ -1885,6 +1890,12 @@ document.addEventListener("click", async e => {
   if (el.dataset.seen === "fines") { store.set("asb-seen-fines", String(duesOf(S.data.m).length)); S.tab = "fines"; return render(); }
   if (el.dataset.seen === "slip") { store.set("asb-seen-slip", S.data.m.payslips[0].month); S.tab = "salary"; S.slip = S.data.m.payslips[0].month; return render(); }
   if (el.dataset.pdf) return pdf(el.dataset.pdf);
+  if (el.dataset.bntest) {
+    const k = el.dataset.bntest, m0 = S.data.m; document.getElementById("bnOv")?.remove();
+    const fake = k === "t3" ? { ...m0, month: { ...m0.month, rank: 2 } } : k === "t10" ? { ...m0, month: { ...m0.month, rank: 7 } }
+      : k === "warn" ? { ...m0, perf: { today: { g: "C", rp: 70, fa: 82.5, ot: 90.2, cr: 97, ne: 99 }, yest: { g: "C", fa: 82.5, ot: 94, cr: 97, ne: 99 } } } : m0;
+    bannerShow(fake, k); return;
+  }
   if (el.matches("[data-signout]")) { try { await rpc("driver_logout", { p_token: S.token }); } catch {} store.del("asb-seen-fines"); store.del("asb-seen-slip"); return toLogin(""); }
 });
 document.addEventListener("change", e => { if (e.target.id === "remember") S.remember = e.target.checked; });
