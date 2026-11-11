@@ -4086,7 +4086,7 @@ document.addEventListener("click", async e => {
               state.payMonth = m; state.adjDraft = { ...adjs }; render();
               const slips = computePayroll(), byId = Object.fromEntries(slips.map(x => [x.id, x]));
               const notIn = payEmps().map(x => x[0]).filter(i => !adjs[i]), ids = Object.keys(adjs), diff = ids.filter(i => byId[i] && Math.abs(byId[i].net - sheetNet[i]) > 0.01);
-              const miss2 = ids.filter(i => !byId[i]);
+              const miss2 = ids.filter(i => !byId[i] && state.emp[i]?.inPayroll !== false);
               const tbl = `<div class="full scroll" style="max-height:44vh"><table><thead><tr><th>${t("name")}</th><th class="r">Sheet</th><th class="r">${t("net")}</th></tr></thead><tbody>${ids.filter(i => byId[i]).map(i => `<tr><td>${esc(byId[i].name)}</td><td class="r">${fmt(sheetNet[i])}</td><td class="r ${Math.abs(byId[i].net - sheetNet[i]) > 0.01 ? "neg" : ""}">${fmt(byId[i].net)}</td></tr>`).join("")}</tbody></table></div>`;
               setTimeout(() => openDialog({ title: "🧪 " + t("pay_sheet_t") + " · " + m,
                 body: `<p class="full">✓ ${t("pay_test_sum", { n: ids.length - miss2.length })} · ${t("pay_sheet_notpub")}${miss.length ? ` · <b class="neg">${t("perf_unmatched")}: ${miss.length}</b>` : ""}${diff.length ? ` · <b class="neg">≠ ${diff.length}</b>` : ""}</p>${miss.length ? `<p class="full mono sub">${miss.map(esc).join(", ")}</p>` : ""}${miss2.length ? `<p class="full sub">${t("pay_sheet_out")}: ${miss2.length}</p>` : ""}${notIn.length ? `<p class="full sub">⊖ ${t("pay_sheet_notin")}: ${notIn.map(i => esc(state.emp[i]?.fullName || i)).join(", ")}</p>` : ""}${tbl}`,
@@ -4094,7 +4094,7 @@ document.addEventListener("click", async e => {
                 onSubmit: async () => {
                   const old = state.payroll[m] ?? {};
                   await db.doc("payroll_files/" + m).set({ b64: b64OfBuf(buf), rows: rowmap, r1: Math.min(...P.rows.map(r => r.row)), r2: Math.max(...P.rows.map(r => r.row)), name: file.name, at: Date.now(), by: auth.session?.user?.email || "" });
-                  await db.doc("payroll/" + m).set({ ...old, month: m, status: "DRAFT", adj: { ...(old.adj ?? {}), ...adjs }, out: [...new Set([...(old.out ?? []), ...notIn])], updatedAt: Date.now() });
+                  await db.doc("payroll/" + m).set({ ...old, month: m, status: "DRAFT", adj: { ...(old.adj ?? {}), ...adjs }, out: [...new Set([...(old.out ?? []), ...notIn].filter(i => !adjs[i]))], extra: [...new Set([...(old.extra ?? []), ...Object.keys(adjs).filter(i => state.emp[i]?.inPayroll === false)])], updatedAt: Date.now() });
                   state.adjDraft = {}; toast(t("pay_test_done"));
                 } }), 70);
               return;
