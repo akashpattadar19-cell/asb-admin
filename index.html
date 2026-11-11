@@ -557,6 +557,29 @@ dialog{border-radius:16px;box-shadow:0 20px 60px rgba(20,24,50,.25)}
 table.pay thead th{position:sticky;top:0;z-index:3;background:var(--surface)}
 table.pay td:first-child,table.pay th:first-child{position:sticky;inset-inline-start:0;z-index:2;background:var(--surface)}
 table.pay thead th:first-child{z-index:4}
+/* Payroll page polish */
+.paybar{gap:6px}.paybar .btn{padding:7px 11px;font-size:13px;border-radius:10px}
+.paybar .btn.gold{margin-inline-start:auto;padding:8px 18px;font-weight:700;box-shadow:0 2px 8px rgba(185,131,15,.28)}
+.pkpis{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:12px}
+.pkpis .kpi{padding:11px 13px;border-radius:14px;border-inline-start:4px solid var(--line)}
+.pkpis .kpi b{font-size:22px}.pkpis .kpi small{color:var(--muted);font-size:11px;margin-inline-start:4px}
+.pkpis .k-due{border-inline-start-color:var(--info)}.pkpis .k-ded{border-inline-start-color:var(--bad)}.pkpis .k-net{border-inline-start-color:var(--good);background:var(--good-soft)}.pkpis .k-ord{border-inline-start-color:var(--gold)}
+.paynote{display:flex;gap:8px;align-items:center;margin:0 0 8px;flex-wrap:wrap}.paynote p{margin:0;flex:1;min-width:180px;font-size:12px}
+section.panel:has(table.pay){padding:6px;border-radius:16px}
+table.pay{border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
+table.pay thead th{font-size:10.5px;padding:9px 6px;border-bottom:3px solid var(--line)}
+table.pay thead th:nth-child(n+3):nth-child(-n+5),table.pay thead th:nth-child(14){border-bottom-color:var(--info)}
+table.pay thead th:nth-child(6),table.pay thead th:nth-child(7){border-bottom-color:var(--gold)}
+table.pay thead th:nth-child(n+8):nth-child(-n+13),table.pay thead th:nth-child(15){border-bottom-color:var(--bad)}
+table.pay thead th:nth-child(16){border-bottom-color:var(--good)}
+table.pay tbody td{border-bottom:1px solid var(--line);padding-top:9px;padding-bottom:9px}
+table.pay tbody tr:nth-child(even) td{background:color-mix(in srgb,var(--surface) 95%,var(--ink))}
+table.pay tbody tr:hover td{background:color-mix(in srgb,var(--surface) 88%,var(--info))}
+table.pay tbody td:nth-child(16){background:var(--good-soft)!important;font-size:12.5px;border-inline-start:1px solid var(--line)}
+table.pay tbody td:nth-child(5){background:color-mix(in srgb,var(--surface) 90%,var(--info))!important}
+table.pay td .name{font-weight:600}
+table.pay td.ed:not(:first-child){box-shadow:none;border-bottom:1px dashed rgba(120,160,220,.7)}
+.chips .chip{padding:5px 11px;font-size:12.5px}
 /* Theme v5: Employees and Payroll fit the page width on desktop (no sideways scroll) */
 @media(min-width:900px){
  table.emps th,table.emps td{padding-inline:6px;font-size:12.5px} table.emps th{white-space:normal}
@@ -3053,7 +3076,7 @@ function computePayroll(){
         allowance: al, absDed: 0, absShifts: 0, fineDed: 0, advDed: 0, planned: [], extraOrders: xo || null, extraRate: xr || null, rank: h.rk || "" });
       slip.sded = r2(nd + Math.max(0, -fa)); slip.deductions = slip.sded;
       slip.gross = r2(due + duesBonus + incent + overtime + Math.max(0, fa) + Math.max(0, other));
-      slip.net = r2(due + incent + overtime + other + duesBonus + fa - nd);
+      slip.net = r2(due + incent + overtime + other + duesBonus + fa - nd + (+h.fix || 0));
     }
     return slip;
   });
@@ -3088,7 +3111,8 @@ function paySheetParse(buf){
   for (let i = hi + 1; i < rows.length; i++) { const r = rows[i], cid = String(r[0] ?? "").replace(/\D/g, ""); if (cid.length < 10) continue;
     out.push({ row: i + 1, cid, name: r[1], valid: !/غير|invalid/i.test(String(r[2] ?? "")), reason: String(r[21] ?? ""),
       sh: { due: n(r[9]), cls: String(r[3] ?? ""), o: n(r[4]), xo: n(r[5]), xr: n(r[6]), base: n(r[7]), k: n(r[10]), pad: n(r[11]), rk: String(r[22] ?? "") },
-      adj: { traffic: n(r[12]), accident: n(r[13]), company: n(r[14]), duesBonus: n(r[15]), akash: n(r[16]), advance: n(r[17]), keeta: n(r[18]) }, net: n(r[20]) }); }
+      adj: { traffic: n(r[12]), accident: n(r[13]), company: n(r[14]), duesBonus: n(r[15]), akash: n(r[16]), advance: n(r[17]), keeta: n(r[18]) }, net: n(r[20]) });
+    const z = out[out.length - 1]; z.sh.fix = Math.round((z.net - (z.sh.due + z.sh.pad - z.adj.traffic - z.adj.accident - z.adj.company + z.adj.duesBonus - z.adj.akash - z.adj.advance - z.adj.keeta)) * 100) / 100; }
   return { month, rows: out };
 }
 const b64OfBuf = buf => { const u = new Uint8Array(buf); let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
@@ -3112,7 +3136,8 @@ async function paySheetExport(month, slips){
     for (const [c, v] of Object.entries(vals)) { const ref = c + rn; if (+v || hasVal(ref)) setNum(ref, r2(+v || 0)); }
     if (s.reason || hasVal("V" + rn)) setStr("V" + rn, s.reason || "");
     const J = numOf("J" + rn), T = r2(vals.M + vals.N + vals.O + vals.Q + vals.R + vals.S + Math.max(-vals.L, 0)), U = r2(J + vals.L - vals.M - vals.N - vals.O + vals.P - vals.Q - vals.R - vals.S);
-    setCached("T" + rn, T); setCached("U" + rn, U); }
+    setCached("T" + rn, T); setCached("U" + rn, U);
+    if (s.adj?.sh?.fix) setNum("U" + rn, r2(s.net)); }
   if (fd.r1 && fd.r2) for (const c of "KLMNOPQRSTU") { let sum = 0; for (let r = fd.r1; r <= fd.r2; r++) sum += numOf(c + r); setCached(c + (fd.r2 + 1), r2(sum)); }
   x = x.replace(/<col [^>]*min="12"[^>]*\/>/g, m => m.replace('hidden="true"', 'hidden="false"')); // petrol, traffic, accident, company columns are hidden in the template: show them
   zip.file(path, x);
@@ -3130,7 +3155,7 @@ function vPayroll(){
     `<td class="r"><input class="input num" type="number" step="0.01" data-adj="${k}" data-id="${s.id}" value="${s.adj?.[k] ?? ""}" placeholder="0"></td>`;
   return `
   <div class="head"><div><h1>${t("nav_payroll")}</h1><p>${published?t("lockedNote"):t("payHint")}</p></div>
-    <div class="tools">
+    <div class="tools paybar">
       ${mpick("payMonth", state.payMonth)}
       <span class="pill ${published?"p-good":"p-warn"}">${published?t("published"):t("draft")}</span>
       <button class="btn ghost" data-act="pay-export">⬇ ${t("exportCsv")}</button>
@@ -3142,13 +3167,13 @@ function vPayroll(){
   ${(() => { const ms = Object.values(state.payroll).filter(p => p.month).sort((a, b) => b.month.localeCompare(a.month));
     return ms.length ? `<div class="chips"><span class="sub" style="margin-inline-end:4px">${t("pay_saved")}:</span>${ms.map(p => `<button class="chip ${p.month === state.payMonth ? "on" : ""}" data-act="pay-month" data-v="${esc(p.month)}"><b>${esc(p.month)}</b> ${p.status === "PUBLISHED" ? t("published") : t("draft")}</button>`).join("")}</div>` : ""; })()}
   ${!published && payOut().length ? `<div class="chips" style="margin:0 0 10px"><span class="sub" style="margin-inline-end:4px">⊖ ${t("pay_out_l")}:</span>${payOut().map(i => `<span class="chip" style="gap:6px">${esc(state.emp[i]?.fullName || i)} <button class="btn ghost sm" data-act="pay-in" data-id="${esc(i)}" data-needs-write style="padding:1px 8px">↩ ${t("pay_out_back")}</button></span>`).join("")}</div>` : ""}
-  <div class="kpis">
-    <div class="kpi"><span>${t("totalOrders")}</span><b>${fmt0(sum("orders"))}</b></div>
-    <div class="kpi"><span>${t("pa_due")}</span><b>${fmt(sum("due"))}</b><small>${t("sar")}</small></div>
-    <div class="kpi"><span>${t("pa_totded")}</span><b>${fmt(sum("sded"))}</b><small>${t("sar")}</small></div>
-    <div class="kpi"><span>${t("net")}</span><b>${fmt(sum("net"))}</b><small>${t("sar")}</small></div>
+  <div class="kpis pkpis">
+    <div class="kpi k-ord"><span>${t("totalOrders")}</span><b>${fmt0(sum("orders"))}</b></div>
+    <div class="kpi k-due"><span>${t("pa_due")}</span><b>${fmt(sum("due"))}</b><small>${t("sar")}</small></div>
+    <div class="kpi k-ded"><span>${t("pa_totded")}</span><b>${fmt(sum("sded"))}</b><small>${t("sar")}</small></div>
+    <div class="kpi k-net"><span>${t("net")}</span><b>${fmt(sum("net"))}</b><small>${t("sar")}</small></div>
   </div>
-  <div style="display:flex;gap:8px;align-items:center;margin:-6px 0 10px;flex-wrap:wrap"><p class="sub" style="margin:0;flex:1;min-width:200px">${t("pa_tbl_note")}</p><span class="sub">${t("pay_scroll")}</span><button class="btn ghost sm" data-act="tbl-scroll" data-dir="-1" aria-label="left">◀</button><button class="btn ghost sm" data-act="tbl-scroll" data-dir="1" aria-label="right">▶</button></div>
+  <div class="paynote"><p class="sub">${t("pa_tbl_note")}</p><span class="sub">${t("pay_scroll")}</span><button class="btn ghost sm" data-act="tbl-scroll" data-dir="-1" aria-label="left">◀</button><button class="btn ghost sm" data-act="tbl-scroll" data-dir="1" aria-label="right">▶</button></div>
   <section class="panel">${slips.length ? `<div class="scroll payscr"><table class="pay">
     <thead><tr><th>${t("name")}</th><th class="r">${t("orders")}</th><th class="r">${t("pa_base")}</th><th class="r">${t("pa_additional")}</th><th class="r">${t("pa_due")}</th><th class="r">${t("pa_petrol")}</th><th class="r">${t("pa_petrolk")}</th><th class="r ordd-badh">${t("pa_traffic")}</th><th class="r ordd-badh">${t("pa_accident")}</th><th class="r ordd-badh">${t("pa_company")}</th><th class="r ordd-badh">${t("pa_akash")}</th><th class="r ordd-badh">${t("pa_advance")}</th><th class="r ordd-badh">${t("pa_keeta")}</th><th class="r">${t("pa_bonus_o")}</th><th class="r">${t("pa_totded")}</th><th class="r">${t("net")}</th>${published ? "<th></th>" : ""}</tr></thead>
     <tbody>${slips.map(s => { const ded = k => { const L = s.lk?.[k]; const sub = !published && L?.over ? `<div class="sub" style="color:var(--bad)">⚠</div>` : ""; return `<td class="r nowrap${+s[k] ? " ordd-bad" : ""}${published ? "" : " ed"}"${ed(k, s.id)}>${+s[k] ? "−" + fmt(s[k]) : fmt(0)}${sub}</td>`; }; const due = s.due != null ? s.due : r2((+s.base || 0) + (+s.bonus || 0)); const extraDed = r2((+s.fineDed || 0) + (+s.advDed || 0) + (+s.shortfall || 0) + (+s.absDed || 0) + (+s.incent || 0) + (+s.overtime || 0)); return `<tr>
@@ -4056,7 +4081,7 @@ document.addEventListener("click", async e => {
               const byJ = {}; for (const [eid, e] of Object.entries(state.emp)) if (e.jahezId) byJ[String(e.jahezId)] = eid;
               const adjs = {}, rowmap = {}, miss = [], sheetNet = {};
               for (const r of P.rows) { const eid = byJ[r.cid]; if (!eid) { miss.push(`${r.name} (${r.cid})`); continue; }
-                adjs[eid] = { ...r.adj, valid: r.valid, reason: r.reason, sh: r.sh }; rowmap[eid] = r.row; sheetNet[eid] = r.net; }
+                adjs[eid] = { ...r.adj, fuelSet: r.sh.pad, valid: r.valid, reason: r.reason, sh: r.sh }; rowmap[eid] = r.row; sheetNet[eid] = r.net; }
               if (!Object.keys(adjs).length) fail(t("perf_nothing"));
               state.payMonth = m; state.adjDraft = { ...adjs }; render();
               const slips = computePayroll(), byId = Object.fromEntries(slips.map(x => [x.id, x]));
