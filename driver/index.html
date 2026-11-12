@@ -1679,25 +1679,70 @@ window.asbBack = () => {
 
 /* ── PDF ── */
 function loadScript(src){ return new Promise((ok, no) => { const s = document.createElement("script"); s.src = src; s.onload = ok; s.onerror = no; document.head.append(s); }); }
+/* Salary invoice: the same layout as the company's salary sheet ("INV-<name>" page), drawn on a canvas so Arabic / Bengali text is always correct */
+function invoiceCanvas(s, p){
+  const W = 1240, H = 1754, L = 74, R = W - 74, FONT = '"Noto Sans Arabic","Noto Sans Bengali","Segoe UI",Roboto,Arial,sans-serif';
+  const c = document.createElement("canvas"); c.width = W; c.height = H; const g = c.getContext("2d");
+  g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+  const NAVY = "#1F3864", num = v => { const x = +v || 0; return x.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); };
+  const T = (str, x, y, o = {}) => { g.font = `${o.w || 400} ${o.sz || 22}px ${FONT}`; g.fillStyle = o.c || "#111"; g.textAlign = o.al || "center"; g.textBaseline = "middle"; g.direction = o.rtl ? "rtl" : "ltr"; g.fillText(String(str ?? ""), x, y); };
+  const box = (x, y, w, h, fill) => { g.fillStyle = fill; g.fillRect(x, y, w, h); };
+  const hl = (y, col = "#d5dbe6", w = 2) => { g.strokeStyle = col; g.lineWidth = w; g.beginPath(); g.moveTo(L, y); g.lineTo(R, y); g.stroke(); };
+  const mo = (s.month || "").split("-"), MA = ["يناير","فبراير","مارس","أبريل","مايو","يونيو","يوليو","أغسطس","سبتمبر","أكتوبر","نوفمبر","ديسمبر"], ME = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const period = `${MA[+mo[1] - 1]} ${mo[0]}  |  ${ME[+mo[1] - 1]} ${mo[0]}`;
+  /* header */
+  T("ASB LOGISTICS Services", W / 2, 70, { sz: 36, w: 800, c: NAVY });
+  T("خدمات لوجستية متكاملة", W / 2, 114, { sz: 30, w: 700, c: NAVY, rtl: 1 });
+  T("Riyadh  |  الرياض", W / 2, 154, { sz: 28, w: 800, c: NAVY });
+  box(L, 184, R - L, 7, NAVY); box(L, 196, R - L, 3, "#9fb3d6");
+  box(L, 214, R - L, 50, NAVY); T("فاتورة راتب موظف     |     EMPLOYEE SALARY INVOICE", W / 2, 239, { sz: 26, w: 800, c: "#fff" });
+  /* info table */
+  const split = 600, info = [
+    ["اسم الموظف  /  Employee", p.fullName || s.name || "-"], ["رقم المندوب  /  Courier ID", s.courier || "-"], ["نوع المندوب  /  Rank / Unrank", s.rank || (p.payType === "FLAT" ? "Unrank" : "Rank")],
+    ["رقم الفاتورة  /  Invoice No", s.inv || "-"], ["الفترة  /  Period", period], ["تقييم الصلاحية  /  Validity", s.valid === false ? "غير صالح" : "صالح"], ["سبب عدم الصلاحية  /  Invalid Reason", s.reason || "-"]];
+  let y = 278; const rh = 40;
+  info.forEach(([k, v], i) => { const h = rh; box(L, y, R - L, h, "#fff"); box(split, y, R - split, h, "#eef3fa"); if (i === 5) box(L, y, split - L, h, s.valid === false ? "#fde2e2" : "#e2f0d9");
+    g.fillStyle = NAVY; g.fillRect(split - 2, y, 3, h); T(v, (L + split) / 2, y + h / 2, { sz: 24, w: 700, c: i === 5 ? (s.valid === false ? "#c00000" : "#2e6b1f") : "#111", rtl: /[؀-ۿ]/.test(String(v)) }); T(k, R - 14, y + h / 2, { sz: 19, c: "#445", al: "right", w: 600 }); hl(y + h, "#d5dbe6", 1.5); y += h; });
+  g.strokeStyle = "#c3ccdc"; g.lineWidth = 2; g.strokeRect(L, 278, R - L, y - 278);
+  y += 18;
+  /* table head */
+  const X1 = L + 160, X2 = (L + 160 + R) / 2 + 60;   /* amount | description EN | description AR */
+  box(L, y, R - L, 44, NAVY); T("المبلغ  (SAR)", L + 80, y + 22, { sz: 20, w: 700, c: "#fff" }); T("DESCRIPTION", (X1 + X2) / 2 - 20, y + 22, { sz: 20, w: 800, c: "#fff" }); T("البيان", R - 130, y + 22, { sz: 21, w: 700, c: "#fff", rtl: 1 }); y += 44;
+  const sec = (ar, en) => { box(L, y, R - L, 40, "#d9e2f3"); T(en, (X1 + X2) / 2 - 20, y + 20, { sz: 19, w: 800, c: NAVY }); T(ar, R - 14, y + 20, { sz: 20, w: 700, c: NAVY, al: "right", rtl: 1 }); hl(y + 40, "#b7c4dc", 1.5); y += 40; };
+  const row = (ar, en, v, o = {}) => { const h = o.h || 35; if (o.fill) box(L, y, R - L, h, o.fill); else if (o.z) box(L, y, R - L, h, "#f7f9fc");
+    T(v, L + 80, y + h / 2, { sz: 22, w: 800, c: o.vc || "#111" }); T(en, X1 + 30, y + h / 2, { sz: 20, w: o.b ? 800 : 400, c: o.tc || "#667", al: "left" }); T(ar, R - 14, y + h / 2, { sz: 20, w: o.b ? 700 : 400, c: o.tc || "#445", al: "right", rtl: 1 }); hl(y + h, o.line || "#e2e7ef", 1.5); y += h; };
+  const dash = v => (+v ? num(v) : "-"), cnt = v => (+v ? String(Math.round(+v * 100) / 100) : "-");
+  sec("بيانات الموظف", "EMPLOYEE DETAILS");
+  row("المستوى", "Level", s.grade || "-", { z: 1 }); row("اجمالي الطلبات", "Total Orders", cnt(s.orders)); row("الطلبات الاضافية", "Additional Orders", s.extraOrders ? String(s.extraOrders) : "-", { z: 1 });
+  row("قيمة الطلب الاضافي", "Additional Order Rate", s.extraRate ? num(s.extraRate) : "-"); row("اجمالي البنزين", "Total Petrol", dash(s.fuelSpent), { z: 1 });
+  sec("الاستحقاقات", "EARNINGS");
+  row("الراتب الاساسي", "Basic Salary", dash(s.base), { z: 1 }); row("الاضافي", "Additional Pay", dash(s.bonus));
+  const due = s.due != null ? s.due : (+s.base || 0) + (+s.bonus || 0);
+  row("اجمالي المستحق", "Total Due", num(due), { fill: "#e2f0d9", b: 1, vc: "#2e6b1f", tc: "#2e6b1f", line: "#2e6b1f" });
+  sec("الخصومات والتسويات", "DEDUCTIONS & ADJUSTMENTS");
+  const fa = +s.fuelAdj || 0;
+  row("خصم (−) / استرداد (+) البنزين", "Petrol Deduction (−) / Refund (+)", fa ? num(fa) : "-", { z: 1, vc: fa < 0 ? "#d00000" : fa > 0 ? "#2e6b1f" : "#111" });
+  row("مخالفة مرورية", "Traffic Violation", dash(s.traffic)); row("حادث", "Accident", dash(s.accident), { z: 1 }); row("خصومات الشركة", "Company Deduction", dash(s.company));
+  row("خصم المشرف أكاش", "Akash Supervisor Deduction", dash(s.akash), { z: 1 }); row("حسم السلف", "Advance Deduction", dash(s.advance)); row("خصومات كيتا", "Keeta Deduction", dash(s.keeta), { z: 1 });
+  row("المتأخرات والمكافآت (+)", "Dues & Bonuses (+)", dash(s.duesBonus)); const sd = s.sded != null ? s.sded : s.deductions;
+  row("اجمالي الخصومات", "Total Deductions", num(sd), { fill: "#fde2e2", b: 1, vc: "#c00000", tc: "#c00000", line: "#c00000", h: 40 });
+  y += 16;
+  box(L, y, R - L, 4, "#b7902c"); box(L, y + 4, R - L, 78, NAVY); box(L, y + 82, R - L, 4, "#b7902c");
+  T(num(s.net), L + 100, y + 44, { sz: 38, w: 800, c: "#FFC000" }); T("NET SALARY", (L + R) / 2 + 10, y + 44, { sz: 30, w: 800, c: "#fff" }); T("صافي الراتب", R - 28, y + 44, { sz: 32, w: 800, c: "#fff", al: "right", rtl: 1 });
+  y += 112; T("جميع المبالغ بالريال السعودي   |   All amounts are in Saudi Riyal (SAR)", W / 2, y, { sz: 17, c: "#667" });
+  y += 70; const sg = (x0, x1, lb) => { g.strokeStyle = "#666"; g.lineWidth = 2; g.beginPath(); g.moveTo(x0, y); g.lineTo(x1, y); g.stroke(); T(lb, (x0 + x1) / 2, y + 28, { sz: 19, w: 700 }); T("التاريخ / Date:  ____ / ____ / " + mo[0], (x0 + x1) / 2, y + 66, { sz: 17, c: "#889" }); };
+  sg(L + 20, (L + R) / 2 - 40, "توقيع الموظف  /  Employee"); sg((L + R) / 2 + 40, R - 20, "توقيع الإدارة  /  Management");
+  box(L, H - 120, R - L, 5, NAVY); T("ASB LOGISTICS Services   •   خدمات لوجستية متكاملة", W / 2, H - 84, { sz: 18, w: 700, c: NAVY });
+  return c;
+}
 async function pdf(month){
   const m = S.data?.m, s = m?.payslips.find(x => x.month === month); if (!s) return;
   try {
     if (!window.jspdf) { try { await loadScript("jspdf.umd.min.js"); } catch { await loadScript("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"); } }
-    const d = new window.jspdf.jsPDF({ unit: "pt", format: "a4" }); let y = 64; const money = v => fmt(v) + " SAR", p = m.profile;
-    d.setFillColor(10, 42, 71); d.rect(0, 0, 595, 92, "F"); d.setFillColor(224, 165, 38); d.rect(0, 92, 595, 4, "F");
-    d.setTextColor(255); d.setFont("helvetica", "bold"); d.setFontSize(20); d.text("ASB LOGISTICS Services", 48, 46);
-    d.setFont("helvetica", "normal"); d.setFontSize(9); d.text("ABDULRAHMAN SAAD ALBAQAMI Company For Logistics", 48, 64);
-    d.setFontSize(14); d.setFont("helvetica", "bold"); d.text("PAYSLIP  " + s.month, 547, 50, { align: "right" });
-    y = 132; d.setTextColor(0); d.setFontSize(10);
-    for (const [a, b] of [["Employee", p.fullName], ["Iqama", p.residentId], ["Vehicle plate", p.plate || "-"], ["Orders this month", fmt0(s.orders)]]) { d.setFont("helvetica", "normal"); d.setTextColor(100); d.text(a, 48, y); d.setTextColor(0); d.setFont("helvetica", "bold"); d.text(String(b), 180, y); y += 17; }
-    y += 14;
-    const row = (a, v, bold) => { d.setFont("helvetica", bold ? "bold" : "normal"); d.text(a, 48, y); d.text(v, 547, y, { align: "right" }); y += 18; };
-    const head = h => { d.setFont("helvetica", "bold"); d.setFontSize(11); d.setTextColor(10, 42, 71); d.text(h, 48, y); d.setTextColor(0); d.setFontSize(10); y += 8; d.setDrawColor(220); d.line(48, y, 547, y); y += 16; };
-    head("Earnings"); row("Base salary", money(s.base)); row("Order bonus", money(s.bonus)); row("Bonus", money(s.incent)); row("Overtime", money(s.overtime)); row("Gross earnings", money(s.gross), true);
-    y += 10; head("Deductions & adjustments"); row("Order shortfall", "-" + money(s.shortfall)); row("Fines", "-" + money(s.fineDed)); row("Advances", "-" + money(s.advDed)); if (s.absDed) row("Missed shifts", "-" + money(s.absDed)); if (s.allowance) row("Fuel allowance", money(s.allowance)); row("Fuel adjustment", money(s.fuelAdj)); row("Other", money(s.other)); row("Total deductions", "-" + money(s.deductions), true);
-    y += 18; d.setFillColor(10, 42, 71); d.roundedRect(40, y - 22, 515, 40, 6, 6, "F"); d.setTextColor(255); d.setFontSize(13); row("NET PAYABLE", money(s.net), true);
-    d.setTextColor(140); d.setFontSize(8); d.setFont("helvetica", "normal"); d.text("Generated by ASB Driver · " + new Date().toISOString().slice(0, 10), 48, 806);
-    const name = `ASB-payslip-${s.month}.pdf`;
+    try { await document.fonts?.load('700 20px "Noto Sans Arabic"'); } catch {}
+    const d = new window.jspdf.jsPDF({ unit: "pt", format: "a4" }), cv = invoiceCanvas(s, m.profile);
+    d.addImage(cv.toDataURL("image/jpeg", 0.92), "JPEG", 0, 0, 595.28, 841.89);
+    const name = `ASB-invoice-${s.inv || s.month}.pdf`;
     if (inApp) { window.ASBAndroid.save(d.output("datauristring"), name); return; }
     const blob = d.output("blob"), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = name; document.body.append(a); a.click(); setTimeout(() => a.remove(), 1500); toast(t("pdf_ok"));
   } catch { toast(t("pdf_fail")); }

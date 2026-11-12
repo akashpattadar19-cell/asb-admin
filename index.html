@@ -3229,7 +3229,7 @@ function computePayroll(){
     const lk = {}, linkedSum = r2(Object.keys(PAY_LINK).reduce((x, k) => x + (+a[k] || 0), 0)), totLeft = dueTotalOf(id); for (const k of Object.keys(PAY_LINK)) lk[k] = { left: totLeft, over: (+a[k] || 0) > 0 && linkedSum > totLeft + 0.001 };
     // sheet-style total deductions: L+M+N+P+Q+R + petrol over-spend + shortfall + absence + dues taken
     const sded = r2(namedDed + Math.max(0, -fuelAdj) + shortfall + absDed + fineDed + advDed);
-    const slip = { id, name: e.fullName, residentId: e.residentId, payType: e.payType || "TARGET", orders, fuelSpent,
+    const slip = { id, name: e.fullName, courier: e.jahezId || "", inv: a.sh?.n ? `ASB-${m.slice(0, 4)}-${m.slice(5, 7)}-${String(a.sh.n).padStart(3, "0")}` : "", residentId: e.residentId, payType: e.payType || "TARGET", orders, fuelSpent,
       base: r2(base), bonus: r2(bonus), due: r2(base + bonus), incent, overtime, shortfall: r2(shortfall), fuelAdj, other, absDed, absShifts: +a.abs || 0, allowance, grade: pg.g, gradeSrc: pg.src, manual: pay.manual || "",
       traffic: r2(traffic), accident: r2(accident), company: r2(company), akash: r2(akash), keeta: r2(keeta), advance: r2(advanceM), duesBonus: r2(duesBonus),
       valid: a.valid !== false, reason: a.reason || "", extraOrders: +a.extraOrders || null, extraRate: +a.extraRate || null,
@@ -3275,7 +3275,7 @@ function paySheetParse(buf){
   const out = [], n = v => { const x = parseFloat(v); return isNaN(x) ? 0 : x; };
   for (let i = hi + 1; i < rows.length; i++) { const r = rows[i], cid = String(r[0] ?? "").replace(/\D/g, ""); if (cid.length < 10) continue;
     out.push({ row: i + 1, cid, name: r[1], valid: !/غير|invalid/i.test(String(r[2] ?? "")), reason: String(r[21] ?? ""),
-      sh: { due: n(r[9]), cls: String(r[3] ?? ""), o: n(r[4]), xo: n(r[5]), xr: n(r[6]), base: n(r[7]), k: n(r[10]), pad: n(r[11]), rk: String(r[22] ?? "") },
+      sh: { n: out.length + 1, due: n(r[9]), cls: String(r[3] ?? ""), o: n(r[4]), xo: n(r[5]), xr: n(r[6]), base: n(r[7]), k: n(r[10]), pad: n(r[11]), rk: String(r[22] ?? "") },
       adj: { traffic: n(r[12]), accident: n(r[13]), company: n(r[14]), duesBonus: n(r[15]), akash: n(r[16]), advance: n(r[17]), keeta: n(r[18]) }, net: n(r[20]) });
     const z = out[out.length - 1]; z.sh.fix = Math.round((z.net - (z.sh.due + z.sh.pad - z.adj.traffic - z.adj.accident - z.adj.company + z.adj.duesBonus - z.adj.akash - z.adj.advance - z.adj.keeta)) * 100) / 100; }
   return { month, rows: out };
