@@ -1354,7 +1354,7 @@ function vAiPage(){
   return subHead("🤖 " + t("ai_title")) + `<p class="muted" style="font-size:13px;margin:0 4px 10px">${t("ai_hint")}</p>
   <section class="card">
     <textarea id="aiText" rows="5" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px;font:inherit;background:var(--sunk);color:var(--ink)" placeholder="${esc(t("ai_ph"))}">${esc(AI.text)}</textarea>
-    <div style="margin:10px 0"><label class="btn ghost" for="aiFile" style="margin:0;display:inline-block">📎 ${t("ai_photo")} (${AI.imgs.length}/3)</label><input id="aiFile" type="file" accept="image/*" multiple hidden>
+    <div style="margin:10px 0"><label class="btn ghost" for="aiFile" style="margin:0;display:inline-block">📎 ${t("ai_photo")} (${AI.imgs.length}/3)</label>${AI.loading ? `<span class="muted" style="margin:0 8px">⏳</span>` : ""}<input id="aiFile" type="file" accept="image/*" hidden>
       ${AI.imgs.length ? `<div style="color:var(--pos,#1a7f4b);font-weight:700;font-size:14px;margin:10px 0 6px">✓ ${t("ai_added", { n: AI.imgs.length })}</div><div style="display:flex;gap:10px;flex-wrap:wrap">${AI.imgs.map((d, k) => `<div style="position:relative"><img src="${d}" alt="" style="width:84px;height:84px;object-fit:cover;border-radius:10px;border:2px solid var(--line)"><button data-ai="rmimg" data-k="${k}" aria-label="x" style="position:absolute;top:-8px;inset-inline-end:-8px;width:26px;height:26px;border-radius:50%;border:0;background:#d33;color:#fff;font-weight:800">✕</button></div>`).join("")}</div>` : ""}</div>
     <div class="muted" style="font-size:13px;margin:4px 0">${t("ai_alang")}</div>
     <div class="seg" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">${[["en","English"],["bn","বাংলা"],["ar","العربية"]].map(([k, l]) => `<button data-ailang="${k}" aria-pressed="${k === AI.lang}">${l}</button>`).join("")}</div>
@@ -1373,7 +1373,7 @@ async function aiShrink(file, lim){
   let q = 0.75, d = c.toDataURL("image/jpeg", q); while (d.length > (lim || 450000) && q > 0.3) { q -= 0.1; d = c.toDataURL("image/jpeg", q); } return d;
 }
 document.addEventListener("input", e => { if (e.target.id === "aiText") AI.text = e.target.value; });
-document.addEventListener("change", async e => { if (e.target.id !== "aiFile") return; const fs = [...(e.target.files || [])]; e.target.value = ""; if (!fs.length) return; AI.err = ""; for (const f of fs) { if (AI.imgs.length >= 3) break; try { AI.imgs.push(await aiShrink(f)); } catch { AI.err = t("ai_e_photo"); } } render(); toast(t("ai_added", { n: AI.imgs.length })); });
+document.addEventListener("change", async e => { if (e.target.id !== "aiFile") return; const fs = [...(e.target.files || [])]; e.target.value = ""; if (!fs.length) return; AI.err = ""; AI.loading = true; render(); for (const f of fs) { if (AI.imgs.length >= 3) break; try { AI.imgs.push(await aiShrink(f)); } catch (x) { AI.err = t("ai_e_photo") + " [" + String((x && (x.message || x.type)) || x || "?").slice(0, 60) + "; " + (f.type || "?") + " " + f.size + "]"; } } AI.loading = false; render(); if (AI.imgs.length) toast(t("ai_added", { n: AI.imgs.length })); });
 document.addEventListener("click", async e => {
   const lg = e.target.closest("[data-ailang]"); if (lg) { AI.lang = lg.dataset.ailang; render(); return; }
   const b = e.target.closest("[data-ai]"); if (!b) return;
