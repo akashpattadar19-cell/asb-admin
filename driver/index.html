@@ -128,7 +128,7 @@ button{cursor:pointer}
 .dmimg{display:block;max-width:100%;width:230px;border-radius:10px;margin-bottom:4px;object-fit:cover}.dmph{width:230px;height:150px;border-radius:10px;background:rgba(255,255,255,.08);margin-bottom:4px}
 .dmzoom{position:fixed;inset:0;z-index:99998;background:rgba(0,0,0,.92);display:grid;place-items:center}.dmzoom img{max-width:100%;max-height:100%}
 .tgc-in{display:flex;gap:8px;align-items:flex-end;padding:8px 8px calc(8px + env(safe-area-inset-bottom,0px))}
-.tgc-pill{flex:1;display:flex;align-items:flex-end;background:#17212B;border-radius:24px;padding:2px 6px 2px 14px;min-height:48px}
+.tgc-pill{min-width:0;flex:1;display:flex;align-items:flex-end;background:#17212B;border-radius:24px;padding:2px 6px 2px 14px;min-height:48px}
 .tgc-pill textarea{flex:1;min-height:44px;max-height:120px;border:0;background:none;color:#fff;font:inherit;font-size:16px;resize:none;padding:11px 0;outline:none}
 .tgc-pill textarea::placeholder{color:#7D8E9E}
 .tgc-clip{width:42px;height:46px;display:grid;place-items:center;cursor:pointer;border:0;background:none;font-size:21px;color:#9BB0C2;filter:grayscale(1) brightness(1.6)}
@@ -538,7 +538,6 @@ b,strong{font-weight:700}
 #gcMen{position:absolute;inset-inline:10px;bottom:calc(66px + env(safe-area-inset-bottom,0px));background:#fff;border:1px solid rgba(150,120,230,.4);border-radius:16px;box-shadow:0 14px 30px rgba(40,20,100,.3);overflow:hidden;z-index:30;color:#2A1D5C}
 #gcMen button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;background:transparent;text-align:start;font-size:15px;font-weight:600;color:inherit}
 #gcMen button:active{background:rgba(123,92,224,.15)}
-.tgc{position:relative}
 </style>
 <script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 </head><body>
@@ -1750,7 +1749,7 @@ async function gcRecStart(){
     };
     mr.start(); GC.rec = r; render();
     gcTick = setInterval(() => { const sec = Math.round((Date.now() - r.t0) / 1000), el = $("#gcTimer"); if (el) el.textContent = gcDur(sec); if (sec >= 60) { gcRecStop(true); render(); } }, 500);
-  } catch { toast(t("gc_nomic")); }
+  } catch (err) { toast(t("gc_nomic") + " (" + (err && err.name || "err") + ")"); }
 }
 document.addEventListener("click", async e => {
   const el = e.target.closest("[data-gcsend],[data-gcdel],[data-gcedit],[data-gcecancel],[data-gcmic],[data-gcstop],[data-gccancel],[data-gcplay]"); if (!el) return;
