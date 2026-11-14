@@ -7,7 +7,7 @@
 <link rel="manifest" href="manifest.json">
 <meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="ASB Driver">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Inter+Tight:wght@400;500;600&family=Hind+Siliguri:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:wght@500;600;700&family=Inter+Tight:wght@400;500;600;700;800&family=Hind+Siliguri:wght@400;500;600;700&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
 <style>
 /* ASB Driver: a road-going dashboard. Navy cab, signal-gold accents, one card per instrument. */
 :root{
@@ -516,6 +516,19 @@ html[data-skin="lav"] .toast{background:#2A1D5C;color:#fff}
 html[data-skin="lav"] .thm-row button[aria-pressed="true"]{background:linear-gradient(145deg,#B48CFF,#6A3FE0);color:#fff}
 html[data-skin="lav"] body::before{background-image:var(--wmd);opacity:.5}
 .hero .hero-wm{animation:hwf 7s ease-in-out infinite!important}
+/* ── readability pass: clearer text and numbers ── */
+:root{--muted:#41546A}
+@media (prefers-color-scheme:dark){:root{--muted:#B9C8D6}}
+body{font-size:16px;font-weight:500;line-height:1.55;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+:lang(bn) body,:lang(ar) body{line-height:1.65}
+:lang(bn) *,:lang(ar) *{letter-spacing:0!important;text-transform:none!important}
+.num,.big,.bigg{font-family:"Inter Tight","Barlow Semi Condensed",system-ui,sans-serif!important;font-weight:700;letter-spacing:0;font-variant-numeric:lining-nums tabular-nums}
+.card h3{font-size:14px;font-weight:700;letter-spacing:.02em}
+.lbl,.field span{font-size:12.5px;font-weight:700;letter-spacing:.02em}
+small,.li .t small,.ntc-t small,.cb small{font-size:13px!important;opacity:1!important}
+.muted{font-weight:500}
+b,strong{font-weight:700}
+.card,.li{color:var(--ink)}
 </style>
 <script>(function(){try{var B="__BUILD__";fetch("v.txt?cb="+Date.now(),{cache:"no-store"}).then(function(r){return r.ok?r.text():null}).then(function(t){if(t){t=(t||"").trim();if(t&&t!==B&&location.search.indexOf("v="+t)<0){location.replace(location.pathname+"?v="+t)}}}).catch(function(){})}catch(e){}})();</script>
 </head><body>
@@ -739,8 +752,8 @@ function vApp(){
   if (!m) return `<div class="login" style="justify-content:center"><div class="brand">${SHIELD}<div class="spin"></div></div></div>`;
   const p = m.profile;
   const outstanding = duesOf(m).filter(x => !x.waived).reduce((s, f) => s + (+f.remaining || 0), 0);
-  let body = S.sub === "chat" ? vDm() : S.sub === "notices" ? vNotices(m) : S.sub === "fuel" ? vFuelPage(m) : S.sub === "changes" ? vChanges() : S.sub === "ai" && AI_ON.test(String(m.profile?.fullName || "")) ? vAiPage() : S.sub === "editp" ? vEditProfile(m) : S.sub === "reports" ? vReports() : S.tab === "home" ? (S.sub === "perf" ? vPerfPage(m) + aiPerfCard(m) : S.sub === "target" ? vTargetPage(m) : S.sub === "ordd" ? vOrddPage(m) + aiPerfCard(m) : S.sub === "history" ? vHistoryPage(m) : S.sub === "vehicle" ? vVehiclePage() : S.sub === "vcond" ? vCondPage() : vHome(m)) : S.tab === "fines" ? vDues(m) : S.tab === "salary" ? (S.slip ? vSlip(m, S.slip) : vSalary(m)) : vProfile(m);
-  const last = S.lastAt ? new Date(S.lastAt).toLocaleTimeString(lang === "ar" ? "ar-SA" : "en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
+  let body = S.sub === "chat" ? vDm() : S.sub === "notices" ? vNotices(m) : S.sub === "fuel" ? vFuelPage(m) : S.sub === "changes" ? vChanges() : S.sub === "ai" && AI_APPEAL && AI_ON.test(String(m.profile?.fullName || "")) ? vAiPage() : S.sub === "editp" ? vEditProfile(m) : S.sub === "reports" ? vReports() : S.tab === "home" ? (S.sub === "perf" ? vPerfPage(m) + aiPerfCard(m) : S.sub === "target" ? vTargetPage(m) : S.sub === "ordd" ? vOrddPage(m) + aiPerfCard(m) : S.sub === "history" ? vHistoryPage(m) : S.sub === "vehicle" ? vVehiclePage() : S.sub === "vcond" ? vCondPage() : vHome(m)) : S.tab === "fines" ? vDues(m) : S.tab === "salary" ? (S.slip ? vSlip(m, S.slip) : vSalary(m)) : vProfile(m);
+  const last = S.lastAt ? new Date(S.lastAt).toLocaleTimeString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { hour: "2-digit", minute: "2-digit" }) : "";
   if (S.token && S.langSent !== S.token + lang) { S.langSent = S.token + lang; try { rpc("driver_set_lang", { p_token: S.token, p_lang: lang }).catch(() => { S.langSent = ""; }); } catch {} }
   if (window.ASBAndroid?.locStart) {
     if (!p.locOn) { if (!S.locStopped) { S.locStopped = true; try { window.ASBAndroid.locStop && window.ASBAndroid.locStop(); } catch {} } }
@@ -869,7 +882,7 @@ function noticeText(n){
   return k ? [t(k[0], v), t(k[1], v)] : [esc(n.title || ""), esc(n.body || "")];
 }
 const noticeGo = n => ({ report: 'data-sub="reports"', answer: 'data-sub="changes"', fuel: 'data-sub="fuel"', perf: 'data-sub="perf"', orders: 'data-sub="target"', salary: 'data-tab="salary"', due_new: 'data-tab="fines"', due_edit: 'data-tab="fines"', due_paid: 'data-tab="fines"', due_cut: 'data-tab="fines"' }[n.kind] || "");
-const whenTxt = at => new Date(+at).toLocaleString(lang === "ar" ? "ar-SA" : "en-GB", { timeZone: "Asia/Riyadh", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const whenTxt = at => new Date(+at).toLocaleString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { timeZone: "Asia/Riyadh", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
 function noticeRow(n, unread){
   const [ti, bo] = noticeText(n), go = noticeGo(n);
   return `<${go ? "button" : "div"} class="ntc ${unread ? "unread" : ""}" ${go}><span class="ntc-ic k-${esc(String(n.kind || "msg").split("_")[0])}">${icon(n.kind === "fuel" ? "salary" : n.kind === "perf" ? "chart" : n.kind === "orders" ? "target" : n.kind === "salary" ? "salary" : n.kind?.startsWith("due") ? "fines" : "bell")}</span>
@@ -893,13 +906,13 @@ function subHead(title){ return `<div class="subhead"><button class="back" data-
 /* ── past pay months (2nd → 1st) ── */
 const FP = ["p1", "p2", "p3"];
 const cycleRange = k => { const [y, mo] = k.split("-").map(Number), a = new Date(Date.UTC(y, mo - 1, 2)), b = new Date(Date.UTC(y, mo, 1));
-  const f = d => d.toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" }); return `${f(a)} – ${f(b)}`; };
-const periodRanges = k => { const [y, mo] = k.split("-").map(Number), d = (mm, dd) => new Date(Date.UTC(y, mm - 1, dd)), f = x => x.toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
+  const f = d => d.toLocaleDateString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" }); return `${f(a)} – ${f(b)}`; };
+const periodRanges = k => { const [y, mo] = k.split("-").map(Number), d = (mm, dd) => new Date(Date.UTC(y, mm - 1, dd)), f = x => x.toLocaleDateString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
   return [[d(mo, 2), d(mo, 11)], [d(mo, 12), d(mo, 21)], [d(mo, 22), d(mo + 1, 1)]].map(([a, b]) => `${f(a)} – ${f(b)}`); };
-const monthName = k => { const [y, mo] = k.split("-").map(Number); return new Date(Date.UTC(y, mo - 1, 15)).toLocaleDateString(lang === "ar" ? "ar-SA" : lang === "bn" ? "bn-BD" : "en-GB", { month: "long", year: "numeric", timeZone: "UTC" }); };
+const monthName = k => { const [y, mo] = k.split("-").map(Number); return new Date(Date.UTC(y, mo - 1, 15)).toLocaleDateString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : lang === "bn" ? "bn-BD-u-nu-latn" : "en-GB", { month: "long", year: "numeric", timeZone: "UTC" }); };
 /* petrol entries: an amount and the dates it covers (old months may still have the three 10-day periods) */
 const fEntries = r => [...((r || {}).e || []), ...FP.map((p, i) => ({ a: +(r || {})[p] || 0, legacy: i + 1 })).filter(x => x.a)];
-const fDay = d => d ? new Date(d + "T12:00:00Z").toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" }) : "";
+const fDay = d => d ? new Date(d + "T12:00:00Z").toLocaleDateString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { day: "numeric", month: "short", timeZone: "UTC" }) : "";
 const fRange = x => x.legacy ? t("fu_p" + x.legacy) : x.f && x.t ? (x.f === x.t ? fDay(x.f) : `${fDay(x.f)} – ${fDay(x.t)}`) : fDay(x.f || x.t) || "—";
 function vFuelPage(m){
   const k = m.month.key, f = m.fuel || {}, ents = fEntries(f);
@@ -1190,7 +1203,7 @@ const t3Badge = m => `<div class="t3-badge"><span>👑</span><b>TOP 3</b><em>#${
 function vHome(m){
   const p = m.profile, mm = m.month, out = duesOf(m).filter(x => !x.waived).reduce((s, f) => s + (+f.remaining || 0), 0);
   const target = +mm.target || 0, pct = target ? Math.min(100, mm.o / target * 100) : 0, isRank = p.payType !== "PER_ORDER";
-  const upd = mm.at ? new Date(mm.at).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { timeZone: "Asia/Riyadh", day: "numeric", month: "short" }) : "";
+  const upd = mm.at ? new Date(mm.at).toLocaleDateString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { timeZone: "Asia/Riyadh", day: "numeric", month: "short" }) : "";
   const banners = headlineBanner(m) + homeNotices(m);   // build with the current "seen" mark…
   armHomeSeen();              // …then, after it has been on screen a moment, mark it seen so it won't float again
   const T3 = isTop3(m);
@@ -1255,8 +1268,8 @@ function perfCard(pf){
     ${rateRow("fa", t("pf_forced"))}${rateRow("ot", t("pf_ontime"))}${rateRow("cr", t("pf_complete"))}${rateRow("ne", t("pf_early"))}
   </section>`;
 }
-const longDate = iso => new Date(iso + "T12:00:00Z").toLocaleDateString(lang === "ar" ? "ar-SA" : lang === "bn" ? "bn-BD" : "en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
-const ddate = iso => new Date(iso + "T12:00:00Z").toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { day: "numeric", month: "short" });
+const longDate = iso => new Date(iso + "T12:00:00Z").toLocaleDateString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : lang === "bn" ? "bn-BD-u-nu-latn" : "en-GB", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" });
+const ddate = iso => new Date(iso + "T12:00:00Z").toLocaleDateString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { day: "numeric", month: "short" });
 const todayK = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Riyadh" }).format(new Date());
 const addDaysD = (d, n) => d ? new Date(Date.parse(d + "T12:00:00Z") + n * 864e5).toISOString().slice(0, 10) : "";
 const dUntil = d => d ? Math.round((Date.parse(d + "T12:00:00Z") - Date.parse(todayK() + "T12:00:00Z")) / 864e5) : null;
@@ -1347,7 +1360,7 @@ async function loadChanges(){
 const chVal = v => v === null || v === undefined || v === "" ? "—" : Array.isArray(v) ? "…" : typeof v === "object" ? "…" : esc(String(v)).slice(0, 50);
 const HIDE_F = ["pinCheck", "pinHash", "pinSalt", "pinVer", "profileAt", "payTypePrev", "photoPath"];
 /* ── AI helper: writes a Keeta appeal from a screenshot / description (owner test account only until approved) ── */
-const AI_ON = BN_TEST;
+const AI_ON = BN_TEST, AI_APPEAL = false; /* appeal helper switched off for now (AI too slow); perf analysis stays owner-only */
 const AI = { text: "", imgs: [],  lang: "en", busy: false, out: null, err: "", copied: false };
 function vAiPage(){
   const o = AI.out;
@@ -1396,6 +1409,7 @@ document.addEventListener("click", async e => {
 
 /* ── AI analysis of performance + order details (owner test account only) ── */
 const AIP = { busy: false, out: null, err: "" };
+const latDigits = x => String(x).replace(/[০-৯]/g, d => "০১২৩৪৫৬৭৮৯".indexOf(d)).replace(/[٠-٩]/g, d => "٠١٢٣٤٥٦٧٨٩".indexOf(d));
 function aiPerfData(m){
   const pf = m.perf || {}, c = (pf.today && Object.keys(pf.today).length ? pf.today : pf.yest) || {}, pv = (c === pf.today ? pf.yest : null) || {}, r = (m.ordd && m.ordd.row) || {};
   const pick = o => ({ [t("pf_grade")]: o.g, [t("pf_rank")]: o.rp, [t("pf_forced")]: o.fa, [t("pf_ontime")]: o.ot, [t("pf_complete")]: o.cr, [t("pf_early")]: o.ne });
@@ -1404,11 +1418,11 @@ function aiPerfData(m){
 }
 function aiPerfCard(m){
   if (!AI_ON.test(String(m.profile?.fullName || ""))) return "";
-  const o = AIP.out, li = a => (a || []).map(x => `<li style="margin:4px 0">${esc(x)}</li>`).join("");
+  const o = AIP.out, li = a => (a || []).map(x => `<li style="margin:4px 0">${esc(latDigits(x))}</li>`).join("");
   return `<section class="card"><h3>🤖 ${t("aip_btn")}</h3><p class="muted" style="font-size:13px;margin:0 0 10px">${t("aip_hint")}</p>
     <button class="btn gold" data-aip="go" style="width:100%" ${AIP.busy ? "disabled" : ""}>${AIP.busy ? t("ai_busy") : "✨ " + t("aip_go")}</button>
     ${AIP.err ? `<div class="neg" style="margin-top:10px;font-size:14px">${esc(AIP.err)}</div>` : ""}
-    ${o ? `<div dir="auto" style="margin-top:14px;line-height:1.65;font-size:15px"><p style="margin:0 0 10px"><b>${esc(o.summary)}</b></p>
+    ${o ? `<div dir="auto" style="margin-top:14px;line-height:1.65;font-size:15px"><p style="margin:0 0 10px"><b>${esc(latDigits(o.summary))}</b></p>
       ${o.good.length ? `<h4 style="margin:10px 0 2px;color:var(--pos,#1a7f4b)">✅ ${t("aip_good")}</h4><ul style="margin:0;padding-inline-start:20px">${li(o.good)}</ul>` : ""}
       ${o.bad.length ? `<h4 style="margin:10px 0 2px;color:#d33">⚠️ ${t("aip_bad")}</h4><ul style="margin:0;padding-inline-start:20px">${li(o.bad)}</ul>` : ""}
       ${o.tips.length ? `<h4 style="margin:10px 0 2px">💡 ${t("aip_tips")}</h4><ol style="margin:0;padding-inline-start:20px">${li(o.tips)}</ol>` : ""}
@@ -1495,8 +1509,8 @@ async function dmFetchImg(at){
   if (DM.req[at]) return; DM.req[at] = 1;
   try { const r = await rpc("driver_msg_img", { p_token: S.token, p_at: at }); if (r.ok && r.img) { DM.imgs[at] = r.img; if (S.sub === "chat") { const keep = $("#dmList")?.scrollTop; render(); const l = $("#dmList"); if (l && keep != null) l.scrollTop = keep; } } } catch {}
 }
-const dmTime = at => new Date(+at).toLocaleTimeString(lang === "ar" ? "ar-SA" : "en-GB", { timeZone: "Asia/Riyadh", hour: "2-digit", minute: "2-digit" });
-const dmDay = at => new Date(+at).toLocaleDateString(lang === "ar" ? "ar-SA" : "en-GB", { timeZone: "Asia/Riyadh", day: "numeric", month: "long" });
+const dmTime = at => new Date(+at).toLocaleTimeString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { timeZone: "Asia/Riyadh", hour: "2-digit", minute: "2-digit" });
+const dmDay = at => new Date(+at).toLocaleDateString(lang === "ar" ? "ar-SA-u-nu-latn-ca-gregory" : "en-GB", { timeZone: "Asia/Riyadh", day: "numeric", month: "long" });
 function vDm(){
   if (DM.msgs === null) loadDm();
   const list = DM.msgs || [];
@@ -1665,7 +1679,7 @@ function vProfile(m){
   <section class="card"><h3>${t("language")}</h3><div class="seg" style="grid-template-columns:repeat(3,1fr)">${[["en","English"],["bn","বাংলা"],["ar","العربية"]].map(([k,l]) => `<button data-lang="${k}" aria-pressed="${k===lang}">${l}</button>`).join("")}</div></section>
   <button class="card fuel-card" data-sub="reports" style="display:flex;align-items:center;gap:12px"><span class="ntc-ic k-due">${icon("fines")}</span><span style="flex:1"><b>${t("rp_title")}</b><br><small class="muted">${t("rp_tile")}</small></span><span class="tile-go">›</span></button>
   <button class="card fuel-card" data-sub="changes" style="display:flex;align-items:center;gap:12px"><span class="ntc-ic k-msg">${icon("bell")}</span><span style="flex:1"><b>${t("ch_title")}</b><br><small class="muted">${t("ch_tile")}</small></span><span class="tile-go">›</span></button>
-  ${AI_ON.test(String(m.profile?.fullName || "")) ? `<button class="card fuel-card" data-sub="ai" style="display:flex;align-items:center;gap:12px"><span class="ntc-ic k-msg" style="font-size:20px">🤖</span><span style="flex:1"><b>${t("ai_title")}</b><br><small class="muted">${t("ai_tile")}</small></span><span class="tile-go">›</span></button>` : ""}
+  ${AI_APPEAL && AI_ON.test(String(m.profile?.fullName || "")) ? `<button class="card fuel-card" data-sub="ai" style="display:flex;align-items:center;gap:12px"><span class="ntc-ic k-msg" style="font-size:20px">🤖</span><span style="flex:1"><b>${t("ai_title")}</b><br><small class="muted">${t("ai_tile")}</small></span><span class="tile-go">›</span></button>` : ""}
   <div class="muted" style="text-align:center;font-size:13.5px">${t("pin_hint")}</div>
   ${BN_TEST.test(String(m.profile?.fullName || "")) ? bnTestHtml() : ""}
   <button class="btn ghost" data-signout>${t("signout")}</button>`;
