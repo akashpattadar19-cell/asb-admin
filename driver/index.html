@@ -1356,7 +1356,7 @@ function vAiPage(){
     <textarea id="aiText" rows="5" style="width:100%;border:1.5px solid var(--line);border-radius:12px;padding:10px;font:inherit;background:var(--sunk);color:var(--ink)" placeholder="${esc(t("ai_ph"))}">${esc(AI.text)}</textarea>
     <div style="display:flex;gap:10px;align-items:center;margin:10px 0"><label class="btn ghost" for="aiFile" style="margin:0">📎 ${t("ai_photo")}</label><input id="aiFile" type="file" accept="image/*" hidden>${AI.img ? `<img src="${AI.img}" alt="" style="width:54px;height:54px;object-fit:cover;border-radius:10px;border:1px solid var(--line)"><button class="btn ghost" data-ai="rmimg" style="padding:6px 10px">✕</button>` : ""}</div>
     <div class="muted" style="font-size:13px;margin:4px 0">${t("ai_alang")}</div>
-    <div class="seg" style="grid-template-columns:repeat(2,1fr);margin-bottom:12px">${[["en","English"],["ar","العربية"]].map(([k, l]) => `<button data-ailang="${k}" aria-pressed="${k === AI.lang}">${l}</button>`).join("")}</div>
+    <div class="seg" style="grid-template-columns:repeat(3,1fr);margin-bottom:12px">${[["en","English"],["bn","বাংলা"],["ar","العربية"]].map(([k, l]) => `<button data-ailang="${k}" aria-pressed="${k === AI.lang}">${l}</button>`).join("")}</div>
     <button class="btn gold" data-ai="go" style="width:100%" ${AI.busy ? "disabled" : ""}>${AI.busy ? t("ai_busy") : "✨ " + t("ai_go")}</button>
     ${AI.err ? `<div class="neg" style="margin-top:10px;font-size:14px">${esc(AI.err)}</div>` : ""}
   </section>
