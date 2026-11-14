@@ -535,7 +535,7 @@ b,strong{font-weight:700}
 .gcav2{flex:none;width:30px;height:30px;border-radius:50%;display:inline-grid;place-items:center;color:#fff;font-weight:800;font-size:14px;margin-inline-end:0}
 .gcmen{color:#6A3FE0;font-weight:800;background:rgba(123,92,224,.14);border-radius:6px;padding:0 3px}.cb.me .gcmen{color:#fff;background:rgba(255,255,255,.25)}
 .cb.gcmme{box-shadow:0 0 0 2px #FFB020!important}
-#gcMen{position:absolute;inset-inline:10px;bottom:calc(66px + env(safe-area-inset-bottom,0px));background:#fff;border:1px solid rgba(150,120,230,.4);border-radius:16px;box-shadow:0 14px 30px rgba(40,20,100,.3);overflow:hidden;z-index:30;color:#2A1D5C}
+#gcMen{position:absolute;inset-inline:10px;bottom:calc(66px + env(safe-area-inset-bottom,0px));max-height:min(250px,38vh);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;-webkit-overflow-scrolling:touch;background:#fff;border:1px solid rgba(150,120,230,.4);border-radius:16px;box-shadow:0 14px 30px rgba(40,20,100,.3);z-index:30;color:#2A1D5C}
 #gcMen button{display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border:0;background:transparent;text-align:start;font-size:15px;font-weight:600;color:inherit}
 #gcMen button:active{background:rgba(123,92,224,.15)}
 </style>
@@ -1692,12 +1692,13 @@ function gcMenuClose(){ document.getElementById("gcMen")?.remove(); }
 function gcMenuUpdate(ta){
   const pos = ta.selectionStart ?? ta.value.length, m = /(^|\s)@([^\s@]*)$/.exec(ta.value.slice(0, pos));
   if (!m || !GC.members) return gcMenuClose();
-  const q = m[2].toLowerCase(), list = GC.members.filter(x => x.id !== GC.me && x.name.toLowerCase().includes(q)).sort((a, b) => (a.name.toLowerCase().startsWith(q) ? 0 : 1) - (b.name.toLowerCase().startsWith(q) ? 0 : 1)).slice(0, 6);
+  const q = m[2].toLowerCase(), list = GC.members.filter(x => x.id !== GC.me && x.name.toLowerCase().includes(q)).sort((a, b) => (a.name.toLowerCase().startsWith(q) ? 0 : 1) - (b.name.toLowerCase().startsWith(q) ? 0 : 1)).slice(0, 60);
   if (!list.length) return gcMenuClose();
   let box = document.getElementById("gcMen"); if (!box) { box = document.createElement("div"); box.id = "gcMen"; (document.querySelector(".tgc") || document.body).append(box); }
   box.innerHTML = list.map(x => `<button type="button" data-gcpick="${esc(x.name)}"><span class="gcav2" style="background:hsl(${gcHue(x.name)} 55% 46%)">${esc(x.name.charAt(0).toUpperCase())}</span>${esc(x.name)}</button>`).join("");
 }
-document.addEventListener("pointerdown", e => {
+document.addEventListener("mousedown", e => { if (e.target.closest("#gcMen")) e.preventDefault(); });
+document.addEventListener("click", e => {
   const b = e.target.closest("[data-gcpick]"); if (!b) return; e.preventDefault();
   const ta = $("#gcText"); if (!ta) return; const pos = ta.selectionStart ?? ta.value.length, before = ta.value.slice(0, pos), after = ta.value.slice(pos);
   const nb = before.replace(/(^|\s)@[^\s@]*$/, (m0, sp) => sp + "@" + b.dataset.gcpick + " ");
@@ -1953,9 +1954,10 @@ function vProfile(m){
 /* ── render & data ── */
 function render(){
   document.documentElement.lang = lang; document.documentElement.dir = lang === "ar" ? "rtl" : "ltr";
-  const focused = document.activeElement?.id === "rid" ? $("#rid").selectionStart : null;
+  const ae = document.activeElement, keepIds = ["rid", "gcText", "dmText"], fid = ae && keepIds.includes(ae.id) ? ae.id : null;
+  const fs = fid ? { v: ae.value, a: ae.selectionStart, b: ae.selectionEnd } : null;
   $("#root").innerHTML = S.view === "login" ? vLogin() : S.view === "signup" ? vSignup() : vApp();
-  if (focused !== null && $("#rid")) { $("#rid").focus(); $("#rid").setSelectionRange(focused, focused); }
+  if (fid && $("#" + fid)) { const el = $("#" + fid); if (fid !== "rid") el.value = fs.v; try { el.focus({ preventScroll: true }); el.setSelectionRange(fs.a, fs.b); } catch {} }
   try { bannerCheck(); } catch {}
   try { const m = S.data?.m; if (m && isTop3(m) && !S.sub && S.tab === "home" && !S._eg && !document.getElementById("bnOv")) { S._eg = 1; setTimeout(eagleFly, 400); } } catch {}
 }
@@ -2017,7 +2019,7 @@ async function refresh(force){
   } catch { if (!S.data) toast(t("offline")); }
   S.refreshing = false; render();
 }
-setInterval(() => { if (document.visibilityState === "visible") refresh(); }, REFRESH_MS);
+setInterval(() => { const a = document.activeElement; if (document.visibilityState === "visible" && !(a && (a.id === "gcText" || a.id === "dmText"))) refresh(); }, REFRESH_MS);
 /* tell the office the app is open: one small ping a minute while it is on screen */
 let lastPing = 0;
 async function ping(){
