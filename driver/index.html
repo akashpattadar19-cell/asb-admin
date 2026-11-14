@@ -1384,9 +1384,9 @@ document.addEventListener("click", async e => {
   if (!txt && !AI.imgs.length) { AI.err = t("ai_e_input"); render(); return; }
   AI.busy = true; AI.err = ""; AI.copied = false; render();
   try {
-    const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 60000);
+    const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 90000);
     const r = await fetch(`${SB_URL}/functions/v1/appeal-ai`, { method: "POST", signal: ac.signal, headers: { apikey: SB_KEY, Authorization: "Bearer " + SB_KEY, "Content-Type": "application/json" }, body: JSON.stringify({ token: S.token, text: txt, photos: AI.imgs, lang: AI.lang, uiLang: lang }) }).then(x => x.json()); clearTimeout(tm);
-    if (r.ok && r.appeal) AI.out = r; else AI.err = t(r.error === "limit" ? "ai_e_limit" : r.error === "busy" ? "ai_e_busy" : r.error === "off" ? "ai_e_off" : r.error === "nokey" ? "ai_e_nokey" : r.error === "input" ? "ai_e_input" : "ai_e_fail");
+    if (r.ok && r.appeal) AI.out = r; else AI.err = t(r.error === "limit" ? "ai_e_limit" : r.error === "busy" ? "ai_e_busy" : r.error === "off" ? "ai_e_off" : r.error === "nokey" ? "ai_e_nokey" : r.error === "input" ? "ai_e_input" : "ai_e_fail") + (r.msg ? " [" + r.msg + "]" : "");
   } catch { AI.err = t("ai_e_fail"); }
   AI.busy = false; render();
 });
