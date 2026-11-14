@@ -2703,7 +2703,7 @@ async function xInvoice(acctId, per){
     if (logo) { g.globalAlpha = 0.05; g.drawImage(logo, (W - 760) / 2, (H - 760) / 2, 760, 760); g.globalAlpha = 1; }
     const gr = g.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, "#0b3b60"); gr.addColorStop(1, "#1f6fb2"); g.fillStyle = gr; g.fillRect(0, 0, W, 18); g.fillStyle = "#f0a81a"; g.fillRect(0, 18, W, 5); pages.push(c); y = M + 10; };
   const txt = (s, x, yy, o = {}) => { g.font = `${o.w || 400} ${o.sz || 24}px ${FONT}`; g.fillStyle = o.c || "#111"; let al = o.al || "left"; if (rtl && !o.nm) { x = W - x; al = al === "right" ? "left" : "right"; } g.direction = rtl ? "rtl" : "ltr"; g.textAlign = al; g.textBaseline = "alphabetic"; g.fillText(String(s ?? ""), x, yy); };
-  const wrap = (s, maxW, sz, w, maxL) => { g.font = `${w || 400} ${sz}px ${FONT}`; const out = []; let cur = ""; for (const ch of String(s ?? "")) { if (g.measureText(cur + ch).width > maxW && cur) { out.push(cur); cur = ch.trim() ? ch : ""; } else cur += ch; } if (cur) out.push(cur); if (out.length > maxL) { out.length = maxL; let l = out[maxL - 1]; while (l.length > 1 && g.measureText(l + "…").width > maxW) l = l.slice(0, -1); out[maxL - 1] = l + "…"; } return out.length ? out : [""]; };
+  const wrap = (s, maxW, sz, w, maxL) => { g.font = `${w || 400} ${sz}px ${FONT}`; const out = []; let cur = ""; for (const ch of String(s ?? "")) { if (g.measureText(cur + ch).width > maxW && cur) { const sp = cur.lastIndexOf(" "); if (ch.trim() && sp > 0 && sp > cur.length - 22) { out.push(cur.slice(0, sp)); cur = cur.slice(sp + 1) + ch; } else { out.push(cur); cur = ch.trim() ? ch : ""; } } else cur += ch; } if (cur) out.push(cur); if (out.length > maxL) { out.length = maxL; let l = out[maxL - 1]; while (l.length > 1 && g.measureText(l + "…").width > maxW) l = l.slice(0, -1); out[maxL - 1] = l + "…"; } return out.length ? out : [""]; };
   const ensure = need => { if (y + need > H - 110) newPage(); };
   const line = (yy, col = "#d8dee6") => { g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); g.moveTo(M, yy); g.lineTo(R, yy); g.stroke(); };
   const sec = (title) => { ensure(120); y += 52; g.fillStyle = "#f0a81a"; g.fillRect(rtl ? R - 8 : M, y - 28, 8, 36); txt(title, M + 20, y, { sz: 30, w: 700, c: "#0b3b60" }); y += 14; line(y, "#0b3b60"); y += 8; };
@@ -2735,11 +2735,11 @@ async function xInvoice(acctId, per){
   const rcpts = [];
   outs.forEach((x, i) => {
     const isS = x.kind === "SEND", main = isS ? `${t("xk_send")} ${xAName(x.to)}` : ((x.cat === "loan" || x.cat === "internet") ? `${t("xc_" + x.cat)} — ${x.place || ""}` : (x.place || "")), sub = isS ? (x.note || "") : `${t("xc_" + (XCAT_I[x.cat] ? x.cat : "other"))}${x.note ? " · " + x.note : ""}`;
-    const l1 = wrap(main, 560, 23, 600, 2), l2 = wrap(sub, 560, 19, 400, 1), en = xEmps(x), l3 = en.length ? wrap("👥 " + en.join(", "), 560, 19, 600, 3) : [], h = 20 + l1.length * 30 + (sub ? 26 : 0) + l3.length * 25;
+    const l1 = wrap(main, 580, 23, 600, 3), l2 = sub ? wrap(sub, 600, 19, 400, 5) : [], en = xEmps(x), l3 = en.length ? wrap("👥 " + en.join(", "), 560, 19, 600, 3) : [], h = 20 + l1.length * 30 + l2.length * 25 + (l2.length ? 2 : 0) + l3.length * 25;
     ensure(h + 14); const y0 = y + 14; if (i % 2) { g.fillStyle = "#f6f9fc"; g.fillRect(M - 12, y0 - 6, R - M + 24, h + 4); }
     txt(String(i + 1), M, y0 + 24, { sz: 20, c: "#889" }); txt(dmy(x.date), M + 46, y0 + 24, { sz: 21, c: "#556" });
-    l1.forEach((s, k) => txt(s, M + 190, y0 + 24 + k * 30, { sz: 23, w: 600 })); if (sub) txt(l2[0], M + 190, y0 + 24 + l1.length * 30 - 2, { sz: 19, c: "#778" });
-    l3.forEach((s3, k3) => txt(s3, M + 190, y0 + 24 + l1.length * 30 + (sub ? 24 : -2) + k3 * 25, { sz: 19, w: 600, c: "#1f6fb2" }));
+    l1.forEach((s, k) => txt(s, M + 190, y0 + 24 + k * 30, { sz: 23, w: 600 })); l2.forEach((s2, k2) => txt(s2, M + 190, y0 + 24 + l1.length * 30 - 2 + k2 * 25, { sz: 19, c: "#778" }));
+    l3.forEach((s3, k3) => txt(s3, M + 190, y0 + 24 + l1.length * 30 + (l2.length ? l2.length * 25 - 2 : -2) + k3 * 25, { sz: 19, w: 600, c: "#1f6fb2" }));
     if (x.receipt?.url) { rcpts.push({ n: i + 1, x }); txt("🧾", M + 790, y0 + 24, { sz: 22 }); }
     txt("−" + fmt(x.amount), R, y0 + 24, { sz: 24, w: 700, al: "right", c: "#c2312f" });
     y = y0 + h - 6; line(y, "#eef1f5");
