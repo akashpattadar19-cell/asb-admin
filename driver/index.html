@@ -1581,7 +1581,7 @@ async function loadReports(){
   try { const r = await rpc("driver_reports", { p_token: S.token }); RP.items = r.ok ? (r.items || []) : []; } catch { RP.items = RP.items || []; }
   RP.loading = false; if (S.sub === "reports") render();
 }
-const GC_ON = BN_TEST;   /* group chat + pull-to-refresh: owner test only until approved */
+const GC_ON = /./;   /* group chat + pull-to-refresh: live for everyone */
 const gcOn = m => GC_ON.test(String(m?.profile?.fullName || ""));
 const GC = { msgs: null, state: "ok", me: "", draft: "", sig: "", ask: 0 };
 const gcSeen = () => +store.get("asb-gc-seen") || 0;
