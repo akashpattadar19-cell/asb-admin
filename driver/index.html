@@ -1442,7 +1442,7 @@ document.addEventListener("click", async e => {
 /* ── Accident report (Najm PDF + photos + fault choice). Owner test account only until approved. ── */
 const ACC_ON = BN_TEST;
 const ACC = { items: null, date: "", fault: null, text: "", pdf: null, video: null, g: { around: [], damage: [], plate: [], scene: [] }, up: 0, busy: false, err: "" };
-const ACC_G = [["around", "acc_g_around", 8], ["damage", "acc_g_damage", 6], ["plate", "acc_g_plate", 4], ["scene", "acc_g_scene", 8]];
+const ACC_G = [["around", "acc_g_around", 8], ["damage", "acc_g_damage", 6], ["plate", "acc_g_plate", 4]];
 const accPick = { grp: null }, accKinds = {};
 function accReset(){ Object.assign(ACC, { date: "", fault: null, text: "", pdf: null, video: null, g: { around: [], damage: [], plate: [], scene: [] }, up: 0, busy: false, err: "" }); }
 async function accLoad(){
@@ -1475,7 +1475,7 @@ function vAccPage(){
     ${ACC.video ? `<div style="color:var(--good);font-weight:700;margin:10px 0 0">✓ ${t("acc_video_ok")}: ${esc(ACC.video.name)} <button data-acc="rmvid" class="btn ghost" style="padding:4px 10px">✕</button></div>` : `<button type="button" class="btn ghost" data-acc="vid" style="margin-top:10px">🎥 ${t("acc_video_add")}</button>`}</section>
   <section class="card"><h3 style="text-transform:none">${t("acc_fault")}</h3>
     <div class="seg" style="grid-template-columns:repeat(2,1fr);margin-bottom:10px"><button data-accf="0" aria-pressed="${ACC.fault === 0}">${t("acc_f0")}</button><button data-accf="100" aria-pressed="${ACC.fault === 100}">${t("acc_f100")}</button></div>
-    ${ACC.fault === 100 ? `<div style="background:var(--bad-soft);color:var(--bad);border-radius:12px;padding:10px;font-size:14px;font-weight:600">${t("acc_f100_note")}</div>` : ACC.fault === 0 ? `<div class="muted" style="font-size:14px">${t("acc_f0_note")}</div>` : ""}
+    ${ACC.fault === 0 ? `<div class="muted" style="font-size:14px">${t("acc_f0_note")}</div>` : ""}
     <button class="btn gold" data-acc="send" style="width:100%;margin-top:14px" ${ACC.busy || ACC.up ? "disabled" : ""}>${ACC.busy || ACC.up ? "⏳ " + t("acc_busy") : "📨 " + t("acc_send")}</button>
     ${ACC.err ? `<div class="neg" style="margin-top:10px;font-size:14px">${esc(ACC.err)}</div>` : ""}</section>
   <section class="card"><h3>${t("acc_past")}</h3>${ACC.items && ACC.items.length ? `<div class="list">${ACC.items.map(x => `<div class="li"><div class="t"><b>${x.date ? esc(dmy(x.date)) : "—"}</b><small>${+x.fault === 100 ? t("acc_f100") : t("acc_f0")}${+x.amount > 0 ? " · " + fmt(x.amount) + " " + t("sar") : ""}</small></div><div class="v">${st(x.status)}</div></div>`).join("")}</div>` : `<div class="empty">${t("acc_none")}</div>`}</section>`;
