@@ -45,6 +45,11 @@ body:has(.alog) .scrollfab{display:none!important}
 .emprow input{width:20px;height:20px;flex:none}
 .emptools{display:flex;gap:8px;margin-top:6px}.empcnt{color:var(--brand,#5b3fd1)}
 .xemp{font-size:12.5px;color:var(--brand,#5b3fd1);margin-top:2px;font-weight:600}
+.gcblk{border:1px solid var(--line);background:transparent;border-radius:999px;width:26px;height:26px;font-size:13px;line-height:1;padding:0;cursor:pointer;vertical-align:middle;margin-inline-start:4px;opacity:.55}
+.gcblk:hover{opacity:1}.gcblk.on{opacity:1;background:rgba(200,40,40,.14);border-color:#c8283c}
+.gclist{max-height:46vh;overflow:auto;border:1px solid var(--line);border-radius:12px;padding:8px;display:flex;flex-direction:column;gap:8px}
+.gcm{background:rgba(110,80,220,.07);border-radius:10px;padding:8px 10px;line-height:1.5}.gcm.off{background:rgba(240,168,26,.16)}
+.gcm-h{display:flex;gap:8px;align-items:center}.gcm-h .btn{margin-inline-start:auto}
 </style>
 </head><body>
 <title>ASB Admin Panel</title>
@@ -935,7 +940,7 @@ function toast(msg){ const el = document.createElement("div"); el.className = "t
 
 /* ───────── state ───────── */
 const state = {
-  vehicles: {}, vcfg: {}, cacct: {}, ctx: {}, accidents: {}, accF: "pending", xAcct: "", vq: "", vst: "", vopen: "", staff: {}, claimlog: {}, duty: {}, presence: {}, fuel: {}, fuelDraft: {}, fuelMonth: "", pinreq: {}, payroll: {}, curMonthDocs: [], invoice: {}, profDraft: {}, profMonth: "", pq: "", ordd: {}, orddKey: "", orddDraft: {}, perfDraft: {}, oq: "", expenses: {}, internet: {}, lq: "", xq: "", iq: "", curMonth: "", monthly: {}, mode: "admin", myId: null, appTab: "home", appSlip: null, previewId: "",
+  vehicles: {}, vcfg: {}, cacct: {}, ctx: {}, accidents: {}, gmsg: {}, accF: "pending", xAcct: "", vq: "", vst: "", vopen: "", staff: {}, claimlog: {}, duty: {}, presence: {}, fuel: {}, fuelDraft: {}, fuelMonth: "", pinreq: {}, payroll: {}, curMonthDocs: [], invoice: {}, profDraft: {}, profMonth: "", pq: "", ordd: {}, orddKey: "", orddDraft: {}, perfDraft: {}, oq: "", expenses: {}, internet: {}, lq: "", xq: "", iq: "", curMonth: "", monthly: {}, mode: "admin", myId: null, appTab: "home", appSlip: null, previewId: "",
   emp: {}, fines: {}, adv: {}, ledger: {}, fuelneed: {}, rules: { ...DEFAULT_RULES },
   todayDoc: null, opsDoc: null, monthDocs: [], payDoc: null, dailyAll: {}, totals: {},
   opsDate: todayKey(), opsMonth: monthKey(), payMonth: monthKey(),
@@ -1395,6 +1400,16 @@ let calmT = 0;
 function calmRender(){ clearTimeout(calmT); calmT = setTimeout(() => { if (!document.activeElement?.matches?.("input,textarea,select") && !dlg.open && ["employees", "dashboard"].includes(location.hash.slice(1) || "dashboard")) render(); }, 400); }
 setInterval(calmRender, 30000);
 const platPill = p => p ? `<span class="pill nodot plat plat-${esc(String(p).toLowerCase().replace(/[^a-z]/g, ""))}">${esc(p === "HungerStation" ? "Hunger" : p)}</span>` : "";
+function gcList(){
+  const L = Object.entries(state.gmsg || {}).map(([id, m]) => ({ id, ...m })).sort((a, b) => (+a.at || 0) - (+b.at || 0)).slice(-100);
+  return L.length ? L.map(m => { const off = m.emp === "office"; return `<div class="gcm ${off ? "off" : ""}"><div class="gcm-h"><b>${esc(m.name || m.emp)}</b><span class="sub">${esc(new Date(+m.at).toLocaleString("en-GB", { timeZone: "Asia/Riyadh", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" }))}</span><button class="btn ghost sm danger-t" data-act="gc-del" data-id="${esc(m.id)}" data-needs-write>${t("delete")}</button></div><div>${esc(m.text || "")}</div></div>`; }).join("") : `<div class="empty"><b>${t("gc_none")}</b></div>`;
+}
+function gcDialog(){
+  openDialog({ title: "👥 " + t("gc_title"), footer: `<button type="button" class="btn ghost" data-close>${t("close")}</button>`,
+    body: `<p class="sub full">${t("gc_admin_hint")}</p><div class="gclist full" id="gcAdmList">${gcList()}</div>
+      <div class="full" style="display:flex;gap:8px"><input class="input" id="gcAdm" maxlength="500" placeholder="${t("gc_office_ph")}" style="flex:1"><button type="button" class="btn" data-act="gc-send" data-needs-write>${t("gc_send")}</button></div>` });
+  setTimeout(() => { const l = $("#gcAdmList"); if (l) l.scrollTop = l.scrollHeight; }, 30);
+}
 function vEmployees(){
   const q = state.q.trim().toLowerCase(), bin = Object.entries(state.emp).filter(([, e]) => e.status === "DELETED"), all = Object.entries(state.emp).filter(([, e]) => e.status !== "DELETED");
   if (state.qBin) return vBin(bin);
@@ -1413,7 +1428,7 @@ function vEmployees(){
   const act = all.filter(([,e]) => e.status === "ACTIVE"), noPin = act.filter(([,e]) => !e.pinCheck).length;
   const chip = (label, n, key, val) => `<button class="chip ${state[key] === val ? "on" : ""}" data-act="emp-chip" data-k="${key}" data-v="${esc(val)}"><b>${n}</b> ${label}</button>`;
   const row = ([id, e]) => `<tr class="${e.status === "INACTIVE" ? "dim" : ""}">
-      <td style="min-width:220px"><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 40)}<div style="min-width:0"><div class="name"><button class="rk-sw ${e.isActive !== false ? "on" : ""}" role="switch" aria-checked="${e.isActive !== false}" data-act="emp-work" data-id="${id}" data-needs-write><i></i><span>${t(e.isActive !== false ? "wk_on" : "wk_off")}</span></button> ${esc(e.fullName)}${state.fuelneed[id]?.on ? ` <span class="pill p-warn nodot" title="${t("fn_hint")}">⛽ ${t("fn_title")}</span>` : ""}</div>
+      <td style="min-width:220px"><div style="display:flex;gap:10px;align-items:center">${avatarHtml(e.photoUrl, e.fullName, 40)}<div style="min-width:0"><div class="name"><button class="rk-sw ${e.isActive !== false ? "on" : ""}" role="switch" aria-checked="${e.isActive !== false}" data-act="emp-work" data-id="${id}" data-needs-write><i></i><span>${t(e.isActive !== false ? "wk_on" : "wk_off")}</span></button> ${esc(e.fullName)} <button class="gcblk ${e.chatBlocked ? "on" : ""}" data-act="emp-gblock" data-id="${id}" data-needs-write title="${t(e.chatBlocked ? "gc_unblock_t" : "gc_block_t")}" aria-label="${t("gc_block_t")}">${e.chatBlocked ? "🔇" : "💬"}</button>${state.fuelneed[id]?.on ? ` <span class="pill p-warn nodot" title="${t("fn_hint")}">⛽ ${t("fn_title")}</span>` : ""}</div>
         <div class="sub" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">${e.status === "ACTIVE" ? `<button class="rk-sw ${e.inPayroll !== false ? "on" : ""}" role="switch" aria-checked="${e.inPayroll !== false}" data-act="emp-pay" data-id="${id}" data-needs-write title="${t(e.inPayroll !== false ? "emp_pay_on_t" : "emp_pay_off_t")}"><i></i><span>${t("emp_pay")}</span></button>` : ""}${platPill(e.platform)}${e.delegateStatus ? `<span class="pill ${e.delegateStatus === "Disabled" ? "p-bad" : "p-ok"}">${t("ds_" + e.delegateStatus)}</span>` : ""}${e.fullNameAr ? `<span dir="rtl">${esc(e.fullNameAr)}</span>` : ""}</div></div></div></td>
       <td class="mono nowrap">${esc(e.residentId)}${e.jahezId ? `<div class="sub" title="${t("jahezId")}">K: ${esc(e.jahezId)}</div>` : ""}</td>
       <td class="nowrap mono">${e.mobile ? `<a class="tel" href="tel:${esc(e.mobile)}">${esc(e.mobile)}</a>` : `<span class="sub">${t("none")}</span>`}</td>
@@ -1431,7 +1446,7 @@ function vEmployees(){
       </div></td></tr>`;
   return `
   <div class="head"><div><h1>${t("nav_employees")}</h1><p>${all.length} · ${act.length} ${t("ACTIVE")}</p></div>
-    <div class="tools"><button class="btn ghost" data-act="notice-new" data-needs-write>📣 ${t("nt_send")}</button><button class="btn" data-act="emp-new" data-needs-write>+ ${t("addEmp")}</button></div></div>
+    <div class="tools"><button class="btn ghost" data-act="gc-open">👥 ${t("gc_title")}</button><button class="btn ghost" data-act="notice-new" data-needs-write>📣 ${t("nt_send")}</button><button class="btn" data-act="emp-new" data-needs-write>+ ${t("addEmp")}</button></div></div>
   ${(()=>{const req=all.filter(([id,e])=>(state.pinreq[id]?.at||0)>(e.pinResetAt||0));return req.length?`<div class="note warn"><b>${t("pin_req")}:</b> ${req.map(([id,e])=>`<button class="btn ghost sm" data-act="emp-pin" data-id="${id}" data-needs-write style="margin:4px 4px 0 0">${esc(e.fullName)} · ${t("pin_change")}</button>`).join("")}</div>`:""})()}
   <div class="chips"><b>${t("wk_on")}: ${act.filter(([, e]) => e.isActive !== false).length} | ${t("wk_off")}: ${act.filter(([, e]) => e.isActive === false).length}</b>
     ${[["", t("all")], ["1", t("wk_on")], ["0", t("wk_off")]].map(([v, l]) => `<button class="chip ${(state.qWork || "") === v ? "on" : ""}" data-act="emp-chip" data-k="qWork" data-v="${v}">${l}</button>`).join("")}</div>
@@ -3917,6 +3932,10 @@ document.addEventListener("click", async e => {
         } });
       return;
     }
+    if (act === "emp-gblock") { const e0 = state.emp[id] || {}; await db.doc("employees/" + id).update({ chatBlocked: !e0.chatBlocked, updatedAt: Date.now() }); toast(t(e0.chatBlocked ? "gc_unblocked" : "gc_blocked_ok", { n: e0.fullName || "" })); return; }
+    if (act === "gc-open") { gcDialog(); return; }
+    if (act === "gc-del") { await db.doc("gmsg/" + id).delete(); return; }
+    if (act === "gc-send") { const inp = $("#gcAdm"); const v = (inp?.value || "").trim(); if (!v) return; const ms = Date.now(); await db.doc("gmsg/" + ms + "_office").set({ emp: "office", name: t("gc_office"), at: ms, text: v.slice(0, 500) }); inp.value = ""; return; }
     if (act === "emp-work") { await db.doc("employees/" + id).update({ isActive: state.emp[id]?.isActive === false, updatedAt: Date.now() }); return; }
     if (act === "emp-pay") { const e0 = state.emp[id] || {}; await db.doc("employees/" + id).update({ inPayroll: e0.inPayroll === false, updatedAt: Date.now() }); return; }
     if (act === "copy-card") { try { await navigator.clipboard.writeText(b.dataset.v); toast(t("fn_copied")); } catch { toast(b.dataset.v); } return; }
@@ -5065,6 +5084,7 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   tgt_note: "Pay so far uses this month's total orders and excludes fines, advances and fuel. Payroll uses these same settings.",
   perf_hint: "Daily Keeta performance for each driver. Drivers see yesterday and today side by side in their app.", perf_yest: "Yesterday", perf_today: "Today", perf_change: "Orders change",
   exp_emps: "Employees", exp_emps_search: "Search employee…", exp_emps_all: "Select all shown", exp_emps_none: "Clear", xi_emps: "Employees",
+  gc_title: "Group chat", gc_send: "Send", gc_none: "No messages yet.", gc_block_t: "Block this employee from group chat", gc_unblock_t: "Blocked from group chat — tap to allow", gc_blocked_ok: "{n} is blocked from group chat", gc_unblocked: "{n} can use group chat again", gc_admin_hint: "All active employees can chat here. Delete any message. Use the 💬 button next to an employee name to block someone.", gc_office: "ASB Office", gc_office_ph: "Write as office…",
   xp_hint: "Main account → manager accounts. Everyone can see everything; managers record spending on their own account.", xp_noacct: "You don't have an account yet — ask the super admin to add one for you.", xp_all: "All accounts", xp_in: "Received", xp_out: "Spent / sent", xp_bal: "Balance", xp_acct: "Account", xp_detail: "Details", xp_rcpt: "Receipt", xp_rcpt_keep: "Leave empty to keep the current receipt", xp_rcpt_err: "Couldn't upload the receipt photo. Try again.", xp_cat: "Category", xa_main: "Main account", xa_main_h: "Company (main)", xa_add: "Add account", xa_who: "Manager / admin", xa_name: "Account name", xa_name_ph: "e.g. Riyadh branch", xa_none: "Every admin already has an account.", xa_first: "Add a manager account first.", xk_fund: "Money added to main account", xk_fund_b: "Add money", xk_send: "Sent to", xk_send_b: "Send money", xk_recv: "Received from main account", xk_to: "Send to", xc_fuel: "Petrol", xc_repair: "Repair / maintenance", xc_office: "Office", xc_food: "Food", xc_phone: "Phone / internet", xc_rent: "Rent", xc_other: "Other", xc_send: "Sent to managers", xi_btn: "Invoice PDF", xi_title: "EXPENSE INVOICE", xi_acct: "Account", xi_holder: "Account holder", xi_period: "Month", xi_gen: "Date", xi_open: "Opening balance", xi_in: "Received", xi_out: "Spent", xi_close: "Closing balance", xi_recv_h: "Money received", xi_exp_h: "Expenses", xi_cat_h: "By category", xi_sign1: "Prepared by (manager)", xi_sign2: "Approved by", xi_rc: "Receipts",
   xi_wk: "PDF · 7 days", xi_mo: "PDF · Month", xc_loan: "Loan / advance", xc_internet: "Internet service", xf_from: "Pay from account", xf_none: "Not from an account", xf_low: "Not enough balance in that account.",
   xp_recv_all: "Received (total)", xp_spent_all: "Spent (total)", xp_left: "Remaining", xp_mgr_total: "Total with managers",
@@ -5113,6 +5133,7 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   tgt_note: "এখন পর্যন্ত বেতন এই মাসের মোট অর্ডার থেকে হিসাব, জরিমানা, অগ্রিম ও পেট্রোল বাদে। বেতন হিসাবেও এই একই নিয়ম ব্যবহার হয়।",
   perf_hint: "প্রত্যেক কর্মীর দৈনিক Keeta পারফরমেন্স। কর্মীরা অ্যাপে গতকাল আর আজ পাশাপাশি দেখবে।", perf_yest: "গতকাল", perf_today: "আজ", perf_change: "অর্ডারের পরিবর্তন",
   exp_emps: "কর্মী", exp_emps_search: "কর্মীর নাম খুঁজুন…", exp_emps_all: "দেখানো সবাইকে বাছুন", exp_emps_none: "মুছুন", xi_emps: "কর্মী",
+  gc_title: "গ্রুপ চ্যাট", gc_send: "পাঠান", gc_none: "এখনো কোনো বার্তা নেই।", gc_block_t: "এই কর্মীকে গ্রুপ চ্যাটে ব্লক করুন", gc_unblock_t: "গ্রুপ চ্যাটে ব্লক করা আছে — চাপলে খুলবে", gc_blocked_ok: "{n} গ্রুপ চ্যাটে ব্লক হয়েছে", gc_unblocked: "{n} আবার গ্রুপ চ্যাট ব্যবহার করতে পারবে", gc_admin_hint: "সব সক্রিয় কর্মী এখানে কথা বলতে পারে। যেকোনো বার্তা মুছতে পারবেন। কাউকে ব্লক করতে কর্মীর নামের পাশে 💬 বাটন চাপুন।", gc_office: "ASB অফিস", gc_office_ph: "অফিস হিসেবে লিখুন…",
   xp_hint: "মূল অ্যাকাউন্ট → ম্যানেজারদের অ্যাকাউন্ট। সবাই সব দেখতে পারবে; ম্যানেজার নিজের অ্যাকাউন্টে খরচ লিখবে।", xp_noacct: "আপনার এখনো কোনো অ্যাকাউন্ট নেই — সুপার এডমিনকে বলুন অ্যাকাউন্ট খুলে দিতে।", xp_all: "সব অ্যাকাউন্ট", xp_in: "প্রাপ্ত", xp_out: "খরচ / পাঠানো", xp_bal: "ব্যালেন্স", xp_acct: "অ্যাকাউন্ট", xp_detail: "বিবরণ", xp_rcpt: "রসিদ", xp_rcpt_keep: "খালি রাখলে আগের রসিদ থাকবে", xp_rcpt_err: "রসিদের ছবি আপলোড হয়নি। আবার চেষ্টা করুন।", xp_cat: "ক্যাটাগরি", xa_main: "মূল অ্যাকাউন্ট", xa_main_h: "কোম্পানি (মূল)", xa_add: "অ্যাকাউন্ট যোগ", xa_who: "ম্যানেজার / এডমিন", xa_name: "অ্যাকাউন্টের নাম", xa_name_ph: "যেমন: রিয়াদ শাখা", xa_none: "সব এডমিনের অ্যাকাউন্ট আছে।", xa_first: "আগে একটি ম্যানেজার অ্যাকাউন্ট যোগ করুন।", xk_fund: "মূল অ্যাকাউন্টে টাকা জমা", xk_fund_b: "টাকা জমা", xk_send: "পাঠানো হয়েছে", xk_send_b: "টাকা পাঠান", xk_recv: "মূল অ্যাকাউন্ট থেকে প্রাপ্ত", xk_to: "কাকে পাঠাবেন", xc_fuel: "পেট্রোল", xc_repair: "মেরামত", xc_office: "অফিস", xc_food: "খাবার", xc_phone: "ফোন / ইন্টারনেট", xc_rent: "ভাড়া", xc_other: "অন্যান্য", xc_send: "ম্যানেজারদের পাঠানো", xi_btn: "Invoice PDF", xi_title: "খরচের ইনভয়েস", xi_acct: "অ্যাকাউন্ট", xi_holder: "দায়িত্বে", xi_period: "মাস", xi_gen: "তারিখ", xi_open: "শুরুর ব্যালেন্স", xi_in: "প্রাপ্ত", xi_out: "খরচ", xi_close: "শেষ ব্যালেন্স", xi_recv_h: "প্রাপ্ত টাকা", xi_exp_h: "খরচের তালিকা", xi_cat_h: "ক্যাটাগরি অনুযায়ী", xi_sign1: "প্রস্তুতকারী (ম্যানেজার)", xi_sign2: "অনুমোদনকারী", xi_rc: "রসিদ",
   xi_wk: "PDF · ৭ দিন", xi_mo: "PDF · মাস", xc_loan: "ঋণ / অগ্রিম", xc_internet: "ইন্টারনেট সার্ভিস", xf_from: "কোন অ্যাকাউন্ট থেকে দিচ্ছেন", xf_none: "অ্যাকাউন্ট থেকে নয়", xf_low: "ওই অ্যাকাউন্টে যথেষ্ট ব্যালেন্স নেই।",
   xp_recv_all: "মোট প্রাপ্ত", xp_spent_all: "মোট খরচ", xp_left: "অবশিষ্ট", xp_mgr_total: "ম্যানেজারদের কাছে মোট অবশিষ্ট",
@@ -5161,6 +5182,7 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   tgt_note: "الراتب حتى الآن من إجمالي طلبات الشهر بدون المخالفات والسلف والوقود. الرواتب تستخدم نفس الإعدادات.",
   perf_hint: "الأداء اليومي لكل سائق. يرى السائق أمس واليوم جنباً إلى جنب في تطبيقه.", perf_yest: "أمس", perf_today: "اليوم", perf_change: "تغير الطلبات",
   exp_emps: "الموظفون", exp_emps_search: "ابحث عن موظف…", exp_emps_all: "تحديد كل المعروض", exp_emps_none: "مسح", xi_emps: "الموظفون",
+  gc_title: "المحادثة الجماعية", gc_send: "إرسال", gc_none: "لا توجد رسائل بعد.", gc_block_t: "حظر هذا الموظف من المحادثة الجماعية", gc_unblock_t: "محظور من المحادثة — اضغط للسماح", gc_blocked_ok: "تم حظر {n} من المحادثة الجماعية", gc_unblocked: "يمكن لـ {n} استخدام المحادثة الجماعية", gc_admin_hint: "يمكن لجميع الموظفين النشطين المحادثة هنا. يمكنك حذف أي رسالة. لحظر شخص اضغط زر 💬 بجانب اسمه.", gc_office: "مكتب ASB", gc_office_ph: "اكتب كمكتب…",
   xp_hint: "الحساب الرئيسي ← حسابات المديرين. الجميع يرى كل شيء؛ ويسجّل المدير مصاريفه في حسابه.", xp_noacct: "ليس لديك حساب بعد — اطلب من المشرف العام إضافته.", xp_all: "كل الحسابات", xp_in: "المستلم", xp_out: "المصروف / المرسل", xp_bal: "الرصيد", xp_acct: "الحساب", xp_detail: "التفاصيل", xp_rcpt: "الإيصال", xp_rcpt_keep: "اتركه فارغاً للإبقاء على الإيصال الحالي", xp_rcpt_err: "تعذّر رفع صورة الإيصال. حاول مرة أخرى.", xp_cat: "الفئة", xa_main: "الحساب الرئيسي", xa_main_h: "الشركة (الرئيسي)", xa_add: "إضافة حساب", xa_who: "المدير / المشرف", xa_name: "اسم الحساب", xa_name_ph: "مثال: فرع الرياض", xa_none: "كل المشرفين لديهم حساب.", xa_first: "أضف حساب مدير أولاً.", xk_fund: "إيداع في الحساب الرئيسي", xk_fund_b: "إيداع", xk_send: "أُرسل إلى", xk_send_b: "إرسال مبلغ", xk_recv: "مستلم من الحساب الرئيسي", xk_to: "إرسال إلى", xc_fuel: "وقود", xc_repair: "صيانة", xc_office: "مكتب", xc_food: "طعام", xc_phone: "هاتف / إنترنت", xc_rent: "إيجار", xc_other: "أخرى", xc_send: "مرسل للمديرين", xi_btn: "Invoice PDF", xi_title: "فاتورة المصاريف", xi_acct: "الحساب", xi_holder: "المسؤول", xi_period: "الشهر", xi_gen: "التاريخ", xi_open: "الرصيد الافتتاحي", xi_in: "المستلم", xi_out: "المصروف", xi_close: "الرصيد الختامي", xi_recv_h: "المبالغ المستلمة", xi_exp_h: "المصاريف", xi_cat_h: "حسب الفئة", xi_sign1: "أعدّه (المدير)", xi_sign2: "اعتمده", xi_rc: "الإيصالات",
   xi_wk: "PDF · 7 أيام", xi_mo: "PDF · الشهر", xc_loan: "سلفة / قرض", xc_internet: "خدمة الإنترنت", xf_from: "الدفع من حساب", xf_none: "ليس من حساب", xf_low: "رصيد ذلك الحساب غير كافٍ.",
   xp_recv_all: "إجمالي المستلم", xp_spent_all: "إجمالي المصروف", xp_left: "المتبقي", xp_mgr_total: "إجمالي المتبقي لدى المديرين",
@@ -5397,6 +5419,7 @@ async function startAdmin(session){
   db.collection("orddetail").onSnapshot(s => { state.ordd = docsMap(s); soon(); }, console.warn);
   db.doc("config/month").onSnapshot(s => { state.curMonth = (s.exists && s.data().cur) || ""; soon(); }, console.warn);
   db.collection("monthly").onSnapshot(s => { state.monthly = docsMap(s); soon(); }, console.warn);
+  db.collection("gmsg").onSnapshot(s => { state.gmsg = docsMap(s); const l = $("#gcAdmList"); if (l) { const atEnd = l.scrollHeight - l.scrollTop - l.clientHeight < 60; l.innerHTML = gcList(); if (atEnd) l.scrollTop = l.scrollHeight; } }, console.warn);
   db.collection("daily").onSnapshot(s => { state.dailyAll = docsMap(s); soon(); }, console.warn);
   db.collection("totals").onSnapshot(s => { state.totals = docsMap(s); soon(); }, console.warn);
   db.collection("fuel").onSnapshot(s => { state.fuel = docsMap(s); soon(); }, console.warn);
