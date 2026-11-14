@@ -39,6 +39,12 @@ html[lang=bn] .alog *,html[lang=ar] .alog *{letter-spacing:0!important;text-tran
 html[lang=bn] .alog-btn{font-size:15px}
 body:has(.alog) .scrollfab{display:none!important}
 @media (prefers-reduced-motion:reduce){.alog-lg,.alog-lg .rg{animation:none}}
+.emplist{max-height:190px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--card, #fff);padding:4px;margin-top:6px}
+.emprow{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-weight:500}
+.emprow:hover{background:rgba(110,80,220,.08)}.emprow[hidden]{display:none}
+.emprow input{width:20px;height:20px;flex:none}
+.emptools{display:flex;gap:8px;margin-top:6px}.empcnt{color:var(--brand,#5b3fd1)}
+.xemp{font-size:12.5px;color:var(--brand,#5b3fd1);margin-top:2px;font-weight:600}
 </style>
 </head><body>
 <title>ASB Admin Panel</title>
@@ -2572,11 +2578,13 @@ function xStatR(acct, from, to){
   const inn = xSum(cur, x => xSgn(x) > 0), out = xSum(cur, x => xSgn(x) < 0), open = r2(before.reduce((s, x) => s + xSgn(x) * (+x.amount || 0), 0));
   return { open, inn, out, close: r2(open + inn - out), list: cur };
 }
+const xEmps = x => (x.empN && x.empN.length ? x.empN : (x.emps || []).map(i => state.emp[i]?.fullName).filter(Boolean));
 function xDetail(x){
   if (x.kind === "FUND") return `<b>${t("xk_fund")}</b>${x.note ? `<div class="sub">${esc(x.note)}</div>` : ""}`;
   if (x.kind === "SEND") return `<b>➡️ ${t("xk_send")} ${esc(xAName(x.to))}</b>${x.note ? `<div class="sub">${esc(x.note)}</div>` : ""}`;
   if (x.kind === "RECV") return `<b>⬅️ ${t("xk_recv")}</b>${x.note ? `<div class="sub">${esc(x.note)}</div>` : ""}`;
-  return `<b>${esc(x.place || "—")}</b><div class="sub">${esc(xCat(x.cat))}${x.note ? " · " + esc(x.note) : ""}</div>`;
+  const en = xEmps(x);
+  return `<b>${esc(x.place || "—")}</b><div class="sub">${esc(xCat(x.cat))}${x.note ? " · " + esc(x.note) : ""}</div>${en.length ? `<div class="xemp">👥 ${en.slice(0, 3).map(esc).join(", ")}${en.length > 3 ? ` +${en.length - 3}` : ""}</div>` : ""}`;
 }
 function vExpenses(){
   const xm = state.expMonth || "", sel = state.xAcct || "", accts = xAccts(), sup = xIsSuper(), mine = xMine();
@@ -2589,7 +2597,7 @@ function vExpenses(){
       <div class="xc-b ${all.close < 0 ? "neg" : ""}">${fmt(all.close)} <small>${t("sar")}</small></div>
       <div class="xc-s"><span class="pos">↓ ${fmt(mm.inn)}</span><span class="neg">↑ ${fmt(mm.out)}</span></div>
       <div class="xc-a"><button class="btn ghost sm" data-act="x-pdf" data-id="${esc(a.id)}" data-p="w">📄 ${t("xi_wk")}</button><button class="btn ghost sm" data-act="x-pdf" data-id="${esc(a.id)}" data-p="m">📄 ${t("xi_mo")}</button>${sup && !a.main && !a.auto && !used ? `<button class="btn ghost sm danger-t" data-act="x-acct-del" data-id="${esc(a.id)}" data-needs-write>${t("delete")}</button>` : ""}</div></div>`; }).join("");
-  let list = xTx().filter(x => (!xm || mo(x) === xm) && (!sel || x.acct === sel) && (!q || [x.place, x.note, xAName(x.acct), xAName(x.to)].some(v => String(v || "").toLowerCase().includes(q))));
+  let list = xTx().filter(x => (!xm || mo(x) === xm) && (!sel || x.acct === sel) && (!q || [x.place, x.note, xAName(x.acct), xAName(x.to), xEmps(x).join(" ")].some(v => String(v || "").toLowerCase().includes(q))));
   if (!sel) list = list.filter(x => x.kind !== "RECV");   /* "all": a transfer is shown once (on the main side) */
   list.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || (b.createdAt || 0) - (a.createdAt || 0));
   let inn, out, bal;
@@ -2660,6 +2668,10 @@ function expDialog(id){
       <label class="f">${t("amount")} *<input class="input num" name="amount" type="number" min="0.01" step="0.01" value="${x?.amount ?? ""}" required></label>
       <label class="f full">${t("xp_cat")} *<select class="input" name="cat">${XCATS.map(k => `<option value="${k}" ${(x?.cat || "other") === k ? "selected" : ""}>${esc(xCat(k))}</option>`).join("")}</select></label>
       <label class="f full">${t("exp_place")} *<input class="input" name="place" value="${esc(x?.place || "")}" placeholder="${t("exp_place_ph")}" required></label>
+      <div class="f full"><span>👥 ${t("exp_emps")} <span class="opt">· ${t("optional")}</span> <b id="empCnt" class="empcnt"></b></span>
+        <input class="input" id="empQ" type="search" placeholder="${t("exp_emps_search")}" autocomplete="off">
+        <div class="emplist" id="empList">${activeEmps().map(([id, e]) => `<label class="emprow" data-q="${esc((e.fullName + " " + (e.card || "") + " " + (e.plate || "")).toLowerCase())}"><input type="checkbox" name="empck" value="${esc(id)}" ${(x?.emps || []).includes(id) ? "checked" : ""}><span>${esc(e.fullName)}${e.card ? ` <small class="sub">· ${esc(e.card)}</small>` : ""}</span></label>`).join("")}</div>
+        <div class="emptools"><button type="button" class="btn ghost sm" id="empAll">${t("exp_emps_all")}</button><button type="button" class="btn ghost sm" id="empNone">${t("exp_emps_none")}</button></div></div>
       <label class="f full">${t("reason")} <span class="opt">· ${t("optional")}</span><textarea class="input" name="note" rows="2" placeholder="${t("exp_reason_ph")}">${esc(x?.note || "")}</textarea></label>
       <label class="f full">🧾 ${t("xp_rcpt")} <span class="opt">· ${t("optional")}</span><input class="input" name="receipt" type="file" accept="image/*">${x?.receipt?.url ? `<span class="sub">${t("xp_rcpt_keep")}</span>` : ""}</label>`,
     onSubmit: async (fd, form) => {
@@ -2669,30 +2681,43 @@ function expDialog(id){
           const { error } = await sb.storage.from("photos").upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" }); if (error) throw error;
           if (receipt?.path) sb.storage.from("photos").remove([receipt.path]).catch(() => {});
           receipt = { url: sb.storage.from("photos").getPublicUrl(path).data.publicUrl, path }; } catch (e) { console.error(e); fail(t("xp_rcpt_err")); } }
-      const rec = { kind: "SPEND", acct: fd.acct, amount, date: fd.date, cat: fd.cat, place: fd.place.trim(), note: (fd.note || "").trim(), receipt, by: x?.by || xMe(), updatedAt: Date.now() };
+      const emps = [...new Set(new FormData(form).getAll("empck"))], empN = emps.map(i => state.emp[i]?.fullName).filter(Boolean);
+      const rec = { kind: "SPEND", acct: fd.acct, amount, date: fd.date, cat: fd.cat, place: fd.place.trim(), note: (fd.note || "").trim(), emps, empN, receipt, by: x?.by || xMe(), updatedAt: Date.now() };
       await db.doc("ctx/" + (id || "e" + uid())).set({ ...(x ?? {}), ...rec, createdAt: x?.createdAt || Date.now() });
       toast(t("empSaved")); } });
+  const cnt = () => { const n = dlg.querySelectorAll('#empList input:checked').length; const c = $("#empCnt"); if (c) c.textContent = n ? `(${n})` : ""; };
+  const q = $("#empQ"); if (q) q.oninput = () => { const v = q.value.trim().toLowerCase(); dlg.querySelectorAll("#empList .emprow").forEach(r => { r.hidden = !!v && !r.dataset.q.includes(v); }); };
+  const L = $("#empList"); if (L) L.onchange = cnt;
+  const setAll = on => { dlg.querySelectorAll("#empList .emprow").forEach(r => { if (!r.hidden) r.querySelector("input").checked = on; }); cnt(); };
+  const ba = $("#empAll"), bn = $("#empNone"); if (ba) ba.onclick = () => setAll(true); if (bn) bn.onclick = () => setAll(false);
+  cnt();
 }
 async function xInvoice(acctId, per){
   const J = window.jspdf?.jsPDF; if (!J || !downloads) { toast(t("pdf_na")); return; }
   const a = xAcct(acctId); if (!a) return;
   const wk = per === "w", to = todayKey(), from = wk ? new Date(Date.parse(to + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10) : per + "-01", end = wk ? to : per + "-31", m = wk ? to : per, rtl = lang === "ar";
   const st = xStatR(acctId, from, end), perLbl = wk ? dmy(from) + " – " + dmy(to) : monthLabel(per), W = 1240, H = 1754, M = 80, R = W - M, FONT = '"Noto Sans Bengali","Noto Sans Arabic","Segoe UI",Roboto,Arial,sans-serif';
+  const logo = await (async () => { try { const rs = await fetch("logo.png"); return rs.ok ? await createImageBitmap(await rs.blob()) : null; } catch { return null; } })();
   const pages = []; let c, g, y;
-  const newPage = () => { c = document.createElement("canvas"); c.width = W; c.height = H; g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, W, H); g.fillStyle = "#0b3b60"; g.fillRect(0, 0, W, 16); pages.push(c); y = M + 10; };
+  const newPage = () => { c = document.createElement("canvas"); c.width = W; c.height = H; g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+    if (logo) { g.globalAlpha = 0.05; g.drawImage(logo, (W - 760) / 2, (H - 760) / 2, 760, 760); g.globalAlpha = 1; }
+    const gr = g.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, "#0b3b60"); gr.addColorStop(1, "#1f6fb2"); g.fillStyle = gr; g.fillRect(0, 0, W, 18); g.fillStyle = "#f0a81a"; g.fillRect(0, 18, W, 5); pages.push(c); y = M + 10; };
   const txt = (s, x, yy, o = {}) => { g.font = `${o.w || 400} ${o.sz || 24}px ${FONT}`; g.fillStyle = o.c || "#111"; let al = o.al || "left"; if (rtl && !o.nm) { x = W - x; al = al === "right" ? "left" : "right"; } g.direction = rtl ? "rtl" : "ltr"; g.textAlign = al; g.textBaseline = "alphabetic"; g.fillText(String(s ?? ""), x, yy); };
   const wrap = (s, maxW, sz, w, maxL) => { g.font = `${w || 400} ${sz}px ${FONT}`; const out = []; let cur = ""; for (const ch of String(s ?? "")) { if (g.measureText(cur + ch).width > maxW && cur) { out.push(cur); cur = ch.trim() ? ch : ""; } else cur += ch; } if (cur) out.push(cur); if (out.length > maxL) { out.length = maxL; let l = out[maxL - 1]; while (l.length > 1 && g.measureText(l + "…").width > maxW) l = l.slice(0, -1); out[maxL - 1] = l + "…"; } return out.length ? out : [""]; };
   const ensure = need => { if (y + need > H - 110) newPage(); };
   const line = (yy, col = "#d8dee6") => { g.strokeStyle = col; g.lineWidth = 2; g.beginPath(); g.moveTo(M, yy); g.lineTo(R, yy); g.stroke(); };
-  const sec = (title) => { ensure(120); y += 52; txt(title, M, y, { sz: 30, w: 700, c: "#0b3b60" }); y += 14; line(y, "#0b3b60"); y += 8; };
+  const sec = (title) => { ensure(120); y += 52; g.fillStyle = "#f0a81a"; g.fillRect(rtl ? R - 8 : M, y - 28, 8, 36); txt(title, M + 20, y, { sz: 30, w: 700, c: "#0b3b60" }); y += 14; line(y, "#0b3b60"); y += 8; };
   const ins = st.list.filter(x => xSgn(x) > 0).sort((p, q2) => String(p.date).localeCompare(String(q2.date)) || (p.createdAt || 0) - (q2.createdAt || 0));
   const outs = st.list.filter(x => xSgn(x) < 0).sort((p, q2) => String(p.date).localeCompare(String(q2.date)) || (p.createdAt || 0) - (q2.createdAt || 0));
   newPage();
-  txt("ASB LOGISTICS Services", M, y + 30, { sz: 44, w: 800, c: "#0b3b60" });
-  txt("ABDULRAHMAN SAAD ALBAQAMI Company For Logistics", M, y + 64, { sz: 21, c: "#667" });
-  txt(t("xi_title"), R, y + 30, { sz: 34, w: 800, al: "right" });
-  txt(`EXP-${from.replace(/-/g, "")}-${String(a.main ? "MAIN" : a.id).slice(-4).toUpperCase()}`, R, y + 64, { sz: 22, c: "#667", al: "right" });
-  y += 100; line(y); y += 40;
+  const LS = 112, hx = logo ? M + LS + 22 : M;
+  if (logo) g.drawImage(logo, rtl ? W - M - LS : M, y - 6, LS, LS);
+  txt("ASB LOGISTICS Services", hx, y + 40, { sz: 42, w: 800, c: "#0b3b60" });
+  txt("ABDULRAHMAN SAAD ALBAQAMI Company For Logistics", hx, y + 76, { sz: 20, c: "#667" });
+  g.fillStyle = "#0b3b60"; g.beginPath(); g.roundRect(rtl ? M : R - 330, y - 4, 330, 52, 12); g.fill();
+  txt(t("xi_title"), rtl ? M + 165 : R - 165, y + 33, { sz: 28, w: 800, al: "center", c: "#fff", nm: 1 });
+  txt(`EXP-${from.replace(/-/g, "")}-${String(a.main ? "MAIN" : a.id).slice(-4).toUpperCase()}`, R, y + 82, { sz: 22, c: "#667", al: "right" });
+  y += 130; line(y, "#f0a81a"); g.fillStyle = "#f0a81a"; g.fillRect(M, y - 1, R - M, 3); y += 40;
   const kv = (k, v, x0, yy) => { txt(k, x0, yy, { sz: 21, c: "#667" }); txt(fit(v, 380), x0 + 200, yy, { sz: 24, w: 600 }); };
   const fit = (s, mw) => wrap(s, mw, 24, 600, 1)[0];
   kv(t("xi_acct"), xAName(acctId), M, y); kv(t("xi_period"), perLbl, 640, y); y += 38;
@@ -2702,17 +2727,19 @@ async function xInvoice(acctId, per){
   y += 124;
   sec(t("xi_recv_h"));
   if (!ins.length) { y += 36; txt("—", M, y, { c: "#889" }); y += 10; }
-  for (const x of ins) { ensure(50); y += 42; txt(dmy(x.date), M, y, { sz: 22, c: "#556" }); txt(x.kind === "FUND" ? t("xk_fund") : t("xk_recv"), M + 190, y, { sz: 23 }); txt("+" + fmt(x.amount), R, y, { sz: 24, w: 700, al: "right", c: "#0a7a4b" }); y += 8; line(y, "#eef1f5"); }
+  ins.forEach((x, zi) => { ensure(50); if (zi % 2) { g.fillStyle = "#f6f9fc"; g.fillRect(M - 12, y + 6, R - M + 24, 50); } y += 42; txt(dmy(x.date), M, y, { sz: 22, c: "#556" }); txt(x.kind === "FUND" ? t("xk_fund") : t("xk_recv"), M + 190, y, { sz: 23 }); txt("+" + fmt(x.amount), R, y, { sz: 24, w: 700, al: "right", c: "#0a7a4b" }); y += 8; line(y, "#eef1f5"); });
   y += 6; ensure(60); y += 36; txt(t("xi_in"), M + 190, y, { sz: 23, w: 700 }); txt(fmt(st.inn), R, y, { sz: 26, w: 800, al: "right", c: "#0a7a4b" });
   sec(t("xi_exp_h"));
+  if (outs.length) { y += 10; g.fillStyle = "#e6eef7"; g.beginPath(); g.roundRect(M - 12, y, R - M + 24, 46, 10); g.fill(); txt("#", M, y + 32, { sz: 20, w: 700, c: "#0b3b60" }); txt(t("date"), M + 46, y + 32, { sz: 20, w: 700, c: "#0b3b60" }); txt(t("xp_detail"), M + 190, y + 32, { sz: 20, w: 700, c: "#0b3b60" }); txt(t("amount"), R, y + 32, { sz: 20, w: 700, al: "right", c: "#0b3b60" }); y += 46; }
   if (!outs.length) { y += 36; txt("—", M, y, { c: "#889" }); y += 10; }
   const rcpts = [];
   outs.forEach((x, i) => {
     const isS = x.kind === "SEND", main = isS ? `${t("xk_send")} ${xAName(x.to)}` : ((x.cat === "loan" || x.cat === "internet") ? `${t("xc_" + x.cat)} — ${x.place || ""}` : (x.place || "")), sub = isS ? (x.note || "") : `${t("xc_" + (XCAT_I[x.cat] ? x.cat : "other"))}${x.note ? " · " + x.note : ""}`;
-    const l1 = wrap(main, 560, 23, 600, 2), l2 = wrap(sub, 560, 19, 400, 1), h = 20 + l1.length * 30 + (sub ? 26 : 0);
-    ensure(h + 14); const y0 = y + 14;
+    const l1 = wrap(main, 560, 23, 600, 2), l2 = wrap(sub, 560, 19, 400, 1), en = xEmps(x), l3 = en.length ? wrap("👥 " + en.join(", "), 560, 19, 600, 3) : [], h = 20 + l1.length * 30 + (sub ? 26 : 0) + l3.length * 25;
+    ensure(h + 14); const y0 = y + 14; if (i % 2) { g.fillStyle = "#f6f9fc"; g.fillRect(M - 12, y0 - 6, R - M + 24, h + 4); }
     txt(String(i + 1), M, y0 + 24, { sz: 20, c: "#889" }); txt(dmy(x.date), M + 46, y0 + 24, { sz: 21, c: "#556" });
     l1.forEach((s, k) => txt(s, M + 190, y0 + 24 + k * 30, { sz: 23, w: 600 })); if (sub) txt(l2[0], M + 190, y0 + 24 + l1.length * 30 - 2, { sz: 19, c: "#778" });
+    l3.forEach((s3, k3) => txt(s3, M + 190, y0 + 24 + l1.length * 30 + (sub ? 24 : -2) + k3 * 25, { sz: 19, w: 600, c: "#1f6fb2" }));
     if (x.receipt?.url) { rcpts.push({ n: i + 1, x }); txt("🧾", M + 790, y0 + 24, { sz: 22 }); }
     txt("−" + fmt(x.amount), R, y0 + 24, { sz: 24, w: 700, al: "right", c: "#c2312f" });
     y = y0 + h - 6; line(y, "#eef1f5");
@@ -5037,6 +5064,7 @@ Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · em
   tgt_rank_rule: "380–499 × 3.5 SAR · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C), plus rating price for each extra order.", tgt_unrank_rule: "380–499 orders × 4 SAR · 500+ = 2,500 · 600+ = 3,500, plus A/B/C price for each order above 500 or 600. Fuel allowance is paid separately.",
   tgt_note: "Pay so far uses this month's total orders and excludes fines, advances and fuel. Payroll uses these same settings.",
   perf_hint: "Daily Keeta performance for each driver. Drivers see yesterday and today side by side in their app.", perf_yest: "Yesterday", perf_today: "Today", perf_change: "Orders change",
+  exp_emps: "Employees", exp_emps_search: "Search employee…", exp_emps_all: "Select all shown", exp_emps_none: "Clear", xi_emps: "Employees",
   xp_hint: "Main account → manager accounts. Everyone can see everything; managers record spending on their own account.", xp_noacct: "You don't have an account yet — ask the super admin to add one for you.", xp_all: "All accounts", xp_in: "Received", xp_out: "Spent / sent", xp_bal: "Balance", xp_acct: "Account", xp_detail: "Details", xp_rcpt: "Receipt", xp_rcpt_keep: "Leave empty to keep the current receipt", xp_rcpt_err: "Couldn't upload the receipt photo. Try again.", xp_cat: "Category", xa_main: "Main account", xa_main_h: "Company (main)", xa_add: "Add account", xa_who: "Manager / admin", xa_name: "Account name", xa_name_ph: "e.g. Riyadh branch", xa_none: "Every admin already has an account.", xa_first: "Add a manager account first.", xk_fund: "Money added to main account", xk_fund_b: "Add money", xk_send: "Sent to", xk_send_b: "Send money", xk_recv: "Received from main account", xk_to: "Send to", xc_fuel: "Petrol", xc_repair: "Repair / maintenance", xc_office: "Office", xc_food: "Food", xc_phone: "Phone / internet", xc_rent: "Rent", xc_other: "Other", xc_send: "Sent to managers", xi_btn: "Invoice PDF", xi_title: "EXPENSE INVOICE", xi_acct: "Account", xi_holder: "Account holder", xi_period: "Month", xi_gen: "Date", xi_open: "Opening balance", xi_in: "Received", xi_out: "Spent", xi_close: "Closing balance", xi_recv_h: "Money received", xi_exp_h: "Expenses", xi_cat_h: "By category", xi_sign1: "Prepared by (manager)", xi_sign2: "Approved by", xi_rc: "Receipts",
   xi_wk: "PDF · 7 days", xi_mo: "PDF · Month", xc_loan: "Loan / advance", xc_internet: "Internet service", xf_from: "Pay from account", xf_none: "Not from an account", xf_low: "Not enough balance in that account.",
   xp_recv_all: "Received (total)", xp_spent_all: "Spent (total)", xp_left: "Remaining", xp_mgr_total: "Total with managers",
@@ -5084,6 +5112,7 @@ Object.assign(I18N.bn, { au_title: "এডমিন লগইন", au_sub: "ASB 
   tgt_rank_rule: "৩৮০–৪৯৯ × ৩.৫ রিয়াল · ৫০০+ = ৩,০০০ / ২,৫০০ / ২,০০০ · ৬০০+ = ৪,২৫০ / ৩,৮০০ / ৩,০০০ (A / B / C), সাথে প্রতি অতিরিক্ত অর্ডারে রেটিং মূল্য।", tgt_unrank_rule: "৩৮০–৪৯৯ অর্ডার × ৪ রিয়াল · ৫০০+ = ২,৫০০ · ৬০০+ = ৩,৫০০, সাথে ৫০০ বা ৬০০-এর বেশি প্রতি অর্ডারে A/B/C মূল্য। জ্বালানি ভাতা আলাদা।",
   tgt_note: "এখন পর্যন্ত বেতন এই মাসের মোট অর্ডার থেকে হিসাব, জরিমানা, অগ্রিম ও পেট্রোল বাদে। বেতন হিসাবেও এই একই নিয়ম ব্যবহার হয়।",
   perf_hint: "প্রত্যেক কর্মীর দৈনিক Keeta পারফরমেন্স। কর্মীরা অ্যাপে গতকাল আর আজ পাশাপাশি দেখবে।", perf_yest: "গতকাল", perf_today: "আজ", perf_change: "অর্ডারের পরিবর্তন",
+  exp_emps: "কর্মী", exp_emps_search: "কর্মীর নাম খুঁজুন…", exp_emps_all: "দেখানো সবাইকে বাছুন", exp_emps_none: "মুছুন", xi_emps: "কর্মী",
   xp_hint: "মূল অ্যাকাউন্ট → ম্যানেজারদের অ্যাকাউন্ট। সবাই সব দেখতে পারবে; ম্যানেজার নিজের অ্যাকাউন্টে খরচ লিখবে।", xp_noacct: "আপনার এখনো কোনো অ্যাকাউন্ট নেই — সুপার এডমিনকে বলুন অ্যাকাউন্ট খুলে দিতে।", xp_all: "সব অ্যাকাউন্ট", xp_in: "প্রাপ্ত", xp_out: "খরচ / পাঠানো", xp_bal: "ব্যালেন্স", xp_acct: "অ্যাকাউন্ট", xp_detail: "বিবরণ", xp_rcpt: "রসিদ", xp_rcpt_keep: "খালি রাখলে আগের রসিদ থাকবে", xp_rcpt_err: "রসিদের ছবি আপলোড হয়নি। আবার চেষ্টা করুন।", xp_cat: "ক্যাটাগরি", xa_main: "মূল অ্যাকাউন্ট", xa_main_h: "কোম্পানি (মূল)", xa_add: "অ্যাকাউন্ট যোগ", xa_who: "ম্যানেজার / এডমিন", xa_name: "অ্যাকাউন্টের নাম", xa_name_ph: "যেমন: রিয়াদ শাখা", xa_none: "সব এডমিনের অ্যাকাউন্ট আছে।", xa_first: "আগে একটি ম্যানেজার অ্যাকাউন্ট যোগ করুন।", xk_fund: "মূল অ্যাকাউন্টে টাকা জমা", xk_fund_b: "টাকা জমা", xk_send: "পাঠানো হয়েছে", xk_send_b: "টাকা পাঠান", xk_recv: "মূল অ্যাকাউন্ট থেকে প্রাপ্ত", xk_to: "কাকে পাঠাবেন", xc_fuel: "পেট্রোল", xc_repair: "মেরামত", xc_office: "অফিস", xc_food: "খাবার", xc_phone: "ফোন / ইন্টারনেট", xc_rent: "ভাড়া", xc_other: "অন্যান্য", xc_send: "ম্যানেজারদের পাঠানো", xi_btn: "Invoice PDF", xi_title: "খরচের ইনভয়েস", xi_acct: "অ্যাকাউন্ট", xi_holder: "দায়িত্বে", xi_period: "মাস", xi_gen: "তারিখ", xi_open: "শুরুর ব্যালেন্স", xi_in: "প্রাপ্ত", xi_out: "খরচ", xi_close: "শেষ ব্যালেন্স", xi_recv_h: "প্রাপ্ত টাকা", xi_exp_h: "খরচের তালিকা", xi_cat_h: "ক্যাটাগরি অনুযায়ী", xi_sign1: "প্রস্তুতকারী (ম্যানেজার)", xi_sign2: "অনুমোদনকারী", xi_rc: "রসিদ",
   xi_wk: "PDF · ৭ দিন", xi_mo: "PDF · মাস", xc_loan: "ঋণ / অগ্রিম", xc_internet: "ইন্টারনেট সার্ভিস", xf_from: "কোন অ্যাকাউন্ট থেকে দিচ্ছেন", xf_none: "অ্যাকাউন্ট থেকে নয়", xf_low: "ওই অ্যাকাউন্টে যথেষ্ট ব্যালেন্স নেই।",
   xp_recv_all: "মোট প্রাপ্ত", xp_spent_all: "মোট খরচ", xp_left: "অবশিষ্ট", xp_mgr_total: "ম্যানেজারদের কাছে মোট অবশিষ্ট",
@@ -5131,6 +5160,7 @@ Object.assign(I18N.ar, { au_title: "دخول المشرف", au_sub: "ASB LOGISTI
   tgt_rank_rule: "380–499 × 3.5 ريال · 500+ = 3,000 / 2,500 / 2,000 · 600+ = 4,250 / 3,800 / 3,000 (A / B / C)، مع سعر التقييم لكل طلب إضافي.", tgt_unrank_rule: "380–499 طلب × 4 ريال · 500+ = 2,500 · 600+ = 3,500، مع سعر A/B/C لكل طلب فوق 500 أو 600. بدل الوقود منفصل.",
   tgt_note: "الراتب حتى الآن من إجمالي طلبات الشهر بدون المخالفات والسلف والوقود. الرواتب تستخدم نفس الإعدادات.",
   perf_hint: "الأداء اليومي لكل سائق. يرى السائق أمس واليوم جنباً إلى جنب في تطبيقه.", perf_yest: "أمس", perf_today: "اليوم", perf_change: "تغير الطلبات",
+  exp_emps: "الموظفون", exp_emps_search: "ابحث عن موظف…", exp_emps_all: "تحديد كل المعروض", exp_emps_none: "مسح", xi_emps: "الموظفون",
   xp_hint: "الحساب الرئيسي ← حسابات المديرين. الجميع يرى كل شيء؛ ويسجّل المدير مصاريفه في حسابه.", xp_noacct: "ليس لديك حساب بعد — اطلب من المشرف العام إضافته.", xp_all: "كل الحسابات", xp_in: "المستلم", xp_out: "المصروف / المرسل", xp_bal: "الرصيد", xp_acct: "الحساب", xp_detail: "التفاصيل", xp_rcpt: "الإيصال", xp_rcpt_keep: "اتركه فارغاً للإبقاء على الإيصال الحالي", xp_rcpt_err: "تعذّر رفع صورة الإيصال. حاول مرة أخرى.", xp_cat: "الفئة", xa_main: "الحساب الرئيسي", xa_main_h: "الشركة (الرئيسي)", xa_add: "إضافة حساب", xa_who: "المدير / المشرف", xa_name: "اسم الحساب", xa_name_ph: "مثال: فرع الرياض", xa_none: "كل المشرفين لديهم حساب.", xa_first: "أضف حساب مدير أولاً.", xk_fund: "إيداع في الحساب الرئيسي", xk_fund_b: "إيداع", xk_send: "أُرسل إلى", xk_send_b: "إرسال مبلغ", xk_recv: "مستلم من الحساب الرئيسي", xk_to: "إرسال إلى", xc_fuel: "وقود", xc_repair: "صيانة", xc_office: "مكتب", xc_food: "طعام", xc_phone: "هاتف / إنترنت", xc_rent: "إيجار", xc_other: "أخرى", xc_send: "مرسل للمديرين", xi_btn: "Invoice PDF", xi_title: "فاتورة المصاريف", xi_acct: "الحساب", xi_holder: "المسؤول", xi_period: "الشهر", xi_gen: "التاريخ", xi_open: "الرصيد الافتتاحي", xi_in: "المستلم", xi_out: "المصروف", xi_close: "الرصيد الختامي", xi_recv_h: "المبالغ المستلمة", xi_exp_h: "المصاريف", xi_cat_h: "حسب الفئة", xi_sign1: "أعدّه (المدير)", xi_sign2: "اعتمده", xi_rc: "الإيصالات",
   xi_wk: "PDF · 7 أيام", xi_mo: "PDF · الشهر", xc_loan: "سلفة / قرض", xc_internet: "خدمة الإنترنت", xf_from: "الدفع من حساب", xf_none: "ليس من حساب", xf_low: "رصيد ذلك الحساب غير كافٍ.",
   xp_recv_all: "إجمالي المستلم", xp_spent_all: "إجمالي المصروف", xp_left: "المتبقي", xp_mgr_total: "إجمالي المتبقي لدى المديرين",
