@@ -2739,10 +2739,11 @@ async function xPStmt(){
   const rcpts = [];
   outs.forEach((x, i) => {
     const main = x.place || "", sub = `${t("xc_" + (XCAT_I[x.cat] ? x.cat : "other"))}${x.note ? " · " + x.note : ""}`;
-    const l1 = wrap(main, 580, 23, 600, 3), l2 = wrap(sub, 600, 19, 400, 4), h2 = 20 + l1.length * 30 + l2.length * 25;
+    const l1 = wrap(main, 580, 23, 600, 3), l2 = wrap(sub, 600, 19, 400, 4), en = xEmps(x), l3 = en.length ? wrap("👥 " + en.join(", "), 560, 19, 600, 3) : [], h2 = 20 + l1.length * 30 + l2.length * 25 + l3.length * 25;
     ensure(h2 + 14); const y0 = y + 14; if (i % 2) { g.fillStyle = "#f6f9fc"; g.fillRect(M - 12, y0 - 6, R - M + 24, h2 + 4); }
     txt(String(i + 1), M, y0 + 24, { sz: 20, c: "#889" }); txt(dmy(x.date), M + 46, y0 + 24, { sz: 21, c: "#556" });
     l1.forEach((s2, k) => txt(s2, M + 190, y0 + 24 + k * 30, { sz: 23, w: 600 })); l2.forEach((s2, k) => txt(s2, M + 190, y0 + 24 + l1.length * 30 - 2 + k * 25, { sz: 19, c: "#778" }));
+    l3.forEach((s3, k) => txt(s3, M + 190, y0 + 24 + l1.length * 30 + l2.length * 25 - 2 + k * 25, { sz: 19, w: 600, c: "#1f6fb2" }));
     if (x.receipt?.url) { rcpts.push({ n: i + 1, x }); txt("✔ " + t("ps_attached"), M + 790, y0 + 24, { sz: 19, w: 600, c: "#0a7a4b" }); } else txt("—", M + 790, y0 + 24, { sz: 20, c: "#99a" });
     txt(fmt(x.amount), R, y0 + 24, { sz: 24, w: 700, al: "right" });
     y = y0 + h2 - 6; line(y, "#eef1f5");
