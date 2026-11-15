@@ -976,7 +976,8 @@ window.addEventListener("hashchange", () => { render(); window.scrollTo(0,0); })
 /* Avoid wiping a field the admin is typing in when live data arrives */
 let pendingRender = false;
 const editing = () => { const a = document.activeElement; return a && ($("#main").contains(a) || $("#emp").contains(a)) && /INPUT|SELECT|TEXTAREA/.test(a.tagName); };
-function soon(){ scheduleSync(); if (editing()) { pendingRender = true; return; } render(); }
+let soonT = 0;
+function soon(){ scheduleSync(); if (editing() || dlg.open) { pendingRender = true; return; } clearTimeout(soonT); soonT = setTimeout(() => { if (editing() || dlg.open) { pendingRender = true; return; } render(); }, 400); }   /* batch bursts of live updates into one redraw */
 document.addEventListener("focusout", () => setTimeout(() => { if (pendingRender && !editing()) { pendingRender = false; render(); } }, 0));
 
 /* ───────── shell ───────── */
@@ -1035,7 +1036,10 @@ function render(){ window.__fabT && window.__fabT();
   if (!state.ready) { main.innerHTML = `<div class="empty" style="padding-top:80px"><b>${t("loading")}</b></div>`; return; }
   state.canWrite = canEditView(view());
   const ro = state.canWrite ? "" : `<div class="note warn">${t("readOnly")}</div>`;
-  main.innerHTML = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, orddetail: vOrdd, dues: vDues, accidents: vAccidents, loans: vLoans, internet: vInternet, vehicles: vVehicles, fuel: vFuel, activity: vActivity, bin: vBinAll, bank: vBank, map: vMap, reports: vReports, profit: vProfit, expenses: vExpenses, payroll: vPayroll, app: vAppPreview, rules: vRules, telegram: vTelegram, admins: vAdmins, km: vKm, shift: vShift }[view()])();
+  const html = ro + ({ dashboard: vDashboard, employees: vEmployees, target: vTarget, perf: vPerf, operations: vOperations, orddetail: vOrdd, dues: vDues, accidents: vAccidents, loans: vLoans, internet: vInternet, vehicles: vVehicles, fuel: vFuel, activity: vActivity, bin: vBinAll, bank: vBank, map: vMap, reports: vReports, profit: vProfit, expenses: vExpenses, payroll: vPayroll, app: vAppPreview, rules: vRules, telegram: vTelegram, admins: vAdmins, km: vKm, shift: vShift }[view()])();
+  /* identical screen (e.g. a live update that changed nothing visible): leave the DOM alone, no flicker */
+  if (main.__h === html && main.__v === view() && main.__l === lang && !window.__forceRender) return;
+  main.__h = html; main.__v = view(); main.__l = lang; main.innerHTML = html;
   main.querySelectorAll("[data-needs-write]").forEach(el => { if (!state.canWrite) el.disabled = true; });
   if (!state.canWrite) main.querySelectorAll("input:not([id]),select:not([id]),textarea:not([id]),#rulesForm button,#rulesForm input,[data-roleof]").forEach(el => el.disabled = true);
   if (view() === "map") mountMap();
@@ -3649,6 +3653,8 @@ function vRules(){
 
 /* ───────── dialogs ───────── */
 const dlg = $("#dlg");
+dlg.addEventListener("close", () => { if (pendingRender) { pendingRender = false; setTimeout(render, 50); } });
+document.addEventListener("click", () => { const m = $("#main"); if (m) m.__h = null; }, true);   /* after any click, the next redraw is real */
 function openDialog({ title, body, submit, danger, onSubmit, footer }){
   dlg.innerHTML = `<form method="dialog" id="dlgForm" novalidate>
     <div class="dlg-h"><h3>${title}</h3><button type="button" class="x" data-close aria-label="${t("close")}">×</button></div>
