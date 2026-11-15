@@ -1039,6 +1039,7 @@ function render(){ window.__fabT && window.__fabT();
   main.querySelectorAll("[data-needs-write]").forEach(el => { if (!state.canWrite) el.disabled = true; });
   if (!state.canWrite) main.querySelectorAll("input:not([id]),select:not([id]),textarea:not([id]),#rulesForm button,#rulesForm input,[data-roleof]").forEach(el => el.disabled = true);
   if (view() === "map") mountMap();
+  try { injectExport(); } catch (e) { console.warn(e); }
 }
 
 /* ───────── derived ───────── */
@@ -3842,6 +3843,8 @@ document.addEventListener("click", async e => {
     }
 
     if (act === "emp-rank") { const e0 = state.emp[id] || {}, cur = ((e0.payType === "FLAT" ? e0.payTypePrev : e0.payType) || "TARGET") === "TARGET"; await db.doc("employees/" + id).update({ payType: cur ? "PER_ORDER" : "TARGET", updatedAt: Date.now() }); toast(t(cur ? "rk_set_off" : "rk_set_on", { n: state.emp[id]?.fullName ?? "" })); return; }
+    if (act === "xp-xlsx") { try { await xpExcel(b.dataset.v); } catch (e) { console.error(e); toast(xl("na")); } return; }
+    if (act === "xp-pdf") { try { await xpPdf(b.dataset.v); } catch (e) { console.error(e); toast(xl("na")); } return; }
     if (act === "tg-find") {
       const token = ($("#tgToken").value || "").trim(); if (!token) { toast(t("required")); return; }
       try {
@@ -5053,6 +5056,173 @@ downloads = {
     document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
   }
 };
+
+/* ───────── Export: Excel (all data) + PDF invoice (key figures) for the main pages ───────── */
+const XPL = {
+  en: { xlsx: "Excel", pdf: "PDF Invoice", na: "PDF/Excel library not loaded — check internet", nodata: "Nothing to export", no: "No", name: "Name", iqama: "Iqama", mobile: "Mobile", platform: "Platform", city: "City", plate: "Plate", status: "Status", paytype: "Pay type", card: "Card", vehicle: "Vehicle", bank: "Bank", acct: "Account name", iban: "IBAN", id: "ID",
+    total: "Total", orders: "Orders", grade: "Grade", base: "Base", extra: "Additional", due: "Dues", petrol: "Petrol", ded: "Deductions", net: "Net pay", draft: "DRAFT — not published", emp_t: "Employees summary", pay_t: "Payroll summary", dues_t: "Dues & fines — outstanding", loan_t: "Advances — outstanding", net_t: "Internet payments", fuel_t: "Petrol summary", veh_t: "Vehicles status", acc_t: "Accidents summary", tgt_t: "Orders ranking", bank_t: "Bank transfer list", exp_t: "Company expenses",
+    k_emp: "Employees", k_active: "Active", k_total: "Total amount", k_left: "Outstanding", k_monthly: "Monthly deduction", k_drivers: "Drivers", k_orders: "Total orders", k_net: "Total net", k_ded: "Total deductions", k_due: "Due now", k_soon: "Soon", k_monthly_net: "Monthly total", k_enrolled: "Enrolled", k_spent: "Spent", k_allow: "Allowance", k_veh: "Vehicles", k_issue: "Need attention", k_acc: "Accidents", k_pend: "Pending", k_fines: "Total fines",
+    date: "Date", reason: "Reason", type: "Type", amount: "Amount", remaining: "Remaining", monthly: "Monthly", last: "Last paid", next: "Next due", entries: "Entries", fault: "Fault %", driver: "Driver", cat: "Category", acctn: "Account", details: "Details", note: "Note", by: "By", month: "Month", generated: "Generated", page: "Page", sar: "SAR", open: "Open", cleared: "Cleared", waived: "Waived", ok: "OK", repair: "Repair", service: "Service", substitute: "Substitute", rank: "#", accidents: "Accidents", fuel_allow: "Allowance", spent: "Spent" },
+  bn: { xlsx: "Excel", pdf: "PDF ইনভয়েস", na: "PDF/Excel লাইব্রেরি লোড হয়নি — ইন্টারনেট দেখুন", nodata: "এক্সপোর্ট করার কিছু নেই", no: "নং", name: "নাম", iqama: "ইকামা", mobile: "মোবাইল", platform: "প্ল্যাটফর্ম", city: "শহর", plate: "প্লেট", status: "অবস্থা", paytype: "পে টাইপ", card: "কার্ড", vehicle: "গাড়ি", bank: "ব্যাংক", acct: "অ্যাকাউন্টের নাম", iban: "IBAN", id: "আইডি",
+    total: "মোট", orders: "অর্ডার", grade: "গ্রেড", base: "বেসিক", extra: "অতিরিক্ত", due: "বকেয়া", petrol: "পেট্রোল", ded: "কর্তন", net: "নিট বেতন", draft: "ড্রাফট — পাবলিশ হয়নি", emp_t: "কর্মী সারসংক্ষেপ", pay_t: "বেতন সারসংক্ষেপ", dues_t: "বকেয়া ও জরিমানা — বাকি", loan_t: "অগ্রিম — বাকি", net_t: "ইন্টারনেট পেমেন্ট", fuel_t: "পেট্রোল সারসংক্ষেপ", veh_t: "গাড়ির অবস্থা", acc_t: "দুর্ঘটনা সারসংক্ষেপ", tgt_t: "অর্ডার র‍্যাংকিং", bank_t: "ব্যাংক ট্রান্সফার তালিকা", exp_t: "কোম্পানির খরচ",
+    k_emp: "কর্মী", k_active: "সক্রিয়", k_total: "মোট টাকা", k_left: "বাকি", k_monthly: "মাসিক কর্তন", k_drivers: "কর্মী", k_orders: "মোট অর্ডার", k_net: "মোট নিট", k_ded: "মোট কর্তন", k_due: "এখন বকেয়া", k_soon: "শীঘ্রই", k_monthly_net: "মাসিক মোট", k_enrolled: "তালিকাভুক্ত", k_spent: "খরচ", k_allow: "ভাতা", k_veh: "গাড়ি", k_issue: "নজর দরকার", k_acc: "দুর্ঘটনা", k_pend: "অপেক্ষায়", k_fines: "মোট জরিমানা",
+    date: "তারিখ", reason: "কারণ", type: "ধরন", amount: "টাকা", remaining: "বাকি", monthly: "মাসিক", last: "শেষ পেমেন্ট", next: "পরের পেমেন্ট", entries: "এন্ট্রি", fault: "দোষ %", driver: "কর্মী", cat: "ক্যাটাগরি", acctn: "অ্যাকাউন্ট", details: "বিবরণ", note: "নোট", by: "যে করেছে", month: "মাস", generated: "তৈরির সময়", page: "পাতা", sar: "রিয়াল", open: "চলছে", cleared: "শোধ", waived: "মওকুফ", ok: "ঠিক", repair: "মেরামত", service: "সার্ভিস", substitute: "বিকল্প", rank: "#", accidents: "দুর্ঘটনা", fuel_allow: "ভাতা", spent: "খরচ" },
+  ar: { xlsx: "Excel", pdf: "فاتورة PDF", na: "مكتبة PDF/Excel غير محمّلة — تحقق من الإنترنت", nodata: "لا يوجد ما يُصدَّر", no: "م", name: "الاسم", iqama: "الإقامة", mobile: "الجوال", platform: "المنصة", city: "المدينة", plate: "اللوحة", status: "الحالة", paytype: "نوع الأجر", card: "البطاقة", vehicle: "المركبة", bank: "البنك", acct: "اسم الحساب", iban: "IBAN", id: "المعرّف",
+    total: "الإجمالي", orders: "الطلبات", grade: "التقييم", base: "الأساسي", extra: "إضافي", due: "المستحقات", petrol: "البنزين", ded: "الخصومات", net: "صافي الراتب", draft: "مسودة — غير منشور", emp_t: "ملخص الموظفين", pay_t: "ملخص الرواتب", dues_t: "المستحقات والمخالفات — المتبقي", loan_t: "السلف — المتبقي", net_t: "مدفوعات الإنترنت", fuel_t: "ملخص البنزين", veh_t: "حالة المركبات", acc_t: "ملخص الحوادث", tgt_t: "ترتيب الطلبات", bank_t: "قائمة التحويلات البنكية", exp_t: "مصروفات الشركة",
+    k_emp: "الموظفون", k_active: "نشط", k_total: "المبلغ الكلي", k_left: "المتبقي", k_monthly: "الخصم الشهري", k_drivers: "السائقون", k_orders: "إجمالي الطلبات", k_net: "إجمالي الصافي", k_ded: "إجمالي الخصومات", k_due: "مستحق الآن", k_soon: "قريباً", k_monthly_net: "الإجمالي الشهري", k_enrolled: "مسجّلون", k_spent: "المصروف", k_allow: "البدل", k_veh: "المركبات", k_issue: "تحتاج متابعة", k_acc: "الحوادث", k_pend: "قيد الانتظار", k_fines: "إجمالي الغرامات",
+    date: "التاريخ", reason: "السبب", type: "النوع", amount: "المبلغ", remaining: "المتبقي", monthly: "شهرياً", last: "آخر دفعة", next: "الدفعة القادمة", entries: "القيود", fault: "الخطأ %", driver: "السائق", cat: "الفئة", acctn: "الحساب", details: "التفاصيل", note: "ملاحظة", by: "بواسطة", month: "الشهر", generated: "تاريخ الإصدار", page: "صفحة", sar: "ريال", open: "مفتوح", cleared: "مسدد", waived: "معفى", ok: "سليمة", repair: "إصلاح", service: "صيانة", substitute: "بديلة", rank: "#", accidents: "الحوادث", fuel_allow: "البدل", spent: "المصروف" },
+};
+const xl = k => (XPL[lang] || XPL.en)[k] ?? XPL.en[k] ?? k;
+const xn = v => (+v || 0);
+const xr2 = v => Math.round(xn(v) * 100) / 100;
+function xpSets(v){
+  const E = state.emp || {}, en = id => E[id]?.fullName || id || "—", live = ([, e]) => e.status !== "DELETED";
+  if (v === "employees") {
+    const L = Object.entries(E).filter(live).sort((a, b) => String(a[1].fullName).localeCompare(String(b[1].fullName))), act = L.filter(([, e]) => e.status === "ACTIVE");
+    return { file: "employees", title: xl("emp_t"),
+      sheets: [{ name: xl("k_emp"), head: [xl("id"), xl("name"), "الاسم", xl("status"), xl("platform"), xl("city"), xl("paytype"), xl("mobile"), xl("iqama"), "Jahez ID", xl("card"), xl("plate"), xl("vehicle"), xl("bank"), xl("acct"), xl("iban")],
+        rows: L.map(([id, e]) => [id, e.fullName, e.fullNameAr || "", e.status, e.platform || "", e.city || "", e.payType || "", e.mobile || "", e.residentId || "", e.jahezId || "", e.card || "", e.plate || "", [e.vehicleName, e.vehicleModel].filter(Boolean).join(" "), e.bankName || "", e.accountName || "", e.iban || ""]) }],
+      kpis: [[xl("k_emp"), L.length], [xl("k_active"), act.length], ["Keeta", act.filter(([, e]) => /keeta/i.test(e.platform || "")).length], ["HungerStation", act.filter(([, e]) => /hunger/i.test(e.platform || "")).length]],
+      tables: [{ head: [xl("rank"), xl("name"), xl("platform"), xl("city"), xl("plate"), xl("mobile")], w: [.06, .32, .17, .13, .14, .18], rows: act.map(([, e], i) => [i + 1, e.fullName, e.platform || "-", e.city || "-", e.plate || "-", e.mobile || "-"]) }] };
+  }
+  if (v === "payroll") {
+    const pub = payDoc()?.status === "PUBLISHED", slips = (pub ? payDoc().slips : computePayroll()) || [], m = state.payMonth;
+    const tot = k => slips.reduce((s, x) => s + xn(x[k]), 0);
+    return { file: "payroll-" + m + (pub ? "" : "-draft"), title: xl("pay_t") + " — " + monthLabel(m), note: pub ? "" : xl("draft"),
+      sheets: [{ name: m, head: [xl("iqama"), xl("name"), xl("grade"), xl("orders"), xl("base"), xl("extra"), xl("due"), xl("petrol"), xl("ded"), xl("net")],
+        rows: slips.map(s => [s.residentId || "", s.name || "", s.grade || "", xn(s.orders), xr2(s.base), xr2(s.bonus), xr2(s.due), xr2(s.fuelSpent), xr2(s.sded), xr2(s.net)]) }],
+      kpis: [[xl("k_drivers"), slips.length], [xl("k_orders"), tot("orders")], [xl("k_ded"), xr2(tot("sded"))], [xl("k_net"), xr2(tot("net"))]],
+      tables: [{ head: [xl("rank"), xl("name"), xl("orders"), xl("base") + "+" + xl("extra"), xl("ded"), xl("net")], w: [.06, .32, .12, .18, .14, .18], al: ["l", "l", "r", "r", "r", "r"],
+        rows: slips.map((s, i) => [i + 1, s.name || "", xn(s.orders), fmt(xn(s.base) + xn(s.bonus) + xn(s.due)), fmt(s.sded), fmt(s.net)]), total: ["", xl("total"), tot("orders"), "", fmt(tot("sded")), fmt(tot("net"))] }] };
+  }
+  if (v === "dues" || v === "loans") {
+    const all = allDues().filter(x => v === "dues" ? x.coll === "fines" : x.coll === "advances"), live2 = all.filter(x => !x.waived);
+    const byE = {}; for (const x of live2) { const r = (byE[x.employeeId] ??= { n: 0, tot: 0, left: 0, mon: 0 }); r.n++; r.tot += xn(x.amount); r.left += dueRemaining(x); if (dueRemaining(x) > 0) r.mon += Math.min(xn(x.monthly), dueRemaining(x)); }
+    const grp = Object.entries(byE).filter(([, r]) => r.left > 0).sort((a, b) => b[1].left - a[1].left);
+    const sum = k => grp.reduce((s, [, r]) => s + r[k], 0);
+    return { file: v, title: xl(v === "dues" ? "dues_t" : "loan_t"),
+      sheets: [{ name: v, head: [xl("name"), xl("iqama"), xl("type"), xl("reason"), xl("date"), xl("amount"), xl("monthly"), xl("remaining"), xl("status")],
+        rows: all.sort((a, b) => String(b.date || "").localeCompare(String(a.date || ""))).map(x => [en(x.employeeId), E[x.employeeId]?.residentId || "", x.type, x.reason || "", x.date || "", xr2(x.amount), xr2(x.monthly), xr2(dueRemaining(x)), xl(dueStatus(x))]) }],
+      kpis: [[xl("k_emp"), grp.length], [xl("k_total"), fmt(live2.reduce((s, x) => s + xn(x.amount), 0))], [xl("k_left"), fmt(sum("left"))], [xl("k_monthly"), fmt(sum("mon"))]],
+      tables: [{ head: [xl("rank"), xl("name"), xl("total"), xl("monthly"), xl("remaining")], w: [.07, .38, .17, .17, .21], al: ["l", "l", "r", "r", "r"], rows: grp.map(([id, r], i) => [i + 1, en(id), fmt(r.tot), fmt(r.mon), fmt(r.left)]), total: ["", xl("total"), fmt(grp.reduce((s, [, r]) => s + r.tot, 0)), fmt(sum("mon")), fmt(sum("left"))] }] };
+  }
+  if (v === "internet") {
+    const L = inetList().filter(x => E[x.employeeId]?.status !== "DELETED").sort((a, b) => en(a.employeeId).localeCompare(en(b.employeeId)));
+    const dueN = L.filter(x => inetStatus(x) === "due").length, soonN = L.filter(x => inetStatus(x) === "soon").length, stl = s => s === "due" ? xl("k_due") : s === "soon" ? xl("k_soon") : s === "new" ? "—" : xl("ok");
+    return { file: "internet", title: xl("net_t"),
+      sheets: [{ name: "Internet", head: [xl("name"), xl("amount"), xl("last"), xl("next"), xl("status")], rows: L.map(x => [en(x.employeeId), xr2(x.amount), x.lastPaid || "", inetNext(x) || "", stl(inetStatus(x))]) }],
+      kpis: [[xl("k_enrolled"), L.length], [xl("k_monthly_net"), fmt(L.reduce((s, x) => s + xn(x.amount), 0))], [xl("k_due"), dueN], [xl("k_soon"), soonN]],
+      tables: [{ head: [xl("rank"), xl("name"), xl("amount"), xl("last"), xl("status")], w: [.07, .36, .15, .2, .22], al: ["l", "l", "r", "l", "l"], rows: L.map((x, i) => [i + 1, en(x.employeeId), fmt(x.amount), dmy(x.lastPaid) || "-", stl(inetStatus(x))]) }] };
+  }
+  if (v === "fuel") {
+    const k = state.fuelMonth || monthKey(), od = monthRows(k), L = activeEmps().map(([id, e]) => { const row = fuelRowView(k, id), sp = fuelSum(row), al = fuelAllowance(e, xn(od[id]?.o)); return [id, e, xn(od[id]?.o), al, sp, fuelEntries(row).length]; });
+    const sp = L.reduce((s, r) => s + r[4], 0), al = L.reduce((s, r) => s + xn(r[3]), 0);
+    return { file: "petrol-" + k, title: xl("fuel_t") + " — " + monthLabel(k),
+      sheets: [{ name: k, head: [xl("name"), xl("card"), xl("plate"), xl("orders"), xl("fuel_allow"), xl("spent"), xl("entries")], rows: L.map(([, e, o, a, s2, n]) => [e.fullName, e.card || "", e.plate || "", o, xr2(a), xr2(s2), n]) }],
+      kpis: [[xl("k_drivers"), L.length], [xl("k_allow"), fmt(al)], [xl("k_spent"), fmt(sp)], [xl("entries"), L.reduce((s, r) => s + r[5], 0)]],
+      tables: [{ head: [xl("rank"), xl("name"), xl("orders"), xl("fuel_allow"), xl("spent")], w: [.07, .37, .14, .21, .21], al: ["l", "l", "r", "r", "r"], rows: L.filter(r => r[4] > 0 || r[3] > 0).sort((a, b) => b[4] - a[4]).map(([, e, o, a, s2], i) => [i + 1, e.fullName, o, fmt(a), fmt(s2)]), total: ["", xl("total"), L.reduce((s, r) => s + r[2], 0), fmt(al), fmt(sp)] }] };
+  }
+  if (v === "vehicles") {
+    const L = Object.values(state.vehicles || {}), st = x => { const sv = x.service || {}, rp = x.repair || {}, sb = x.sub || {}; return sb.given && sb.givenDate && !sb.returnDate && !rp.doneDate ? xl("substitute") : rp.sentDate && !rp.doneDate ? xl("repair") : sv.sent && sv.date && !sv.doneDate ? xl("service") : xl("ok"); };
+    const bad = L.filter(x => st(x) !== xl("ok"));
+    return { file: "vehicles", title: xl("veh_t"),
+      sheets: [{ name: xl("k_veh"), head: [xl("plate"), xl("type"), xl("driver"), xl("status"), xl("accidents"), xl("k_fines")], rows: L.map(x => [x.plate || "", x.type || "", en(x.empId), st(x), (x.accidents || []).length, xr2((x.accidents || []).reduce((s, a) => s + xn(a.fine), 0))]) }],
+      kpis: [[xl("k_veh"), L.length], [xl("k_issue"), bad.length], [xl("accidents"), L.reduce((s, x) => s + (x.accidents || []).length, 0)], [xl("k_fines"), fmt(L.reduce((s, x) => s + (x.accidents || []).reduce((q, a) => q + xn(a.fine), 0), 0))]],
+      tables: [{ head: [xl("rank"), xl("plate"), xl("type"), xl("driver"), xl("status")], w: [.06, .2, .2, .3, .24], rows: [...bad, ...L.filter(x => !bad.includes(x))].map((x, i) => [i + 1, x.plate || "-", x.type || "-", en(x.empId), st(x)]) }] };
+  }
+  if (v === "accidents") {
+    const L = accList(), sum = s => L.filter(x => x.status === s).length;
+    return { file: "accidents", title: xl("acc_t"),
+      sheets: [{ name: xl("accidents"), head: [xl("driver"), xl("date"), xl("fault"), xl("amount"), xl("status")], rows: L.map(x => [en(x.empId), x.date || "", xn(x.fault), xr2(x.amount), x.status || ""]) }],
+      kpis: [[xl("k_acc"), L.length], [xl("k_pend"), sum("pending")], ["✓", sum("approved")], [xl("k_fines"), fmt(L.reduce((s, x) => s + xn(x.amount), 0))]],
+      tables: [{ head: [xl("rank"), xl("driver"), xl("date"), xl("fault"), xl("amount"), xl("status")], w: [.06, .32, .15, .11, .16, .2], al: ["l", "l", "l", "r", "r", "l"], rows: L.map((x, i) => [i + 1, en(x.empId), dmy(x.date), xn(x.fault) + "%", fmt(x.amount), x.status || ""]) }] };
+  }
+  if (v === "target") {
+    const tm = state.tgtMonth || monthKey(), arch = tm !== monthKey() ? state.monthly?.[tm] : null, rows = arch?.rows || monthRows(tm);
+    const L = activeEmps().map(([id, e]) => [e, xn(rows[id]?.o), xn(rows[id]?.f)]).sort((a, b) => b[1] - a[1]);
+    return { file: "orders-" + tm, title: xl("tgt_t") + " — " + monthLabel(tm),
+      sheets: [{ name: tm, head: [xl("rank"), xl("name"), xl("paytype"), xl("orders")], rows: L.map(([e, o], i) => [i + 1, e.fullName, e.payType || "TARGET", o]) }],
+      kpis: [[xl("k_drivers"), L.length], [xl("k_orders"), L.reduce((s, r) => s + r[1], 0)], ["Max", L[0] ? L[0][1] : 0], ["Avg", L.length ? Math.round(L.reduce((s, r) => s + r[1], 0) / L.length) : 0]],
+      tables: [{ head: [xl("rank"), xl("name"), xl("paytype"), xl("orders")], w: [.08, .5, .2, .22], al: ["l", "l", "l", "r"], rows: L.map(([e, o], i) => [i + 1, e.fullName, e.payType || "TARGET", o]), total: ["", xl("total"), "", L.reduce((s, r) => s + r[1], 0)] }] };
+  }
+  if (v === "bank") {
+    const L = Object.entries(E).filter(([, e]) => e.status === "ACTIVE" && (e.iban || e.bankName)).sort((a, b) => String(a[1].fullName).localeCompare(String(b[1].fullName)));
+    return { file: "bank", title: xl("bank_t"),
+      sheets: [{ name: xl("bank"), head: [xl("name"), xl("iqama"), xl("bank"), xl("acct"), xl("iban")], rows: L.map(([, e]) => [e.fullName, e.residentId || "", e.bankName || "", e.accountName || "", e.iban || ""]) }],
+      kpis: [[xl("k_emp"), L.length], [xl("k_active"), L.length]],
+      tables: [{ head: [xl("rank"), xl("name"), xl("bank"), xl("iban")], w: [.06, .3, .2, .44], rows: L.map(([, e], i) => [i + 1, e.fullName, e.bankName || "-", e.iban || "-"]) }] };
+  }
+  if (v === "expenses") {
+    const xm = state.expMonth || "", sel = state.xAcct || "", L = xTx().filter(x => (!xm || String(x.date || "").slice(0, 7) === xm) && (!sel || x.acct === sel) && (sel || x.kind !== "RECV")).sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+    return { file: "expenses" + (xm ? "-" + xm : ""), title: xl("exp_t"),
+      sheets: [{ name: xl("exp_t").slice(0, 30), head: [xl("date"), xl("acctn"), xl("type"), xl("cat"), xl("details"), xl("note"), xl("amount"), xl("by")], rows: L.map(x => [x.date || "", x.acct || "", x.kind || "", x.cat || "", x.place || "", x.note || "", xr2(x.amount), x.by || ""]) }] };
+  }
+  return null;
+}
+async function xpExcel(v){
+  const S = xpSets(v); if (!S || !S.sheets[0].rows.length) { toast(xl("nodata")); return; }
+  if (!window.XLSX || !downloads) { toast(xl("na")); return; }
+  const wb = XLSX.utils.book_new();
+  for (const sh of S.sheets) {
+    const ws = XLSX.utils.aoa_to_sheet([sh.head, ...sh.rows]);
+    ws["!cols"] = sh.head.map((h, i) => ({ wch: Math.min(40, Math.max(String(h).length + 2, ...sh.rows.slice(0, 200).map(r => String(r[i] ?? "").length + 2))) }));
+    XLSX.utils.book_append_sheet(wb, ws, String(sh.name).replace(/[\\/?*[\]:]/g, " ").slice(0, 31) || "Sheet1");
+  }
+  const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" });
+  await downloads.save({ filename: `ASB-${S.file}-${todayKey()}.xlsx`, data: new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }) });
+}
+async function xpPdf(v){
+  const S = xpSets(v); if (!S || !S.tables) { toast(xl("nodata")); return; }
+  const J = window.jspdf?.jsPDF; if (!J || !downloads) { toast(xl("na")); return; }
+  const W = 1240, H = 1754, M = 70, R = W - M, FONT = '"Noto Sans Bengali","Noto Sans Arabic","Segoe UI",Roboto,Arial,sans-serif', rtl = lang === "ar";
+  const logo = await (async () => { try { const rs = await fetch("logo.png"); return rs.ok ? await createImageBitmap(await rs.blob()) : null; } catch { return null; } })();
+  const pages = []; let c, g, y;
+  const newPage = first => { c = document.createElement("canvas"); c.width = W; c.height = H; g = c.getContext("2d"); g.fillStyle = "#fff"; g.fillRect(0, 0, W, H);
+    if (logo) { g.globalAlpha = 0.05; g.drawImage(logo, (W - 720) / 2, (H - 720) / 2, 720, 720); g.globalAlpha = 1; }
+    const gr = g.createLinearGradient(0, 0, W, 0); gr.addColorStop(0, "#0b3b60"); gr.addColorStop(1, "#1f6fb2"); g.fillStyle = gr; g.fillRect(0, 0, W, 18); g.fillStyle = "#f0a81a"; g.fillRect(0, 18, W, 5); pages.push(c); y = first ? M + 10 : M + 20; };
+  const txt = (s, x, yy, o = {}) => { g.font = `${o.w || 400} ${o.sz || 22}px ${FONT}`; g.fillStyle = o.c || "#111"; g.textAlign = o.al || "left"; g.direction = "ltr"; g.fillText(String(s ?? ""), x, yy); };
+  const fitTxt = (s, mw, sz, w) => { g.font = `${w || 400} ${sz}px ${FONT}`; s = String(s ?? ""); if (g.measureText(s).width <= mw) return s; while (s.length > 1 && g.measureText(s + "…").width > mw) s = s.slice(0, -1); return s + "…"; };
+  newPage(true);
+  const LS = 104; if (logo) g.drawImage(logo, M, y - 6, LS, LS); const hx = logo ? M + LS + 20 : M;
+  txt("ASB LOGISTICS Services", hx, y + 38, { sz: 40, w: 800, c: "#0b3b60" });
+  txt("ABDULRAHMAN SAAD ALBAQAMI Company For Logistics", hx, y + 72, { sz: 19, c: "#667" });
+  txt(`${xl("generated")}: ${new Date().toLocaleString("en-GB", { timeZone: "Asia/Riyadh" })}`, hx, y + 98, { sz: 18, c: "#889" });
+  y += 128; g.fillStyle = "#0b3b60"; g.beginPath(); g.roundRect(M, y, R - M, 64, 14); g.fill(); txt(fitTxt(S.title, R - M - 40, 32, 800), M + 22, y + 43, { sz: 32, w: 800, c: "#fff" });
+  y += 64 + 18;
+  if (S.note) { g.fillStyle = "#fff4d6"; g.fillRect(M, y, R - M, 44); g.fillStyle = "#b86e00"; g.fillRect(M, y, 6, 44); txt("⚠ " + S.note, M + 20, y + 30, { sz: 22, w: 700, c: "#8a5200" }); y += 44 + 14; }
+  y += 4;
+  if (S.kpis?.length) { const n = S.kpis.length, cw = (R - M - (n - 1) * 16) / n;
+    S.kpis.forEach(([l, val], i) => { const x = M + i * (cw + 16); g.fillStyle = "#f3f7fb"; g.beginPath(); g.roundRect(x, y, cw, 118, 14); g.fill(); g.fillStyle = i === 0 ? "#f0a81a" : "#1f6fb2"; g.fillRect(x, y + 18, 5, 82);
+      txt(fitTxt(l, cw - 36, 19, 600), x + 22, y + 38, { sz: 19, c: "#556", w: 600 }); txt(fitTxt(val, cw - 30, 36, 800), x + 22, y + 90, { sz: 36, w: 800, c: "#0b3b60" }); });
+    y += 118 + 30; }
+  const foot = () => { pages.forEach((p, i) => { const gg = p.getContext("2d"); gg.fillStyle = "#eef2f6"; gg.fillRect(0, H - 70, W, 70); gg.font = `400 18px ${FONT}`; gg.fillStyle = "#667"; gg.textAlign = "left"; gg.fillText("ASB LOGISTICS · " + S.title, M, H - 28); gg.textAlign = "right"; gg.fillText(`${xl("page")} ${i + 1}/${pages.length}`, R, H - 28); }); };
+  for (const T of S.tables) {
+    const cols = T.w.map(f => f * (R - M)), al = T.al || T.head.map(() => "l"), RH = 46;
+    const header = () => { g.fillStyle = "#0b3b60"; g.fillRect(M, y, R - M, 50); let x = M; T.head.forEach((h, i) => { const pad = 14; txt(fitTxt(h, cols[i] - 2 * pad, 20, 700), al[i] === "r" ? x + cols[i] - pad : x + pad, y + 33, { sz: 20, w: 700, c: "#fff", al: al[i] === "r" ? "right" : "left" }); x += cols[i]; }); y += 50; };
+    header();
+    T.rows.forEach((r, ri) => {
+      if (y + RH > H - 110) { newPage(); header(); }
+      if (ri % 2 === 0) { g.fillStyle = "#f5f8fb"; g.fillRect(M, y, R - M, RH); }
+      let x = M; r.forEach((cell, i) => { const pad = 14; txt(fitTxt(cell, cols[i] - 2 * pad, 21), al[i] === "r" ? x + cols[i] - pad : x + pad, y + 31, { sz: 21, al: al[i] === "r" ? "right" : "left", c: "#1a2330" }); x += cols[i]; });
+      g.strokeStyle = "#e3e9f0"; g.lineWidth = 1; g.beginPath(); g.moveTo(M, y + RH); g.lineTo(R, y + RH); g.stroke(); y += RH;
+    });
+    if (T.total) { if (y + 60 > H - 110) { newPage(); header(); } g.fillStyle = "#fdf1d3"; g.fillRect(M, y, R - M, 54); g.fillStyle = "#f0a81a"; g.fillRect(M, y, R - M, 3); let x = M;
+      T.total.forEach((cell, i) => { const pad = 14; txt(fitTxt(cell, cols[i] - 2 * pad, 23, 800), al[i] === "r" ? x + cols[i] - pad : x + pad, y + 37, { sz: 23, w: 800, c: "#0b3b60", al: al[i] === "r" ? "right" : "left" }); x += cols[i]; }); y += 54; }
+    y += 30;
+  }
+  foot();
+  const d = new J({ unit: "pt", format: "a4" });
+  pages.forEach((p, i) => { if (i) d.addPage(); d.addImage(p.toDataURL("image/jpeg", 0.86), "JPEG", 0, 0, 595.28, 841.89); });
+  await downloads.save({ filename: `ASB-${S.file}-${todayKey()}.pdf`, data: d.output("arraybuffer") });
+}
+const XP_VIEWS = ["employees", "payroll", "dues", "loans", "internet", "fuel", "vehicles", "accidents", "target", "bank", "expenses"];
+function injectExport(){
+  const v = view(); if (!XP_VIEWS.includes(v)) return;
+  const h = document.querySelector("#main .head"); if (!h || h.querySelector(".xpbar")) return;
+  const bar = document.createElement("div"); bar.className = "xpbar"; bar.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;width:100%";
+  bar.innerHTML = `<button class="btn ghost" data-act="xp-xlsx" data-v="${v}">⬇ ${xl("xlsx")}</button>${v === "expenses" ? "" : `<button class="btn" data-act="xp-pdf" data-v="${v}">📄 ${xl("pdf")}</button>`}`;
+  h.append(bar);
+}
 
 /* ───────── Admin sign-in ───────── */
 Object.assign(I18N.en, { au_title: "Admin sign in", au_sub: "ASB LOGISTICS · employee management", au_email: "Email", au_pass: "Password",
