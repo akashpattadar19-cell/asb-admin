@@ -3843,8 +3843,8 @@ document.addEventListener("click", async e => {
     }
 
     if (act === "emp-rank") { const e0 = state.emp[id] || {}, cur = ((e0.payType === "FLAT" ? e0.payTypePrev : e0.payType) || "TARGET") === "TARGET"; await db.doc("employees/" + id).update({ payType: cur ? "PER_ORDER" : "TARGET", updatedAt: Date.now() }); toast(t(cur ? "rk_set_off" : "rk_set_on", { n: state.emp[id]?.fullName ?? "" })); return; }
-    if (act === "xp-xlsx") { try { await xpExcel(b.dataset.v); } catch (e) { console.error(e); toast(xl("na")); } return; }
-    if (act === "xp-pdf") { try { await xpPdf(b.dataset.v); } catch (e) { console.error(e); toast(xl("na")); } return; }
+    if (act === "xp-xlsx") { try { xpAsk(b.dataset.v, "xlsx"); } catch (e) { console.error(e); toast(xl("na")); } return; }
+    if (act === "xp-pdf") { try { xpAsk(b.dataset.v, "pdf"); } catch (e) { console.error(e); toast(xl("na")); } return; }
     if (act === "tg-find") {
       const token = ($("#tgToken").value || "").trim(); if (!token) { toast(t("required")); return; }
       try {
@@ -5072,10 +5072,14 @@ const XPL = {
     k_emp: "الموظفون", k_active: "نشط", k_total: "المبلغ الكلي", k_left: "المتبقي", k_monthly: "الخصم الشهري", k_drivers: "السائقون", k_orders: "إجمالي الطلبات", k_net: "إجمالي الصافي", k_ded: "إجمالي الخصومات", k_due: "مستحق الآن", k_soon: "قريباً", k_monthly_net: "الإجمالي الشهري", k_enrolled: "مسجّلون", k_spent: "المصروف", k_allow: "البدل", k_veh: "المركبات", k_issue: "تحتاج متابعة", k_acc: "الحوادث", k_pend: "قيد الانتظار", k_fines: "إجمالي الغرامات",
     date: "التاريخ", reason: "السبب", type: "النوع", amount: "المبلغ", remaining: "المتبقي", monthly: "شهرياً", last: "آخر دفعة", next: "الدفعة القادمة", entries: "القيود", fault: "الخطأ %", driver: "السائق", cat: "الفئة", acctn: "الحساب", details: "التفاصيل", note: "ملاحظة", by: "بواسطة", month: "الشهر", generated: "تاريخ الإصدار", page: "صفحة", sar: "ريال", open: "مفتوح", cleared: "مسدد", waived: "معفى", ok: "سليمة", repair: "إصلاح", service: "صيانة", substitute: "بديلة", rank: "#", accidents: "الحوادث", fuel_allow: "البدل", spent: "المصروف" },
 };
+Object.assign(XPL.en, { from: "From", to: "To", per_hint: "Pick a month, or a from–to date range (range overrides month). Leave empty for current view.", per_bad: "‘From’ is after ‘To’", perf_t: "Performance report", ord_t: "Order details" });
+Object.assign(XPL.bn, { from: "থেকে", to: "পর্যন্ত", per_hint: "মাস বা তারিখ (থেকে–পর্যন্ত) বেছে নিন। তারিখ দিলে মাস গণ্য হবে না। খালি রাখলে এখন যা দেখছেন তাই আসবে।", per_bad: "‘থেকে’ তারিখ ‘পর্যন্ত’-র পরে", perf_t: "পারফরম্যান্স রিপোর্ট", ord_t: "অর্ডার ডিটেলস" });
+Object.assign(XPL.ar, { from: "من", to: "إلى", per_hint: "اختر شهراً أو نطاق تاريخ (النطاق يتجاوز الشهر). اتركه فارغاً للعرض الحالي.", per_bad: "تاريخ ‘من’ بعد ‘إلى’", perf_t: "تقرير الأداء", ord_t: "تفاصيل الطلبات" });
 const xl = k => (XPL[lang] || XPL.en)[k] ?? XPL.en[k] ?? k;
 const xn = v => (+v || 0);
 const xr2 = v => Math.round(xn(v) * 100) / 100;
-function xpSets(v){
+function xpSets0(v, o){
+  o = o || {}; const inP = d => { d = String(d || "").slice(0, 10); return !o.F || (d >= o.F && d <= o.T); }, pm = o.m0 || "";
   const E = state.emp || {}, en = id => E[id]?.fullName || id || "—", live = ([, e]) => e.status !== "DELETED";
   if (v === "employees") {
     const L = Object.entries(E).filter(live).sort((a, b) => String(a[1].fullName).localeCompare(String(b[1].fullName))), act = L.filter(([, e]) => e.status === "ACTIVE");
@@ -5086,7 +5090,7 @@ function xpSets(v){
       tables: [{ head: [xl("rank"), xl("name"), xl("platform"), xl("city"), xl("plate"), xl("mobile")], w: [.06, .32, .17, .13, .14, .18], rows: act.map(([, e], i) => [i + 1, e.fullName, e.platform || "-", e.city || "-", e.plate || "-", e.mobile || "-"]) }] };
   }
   if (v === "payroll") {
-    const pub = payDoc()?.status === "PUBLISHED", slips = (pub ? payDoc().slips : computePayroll()) || [], m = state.payMonth;
+    const m = pm || state.payMonth, oldM = state.payMonth; state.payMonth = m; let pub, slips; try { pub = payDoc()?.status === "PUBLISHED"; slips = (pub ? payDoc().slips : computePayroll()) || []; } finally { state.payMonth = oldM; }
     const tot = k => slips.reduce((s, x) => s + xn(x[k]), 0);
     return { file: "payroll-" + m + (pub ? "" : "-draft"), title: xl("pay_t") + " — " + monthLabel(m), note: pub ? "" : xl("draft"),
       sheets: [{ name: m, head: [xl("iqama"), xl("name"), xl("grade"), xl("orders"), xl("base"), xl("extra"), xl("due"), xl("petrol"), xl("ded"), xl("net")],
@@ -5096,7 +5100,7 @@ function xpSets(v){
         rows: slips.map((s, i) => [i + 1, s.name || "", xn(s.orders), fmt(xn(s.base) + xn(s.bonus) + xn(s.due)), fmt(s.sded), fmt(s.net)]), total: ["", xl("total"), tot("orders"), "", fmt(tot("sded")), fmt(tot("net"))] }] };
   }
   if (v === "dues" || v === "loans") {
-    const all = allDues().filter(x => v === "dues" ? x.coll === "fines" : x.coll === "advances"), live2 = all.filter(x => !x.waived);
+    const all = allDues().filter(x => (v === "dues" ? x.coll === "fines" : x.coll === "advances") && inP(x.date)), live2 = all.filter(x => !x.waived);
     const byE = {}; for (const x of live2) { const r = (byE[x.employeeId] ??= { n: 0, tot: 0, left: 0, mon: 0 }); r.n++; r.tot += xn(x.amount); r.left += dueRemaining(x); if (dueRemaining(x) > 0) r.mon += Math.min(xn(x.monthly), dueRemaining(x)); }
     const grp = Object.entries(byE).filter(([, r]) => r.left > 0).sort((a, b) => b[1].left - a[1].left);
     const sum = k => grp.reduce((s, [, r]) => s + r[k], 0);
@@ -5107,7 +5111,7 @@ function xpSets(v){
       tables: [{ head: [xl("rank"), xl("name"), xl("total"), xl("monthly"), xl("remaining")], w: [.07, .38, .17, .17, .21], al: ["l", "l", "r", "r", "r"], rows: grp.map(([id, r], i) => [i + 1, en(id), fmt(r.tot), fmt(r.mon), fmt(r.left)]), total: ["", xl("total"), fmt(grp.reduce((s, [, r]) => s + r.tot, 0)), fmt(sum("mon")), fmt(sum("left"))] }] };
   }
   if (v === "internet") {
-    const L = inetList().filter(x => E[x.employeeId]?.status !== "DELETED").sort((a, b) => en(a.employeeId).localeCompare(en(b.employeeId)));
+    const L = inetList().filter(x => E[x.employeeId]?.status !== "DELETED" && (!o.F || inP(x.lastPaid))).sort((a, b) => en(a.employeeId).localeCompare(en(b.employeeId)));
     const dueN = L.filter(x => inetStatus(x) === "due").length, soonN = L.filter(x => inetStatus(x) === "soon").length, stl = s => s === "due" ? xl("k_due") : s === "soon" ? xl("k_soon") : s === "new" ? "—" : xl("ok");
     return { file: "internet", title: xl("net_t"),
       sheets: [{ name: "Internet", head: [xl("name"), xl("amount"), xl("last"), xl("next"), xl("status")], rows: L.map(x => [en(x.employeeId), xr2(x.amount), x.lastPaid || "", inetNext(x) || "", stl(inetStatus(x))]) }],
@@ -5115,7 +5119,7 @@ function xpSets(v){
       tables: [{ head: [xl("rank"), xl("name"), xl("amount"), xl("last"), xl("status")], w: [.07, .36, .15, .2, .22], al: ["l", "l", "r", "l", "l"], rows: L.map((x, i) => [i + 1, en(x.employeeId), fmt(x.amount), dmy(x.lastPaid) || "-", stl(inetStatus(x))]) }] };
   }
   if (v === "fuel") {
-    const k = state.fuelMonth || monthKey(), od = monthRows(k), L = activeEmps().map(([id, e]) => { const row = fuelRowView(k, id), sp = fuelSum(row), al = fuelAllowance(e, xn(od[id]?.o)); return [id, e, xn(od[id]?.o), al, sp, fuelEntries(row).length]; });
+    const k = pm || state.fuelMonth || monthKey(), od = monthRows(k), L = activeEmps().map(([id, e]) => { const row = fuelRowView(k, id), sp = fuelSum(row), al = fuelAllowance(e, xn(od[id]?.o)); return [id, e, xn(od[id]?.o), al, sp, fuelEntries(row).length]; });
     const sp = L.reduce((s, r) => s + r[4], 0), al = L.reduce((s, r) => s + xn(r[3]), 0);
     return { file: "petrol-" + k, title: xl("fuel_t") + " — " + monthLabel(k),
       sheets: [{ name: k, head: [xl("name"), xl("card"), xl("plate"), xl("orders"), xl("fuel_allow"), xl("spent"), xl("entries")], rows: L.map(([, e, o, a, s2, n]) => [e.fullName, e.card || "", e.plate || "", o, xr2(a), xr2(s2), n]) }],
@@ -5131,14 +5135,14 @@ function xpSets(v){
       tables: [{ head: [xl("rank"), xl("plate"), xl("type"), xl("driver"), xl("status")], w: [.06, .2, .2, .3, .24], rows: [...bad, ...L.filter(x => !bad.includes(x))].map((x, i) => [i + 1, x.plate || "-", x.type || "-", en(x.empId), st(x)]) }] };
   }
   if (v === "accidents") {
-    const L = accList(), sum = s => L.filter(x => x.status === s).length;
+    const L = accList().filter(x => inP(x.date)), sum = s => L.filter(x => x.status === s).length;
     return { file: "accidents", title: xl("acc_t"),
       sheets: [{ name: xl("accidents"), head: [xl("driver"), xl("date"), xl("fault"), xl("amount"), xl("status")], rows: L.map(x => [en(x.empId), x.date || "", xn(x.fault), xr2(x.amount), x.status || ""]) }],
       kpis: [[xl("k_acc"), L.length], [xl("k_pend"), sum("pending")], ["✓", sum("approved")], [xl("k_fines"), fmt(L.reduce((s, x) => s + xn(x.amount), 0))]],
       tables: [{ head: [xl("rank"), xl("driver"), xl("date"), xl("fault"), xl("amount"), xl("status")], w: [.06, .32, .15, .11, .16, .2], al: ["l", "l", "l", "r", "r", "l"], rows: L.map((x, i) => [i + 1, en(x.empId), dmy(x.date), xn(x.fault) + "%", fmt(x.amount), x.status || ""]) }] };
   }
   if (v === "target") {
-    const tm = state.tgtMonth || monthKey(), arch = tm !== monthKey() ? state.monthly?.[tm] : null, rows = arch?.rows || monthRows(tm);
+    const tm = pm || state.tgtMonth || monthKey(), arch = tm !== monthKey() ? state.monthly?.[tm] : null, rows = arch?.rows || monthRows(tm);
     const L = activeEmps().map(([id, e]) => [e, xn(rows[id]?.o), xn(rows[id]?.f)]).sort((a, b) => b[1] - a[1]);
     return { file: "orders-" + tm, title: xl("tgt_t") + " — " + monthLabel(tm),
       sheets: [{ name: tm, head: [xl("rank"), xl("name"), xl("paytype"), xl("orders")], rows: L.map(([e, o], i) => [i + 1, e.fullName, e.payType || "TARGET", o]) }],
@@ -5153,14 +5157,56 @@ function xpSets(v){
       tables: [{ head: [xl("rank"), xl("name"), xl("bank"), xl("iban")], w: [.06, .3, .2, .44], rows: L.map(([, e], i) => [i + 1, e.fullName, e.bankName || "-", e.iban || "-"]) }] };
   }
   if (v === "expenses") {
-    const xm = state.expMonth || "", sel = state.xAcct || "", L = xTx().filter(x => (!xm || String(x.date || "").slice(0, 7) === xm) && (!sel || x.acct === sel) && (sel || x.kind !== "RECV")).sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+    const xm = o.F ? "" : (pm || state.expMonth || ""), sel = state.xAcct || "", L = xTx().filter(x => (!xm || String(x.date || "").slice(0, 7) === xm) && inP(x.date) && (!sel || x.acct === sel) && (sel || x.kind !== "RECV")).sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
     return { file: "expenses" + (xm ? "-" + xm : ""), title: xl("exp_t"),
       sheets: [{ name: xl("exp_t").slice(0, 30), head: [xl("date"), xl("acctn"), xl("type"), xl("cat"), xl("details"), xl("note"), xl("amount"), xl("by")], rows: L.map(x => [x.date || "", x.acct || "", x.kind || "", x.cat || "", x.place || "", x.note || "", xr2(x.amount), x.by || ""]) }] };
   }
+  if (v === "perf") {
+    const dAll = perfDays().slice().reverse(), days = dAll.filter(d => inP(d) && (!pm || d.startsWith(pm))).slice(-31), last = days[days.length - 1] || "";
+    const lab = k => t(k), H = [xl("name"), xl("iqama"), "Jahez ID", ...PERF_F.map(([, k]) => lab(k))];
+    const rowsOf = d => { const T = state.perf[d]?.rows || {}; return activeEmps().map(([id, e]) => [e, T[id] || {}]).filter(([, r]) => Object.keys(r).length).sort((a, b) => ((+a[1].rp || 999) - (+b[1].rp || 999))); };
+    const cell = (r, k) => r[k] == null ? "" : r[k];
+    const LR = rowsOf(last), gc = g => LR.filter(([, r]) => r.g === g).length;
+    return { file: "performance", title: xl("perf_t") + (last ? " — " + dmy(last) : ""),
+      sheets: days.slice().reverse().map(d => ({ name: d, head: H, rows: rowsOf(d).map(([e, r]) => [e.fullName, e.residentId || "", e.jahezId || "", ...PERF_F.map(([k]) => cell(r, k))]) })),
+      kpis: [[xl("k_drivers"), LR.length], ...(GRADES || []).slice(0, 3).map(g => [(t("pf_grade") || "Grade") + " " + g, gc(g)])],
+      tables: [{ head: [xl("rank"), xl("name"), ...PERF_F.map(([, k]) => lab(k))], hs: 15, w: [.05, .24, ...PERF_F.map(() => .71 / PERF_F.length)], al: ["l", "l", ...PERF_F.map(() => "r")],
+        rows: LR.map(([e, r], i) => [i + 1, e.fullName, ...PERF_F.map(([k]) => cell(r, k))]) }] };
+  }
+  if (v === "orddetail") {
+    const keys = Object.keys(state.ordd).sort((a, b) => b.localeCompare(a)).filter(k => { const d = state.ordd[k] || {}, f = String(d.from || "").slice(0, 10), tt = String(d.to || "").slice(0, 10); if (o.F) return f <= o.T && tt >= o.F; if (pm) return f.slice(0, 7) <= pm && tt.slice(0, 7) >= pm; return true; }).slice(0, 12);
+    const byJ = {}; for (const [id, e] of Object.entries(E)) if (e.jahezId) byJ[String(e.jahezId)] = id;
+    const rowsOf = k => Object.entries(state.ordd[k]?.rows || {}).map(([cid, m]) => [cid, m, byJ[cid] ? en(byJ[cid]) : ""]).sort((a, b) => (+b[1].d || 0) - (+a[1].d || 0));
+    const sh = ORDD_F.filter(f => ["d", "b", "k", "j", "m", "i", "f"].includes(f.k));
+    const k0 = keys[0], L = k0 ? rowsOf(k0) : [], sum = x => L.reduce((s, r) => s + xn(r[1][x]), 0), avg = x => { const a = L.filter(r => r[1][x] != null); return a.length ? a.reduce((s, r) => s + xn(r[1][x]), 0) / a.length : 0; };
+    const dd = k0 ? state.ordd[k0] : null;
+    return { file: "order-details", title: xl("ord_t") + (dd ? " — " + dmy(dd.from) + " – " + dmy(dd.to) : ""),
+      sheets: keys.map(k => ({ name: String(k).slice(0, 30), head: [xl("name"), "Courier ID", ...ORDD_F.map(f => f.h)], rows: rowsOf(k).map(([cid, m, nm]) => [nm, cid, ...ORDD_F.map(f => m[f.k] == null ? "" : m[f.k])]) })),
+      kpis: [[xl("k_orders"), fmt0(sum("d"))], [xl("k_drivers"), L.length], ["On-time %", fmt(avg("k")) + "%"], ["Completion %", fmt(avg("j")) + "%"]],
+      tables: [{ head: [xl("rank"), xl("name"), ...sh.map(f => f.h)], hs: 15, w: [.05, .22, ...sh.map(() => .73 / sh.length)], al: ["l", "l", ...sh.map(() => "r")],
+        rows: L.map(([cid, m, nm], i) => [i + 1, nm || cid, ...sh.map(f => m[f.k] == null ? "" : (f.type === "pct" || f.type === "min" ? fmt(m[f.k]) : fmt0(m[f.k])))]) }] };
+  }
   return null;
 }
-async function xpExcel(v){
-  const S = xpSets(v); if (!S || !S.sheets[0].rows.length) { toast(xl("nodata")); return; }
+function xpSets(v, o){
+  o = o || {};
+  const F = o.f || (o.m && !o.f && !o.t ? o.m + "-01" : ""), T = o.t || (o.m && !o.f && !o.t ? o.m + "-31" : ""), oo = { F: F || (T ? "0000-01-01" : ""), T: T || (F ? "9999-12-31" : ""), m0: o.m || (o.f ? o.f.slice(0, 7) : (o.t || "").slice(0, 7)) };
+  const S = xpSets0(v, oo); if (!S) return S;
+  const per = (o.f || o.t) ? `${o.f ? dmy(o.f) : "…"} – ${o.t ? dmy(o.t) : "…"}` : (o.m ? monthLabel(o.m) : "");
+  if (per) { S.period = per; S.file += (o.f || o.t) ? `-${o.f || ""}_${o.t || ""}` : (S.file.includes(o.m) ? "" : "-" + o.m); }
+  return S;
+}
+const XP_PERIOD = ["payroll", "dues", "loans", "internet", "fuel", "accidents", "target", "expenses", "perf", "orddetail"];
+function xpAsk(v, kind){
+  if (!XP_PERIOD.includes(v)) return kind === "pdf" ? xpPdf(v) : xpExcel(v);
+  openDialog({ title: `${kind === "pdf" ? "📄 " + xl("pdf") : "⬇ " + xl("xlsx")}`,
+    body: `<div class="form"><label class="full"><span>${xl("month")}</span><input class="input" type="month" name="m"></label>
+      <label><span>${xl("from")}</span><input class="input" type="date" name="f"></label><label><span>${xl("to")}</span><input class="input" type="date" name="t"></label>
+      <p class="sub full">${xl("per_hint")}</p></div>`,
+    submit: "⬇", onSubmit: async fd => { const o = { m: fd.m || "", f: fd.f || "", t: fd.t || "" }; if (o.f && o.t && o.f > o.t) fail(xl("per_bad")); setTimeout(() => (kind === "pdf" ? xpPdf(v, o) : xpExcel(v, o)).catch(e => { console.error(e); toast(xl("na")); }), 50); } });
+}
+async function xpExcel(v, o){
+  const S = xpSets(v, o); if (!S || !S.sheets[0].rows.length) { toast(xl("nodata")); return; }
   if (!window.XLSX || !downloads) { toast(xl("na")); return; }
   const wb = XLSX.utils.book_new();
   for (const sh of S.sheets) {
@@ -5171,8 +5217,8 @@ async function xpExcel(v){
   const buf = XLSX.write(wb, { type: "array", bookType: "xlsx" });
   await downloads.save({ filename: `ASB-${S.file}-${todayKey()}.xlsx`, data: new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }) });
 }
-async function xpPdf(v){
-  const S = xpSets(v); if (!S || !S.tables) { toast(xl("nodata")); return; }
+async function xpPdf(v, o){
+  const S = xpSets(v, o); if (!S || !S.tables) { toast(xl("nodata")); return; }
   const J = window.jspdf?.jsPDF; if (!J || !downloads) { toast(xl("na")); return; }
   const W = 1240, H = 1754, M = 70, R = W - M, FONT = '"Noto Sans Bengali","Noto Sans Arabic","Segoe UI",Roboto,Arial,sans-serif', rtl = lang === "ar";
   const logo = await (async () => { try { const rs = await fetch("logo.png"); return rs.ok ? await createImageBitmap(await rs.blob()) : null; } catch { return null; } })();
@@ -5186,7 +5232,7 @@ async function xpPdf(v){
   const LS = 104; if (logo) g.drawImage(logo, M, y - 6, LS, LS); const hx = logo ? M + LS + 20 : M;
   txt("ASB LOGISTICS Services", hx, y + 38, { sz: 40, w: 800, c: "#0b3b60" });
   txt("ABDULRAHMAN SAAD ALBAQAMI Company For Logistics", hx, y + 72, { sz: 19, c: "#667" });
-  txt(`${xl("generated")}: ${new Date().toLocaleString("en-GB", { timeZone: "Asia/Riyadh" })}`, hx, y + 98, { sz: 18, c: "#889" });
+  txt(`${S.period ? S.period + " · " : ""}${xl("generated")}: ${new Date().toLocaleString("en-GB", { timeZone: "Asia/Riyadh" })}`, hx, y + 98, { sz: 18, c: "#889" });
   y += 128; g.fillStyle = "#0b3b60"; g.beginPath(); g.roundRect(M, y, R - M, 64, 14); g.fill(); txt(fitTxt(S.title, R - M - 40, 32, 800), M + 22, y + 43, { sz: 32, w: 800, c: "#fff" });
   y += 64 + 18;
   if (S.note) { g.fillStyle = "#fff4d6"; g.fillRect(M, y, R - M, 44); g.fillStyle = "#b86e00"; g.fillRect(M, y, 6, 44); txt("⚠ " + S.note, M + 20, y + 30, { sz: 22, w: 700, c: "#8a5200" }); y += 44 + 14; }
@@ -5198,7 +5244,7 @@ async function xpPdf(v){
   const foot = () => { pages.forEach((p, i) => { const gg = p.getContext("2d"); gg.fillStyle = "#eef2f6"; gg.fillRect(0, H - 70, W, 70); gg.font = `400 18px ${FONT}`; gg.fillStyle = "#667"; gg.textAlign = "left"; gg.fillText("ASB LOGISTICS · " + S.title, M, H - 28); gg.textAlign = "right"; gg.fillText(`${xl("page")} ${i + 1}/${pages.length}`, R, H - 28); }); };
   for (const T of S.tables) {
     const cols = T.w.map(f => f * (R - M)), al = T.al || T.head.map(() => "l"), RH = 46;
-    const header = () => { g.fillStyle = "#0b3b60"; g.fillRect(M, y, R - M, 50); let x = M; T.head.forEach((h, i) => { const pad = 14; txt(fitTxt(h, cols[i] - 2 * pad, 20, 700), al[i] === "r" ? x + cols[i] - pad : x + pad, y + 33, { sz: 20, w: 700, c: "#fff", al: al[i] === "r" ? "right" : "left" }); x += cols[i]; }); y += 50; };
+    const header = () => { g.fillStyle = "#0b3b60"; g.fillRect(M, y, R - M, 50); let x = M; T.head.forEach((h, i) => { const pad = 14; txt(fitTxt(h, cols[i] - 2 * pad, T.hs || 20, 700), al[i] === "r" ? x + cols[i] - pad : x + pad, y + 33, { sz: T.hs || 20, w: 700, c: "#fff", al: al[i] === "r" ? "right" : "left" }); x += cols[i]; }); y += 50; };
     header();
     T.rows.forEach((r, ri) => {
       if (y + RH > H - 110) { newPage(); header(); }
@@ -5215,7 +5261,7 @@ async function xpPdf(v){
   pages.forEach((p, i) => { if (i) d.addPage(); d.addImage(p.toDataURL("image/jpeg", 0.86), "JPEG", 0, 0, 595.28, 841.89); });
   await downloads.save({ filename: `ASB-${S.file}-${todayKey()}.pdf`, data: d.output("arraybuffer") });
 }
-const XP_VIEWS = ["employees", "payroll", "dues", "loans", "internet", "fuel", "vehicles", "accidents", "target", "bank", "expenses"];
+const XP_VIEWS = ["employees", "payroll", "dues", "loans", "internet", "fuel", "vehicles", "accidents", "target", "bank", "expenses", "perf", "orddetail"];
 function injectExport(){
   const v = view(); if (!XP_VIEWS.includes(v)) return;
   const h = document.querySelector("#main .head"); if (!h || h.querySelector(".xpbar")) return;
