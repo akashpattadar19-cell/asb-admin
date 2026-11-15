@@ -1977,6 +1977,7 @@ function bnTestHtml(){
   return `<section class="card"><div style="font-weight:700;margin-bottom:8px">🧪 ${lang === "bn" ? "ব্যানার টেস্ট (শুধু আপনার অ্যাকাউন্টে)" : "Banner test (your account only)"}</div><div style="display:flex;flex-wrap:wrap;gap:8px">${["t3", "t10", "oth", "warn", "jum", "pay"].map((k, i) => `<button class="btn ghost" data-bntest="${k}">${L[i]}</button>`).join("")}</div></section>`;
 }
 function floatCard(){
+  return "";
   const A = window.ASBAndroid; if (!A || !A.floatState) return "";
   let st = "off"; try { st = A.floatState(); } catch {}
   const on = st !== "off";
