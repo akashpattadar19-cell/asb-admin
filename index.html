@@ -2722,12 +2722,12 @@ function expDialog(id){
           const { error } = await sb.storage.from("photos").upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" }); if (error) throw error;
           if (receipt?.path) sb.storage.from("photos").remove([receipt.path]).catch(() => {});
           receipt = { url: sb.storage.from("photos").getPublicUrl(path).data.publicUrl, path }; } catch (e) { console.error(e); fail(t("xp_rcpt_err")); } }
+      const pkt = !!fd.pkt && (!x || x.kind === "PKT"); if (pkt && fd.acct === "main") fail(t("xr_nomain"));
       if (pkt && !receipt) fail(t("xr_need_rcpt"));
       if (!pkt && fd.acct !== "main" && (!x || x.kind === "SPEND")) { const bal = xStat(fd.acct, "").close + (x && x.acct === fd.acct ? xn0(x.amount) : 0); if (bal < amount) fail(t("xf_low") + " (" + fmt(bal) + " " + t("sar") + ") — " + t("xr_use_pkt")); }
       const dupe = xTx().find(z => z.id !== id && z.kind !== "FUND" && z.kind !== "SEND" && z.kind !== "RECV" && z.acct === fd.acct && z.date === fd.date && r2(z.amount) === amount && String(z.place || "").trim().toLowerCase() === fd.place.trim().toLowerCase());
       if (dupe && form.dataset.dupOk !== "1") { form.dataset.dupOk = "1"; const er = $("#dlgErr"); er.textContent = "⚠ " + t("xr_dup"); er.hidden = false; return false; }
       const emps = [...new Set(new FormData(form).getAll("empck"))], empN = emps.map(i => state.emp[i]?.fullName).filter(Boolean);
-      const pkt = !!fd.pkt && (!x || x.kind === "PKT"); if (pkt && fd.acct === "main") fail(t("xr_nomain"));
       const rec = { kind: x && x.kind !== "PKT" ? x.kind : (pkt ? "PKT" : "SPEND"), ...(pkt ? { status: x?.status || "pending" } : {}), acct: fd.acct, amount, date: fd.date, cat: fd.cat, place: fd.place.trim(), note: (fd.note || "").trim(), emps, empN, receipt, by: x?.by || xMe(), updatedAt: Date.now() };
       await db.doc("ctx/" + (id || "e" + uid())).set({ ...(x ?? {}), ...rec, createdAt: x?.createdAt || Date.now() });
       toast(t("empSaved")); } });
