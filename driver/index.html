@@ -2092,7 +2092,8 @@ let lastPing = 0;
 async function ping(){
   if (!S.token || S.view !== "app" || document.visibilityState !== "visible" || Date.now() - lastPing < 50000) return;
   lastPing = Date.now();
-  try { await rpc("driver_ping", { p_token: S.token }); } catch {}
+  let v = 0; try { v = parseInt(window.ASBAndroid?.appVer?.()) || 0; } catch {}
+  try { await rpc("driver_ping", v ? { p_token: S.token, p_ver: v } : { p_token: S.token }); } catch {}
 }
 setInterval(ping, 60000);
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") { refresh(); ping(); } });
