@@ -2585,8 +2585,8 @@ const xAccts = () => { const own = Object.entries(state.cacct || {}).map(([id, a
 const xAcct = id => xAccts().find(a => a.id === id);
 /* the company's overall position: shown in every expense PDF */
 function xPos(){
-  const L = xTx(), ak = L.filter(x => x.acct === "akash"), paid = xSum(ak, x => x.kind === "SPEND"), back = xSum(ak, x => x.kind === "RET");
-  return { main: xStat("main", "").close, spent: xSum(L, x => (x.kind === "SPEND" && x.acct !== "akash") || x.kind === "RET"), paid, back, due: r2(paid - back), items: ak.filter(x => x.kind === "SPEND").sort((p, q) => String(p.date || "").localeCompare(String(q.date || ""))) };
+  const L = xTx(), ak = L.filter(x => x.acct === "akash"), paid = xSum(ak, x => x.kind === "SPEND"), back = xSum(ak, x => x.kind === "RECV" || x.kind === "RET");
+  return { main: xStat("main", "").close, spent: xSum(L, x => x.kind === "SPEND"), paid, back, due: r2(paid - back), items: ak.filter(x => x.kind === "SPEND").sort((p, q) => String(p.date || "").localeCompare(String(q.date || ""))) };
 }
 const PDF_K = 2;   /* PDF pages are drawn at 2x (≈300 dpi) so text stays sharp when zoomed */
 const xHidden = id => !!state.xhide?.[id]?.on;   /* hidden = stopped: no card, no new entries (old entries stay in all totals) */
@@ -2617,6 +2617,7 @@ const xEmps = x => (x.empN && x.empN.length ? x.empN : (x.emps || []).map(i => s
 function xDetail(x){
   if (x.kind === "FUND") return `<b>${t("xk_fund")}</b>${x.note ? `<div class="sub">${esc(x.note)}</div>` : ""}`;
   if (x.kind === "SEND") return `<b>➡️ ${t("xk_send")} ${esc(xAName(x.to))}</b>${x.note ? `<div class="sub">${esc(x.note)}</div>` : ""}`;
+  if (x.ret && (x.kind === "SEND" || x.kind === "RECV")) return `<b>↩ ${t("xr2_ret")}</b>${x.note ? `<div class="sub">${esc(x.note)}</div>` : ""}`;
   if (x.kind === "RET") return `<b>↩ ${t("xr2_ret")}</b>${x.note ? `<div class="sub">${esc(x.note)}</div>` : ""}`;
   if (x.kind === "RECV") return `<b>⬅️ ${t("xk_recv")}</b>${x.note ? `<div class="sub">${esc(x.note)}</div>` : ""}`;
   const en = xEmps(x), pk = x.kind === "PKT" ? `<div><span class="pill ${x.status === "reimbursed" ? "p-ok" : "p-warn"}">${x.status === "reimbursed" ? "✅ " + t("xr_done") + (x.reimbDate ? " · " + esc(dmy(x.reimbDate)) : "") : "⏳ " + t("xr_pending")}</span></div>` : "";
@@ -2638,7 +2639,7 @@ function vExpenses(){
   list.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || (b.createdAt || 0) - (a.createdAt || 0));
   let inn, out, bal;
   if (sel) { const s = xStat(sel, xm); inn = s.inn; out = s.out; bal = xStat(sel, "").close; }
-  else { const all = xTx(), per = xm ? all.filter(x => mo(x) === xm) : all; inn = xSum(per, x => x.kind === "FUND"); out = xSum(per, x => (x.kind === "SPEND" && x.acct !== "akash") || x.kind === "RET"); bal = r2(xSum(all, x => x.kind === "FUND") - xSum(all, x => x.kind === "SPEND" && x.acct !== "akash")); }
+  else { const all = xTx(), per = xm ? all.filter(x => mo(x) === xm) : all; inn = xSum(per, x => x.kind === "FUND"); out = xSum(per, x => x.kind === "SPEND"); bal = r2(xSum(all, x => x.kind === "FUND") - xSum(all, x => x.kind === "SPEND" && x.acct !== "akash") - xSum(all, x => (x.kind === "RECV" && x.ret) || x.kind === "RET")); }
   const mc = xStat("main", "").close, run = {};
   if (sel) { let bb = 0; xTx().filter(x => x.acct === sel).sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")) || (a.createdAt || 0) - (b.createdAt || 0)).forEach(x => { bb = r2(bb + xSgn(x) * (+x.amount || 0)); run[x.id] = bb; }); }
   return `
@@ -2705,7 +2706,7 @@ function xRetDialog(){
       <label class="f full">${t("reason")} <span class="opt">· ${t("optional")}</span><input class="input" name="note" placeholder="${t("xr2_note_ph")}"></label>
       <p class="sub full">${t("xr2_done_h")}</p>`,
     onSubmit: async fd => { const amount = r2(fd.amount); if (!(amount > 0) || !fd.date) fail(t("required"));
-      await db.doc("ctx/t" + uid()).set({ kind: "RET", acct: "akash", amount, date: fd.date, note: (fd.note || "").trim(), by: xMe(), createdAt: Date.now() }); toast(t("empSaved")); } });
+      const tid = uid(), b = { amount, date: fd.date, note: (fd.note || "").trim(), by: xMe(), createdAt: Date.now(), tid, ret: true }; await db.doc("ctx/s" + tid).set({ ...b, kind: "SEND", acct: "main", to: "akash" }); await db.doc("ctx/r" + tid).set({ ...b, kind: "RECV", acct: "akash", from: "main" }); toast(t("empSaved")); } });
 }
 async function xAllPdf(){
   const J = window.jspdf?.jsPDF; if (!J || !downloads) { toast(t("pdf_na")); return; }
@@ -2759,7 +2760,7 @@ async function xAllPdf(){
 async function xPStmt(){
   const J = window.jspdf?.jsPDF; if (!J || !downloads) { toast(t("pdf_na")); return; }
   const all = xTx().filter(x => x.acct === "akash").sort((p, q) => String(p.date || "").localeCompare(String(q.date || "")) || (p.createdAt || 0) - (q.createdAt || 0));
-  const outs = all.filter(x => x.kind === "SPEND"), rets = all.filter(x => x.kind === "RET");
+  const outs = all.filter(x => x.kind === "SPEND"), rets = all.filter(x => x.kind === "RECV" || x.kind === "RET");
   const paid = xSum(outs), back = xSum(rets), due = r2(paid - back), done = paid > 0 && due <= 0, rtl = lang === "ar";
   const W = 1240, H = 1754, M = 80, R = W - M, FONT = '"Noto Sans Bengali","Noto Sans Arabic","Segoe UI",Roboto,Arial,sans-serif';
   const logo = await (async () => { try { const rs = await fetch("logo.png"); return rs.ok ? await createImageBitmap(await rs.blob()) : null; } catch { return null; } })();
