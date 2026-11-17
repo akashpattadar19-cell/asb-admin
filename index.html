@@ -882,6 +882,7 @@ const CATS = ["TRAFFIC_VIOLATION","ACCIDENT","COMPANY_DEDUCTION","DELAY","MISSIN
 const PAY_LINK = { advance: "ADVANCE", company: "COMPANY_DEDUCTION", accident: "ACCIDENT" };   /* Traffic violation is NOT taken from Dues overview: it is only a payroll deduction */
 Object.assign(I18N.en, {"pc_st_draft": "Driver is taking photos", "pc_st_sub": "Waiting for approval", "pc_st_ok": "Approved · locked", "pc_st_reset": "Reset — driver must retake", "pc_approve": "Approve", "pc_reset": "Reset", "pc_reset_q": "Clear these photos? The driver will have to take them again.", "pc_approve_q": "Approve these photos? They will be locked in the driver's app.", "pc_done": "Done", "pc_nopic": "Photo not available", "tgc_title": "Photo channel (Telegram)", "tgc_hint": "Vehicle photos taken by drivers are stored in this Telegram channel so the app stays fast. Create a private channel, add the bot as an Admin, then post any message in the channel — it will appear below.", "tgc_chat": "Channel ID (starts with -100)", "tgc_found": "Detected channel", "tgc_use": "Use it", "tgc_test": "Send test", "tgc_ok": "Test message sent to the channel", "tgc_bad": "Could not send. Is the bot an Admin of the channel?", "tgc_saved": "Saved"});
 Object.assign(I18N.en, {"tgm_title": "Managers (Telegram)", "tgm_hint": "Managers can type a vehicle plate number to the bot and get all its details. A manager first sends /start to the bot (private chat) and receives their Telegram ID — paste IDs here, separated by commas. Anyone in the main Telegram chat above can also look up plates.", "tgm_ids": "Manager Telegram IDs"});
+Object.assign(I18N.en, {"rp_card": "Vehicle repair costs", "rp_sub": "Paid by the company — no fine for the driver", "rp_cnt": "repairs", "rp_add": "Add repair cost", "rp_edit": "Edit repair cost", "rp_from": "Paid from account", "rp_veh": "Vehicle", "rp_shop": "Workshop", "rp_shop_ph": "Workshop / garage name", "rp_note_ph": "What was repaired", "rp_nofine": "The driver is not charged. If you want to charge the driver, add a due manually in Dues.", "rp_by": "Repair cost by vehicle", "rp_close": "Close", "rp_drv": "Driver"});
 Object.assign(I18N.en, {"mn_menu": "Menu", "dm_title": "Month", "dm_cal": "Calendar", "dm_now": "Current month", "dm_past": "Past month — saved data", "dm_none": "No saved data for this month", "dm_drivers": "Drivers", "dm_orders": "Orders", "dm_fuel": "Fuel", "dm_avg": "Average / driver", "dm_hit": "Hit the target", "dm_lb": "Orders ranking", "dm_perf": "Performance (month)", "dm_exp": "Work experience (month)", "dm_back": "Back to current month", "dm_grade": "Grades"});
 Object.assign(I18N.en, {"kg_work": "Work this month", "kg_fin": "Financial information", "tb_search": "Search employee, plate, phone…"});
 Object.assign(I18N.en, {"map_hint": "Where company vehicles are. Each phone sends its location about every minute while the screen is on and unlocked. Screen off (rest time) = no tracking.", "map_note": "History is kept for 10 days, then deleted automatically. Drivers saw a notice in the app before location was turned on.", "map_stops": "Stops (5+ min)", "map_trips": "Trips", "map_no_stops": "No stop of 5 minutes or more", "map_h": "h", "map_m": "m"});
@@ -896,6 +897,7 @@ Object.assign(I18N.en, { v_cond: "Vehicle condition (Out / In photos)", v_cond_a
   pa_rev_note: "Deducted dues go back to the Dues overview and the reversal is written in the ledger." });
 Object.assign(I18N.bn, {"pc_st_draft": "কর্মী ছবি তুলছেন", "pc_st_sub": "অনুমোদনের অপেক্ষায়", "pc_st_ok": "অনুমোদিত · লক", "pc_st_reset": "রিসেট — কর্মীকে আবার তুলতে হবে", "pc_approve": "Approve", "pc_reset": "Reset", "pc_reset_q": "এই ছবিগুলো মুছে ফেলবেন? কর্মীকে আবার ছবি তুলতে হবে।", "pc_approve_q": "ছবিগুলো অনুমোদন করবেন? কর্মীর অ্যাপে লক হয়ে যাবে।", "pc_done": "সম্পন্ন", "pc_nopic": "ছবি পাওয়া যায়নি", "tgc_title": "ছবির চ্যানেল (টেলিগ্রাম)", "tgc_hint": "কর্মীদের তোলা গাড়ির ছবি অ্যাপ দ্রুত রাখতে এই টেলিগ্রাম চ্যানেলে জমা থাকবে। একটি প্রাইভেট চ্যানেল খুলুন, বটকে Admin বানান, তারপর চ্যানেলে যেকোনো মেসেজ দিন — নিচে চ্যানেল দেখা যাবে।", "tgc_chat": "চ্যানেল ID (-100 দিয়ে শুরু)", "tgc_found": "পাওয়া চ্যানেল", "tgc_use": "এটি ব্যবহার করুন", "tgc_test": "টেস্ট পাঠান", "tgc_ok": "চ্যানেলে টেস্ট মেসেজ গেছে", "tgc_bad": "পাঠানো যায়নি। বট কি চ্যানেলের Admin?", "tgc_saved": "সংরক্ষিত"});
 Object.assign(I18N.bn, {"tgm_title": "ম্যানেজার (টেলিগ্রাম)", "tgm_hint": "ম্যানেজার বটকে গাড়ির প্লেট নম্বর লিখলেই সব তথ্য পাবেন। ম্যানেজার প্রথমে বটকে (ব্যক্তিগত চ্যাটে) /start পাঠালে নিজের Telegram ID পাবেন — সেই ID গুলো কমা দিয়ে এখানে বসান। উপরের মূল টেলিগ্রাম চ্যাটের সবাইও প্লেট খুঁজতে পারবে।", "tgm_ids": "ম্যানেজারদের Telegram ID"});
+Object.assign(I18N.bn, {"rp_card": "গাড়ি মেরামত খরচ", "rp_sub": "কোম্পানি দিয়েছে — কর্মীর জরিমানা নেই", "rp_cnt": "টি মেরামত", "rp_add": "মেরামত খরচ যোগ", "rp_edit": "মেরামত খরচ এডিট", "rp_from": "যে অ্যাকাউন্ট থেকে দেওয়া হলো", "rp_veh": "গাড়ি", "rp_shop": "ওয়ার্কশপ", "rp_shop_ph": "ওয়ার্কশপ / গ্যারেজের নাম", "rp_note_ph": "কী মেরামত করা হলো", "rp_nofine": "কর্মীর নামে কিছু কাটা হবে না। কর্মীকে চার্জ করতে চাইলে বকেয়া পেজে নিজে যোগ করুন।", "rp_by": "গাড়ি অনুযায়ী মেরামত খরচ", "rp_close": "বন্ধ", "rp_drv": "কর্মী"});
 Object.assign(I18N.bn, {"mn_menu": "মেনু", "dm_title": "মাস", "dm_cal": "ক্যালেন্ডার", "dm_now": "চলতি মাস", "dm_past": "গত মাস — সংরক্ষিত তথ্য", "dm_none": "এই মাসের কোনো সংরক্ষিত তথ্য নেই", "dm_drivers": "কর্মী", "dm_orders": "অর্ডার", "dm_fuel": "পেট্রোল", "dm_avg": "গড় / কর্মী", "dm_hit": "টার্গেট পূরণ", "dm_lb": "অর্ডার র‍্যাংক", "dm_perf": "Performance (মাস)", "dm_exp": "Work experience (মাস)", "dm_back": "চলতি মাসে ফিরুন", "dm_grade": "গ্রেড"});
 Object.assign(I18N.bn, {"kg_work": "এই মাসের কাজ", "kg_fin": "আর্থিক তথ্য", "tb_search": "কর্মী, প্লেট, ফোন খুঁজুন…"});
 Object.assign(I18N.bn, {"map_hint": "কোম্পানির গাড়ি কোথায় আছে। ফোনের স্ক্রিন চালু ও আনলক থাকলে প্রায় প্রতি মিনিটে লোকেশন আসে। স্ক্রিন বন্ধ (বিশ্রাম) থাকলে ট্র্যাকিং হয় না।", "map_note": "ইতিহাস ১০ দিন জমা থাকে, তারপর নিজে থেকে মুছে যায়। লোকেশন চালুর আগে কর্মীদের অ্যাপে নোটিস দেখানো হয়েছে।", "map_stops": "থামার জায়গা (৫+ মিনিট)", "map_trips": "চলার অংশ", "map_no_stops": "৫ মিনিট বা তার বেশি থামেনি", "map_h": "ঘ", "map_m": "মি"});
@@ -910,6 +912,7 @@ Object.assign(I18N.bn, { v_cond: "গাড়ির অবস্থা (Out / I
   pa_already: "এই পেরোল আগেই Publish হয়েছে — দ্বিতীয়বার কিছু কাটা হয়নি।", pa_conf_t: "Dues Overview থেকে কর্তন", pa_conf_none: "এই পেরোলে বকেয়া থেকে কোনো কর্তন নেই।", pa_conf_before: "আগে বাকি", pa_conf_cut: "কাটা হবে", pa_conf_after: "পরে বাকি",
   pay_reopen: "Unpublish / বাতিল করুন", pay_reopen_q: "{m} মাসের পেরোল বাতিল (Unpublish) করবেন? কর্মীদের অ্যাপ থেকে পে-স্লিপ সরে যাবে, কাটা বকেয়া আবার Dues Overview-এ ফিরে আসবে এবং লেনদেন-রেকর্ডে ‘ফেরত’ হিসেবে লেখা থাকবে। আবার Publish করলে নতুন করে কাটা হবে।",
   pa_rev_note: "কাটা বকেয়া আবার Dues Overview-এ ফিরে যাবে এবং লেনদেন-রেকর্ডে ফেরত লেখা হবে।" });
+Object.assign(I18N.ar, {"rp_card": "تكاليف إصلاح المركبات", "rp_sub": "تدفعها الشركة — بدون غرامة على السائق", "rp_cnt": "إصلاحات", "rp_add": "إضافة تكلفة إصلاح", "rp_edit": "تعديل تكلفة الإصلاح", "rp_from": "الدفع من حساب", "rp_veh": "المركبة", "rp_shop": "الورشة", "rp_shop_ph": "اسم الورشة", "rp_note_ph": "ما الذي تم إصلاحه", "rp_nofine": "لن يُخصم من السائق. لتحميله المبلغ أضف مستحقاً يدوياً من صفحة المستحقات.", "rp_by": "تكلفة الإصلاح حسب المركبة", "rp_close": "إغلاق", "rp_drv": "السائق"});
 Object.assign(I18N.ar, {"pc_st_draft": "السائق يلتقط الصور", "pc_st_sub": "بانتظار الموافقة", "pc_st_ok": "تمت الموافقة · مقفل", "pc_st_reset": "تمت إعادة التعيين — على السائق إعادة التصوير", "pc_approve": "موافقة", "pc_reset": "إعادة تعيين", "pc_reset_q": "مسح هذه الصور؟ سيتعين على السائق التقاطها من جديد.", "pc_approve_q": "الموافقة على الصور؟ ستُقفل في تطبيق السائق.", "pc_done": "تم", "pc_nopic": "الصورة غير متاحة", "tgc_title": "قناة الصور (تيليجرام)", "tgc_hint": "تُحفظ صور المركبات التي يلتقطها السائقون في قناة تيليجرام هذه ليبقى التطبيق سريعًا. أنشئ قناة خاصة وأضف البوت كمشرف ثم أرسل أي رسالة فيها — ستظهر أدناه.", "tgc_chat": "معرّف القناة (يبدأ بـ -100)", "tgc_found": "القناة المكتشفة", "tgc_use": "استخدمها", "tgc_test": "إرسال اختبار", "tgc_ok": "تم إرسال رسالة الاختبار إلى القناة", "tgc_bad": "تعذّر الإرسال. هل البوت مشرف في القناة؟", "tgc_saved": "تم الحفظ"});
 Object.assign(I18N.ar, {"tgm_title": "المديرون (تيليجرام)", "tgm_hint": "يستطيع المدير كتابة رقم لوحة المركبة للبوت ليحصل على كل تفاصيلها. يرسل المدير /start للبوت (محادثة خاصة) ليستلم معرّفه على تيليجرام — الصق المعرّفات هنا مفصولة بفواصل. كل من في محادثة تيليجرام الرئيسية أعلاه يستطيع البحث أيضًا.", "tgm_ids": "معرّفات المديرين"});
 Object.assign(I18N.ar, {"mn_menu": "القائمة", "dm_title": "الشهر", "dm_cal": "التقويم", "dm_now": "الشهر الحالي", "dm_past": "شهر سابق — بيانات محفوظة", "dm_none": "لا توجد بيانات محفوظة لهذا الشهر", "dm_drivers": "السائقون", "dm_orders": "الطلبات", "dm_fuel": "الوقود", "dm_avg": "المتوسط / سائق", "dm_hit": "حققوا الهدف", "dm_lb": "ترتيب الطلبات", "dm_perf": "الأداء (الشهر)", "dm_exp": "الخبرة العملية (الشهر)", "dm_back": "العودة للشهر الحالي", "dm_grade": "الدرجات"});
@@ -2713,6 +2716,7 @@ function xDetail(x){
   if (x.kind === "RET") return `<b>↩ ${t("xr2_ret")}</b>${x.note ? `<div class="sub">${esc(x.note)}</div>` : ""}`;
   if (x.kind === "RECV") return `<b>⬅️ ${t("xk_recv")}</b>${x.note ? `<div class="sub">${esc(x.note)}</div>` : ""}`;
   const en = xEmps(x), pk = x.kind === "PKT" ? `<div><span class="pill ${x.status === "reimbursed" ? "p-ok" : "p-warn"}">${x.status === "reimbursed" ? "✅ " + t("xr_done") + (x.reimbDate ? " · " + esc(dmy(x.reimbDate)) : "") : "⏳ " + t("xr_pending")}</span></div>` : "";
+  if (x.rep) return `<b>🔧 ${esc(x.plate || "—")}${x.drv ? ` <span class="sub">· ${esc(x.drv)}</span>` : ""}</b><div class="sub">${esc(t("rp_card"))}${x.place ? " · " + esc(x.place) : ""}${x.note ? " · " + esc(x.note) : ""}</div>`;
   return `${pk}<b>${esc(x.place || "—")}</b><div class="sub">${esc(xCat(x.cat))}${x.note ? " · " + esc(x.note) : ""}</div>${en.length ? `<div class="xemp">👥 ${en.slice(0, 3).map(esc).join(", ")}${en.length > 3 ? ` +${en.length - 3}` : ""}</div>` : ""}`;
 }
 function vExpenses(){
@@ -2727,11 +2731,17 @@ function vExpenses(){
       <div class="xc-s"><span class="pos">↓ ${fmt(mm.inn)}</span><span class="neg">↑ ${fmt(mm.out)}</span></div>${xPend(a.id).length ? `<div class="sub" style="margin:4px 0;color:var(--warn,#b86e00)">⏳ ${t("xr_due")}: <b>${fmt(xSum(xPend(a.id)))}</b> ${t("sar")}</div>` : ""}
       <div class="xc-a">${sup && !a.main ? `<button class="btn ghost sm" data-act="x-hide" data-id="${esc(a.id)}" data-needs-write title="${t("xh_tip")}">🙈 ${t("xh_btn")}</button>` : ""}${a.personal ? `${sup ? `<button class="btn sm" data-act="x-ret" data-needs-write>↩ ${t("xr2_btn")}</button>` : ""}<button class="btn ghost sm" data-act="x-pstmt">📄 ${t("xr2_stmt")}</button>` : ""}${a.personal ? "" : `${sup && xPend(a.id).length ? `<button class="btn sm" data-act="x-reimb" data-id="${esc(a.id)}" data-needs-write>💵 ${t("xr_btn")}</button>` : ""}<button class="btn ghost sm" data-act="x-pdf" data-id="${esc(a.id)}" data-p="w">📄 ${t("xi_wk")}</button><button class="btn ghost sm" data-act="x-pdf" data-id="${esc(a.id)}" data-p="m">📄 ${t("xi_mo")}</button>`}${sup && !a.main && !a.personal && !a.auto && !used ? `<button class="btn ghost sm danger-t" data-act="x-acct-del" data-id="${esc(a.id)}" data-needs-write>${t("delete")}</button>` : ""}</div></div>`; }).join("");
   let list = xTx().filter(x => (!xm || mo(x) === xm) && (!sel || x.acct === sel) && (!q || [x.place, x.note, xAName(x.acct), xAName(x.to), xEmps(x).join(" ")].some(v => String(v || "").toLowerCase().includes(q))));
+  if (state.xRep) list = list.filter(x => x.rep);
   if (!sel) list = list.filter(x => x.kind !== "RECV");   /* "all": a transfer is shown once (on the main side) */
   list.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")) || (b.createdAt || 0) - (a.createdAt || 0));
   let inn, out, bal;
   if (sel) { const s = xStat(sel, xm); inn = s.inn; out = s.out; bal = xStat(sel, "").close; }
   else { const all = xTx(), per = xm ? all.filter(x => mo(x) === xm) : all; inn = xSum(per, x => x.kind === "FUND"); out = xSum(per, x => x.kind === "SPEND"); bal = r2(xSum(all, x => x.kind === "FUND") - xSum(all, x => x.kind === "SPEND" && x.acct !== "akash") - xSum(all, x => (x.kind === "RECV" && x.ret) || x.kind === "RET")); }
+  const RP = xTx().filter(x => x.rep), rpAll = xSum(RP), rpMo = xSum(RP.filter(x => mo(x) === cur)), rpOn = !!state.xRep;
+  const repCard = `<div class="xcard ${rpOn ? "on" : ""}" data-act="x-rep"><div class="xc-h"><b>🔧 ${t("rp_card")}</b><span class="sub">${t("rp_sub")}</span></div>
+      <div class="xc-b ${rpAll ? "neg" : ""}">${fmt(rpAll)} <small>${t("sar")}</small></div>
+      <div class="xc-s"><span class="neg">↑ ${fmt(rpMo)}</span><span class="sub">${RP.length} ${t("rp_cnt")}</span></div>
+      <div class="xc-a">${(sup || mine) ? `<button class="btn sm" data-act="rp-new" data-needs-write>+ ${t("rp_add")}</button>` : ""}</div></div>`;
   const mc = xStat("main", "").close, run = {};
   if (sel) { let bb = 0; xTx().filter(x => x.acct === sel).sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")) || (a.createdAt || 0) - (b.createdAt || 0)).forEach(x => { bb = r2(bb + xSgn(x) * (+x.amount || 0)); run[x.id] = bb; }); }
   return `
@@ -2740,7 +2750,7 @@ function vExpenses(){
       ${sup ? `<button class="btn ghost" data-act="x-fund" data-needs-write>＋ ${t("xk_fund_b")}</button><button class="btn" data-act="x-send" data-needs-write>➡️ ${t("xk_send_b")}</button>` : ""}
       ${(sup || mine) ? `<button class="btn" data-act="exp-new" data-needs-write>+ ${t("exp_add")}</button>` : ""}
       <button class="btn ghost" data-act="x-allpdf">📄 ${t("ap_btn")}</button><button class="btn ghost" data-act="exp-csv">⬇ CSV</button></div></div>
-  <div class="xcards">${cards}</div>
+  <div class="xcards">${cards}${repCard}</div>
   ${sup && accts.some(a => xHidden(a.id)) ? `<div class="panel" style="margin-bottom:14px;padding:10px 14px"><span class="sub">🙈 ${t("xh_hidden")}:</span> ${accts.filter(a => xHidden(a.id)).map(a => `<button class="btn ghost sm" data-act="x-unhide" data-id="${esc(a.id)}" data-needs-write>👁 ${esc(xAName(a.id))}</button>`).join(" ")}</div>` : ""}
   ${accts.length > 1 ? `<section class="panel" style="margin-bottom:14px"><div class="scroll"><table><thead><tr><th>${t("xp_acct")}</th><th class="r">${t("xp_left")}</th></tr></thead><tbody>${accts.filter(a => !a.main && !a.personal).map(a => { const z = xStat(a.id, ""); return `<tr><td><div class="name">${esc(xAName(a.id))}</div><div class="sub">${esc(adminName(a.email))}</div></td><td class="r nowrap"><b class="${z.close < 0 ? "neg" : ""}">${fmt(z.close)}</b></td></tr>`; }).join("")}</tbody><tfoot><tr><td><b>${t("xp_mgr_total")}</b></td><td class="r"><b>${fmt(accts.filter(a => !a.main && !a.personal).reduce((s2, a) => s2 + xStat(a.id, "").close, 0))}</b></td></tr></tfoot></table></div></section>` : ""}
   ${!sup && !mine ? `<p class="sub" style="margin:0 0 10px">ℹ️ ${t("xp_noacct")}</p>` : ""}
@@ -2751,6 +2761,8 @@ function vExpenses(){
     <div class="kpi"><span>${sel ? t("xp_out") : t("exp_total")}${xm ? " · " + esc(monthLabel(xm)) : ""}</span><b class="${out ? "neg" : ""}">${fmt(out)}</b><small>${t("sar")}</small></div>
     <div class="kpi"><span>${t("xp_bal")}</span><b class="${bal < 0 ? "neg" : ""}">${fmt(bal)}</b><small>${t("sar")}${sel ? "" : " · " + t("xa_main") + " " + fmt(mc)}</small></div>
   </div>
+  ${state.xRep ? (() => { const by = {}; RP.filter(x => !xm || mo(x) === xm).forEach(x => { const k = x.plate || x.place || "—"; (by[k] = by[k] || { n: 0, a: 0, d: x.drv || "" }).n++; by[k].a = r2(by[k].a + (+x.amount || 0)); if (x.drv) by[k].d = x.drv; }); const rows = Object.entries(by).sort((p, q2) => q2[1].a - p[1].a);
+    return `<section class="panel" style="margin-bottom:14px"><div class="head" style="padding:12px 16px 0"><b>🔧 ${t("rp_by")}${xm ? " · " + esc(monthLabel(xm)) : ""}</b> <button class="btn ghost sm" data-act="x-rep">✕ ${t("rp_close")}</button></div>${rows.length ? `<div class="scroll"><table><thead><tr><th>${t("plate")}</th><th>${t("rp_drv")}</th><th class="r">${t("rp_cnt")}</th><th class="r">${t("amount")}</th></tr></thead><tbody>${rows.map(([k, v]) => `<tr><td><b>${esc(k)}</b></td><td class="sub">${esc(v.d || "—")}</td><td class="r">${v.n}</td><td class="r"><b class="neg">${fmt(v.a)}</b></td></tr>`).join("")}</tbody><tfoot><tr><td colspan="3"><b>${t("total")}</b></td><td class="r"><b>${fmt(rows.reduce((s2, r) => s2 + r[1].a, 0))}</b></td></tr></tfoot></table></div>` : `<div class="empty"><b>${t("exp_none")}</b></div>`}</section>`; })() : ""}
   <div class="filters"><input class="input" id="xq" placeholder="${t("search")}" value="${esc(state.xq || "")}"></div>
   <section class="panel">${list.length ? `<div class="scroll"><table>
     <thead><tr><th>${t("date")}</th>${sel ? "" : `<th>${t("xp_acct")}</th>`}<th>${t("xp_detail")}</th><th class="r">${t("amount")}</th>${sel ? `<th class="r">${t("xp_bal")}</th>` : ""}<th>${t("xp_rcpt")}</th><th>${t("exp_by")}</th><th></th></tr></thead>
@@ -2985,6 +2997,33 @@ function expDialog(id){
   const setAll = on => { dlg.querySelectorAll("#empList .emprow").forEach(r => { if (!r.hidden) r.querySelector("input").checked = on; }); cnt(); };
   const ba = $("#empAll"), bn = $("#empNone"); if (ba) ba.onclick = () => setAll(true); if (bn) bn.onclick = () => setAll(false);
   cnt();
+}
+/* Vehicle repair cost: paid from any account the person may spend from (main included); never creates a fine/due for the driver */
+function repDialog(id){
+  const x = id ? state.ctx[id] : null, accts = xAccts().filter(a => xCanSpend(a.id) && (!xHidden(a.id) || (x && x.acct === a.id)));
+  if (!accts.length) { toast(t("xp_noacct")); return; }
+  const selA = x?.acct || "main", vl = Object.entries(state.vehicles || {}).map(([vid, v]) => ({ id: vid, plate: v.plate || "", drv: v.empId ? (state.emp[v.empId]?.fullName || "") : "" })).filter(v => v.plate).sort((a, b) => a.plate.localeCompare(b.plate));
+  openDialog({ title: x ? t("rp_edit") : t("rp_add"), submit: t("save"),
+    body: `<label class="f full">💳 ${t("rp_from")} *<select class="input" name="acct" required>${accts.map(a => `<option value="${esc(a.id)}" ${a.id === selA ? "selected" : ""}>${esc(xAName(a.id))} · ${fmt(xStat(a.id, "").close)} ${t("sar")}</option>`).join("")}</select></label>
+      <label class="f full">🚗 ${t("rp_veh")} *<select class="input" name="veh" required><option value="">—</option>${vl.map(v => `<option value="${esc(v.id)}" ${x?.vehId === v.id ? "selected" : ""}>${esc(v.plate)}${v.drv ? " · " + esc(v.drv) : ""}</option>`).join("")}</select></label>
+      <label class="f">${t("date")} *<input class="input" name="date" type="date" value="${esc(x?.date || todayKey())}" required></label>
+      <label class="f">${t("amount")} *<input class="input num" name="amount" type="number" min="0.01" step="0.01" value="${x?.amount ?? ""}" required></label>
+      <label class="f full">🔧 ${t("rp_shop")} <span class="opt">· ${t("optional")}</span><input class="input" name="place" value="${esc(x?.place || "")}" placeholder="${t("rp_shop_ph")}"></label>
+      <label class="f full">${t("reason")} <span class="opt">· ${t("optional")}</span><textarea class="input" name="note" rows="2" placeholder="${t("rp_note_ph")}">${esc(x?.note || "")}</textarea></label>
+      <label class="f full">🧾 ${t("xp_rcpt")} <span class="opt">· ${t("optional")}</span><input class="input" name="receipt" type="file" accept="image/*">${x?.receipt?.url ? `<span class="sub">${t("xp_rcpt_keep")}</span>` : ""}</label>
+      <p class="sub full">ℹ️ ${t("rp_nofine")}</p>`,
+    onSubmit: async (fd, form) => {
+      const amount = r2(fd.amount), v = (state.vehicles || {})[fd.veh]; if (!(amount > 0) || !v || !fd.date || !xCanSpend(fd.acct)) fail(t("required"));
+      if (fd.acct !== "main" && fd.acct !== "akash") { const bal = xStat(fd.acct, "").close + (x && x.acct === fd.acct ? xn0(x.amount) : 0); if (bal < amount) fail(t("xf_low") + " (" + fmt(bal) + " " + t("sar") + ")"); }
+      let receipt = x?.receipt || null; const f = new FormData(form).get("receipt");
+      if (f && f.size) { try { const blob = await jpegBlob(f, 1400, 0.74), path = `rcpt/${uid()}.jpg`;
+          const { error } = await sb.storage.from("photos").upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" }); if (error) throw error;
+          if (receipt?.path) sb.storage.from("photos").remove([receipt.path]).catch(() => {});
+          receipt = { url: sb.storage.from("photos").getPublicUrl(path).data.publicUrl, path }; } catch (e) { console.error(e); fail(t("xp_rcpt_err")); } }
+      const drv = v.empId ? (state.emp[v.empId]?.fullName || "") : "";
+      const rec = { kind: "SPEND", rep: true, acct: fd.acct, amount, date: fd.date, cat: "repair", vehId: fd.veh, plate: v.plate || "", drv, place: (fd.place || "").trim(), note: (fd.note || "").trim(), receipt, by: x?.by || xMe(), updatedAt: Date.now() };
+      await db.doc("ctx/" + (id || "e" + uid())).set({ ...(x ?? {}), ...rec, createdAt: x?.createdAt || Date.now() });
+      toast(t("empSaved")); } });
 }
 async function xInvoice(acctId, per){
   const J = window.jspdf?.jsPDF; if (!J || !downloads) { toast(t("pdf_na")); return; }
@@ -4109,6 +4148,8 @@ document.addEventListener("click", async e => {
     }
     if (act === "sr-edit") { srDialog(id); return; }
     if (act === "exp-new") { expDialog(null); return; }
+    if (act === "rp-new") { e.stopPropagation(); repDialog(null); return; }
+    if (act === "x-rep") { state.xRep = !state.xRep; render(); return; }
     if (act === "x-allpdf") { await xAllPdf(); return; }
     if (act === "x-ret") { if (xIsSuper()) xRetDialog(); return; }
     if (act === "x-hide") { if (!xIsSuper() || id === "main") return; const a = xAcct(id); if (!a) return; openDialog({ title: "🙈 " + t("xh_btn"), submit: t("xh_btn"), body: `<p class="full"><b>${esc(xAName(id))}</b></p><p class="sub full">${t("xh_confirm")}</p>`, onSubmit: async () => { await db.doc("xhide/" + id).set({ on: true, at: Date.now(), by: xMe() }); if (state.xAcct === id) state.xAcct = ""; toast(t("empSaved")); } }); return; }
@@ -4116,7 +4157,7 @@ document.addEventListener("click", async e => {
     if (act === "x-pstmt") { await xPStmt(); return; }
     if (act === "x-reimb") { if (xIsSuper()) xReimbDialog(xPend(id).map(z => z.id), id); return; }
     if (act === "x-reimb1") { if (xIsSuper() && state.ctx[id]) xReimbDialog([id], state.ctx[id].acct); return; }
-    if (act === "exp-edit") { expDialog(id); return; }
+    if (act === "exp-edit") { if (state.ctx[id]?.rep) repDialog(id); else expDialog(id); return; }
     if (act === "x-sel") { state.xAcct = id || ""; render(); return; }
     if (act === "x-acct-new") { if (xIsSuper()) xAcctDialog(); return; }
     if (act === "x-fund") { if (xIsSuper()) xMoneyDialog("FUND"); return; }
