@@ -882,6 +882,7 @@ const CATS = ["TRAFFIC_VIOLATION","ACCIDENT","COMPANY_DEDUCTION","DELAY","MISSIN
 const PAY_LINK = { advance: "ADVANCE", company: "COMPANY_DEDUCTION", accident: "ACCIDENT" };   /* Traffic violation is NOT taken from Dues overview: it is only a payroll deduction */
 Object.assign(I18N.en, {"pc_st_draft": "Driver is taking photos", "pc_st_sub": "Waiting for approval", "pc_st_ok": "Approved · locked", "pc_st_reset": "Reset — driver must retake", "pc_approve": "Approve", "pc_reset": "Reset", "pc_reset_q": "Clear these photos? The driver will have to take them again.", "pc_approve_q": "Approve these photos? They will be locked in the driver's app.", "pc_done": "Done", "pc_nopic": "Photo not available", "tgc_title": "Photo channel (Telegram)", "tgc_hint": "Vehicle photos taken by drivers are stored in this Telegram channel so the app stays fast. Create a private channel, add the bot as an Admin, then post any message in the channel — it will appear below.", "tgc_chat": "Channel ID (starts with -100)", "tgc_found": "Detected channel", "tgc_use": "Use it", "tgc_test": "Send test", "tgc_ok": "Test message sent to the channel", "tgc_bad": "Could not send. Is the bot an Admin of the channel?", "tgc_saved": "Saved"});
 Object.assign(I18N.en, {"tgm_title": "Managers (Telegram)", "tgm_hint": "Managers can type a vehicle plate number to the bot and get all its details. A manager first sends /start to the bot (private chat) and receives their Telegram ID — paste IDs here, separated by commas. Anyone in the main Telegram chat above can also look up plates.", "tgm_ids": "Manager Telegram IDs"});
+Object.assign(I18N.en, {"rc_multi": "you can add up to {n} photos", "rc_remove": "remove", "rc_max": "At most {n} receipt photos."});
 Object.assign(I18N.en, {"rp_pdf": "VEHICLE REPAIR REPORT", "rp_tot": "Total repair cost", "rp_cnt2": "Repairs", "rp_vn": "Vehicles", "rp_det": "Repair details", "rp_paid": "Paid from", "rp_dl": "Download receipt", "rp_dl_err": "Could not download the receipt"});
 Object.assign(I18N.en, {"rp_card": "Vehicle repair costs", "rp_sub": "Paid by the company — no fine for the driver", "rp_cnt": "repairs", "rp_add": "Add repair cost", "rp_edit": "Edit repair cost", "rp_from": "Paid from account", "rp_veh": "Vehicle", "rp_shop": "Workshop", "rp_shop_ph": "Workshop / garage name", "rp_note_ph": "What was repaired", "rp_nofine": "The driver is not charged. If you want to charge the driver, add a due manually in Dues.", "rp_by": "Repair cost by vehicle", "rp_close": "Close", "rp_drv": "Driver"});
 Object.assign(I18N.en, {"mn_menu": "Menu", "dm_title": "Month", "dm_cal": "Calendar", "dm_now": "Current month", "dm_past": "Past month — saved data", "dm_none": "No saved data for this month", "dm_drivers": "Drivers", "dm_orders": "Orders", "dm_fuel": "Fuel", "dm_avg": "Average / driver", "dm_hit": "Hit the target", "dm_lb": "Orders ranking", "dm_perf": "Performance (month)", "dm_exp": "Work experience (month)", "dm_back": "Back to current month", "dm_grade": "Grades"});
@@ -898,6 +899,7 @@ Object.assign(I18N.en, { v_cond: "Vehicle condition (Out / In photos)", v_cond_a
   pa_rev_note: "Deducted dues go back to the Dues overview and the reversal is written in the ledger." });
 Object.assign(I18N.bn, {"pc_st_draft": "কর্মী ছবি তুলছেন", "pc_st_sub": "অনুমোদনের অপেক্ষায়", "pc_st_ok": "অনুমোদিত · লক", "pc_st_reset": "রিসেট — কর্মীকে আবার তুলতে হবে", "pc_approve": "Approve", "pc_reset": "Reset", "pc_reset_q": "এই ছবিগুলো মুছে ফেলবেন? কর্মীকে আবার ছবি তুলতে হবে।", "pc_approve_q": "ছবিগুলো অনুমোদন করবেন? কর্মীর অ্যাপে লক হয়ে যাবে।", "pc_done": "সম্পন্ন", "pc_nopic": "ছবি পাওয়া যায়নি", "tgc_title": "ছবির চ্যানেল (টেলিগ্রাম)", "tgc_hint": "কর্মীদের তোলা গাড়ির ছবি অ্যাপ দ্রুত রাখতে এই টেলিগ্রাম চ্যানেলে জমা থাকবে। একটি প্রাইভেট চ্যানেল খুলুন, বটকে Admin বানান, তারপর চ্যানেলে যেকোনো মেসেজ দিন — নিচে চ্যানেল দেখা যাবে।", "tgc_chat": "চ্যানেল ID (-100 দিয়ে শুরু)", "tgc_found": "পাওয়া চ্যানেল", "tgc_use": "এটি ব্যবহার করুন", "tgc_test": "টেস্ট পাঠান", "tgc_ok": "চ্যানেলে টেস্ট মেসেজ গেছে", "tgc_bad": "পাঠানো যায়নি। বট কি চ্যানেলের Admin?", "tgc_saved": "সংরক্ষিত"});
 Object.assign(I18N.bn, {"tgm_title": "ম্যানেজার (টেলিগ্রাম)", "tgm_hint": "ম্যানেজার বটকে গাড়ির প্লেট নম্বর লিখলেই সব তথ্য পাবেন। ম্যানেজার প্রথমে বটকে (ব্যক্তিগত চ্যাটে) /start পাঠালে নিজের Telegram ID পাবেন — সেই ID গুলো কমা দিয়ে এখানে বসান। উপরের মূল টেলিগ্রাম চ্যাটের সবাইও প্লেট খুঁজতে পারবে।", "tgm_ids": "ম্যানেজারদের Telegram ID"});
+Object.assign(I18N.bn, {"rc_multi": "সর্বোচ্চ {n}টি ছবি দেওয়া যাবে", "rc_remove": "মুছুন", "rc_max": "সর্বোচ্চ {n}টি রসিদের ছবি দেওয়া যাবে।"});
 Object.assign(I18N.bn, {"rp_pdf": "গাড়ি মেরামত রিপোর্ট", "rp_tot": "মোট মেরামত খরচ", "rp_cnt2": "মেরামত", "rp_vn": "গাড়ি", "rp_det": "মেরামতের বিবরণ", "rp_paid": "যে অ্যাকাউন্ট থেকে দেওয়া", "rp_dl": "রসিদ ডাউনলোড", "rp_dl_err": "রসিদ ডাউনলোড করা যায়নি"});
 Object.assign(I18N.bn, {"rp_card": "গাড়ি মেরামত খরচ", "rp_sub": "কোম্পানি দিয়েছে — কর্মীর জরিমানা নেই", "rp_cnt": "টি মেরামত", "rp_add": "মেরামত খরচ যোগ", "rp_edit": "মেরামত খরচ এডিট", "rp_from": "যে অ্যাকাউন্ট থেকে দেওয়া হলো", "rp_veh": "গাড়ি", "rp_shop": "ওয়ার্কশপ", "rp_shop_ph": "ওয়ার্কশপ / গ্যারেজের নাম", "rp_note_ph": "কী মেরামত করা হলো", "rp_nofine": "কর্মীর নামে কিছু কাটা হবে না। কর্মীকে চার্জ করতে চাইলে বকেয়া পেজে নিজে যোগ করুন।", "rp_by": "গাড়ি অনুযায়ী মেরামত খরচ", "rp_close": "বন্ধ", "rp_drv": "কর্মী"});
 Object.assign(I18N.bn, {"mn_menu": "মেনু", "dm_title": "মাস", "dm_cal": "ক্যালেন্ডার", "dm_now": "চলতি মাস", "dm_past": "গত মাস — সংরক্ষিত তথ্য", "dm_none": "এই মাসের কোনো সংরক্ষিত তথ্য নেই", "dm_drivers": "কর্মী", "dm_orders": "অর্ডার", "dm_fuel": "পেট্রোল", "dm_avg": "গড় / কর্মী", "dm_hit": "টার্গেট পূরণ", "dm_lb": "অর্ডার র‍্যাংক", "dm_perf": "Performance (মাস)", "dm_exp": "Work experience (মাস)", "dm_back": "চলতি মাসে ফিরুন", "dm_grade": "গ্রেড"});
@@ -914,6 +916,7 @@ Object.assign(I18N.bn, { v_cond: "গাড়ির অবস্থা (Out / I
   pa_already: "এই পেরোল আগেই Publish হয়েছে — দ্বিতীয়বার কিছু কাটা হয়নি।", pa_conf_t: "Dues Overview থেকে কর্তন", pa_conf_none: "এই পেরোলে বকেয়া থেকে কোনো কর্তন নেই।", pa_conf_before: "আগে বাকি", pa_conf_cut: "কাটা হবে", pa_conf_after: "পরে বাকি",
   pay_reopen: "Unpublish / বাতিল করুন", pay_reopen_q: "{m} মাসের পেরোল বাতিল (Unpublish) করবেন? কর্মীদের অ্যাপ থেকে পে-স্লিপ সরে যাবে, কাটা বকেয়া আবার Dues Overview-এ ফিরে আসবে এবং লেনদেন-রেকর্ডে ‘ফেরত’ হিসেবে লেখা থাকবে। আবার Publish করলে নতুন করে কাটা হবে।",
   pa_rev_note: "কাটা বকেয়া আবার Dues Overview-এ ফিরে যাবে এবং লেনদেন-রেকর্ডে ফেরত লেখা হবে।" });
+Object.assign(I18N.ar, {"rc_multi": "حتى {n} صور", "rc_remove": "حذف", "rc_max": "الحد الأقصى {n} صور للإيصال."});
 Object.assign(I18N.ar, {"rp_pdf": "تقرير إصلاح المركبات", "rp_tot": "إجمالي تكلفة الإصلاح", "rp_cnt2": "الإصلاحات", "rp_vn": "المركبات", "rp_det": "تفاصيل الإصلاح", "rp_paid": "مدفوع من", "rp_dl": "تنزيل الإيصال", "rp_dl_err": "تعذّر تنزيل الإيصال"});
 Object.assign(I18N.ar, {"rp_card": "تكاليف إصلاح المركبات", "rp_sub": "تدفعها الشركة — بدون غرامة على السائق", "rp_cnt": "إصلاحات", "rp_add": "إضافة تكلفة إصلاح", "rp_edit": "تعديل تكلفة الإصلاح", "rp_from": "الدفع من حساب", "rp_veh": "المركبة", "rp_shop": "الورشة", "rp_shop_ph": "اسم الورشة", "rp_note_ph": "ما الذي تم إصلاحه", "rp_nofine": "لن يُخصم من السائق. لتحميله المبلغ أضف مستحقاً يدوياً من صفحة المستحقات.", "rp_by": "تكلفة الإصلاح حسب المركبة", "rp_close": "إغلاق", "rp_drv": "السائق"});
 Object.assign(I18N.ar, {"pc_st_draft": "السائق يلتقط الصور", "pc_st_sub": "بانتظار الموافقة", "pc_st_ok": "تمت الموافقة · مقفل", "pc_st_reset": "تمت إعادة التعيين — على السائق إعادة التصوير", "pc_approve": "موافقة", "pc_reset": "إعادة تعيين", "pc_reset_q": "مسح هذه الصور؟ سيتعين على السائق التقاطها من جديد.", "pc_approve_q": "الموافقة على الصور؟ ستُقفل في تطبيق السائق.", "pc_done": "تم", "pc_nopic": "الصورة غير متاحة", "tgc_title": "قناة الصور (تيليجرام)", "tgc_hint": "تُحفظ صور المركبات التي يلتقطها السائقون في قناة تيليجرام هذه ليبقى التطبيق سريعًا. أنشئ قناة خاصة وأضف البوت كمشرف ثم أرسل أي رسالة فيها — ستظهر أدناه.", "tgc_chat": "معرّف القناة (يبدأ بـ -100)", "tgc_found": "القناة المكتشفة", "tgc_use": "استخدمها", "tgc_test": "إرسال اختبار", "tgc_ok": "تم إرسال رسالة الاختبار إلى القناة", "tgc_bad": "تعذّر الإرسال. هل البوت مشرف في القناة؟", "tgc_saved": "تم الحفظ"});
@@ -2711,6 +2714,22 @@ function xStatR(acct, from, to){
   const inn = xSum(cur, x => xSgn(x) > 0), out = xSum(cur, x => xSgn(x) < 0), open = r2(before.reduce((s, x) => s + xSgn(x) * (+x.amount || 0), 0));
   return { open, inn, out, close: r2(open + inn - out), list: cur };
 }
+/* a spending record may carry several receipt photos: x.receipts = [{url,path}], x.receipt = the first one (kept for older code) */
+const xRcpts = x => (Array.isArray(x?.receipts) && x.receipts.length ? x.receipts : x?.receipt?.url ? [x.receipt] : []).filter(r => r && r.url);
+const XRC_MAX = 6;
+const xRcptField = x => { const old = xRcpts(x); return `<div class="f full"><span>🧾 ${t("xp_rcpt")} <span class="opt">· ${t("optional")} · ${t("rc_multi", { n: XRC_MAX })}</span></span>
+  ${old.length ? `<div style="display:flex;gap:10px;flex-wrap:wrap;margin:6px 0">${old.map((r, i) => `<label style="display:flex;flex-direction:column;gap:4px;align-items:center;font-size:12px"><a href="${esc(r.url)}" target="_blank" rel="noopener"><img src="${esc(r.url)}" alt="" style="width:64px;height:64px;object-fit:cover;border-radius:8px;border:1px solid var(--line)"></a><span><input type="checkbox" name="rmrc" value="${i}"> ${t("rc_remove")}</span></label>`).join("")}</div>` : ""}
+  <input class="input" name="receipt" type="file" accept="image/*" multiple></div>`; };
+/* uploads the newly chosen photos, drops the ticked old ones, returns the final list */
+const xRcptSave = async (x, form) => {
+  const fdr = new FormData(form), rm = new Set(fdr.getAll("rmrc").map(Number)), old = xRcpts(x), keep = old.filter((_, i) => !rm.has(i)), gone = old.filter((_, i) => rm.has(i));
+  const files = fdr.getAll("receipt").filter(f => f && f.size), out = [...keep];
+  if (out.length + files.length > XRC_MAX) fail(t("rc_max", { n: XRC_MAX }));
+  for (const f of files) { try { const blob = await jpegBlob(f, 1400, 0.74), path = `rcpt/${uid()}.jpg`;
+      const { error } = await sb.storage.from("photos").upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" }); if (error) throw error;
+      out.push({ url: sb.storage.from("photos").getPublicUrl(path).data.publicUrl, path }); } catch (e) { console.error(e); fail(t("xp_rcpt_err")); } }
+  gone.forEach(r => { if (r.path) sb.storage.from("photos").remove([r.path]).catch(() => {}); });
+  return out; };
 const xEmps = x => (x.empN && x.empN.length ? x.empN : x.rep && x.drv ? [x.drv] : (x.emps || []).map(i => state.emp[i]?.fullName).filter(Boolean));
 const xTitle = x => x.rep ? (x.plate || "") + (x.place ? " — " + x.place : "") : (x.place || "");
 function xDetail(x){
@@ -2774,7 +2793,7 @@ function vExpenses(){
       <td class="nowrap">${x.date ? esc(dmy(x.date)) : "—"}</td>${sel ? "" : `<td class="sub">${esc(xAName(x.acct))}</td>`}
       <td>${xDetail(x)}</td>
       <td class="r nowrap"><b class="${pk ? "" : sg > 0 ? "pos" : "neg"}">${pk ? "" : sg > 0 ? "+" : "−"}${fmt(x.amount)}</b></td>
-      ${sel ? `<td class="r nowrap sub">${x.id in run ? `<span class="${run[x.id] < 0 ? "neg" : ""}">${fmt(run[x.id])}</span>` : ""}</td>` : ""}<td>${x.receipt?.url ? `<a href="${esc(x.receipt.url)}" target="_blank" rel="noopener"><img src="${esc(x.receipt.url)}" alt="" style="width:38px;height:38px;object-fit:cover;border-radius:8px;border:1px solid var(--line)" loading="lazy"></a>` : `<span class="sub">—</span>`}${x.receipt?.url ? ` <button class="btn ghost sm" data-act="x-rcpt-dl" data-id="${esc(x.id)}" title="${t("rp_dl")}">⬇</button>` : ""}</td>
+      ${sel ? `<td class="r nowrap sub">${x.id in run ? `<span class="${run[x.id] < 0 ? "neg" : ""}">${fmt(run[x.id])}</span>` : ""}</td>` : ""}<td>${xRcpts(x).length ? `<div style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">${xRcpts(x).map((r, i) => `<span style="display:inline-flex;flex-direction:column;gap:2px;align-items:center"><a href="${esc(r.url)}" target="_blank" rel="noopener"><img src="${esc(r.url)}" alt="" style="width:38px;height:38px;object-fit:cover;border-radius:8px;border:1px solid var(--line)" loading="lazy"></a><button class="btn ghost sm" data-act="x-rcpt-dl" data-id="${esc(x.id)}" data-i="${i}" title="${t("rp_dl")}">⬇</button></span>`).join("")}</div>` : `<span class="sub">—</span>`}</td>
       <td class="sub">${esc(adminName(x.by) || "—")}</td>
       <td class="nowrap">${sup && pend ? `<button class="btn sm" data-act="x-reimb1" data-id="${esc(x.id)}" data-needs-write>💵 ${t("xr_btn1")}</button>` : ""}${own && (!pk || pend) ? `${x.kind === "SPEND" || pend ? `<button class="btn ghost sm" data-act="exp-edit" data-id="${esc(x.id)}" data-needs-write>${t("edit")}</button>` : ""}<button class="btn ghost sm danger-t" data-act="exp-del" data-id="${esc(x.id)}" data-needs-write>${t("delete")}</button>` : ""}</td></tr>`; }).join("")}</tbody></table></div>` : `<div class="empty"><b>${t("exp_none")}</b></div>`}</section>
   <p class="sub" style="margin-top:10px">🔒 ${t("exp_note")}</p>`;
@@ -2915,7 +2934,7 @@ async function xPStmt(){
     txt(String(i + 1), M, y0 + 24, { sz: 20, c: "#889" }); txt(dmy(x.date), M + 46, y0 + 24, { sz: 21, c: "#556" });
     l1.forEach((s2, k) => txt(s2, M + 190, y0 + 24 + k * 30, { sz: 23, w: 600 })); l2.forEach((s2, k) => txt(s2, M + 190, y0 + 24 + l1.length * 30 - 2 + k * 25, { sz: 19, c: "#778" }));
     l3.forEach((s3, k) => txt(s3, M + 190, y0 + 24 + l1.length * 30 + l2.length * 25 - 2 + k * 25, { sz: 19, w: 600, c: "#1f6fb2" }));
-    if (x.receipt?.url) { rcpts.push({ n: i + 1, x }); txt("✔ " + t("ps_attached"), M + 790, y0 + 24, { sz: 19, w: 600, c: "#0a7a4b" }); } else txt("—", M + 790, y0 + 24, { sz: 20, c: "#99a" });
+    if (xRcpts(x).length) { xRcpts(x).forEach(r => rcpts.push({ n: i + 1, x, u: r.url })); txt("✔ " + t("ps_attached") + (xRcpts(x).length > 1 ? " ×" + xRcpts(x).length : ""), M + 790, y0 + 24, { sz: 19, w: 600, c: "#0a7a4b" }); } else txt("—", M + 790, y0 + 24, { sz: 20, c: "#99a" });
     txt(fmt(x.amount), R, y0 + 24, { sz: 24, w: 700, al: "right" });
     y = y0 + h2 - 6; line(y, "#eef1f5");
   });
@@ -2932,7 +2951,7 @@ async function xPStmt(){
   ensure(220); y += 130;
   for (const [i, lb] of [t("ps_sign1"), t("ps_sign2")].entries()) { const x0 = i ? 700 : M, x1 = i ? R : 520, lx = rtl ? W - x1 : x0, lx1 = rtl ? W - x0 : x1; g.strokeStyle = "#889"; g.lineWidth = 2; g.beginPath(); g.moveTo(lx, y); g.lineTo(lx1, y); g.stroke(); txt(lb, x0, y + 34, { sz: 21, c: "#667" }); }
   if (rcpts.length) {
-    const imgs = await Promise.all(rcpts.slice(0, 48).map(async r => { try { const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 9000); const rs = await fetch(r.x.receipt.url, { signal: ac.signal }); clearTimeout(tm); return await createImageBitmap(await rs.blob()); } catch { return null; } }));
+    const imgs = await Promise.all(rcpts.slice(0, 48).map(async r => { try { const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 9000); const rs = await fetch(r.u, { signal: ac.signal }); clearTimeout(tm); return await createImageBitmap(await rs.blob()); } catch { return null; } }));
     let k = 0; const cw = (R - M - 30) / 2, ch = 470;
     rcpts.slice(0, 48).forEach((r, i) => { const im = imgs[i]; if (!im) return;
       if (k % 6 === 0) { newPage(); txt(t("xi_rc"), M, y + 20, { sz: 30, w: 700, c: "#0b3b60" }); y += 50; }
@@ -2958,7 +2977,7 @@ function xReimbDialog(ids, acct){
     onSubmit: async fd => {
       if (!fd.date) fail(t("required"));
       for (const x of L) { const rid = "b" + uid(), cur = state.ctx[x.id]; if (!cur || cur.status === "reimbursed") continue;
-        await db.doc("ctx/" + rid).set({ kind: "SPEND", acct: "main", amount: r2(x.amount), date: fd.date, cat: x.cat, place: x.place, note: ("↩ " + t("xr_note") + " " + xAName(x.acct) + (x.note ? " · " + x.note : "")).slice(0, 300), emps: x.emps || [], empN: x.empN || [], receipt: x.receipt?.url ? { url: x.receipt.url } : null, reimb: x.id, by: xMe(), createdAt: Date.now(), updatedAt: Date.now() });
+        await db.doc("ctx/" + rid).set({ kind: "SPEND", acct: "main", amount: r2(x.amount), date: fd.date, cat: x.cat, place: x.place, note: ("↩ " + t("xr_note") + " " + xAName(x.acct) + (x.note ? " · " + x.note : "")).slice(0, 300), emps: x.emps || [], empN: x.empN || [], receipt: xRcpts(x)[0] ? { url: xRcpts(x)[0].url } : null, receipts: xRcpts(x).map(r => ({ url: r.url })), reimb: x.id, by: xMe(), createdAt: Date.now(), updatedAt: Date.now() });
         await db.doc("ctx/" + x.id).update({ status: "reimbursed", reimbDate: fd.date, rid, updatedAt: Date.now() }); }
       toast(t("empSaved")); } });
 }
@@ -2978,21 +2997,17 @@ function expDialog(id){
         <div class="emplist" id="empList">${activeEmps().map(([id, e]) => `<label class="emprow" data-q="${esc((e.fullName + " " + (e.card || "") + " " + (e.plate || "")).toLowerCase())}"><input type="checkbox" name="empck" value="${esc(id)}" ${(x?.emps || []).includes(id) ? "checked" : ""}><span>${esc(e.fullName)}${e.card ? ` <small class="sub">· ${esc(e.card)}</small>` : ""}</span></label>`).join("")}</div>
         <div class="emptools"><button type="button" class="btn ghost sm" id="empAll">${t("exp_emps_all")}</button><button type="button" class="btn ghost sm" id="empNone">${t("exp_emps_none")}</button></div></div>
       <label class="f full">${t("reason")} <span class="opt">· ${t("optional")}</span><textarea class="input" name="note" rows="2" placeholder="${t("exp_reason_ph")}">${esc(x?.note || "")}</textarea></label>
-      <label class="f full">🧾 ${t("xp_rcpt")} <span class="opt">· ${t("optional")}</span><input class="input" name="receipt" type="file" accept="image/*">${x?.receipt?.url ? `<span class="sub">${t("xp_rcpt_keep")}</span>` : ""}</label>`,
+      ${xRcptField(x)}`,
     onSubmit: async (fd, form) => {
       const amount = r2(fd.amount); if (!(amount > 0) || !fd.place.trim() || !fd.date || !xCanSpend(fd.acct)) fail(t("required"));
-      let receipt = x?.receipt || null; const f = new FormData(form).get("receipt");
-      if (f && f.size) { try { const blob = await jpegBlob(f, 1400, 0.74), path = `rcpt/${uid()}.jpg`;
-          const { error } = await sb.storage.from("photos").upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" }); if (error) throw error;
-          if (receipt?.path) sb.storage.from("photos").remove([receipt.path]).catch(() => {});
-          receipt = { url: sb.storage.from("photos").getPublicUrl(path).data.publicUrl, path }; } catch (e) { console.error(e); fail(t("xp_rcpt_err")); } }
+      const receipts = await xRcptSave(x, form), receipt = receipts[0] || null;
       const pkt = !!fd.pkt && (!x || x.kind === "PKT"); if (pkt && (fd.acct === "main" || fd.acct === "akash")) fail(t("xr_nomain"));
       if (pkt && !receipt) fail(t("xr_need_rcpt"));
       if (!pkt && fd.acct !== "main" && fd.acct !== "akash" && (!x || x.kind === "SPEND")) { const bal = xStat(fd.acct, "").close + (x && x.acct === fd.acct ? xn0(x.amount) : 0); if (bal < amount) fail(t("xf_low") + " (" + fmt(bal) + " " + t("sar") + ") — " + t("xr_use_pkt")); }
       const dupe = xTx().find(z => z.id !== id && z.kind !== "FUND" && z.kind !== "SEND" && z.kind !== "RECV" && z.acct === fd.acct && z.date === fd.date && r2(z.amount) === amount && String(z.place || "").trim().toLowerCase() === fd.place.trim().toLowerCase());
       if (dupe && form.dataset.dupOk !== "1") { form.dataset.dupOk = "1"; const er = $("#dlgErr"); er.textContent = "⚠ " + t("xr_dup"); er.hidden = false; return false; }
       const emps = [...new Set(new FormData(form).getAll("empck"))], empN = emps.map(i => state.emp[i]?.fullName).filter(Boolean);
-      const rec = { kind: x && x.kind !== "PKT" ? x.kind : (pkt ? "PKT" : "SPEND"), ...(pkt ? { status: x?.status || "pending" } : {}), acct: fd.acct, amount, date: fd.date, cat: fd.cat, place: fd.place.trim(), note: (fd.note || "").trim(), emps, empN, receipt, by: x?.by || xMe(), updatedAt: Date.now() };
+      const rec = { kind: x && x.kind !== "PKT" ? x.kind : (pkt ? "PKT" : "SPEND"), ...(pkt ? { status: x?.status || "pending" } : {}), acct: fd.acct, amount, date: fd.date, cat: fd.cat, place: fd.place.trim(), note: (fd.note || "").trim(), emps, empN, receipt, receipts, by: x?.by || xMe(), updatedAt: Date.now() };
       await db.doc("ctx/" + (id || "e" + uid())).set({ ...(x ?? {}), ...rec, createdAt: x?.createdAt || Date.now() });
       toast(t("empSaved")); } });
   const cnt = () => { const n = dlg.querySelectorAll('#empList input:checked').length; const c = $("#empCnt"); if (c) c.textContent = n ? `(${n})` : ""; };
@@ -3014,18 +3029,14 @@ function repDialog(id){
       <label class="f">${t("amount")} *<input class="input num" name="amount" type="number" min="0.01" step="0.01" value="${x?.amount ?? ""}" required></label>
       <label class="f full">🔧 ${t("rp_shop")} <span class="opt">· ${t("optional")}</span><input class="input" name="place" value="${esc(x?.place || "")}" placeholder="${t("rp_shop_ph")}"></label>
       <label class="f full">${t("reason")} <span class="opt">· ${t("optional")}</span><textarea class="input" name="note" rows="2" placeholder="${t("rp_note_ph")}">${esc(x?.note || "")}</textarea></label>
-      <label class="f full">🧾 ${t("xp_rcpt")} <span class="opt">· ${t("optional")}</span><input class="input" name="receipt" type="file" accept="image/*">${x?.receipt?.url ? `<span class="sub">${t("xp_rcpt_keep")}</span>` : ""}</label>
+      ${xRcptField(x)}
       <p class="sub full">ℹ️ ${t("rp_nofine")}</p>`,
     onSubmit: async (fd, form) => {
       const amount = r2(fd.amount), v = (state.vehicles || {})[fd.veh]; if (!(amount > 0) || !v || !fd.date || !xCanSpend(fd.acct)) fail(t("required"));
       if (fd.acct !== "main" && fd.acct !== "akash") { const bal = xStat(fd.acct, "").close + (x && x.acct === fd.acct ? xn0(x.amount) : 0); if (bal < amount) fail(t("xf_low") + " (" + fmt(bal) + " " + t("sar") + ")"); }
-      let receipt = x?.receipt || null; const f = new FormData(form).get("receipt");
-      if (f && f.size) { try { const blob = await jpegBlob(f, 1400, 0.74), path = `rcpt/${uid()}.jpg`;
-          const { error } = await sb.storage.from("photos").upload(path, blob, { contentType: "image/jpeg", cacheControl: "31536000" }); if (error) throw error;
-          if (receipt?.path) sb.storage.from("photos").remove([receipt.path]).catch(() => {});
-          receipt = { url: sb.storage.from("photos").getPublicUrl(path).data.publicUrl, path }; } catch (e) { console.error(e); fail(t("xp_rcpt_err")); } }
+      const receipts = await xRcptSave(x, form), receipt = receipts[0] || null;
       const drv = v.empId ? (state.emp[v.empId]?.fullName || "") : "";
-      const rec = { kind: "SPEND", rep: true, acct: fd.acct, amount, date: fd.date, cat: "repair", vehId: fd.veh, plate: v.plate || "", drv, place: (fd.place || "").trim(), note: (fd.note || "").trim(), receipt, by: x?.by || xMe(), updatedAt: Date.now() };
+      const rec = { kind: "SPEND", rep: true, acct: fd.acct, amount, date: fd.date, cat: "repair", vehId: fd.veh, plate: v.plate || "", drv, place: (fd.place || "").trim(), note: (fd.note || "").trim(), receipt, receipts, by: x?.by || xMe(), updatedAt: Date.now() };
       await db.doc("ctx/" + (id || "e" + uid())).set({ ...(x ?? {}), ...rec, createdAt: x?.createdAt || Date.now() });
       toast(t("empSaved")); } });
 }
@@ -3068,13 +3079,13 @@ async function xRepPdf(){
     txt(String(i + 1), M, y0 + 24, { sz: 20, c: "#889" }); txt(dmy(x.date), M + 46, y0 + 24, { sz: 21, c: "#556" });
     l1.forEach((s2, k) => txt(s2, M + 190, y0 + 24 + k * 30, { sz: 23, w: 600 })); l2.forEach((s2, k) => txt(s2, M + 190, y0 + 24 + l1.length * 30 - 2 + k * 25, { sz: 19, c: "#778" }));
     l3.forEach((s2, k) => txt(s2, M + 190, y0 + 24 + l1.length * 30 + l2.length * 25 - 2 + k * 25, { sz: 19, w: 600, c: "#1f6fb2" }));
-    if (x.receipt?.url) { rcpts.push({ n: i + 1, x }); txt("✔ " + t("ps_attached"), M + 790, y0 + 24, { sz: 19, w: 600, c: "#0a7a4b" }); } else txt("—", M + 790, y0 + 24, { sz: 20, c: "#99a" });
+    if (xRcpts(x).length) { xRcpts(x).forEach(r => rcpts.push({ n: i + 1, x, u: r.url })); txt("✔ " + t("ps_attached") + (xRcpts(x).length > 1 ? " ×" + xRcpts(x).length : ""), M + 790, y0 + 24, { sz: 19, w: 600, c: "#0a7a4b" }); } else txt("—", M + 790, y0 + 24, { sz: 20, c: "#99a" });
     txt(fmt(x.amount), R, y0 + 24, { sz: 24, w: 700, al: "right", c: "#c2312f" }); y = y0 + h - 6; line(y, "#eef1f5"); });
   y += 6; ensure(60); y += 36; txt(t("rp_tot"), M + 190, y, { sz: 23, w: 700 }); txt(fmt(total) + " " + t("sar"), R, y, { sz: 26, w: 800, al: "right", c: "#c2312f" });
   ensure(200); y += 100;
   for (const [i, lb] of [t("xi_sign1"), t("xi_sign2")].entries()) { const x0 = i ? 700 : M, x1 = i ? R : 520, lx = rtl ? W - x1 : x0, lx1 = rtl ? W - x0 : x1; g.strokeStyle = "#889"; g.lineWidth = 2; g.beginPath(); g.moveTo(lx, y); g.lineTo(lx1, y); g.stroke(); txt(lb, x0, y + 34, { sz: 21, c: "#556" }); }
   if (rcpts.length) {
-    const imgs = await Promise.all(rcpts.slice(0, 48).map(async r => { try { const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 9000); const rs = await fetch(r.x.receipt.url, { signal: ac.signal }); clearTimeout(tm); return await createImageBitmap(await rs.blob()); } catch { return null; } }));
+    const imgs = await Promise.all(rcpts.slice(0, 48).map(async r => { try { const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 9000); const rs = await fetch(r.u, { signal: ac.signal }); clearTimeout(tm); return await createImageBitmap(await rs.blob()); } catch { return null; } }));
     let k = 0; const cw = (R - M - 30) / 2, ch = 470;
     rcpts.slice(0, 48).forEach((r, i) => { const im = imgs[i]; if (!im) return;
       if (k % 6 === 0) { newPage(); txt(t("xi_rc"), M, y + 20, { sz: 30, w: 700, c: "#0b3b60" }); y += 50; }
@@ -3141,7 +3152,7 @@ async function xInvoice(acctId, per){
     txt(String(i + 1), M, y0 + 24, { sz: 20, c: "#889" }); txt(dmy(x.date), M + 46, y0 + 24, { sz: 21, c: "#556" });
     l1.forEach((s, k) => txt(s, M + 190, y0 + 24 + k * 30, { sz: 23, w: 600 })); l2.forEach((s2, k2) => txt(s2, M + 190, y0 + 24 + l1.length * 30 - 2 + k2 * 25, { sz: 19, c: "#778" }));
     l3.forEach((s3, k3) => txt(s3, M + 190, y0 + 24 + l1.length * 30 + (l2.length ? l2.length * 25 - 2 : -2) + k3 * 25, { sz: 19, w: 600, c: "#1f6fb2" }));
-    if (x.receipt?.url) { rcpts.push({ n: i + 1, x }); txt("🧾", M + 790, y0 + 24, { sz: 22 }); }
+    if (xRcpts(x).length) { xRcpts(x).forEach(r => rcpts.push({ n: i + 1, x, u: r.url })); txt("🧾" + (xRcpts(x).length > 1 ? " ×" + xRcpts(x).length : ""), M + 790, y0 + 24, { sz: 22 }); }
     txt("−" + fmt(x.amount), R, y0 + 24, { sz: 24, w: 700, al: "right", c: "#c2312f" });
     y = y0 + h - 6; line(y, "#eef1f5");
   });
@@ -3154,7 +3165,7 @@ async function xInvoice(acctId, per){
   for (const [i, lb] of [t("xi_sign1"), t("xi_sign2")].entries()) { const x0 = i ? 700 : M, x1 = i ? R : 520, lx = rtl ? W - x1 : x0, lx1 = rtl ? W - x0 : x1; g.strokeStyle = "#889"; g.lineWidth = 2; g.beginPath(); g.moveTo(lx, y); g.lineTo(lx1, y); g.stroke(); txt(lb, x0, y + 34, { sz: 21, c: "#556" }); }
   /* receipts appendix: small copies of the photos, 6 per page */
   if (rcpts.length) {
-    const imgs = await Promise.all(rcpts.slice(0, 48).map(async r => { try { const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 9000); const rs = await fetch(r.x.receipt.url, { signal: ac.signal }); clearTimeout(tm); return await createImageBitmap(await rs.blob()); } catch { return null; } }));
+    const imgs = await Promise.all(rcpts.slice(0, 48).map(async r => { try { const ac = new AbortController(), tm = setTimeout(() => ac.abort(), 9000); const rs = await fetch(r.u, { signal: ac.signal }); clearTimeout(tm); return await createImageBitmap(await rs.blob()); } catch { return null; } }));
     let k = 0; const cw = (R - M - 30) / 2, ch = 470;
     rcpts.slice(0, 48).forEach((r, i) => { const im = imgs[i]; if (!im) return;
       if (k % 6 === 0) { newPage(); txt(t("xi_rc"), M, y + 20, { sz: 30, w: 700, c: "#0b3b60" }); y += 50; }
@@ -4219,7 +4230,7 @@ document.addEventListener("click", async e => {
     if (act === "rp-new") { e.stopPropagation(); repDialog(null); return; }
     if (act === "x-rep") { state.xRep = !state.xRep; render(); return; }
     if (act === "rp-pdf") { e.stopPropagation(); await xRepPdf(); return; }
-    if (act === "x-rcpt-dl") { const x = state.ctx[id]; if (!x?.receipt?.url) return; try { const rs = await fetch(x.receipt.url); if (!rs.ok) throw 0; const bl = await rs.blob(); await downloads.save({ filename: `ASB-receipt-${x.date || ""}-${String(x.plate || x.place || id).replace(/[^A-Za-z0-9]+/g, "_").slice(0, 24)}.jpg`, data: new Blob([bl], { type: "image/jpeg" }) }); } catch (er) { console.error(er); toast(t("rp_dl_err")); } return; }
+    if (act === "x-rcpt-dl") { const x = state.ctx[id], i = +(b.dataset.i || 0), r = xRcpts(x)[i]; if (!r) return; try { const rs = await fetch(r.url); if (!rs.ok) throw 0; const bl = await rs.blob(); await downloads.save({ filename: `ASB-receipt-${x.date || ""}-${String(x.plate || x.place || id).replace(/[^A-Za-z0-9]+/g, "_").slice(0, 24)}${xRcpts(x).length > 1 ? "-" + (i + 1) : ""}.jpg`, data: new Blob([bl], { type: "image/jpeg" }) }); } catch (er) { console.error(er); toast(t("rp_dl_err")); } return; }
     if (act === "x-allpdf") { await xAllPdf(); return; }
     if (act === "x-ret") { if (xIsSuper()) xRetDialog(); return; }
     if (act === "x-hide") { if (!xIsSuper() || id === "main") return; const a = xAcct(id); if (!a) return; openDialog({ title: "🙈 " + t("xh_btn"), submit: t("xh_btn"), body: `<p class="full"><b>${esc(xAName(id))}</b></p><p class="sub full">${t("xh_confirm")}</p>`, onSubmit: async () => { await db.doc("xhide/" + id).set({ on: true, at: Date.now(), by: xMe() }); if (state.xAcct === id) state.xAcct = ""; toast(t("empSaved")); } }); return; }
@@ -4244,7 +4255,7 @@ document.addEventListener("click", async e => {
       openDialog({ title: t("delete"), danger: true, submit: t("delete"),
         body: `<p class="full">${t("exp_del_q", { a: fmt(x.amount || 0) })}</p>`,
         onSubmit: async () => { if (x.reimb && state.ctx[x.reimb]) await db.doc("ctx/" + x.reimb).update({ status: "pending", reimbDate: null, rid: null }); const ids = x.tid ? xTx().filter(z => z.tid === x.tid).map(z => z.id) : [id];
-          for (const k of ids) { const z = state.ctx[k]; if (z?.receipt?.path) sb.storage.from("photos").remove([z.receipt.path]).catch(() => {}); await db.doc("ctx/" + k).delete(); } toast(t("du_deleted")); } });
+          for (const k of ids) { const z = state.ctx[k]; xRcpts(z).forEach(r => { if (r.path) sb.storage.from("photos").remove([r.path]).catch(() => {}); }); await db.doc("ctx/" + k).delete(); } toast(t("du_deleted")); } });
       return;
     }
     if (act === "exp-csv") {
