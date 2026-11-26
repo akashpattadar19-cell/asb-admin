@@ -1450,7 +1450,7 @@ function vEmployees(){
   ).sort((a,b) => (a[1].status==="PENDING"?-1:0)-(b[1].status==="PENDING"?-1:0) || String(a[1].fullName).localeCompare(String(b[1].fullName)));
   const cityN = c => all.filter(([,e]) => (e.city || "") === c).length;
   const cities = [...new Set(all.map(([,e]) => e.city || ""))].sort((a, b) => (a ? 0 : 1) - (b ? 0 : 1) || cityN(b) - cityN(a) || a.localeCompare(b));
-  const groups = cities.map(c => [c, list.filter(([,e]) => (e.city || "") === c)]).filter(([, l]) => l.length);
+  const groups = cities.map(c => [c, list.filter(([,e]) => (e.city || "") === c && e.isActive !== false)]).filter(([, l]) => l.length); const nwList = list.filter(([,e]) => e.isActive === false); if (nwList.length) groups.push(["\u0000nw", nwList]);
   const act = all.filter(([,e]) => e.status === "ACTIVE"), noPin = act.filter(([,e]) => !e.pinCheck).length;
   const chip = (label, n, key, val) => `<button class="chip ${state[key] === val ? "on" : ""}" data-act="emp-chip" data-k="${key}" data-v="${esc(val)}"><b>${n}</b> ${label}</button>`;
   const row = ([id, e]) => `<tr class="${e.status === "INACTIVE" ? "dim" : ""}">
@@ -1492,7 +1492,7 @@ function vEmployees(){
   </div>
   <section class="panel">${list.length ? `<div class="scroll"><table class="emps">
     <thead><tr><th>${t("name")}</th><th>${t("iqama")}</th><th>${t("mobile")}</th><th>${t("vehicle")}</th><th>${t("card")}</th><th>Rank</th><th>${t("status")}</th><th>${t("app_col")}</th><th></th></tr></thead>
-    ${groups.map(([c, l]) => `<tbody><tr class="grp"><td colspan="9"><b>${esc(c || t("no_city"))}</b> <span class="sub">· ${l.length} ${t("emp_n")}</span></td></tr>${l.map(row).join("")}</tbody>`).join("")}
+    ${groups.map(([c, l]) => `<tbody><tr class="grp"><td colspan="9"><b>${c === "\u0000nw" ? esc(t("wk_off")) : esc(c || t("no_city"))}</b> <span class="sub">· ${l.length} ${t("emp_n")}</span></td></tr>${l.map(row).join("")}</tbody>`).join("")}
     </table></div>`
     : `<div class="empty"><b>${t("noEmp")}</b>${t("noEmpHint")}</div>`}</section>`;
 }
@@ -5621,15 +5621,15 @@ downloads = {
 
 /* ───────── Export: Excel (all data) + PDF invoice (key figures) for the main pages ───────── */
 const XPL = {
-  en: { xlsx: "Excel", pdf: "PDF Invoice", na: "PDF/Excel library not loaded — check internet", nodata: "Nothing to export", no: "No", name: "Name", iqama: "Iqama", mobile: "Mobile", platform: "Platform", city: "City", plate: "Plate", status: "Status", paytype: "Pay type", card: "Card", vehicle: "Vehicle", bank: "Bank", acct: "Account name", iban: "IBAN", id: "ID",
+  en: { ef_all: "All", ef_w1: "Working", ef_w0: "Not working", ef_work: "Who", ef_plat: "Platform", xlsx: "Excel", pdf: "PDF Invoice", na: "PDF/Excel library not loaded — check internet", nodata: "Nothing to export", no: "No", name: "Name", iqama: "Iqama", mobile: "Mobile", platform: "Platform", city: "City", plate: "Plate", status: "Status", paytype: "Pay type", card: "Card", vehicle: "Vehicle", bank: "Bank", acct: "Account name", iban: "IBAN", id: "ID",
     total: "Total", orders: "Orders", grade: "Grade", base: "Base", extra: "Additional", due: "Dues", petrol: "Petrol", ded: "Deductions", net: "Net pay", draft: "DRAFT — not published", emp_t: "Employees summary", pay_t: "Payroll summary", dues_t: "Dues & fines — outstanding", loan_t: "Advances — outstanding", net_t: "Internet payments", fuel_t: "Petrol summary", veh_t: "Vehicles status", acc_t: "Accidents summary", tgt_t: "Orders ranking", bank_t: "Bank transfer list", exp_t: "Company expenses",
     k_emp: "Employees", k_active: "Active", k_total: "Total amount", k_left: "Outstanding", k_monthly: "Monthly deduction", k_drivers: "Drivers", k_orders: "Total orders", k_net: "Total net", k_ded: "Total deductions", k_due: "Due now", k_soon: "Soon", k_monthly_net: "Monthly total", k_enrolled: "Enrolled", k_spent: "Spent", k_allow: "Allowance", k_veh: "Vehicles", k_issue: "Need attention", k_acc: "Accidents", k_pend: "Pending", k_fines: "Total fines",
     date: "Date", reason: "Reason", type: "Type", amount: "Amount", remaining: "Remaining", monthly: "Monthly", last: "Last paid", next: "Next due", entries: "Entries", fault: "Fault %", driver: "Driver", cat: "Category", acctn: "Account", details: "Details", note: "Note", by: "By", month: "Month", generated: "Generated", page: "Page", sar: "SAR", open: "Open", cleared: "Cleared", waived: "Waived", ok: "OK", repair: "Repair", service: "Service", substitute: "Substitute", rank: "#", accidents: "Accidents", fuel_allow: "Allowance", spent: "Spent" },
-  bn: { xlsx: "Excel", pdf: "PDF ইনভয়েস", na: "PDF/Excel লাইব্রেরি লোড হয়নি — ইন্টারনেট দেখুন", nodata: "এক্সপোর্ট করার কিছু নেই", no: "নং", name: "নাম", iqama: "ইকামা", mobile: "মোবাইল", platform: "প্ল্যাটফর্ম", city: "শহর", plate: "প্লেট", status: "অবস্থা", paytype: "পে টাইপ", card: "কার্ড", vehicle: "গাড়ি", bank: "ব্যাংক", acct: "অ্যাকাউন্টের নাম", iban: "IBAN", id: "আইডি",
+  bn: { ef_all: "সবাই", ef_w1: "কাজ করছে", ef_w0: "কাজ করছে না", ef_work: "কারা", ef_plat: "প্ল্যাটফর্ম", xlsx: "Excel", pdf: "PDF ইনভয়েস", na: "PDF/Excel লাইব্রেরি লোড হয়নি — ইন্টারনেট দেখুন", nodata: "এক্সপোর্ট করার কিছু নেই", no: "নং", name: "নাম", iqama: "ইকামা", mobile: "মোবাইল", platform: "প্ল্যাটফর্ম", city: "শহর", plate: "প্লেট", status: "অবস্থা", paytype: "পে টাইপ", card: "কার্ড", vehicle: "গাড়ি", bank: "ব্যাংক", acct: "অ্যাকাউন্টের নাম", iban: "IBAN", id: "আইডি",
     total: "মোট", orders: "অর্ডার", grade: "গ্রেড", base: "বেসিক", extra: "অতিরিক্ত", due: "বকেয়া", petrol: "পেট্রোল", ded: "কর্তন", net: "নিট বেতন", draft: "ড্রাফট — পাবলিশ হয়নি", emp_t: "কর্মী সারসংক্ষেপ", pay_t: "বেতন সারসংক্ষেপ", dues_t: "বকেয়া ও জরিমানা — বাকি", loan_t: "অগ্রিম — বাকি", net_t: "ইন্টারনেট পেমেন্ট", fuel_t: "পেট্রোল সারসংক্ষেপ", veh_t: "গাড়ির অবস্থা", acc_t: "দুর্ঘটনা সারসংক্ষেপ", tgt_t: "অর্ডার র‍্যাংকিং", bank_t: "ব্যাংক ট্রান্সফার তালিকা", exp_t: "কোম্পানির খরচ",
     k_emp: "কর্মী", k_active: "সক্রিয়", k_total: "মোট টাকা", k_left: "বাকি", k_monthly: "মাসিক কর্তন", k_drivers: "কর্মী", k_orders: "মোট অর্ডার", k_net: "মোট নিট", k_ded: "মোট কর্তন", k_due: "এখন বকেয়া", k_soon: "শীঘ্রই", k_monthly_net: "মাসিক মোট", k_enrolled: "তালিকাভুক্ত", k_spent: "খরচ", k_allow: "ভাতা", k_veh: "গাড়ি", k_issue: "নজর দরকার", k_acc: "দুর্ঘটনা", k_pend: "অপেক্ষায়", k_fines: "মোট জরিমানা",
     date: "তারিখ", reason: "কারণ", type: "ধরন", amount: "টাকা", remaining: "বাকি", monthly: "মাসিক", last: "শেষ পেমেন্ট", next: "পরের পেমেন্ট", entries: "এন্ট্রি", fault: "দোষ %", driver: "কর্মী", cat: "ক্যাটাগরি", acctn: "অ্যাকাউন্ট", details: "বিবরণ", note: "নোট", by: "যে করেছে", month: "মাস", generated: "তৈরির সময়", page: "পাতা", sar: "রিয়াল", open: "চলছে", cleared: "শোধ", waived: "মওকুফ", ok: "ঠিক", repair: "মেরামত", service: "সার্ভিস", substitute: "বিকল্প", rank: "#", accidents: "দুর্ঘটনা", fuel_allow: "ভাতা", spent: "খরচ" },
-  ar: { xlsx: "Excel", pdf: "فاتورة PDF", na: "مكتبة PDF/Excel غير محمّلة — تحقق من الإنترنت", nodata: "لا يوجد ما يُصدَّر", no: "م", name: "الاسم", iqama: "الإقامة", mobile: "الجوال", platform: "المنصة", city: "المدينة", plate: "اللوحة", status: "الحالة", paytype: "نوع الأجر", card: "البطاقة", vehicle: "المركبة", bank: "البنك", acct: "اسم الحساب", iban: "IBAN", id: "المعرّف",
+  ar: { ef_all: "الكل", ef_w1: "يعمل", ef_w0: "لا يعمل", ef_work: "من", ef_plat: "المنصة", xlsx: "Excel", pdf: "فاتورة PDF", na: "مكتبة PDF/Excel غير محمّلة — تحقق من الإنترنت", nodata: "لا يوجد ما يُصدَّر", no: "م", name: "الاسم", iqama: "الإقامة", mobile: "الجوال", platform: "المنصة", city: "المدينة", plate: "اللوحة", status: "الحالة", paytype: "نوع الأجر", card: "البطاقة", vehicle: "المركبة", bank: "البنك", acct: "اسم الحساب", iban: "IBAN", id: "المعرّف",
     total: "الإجمالي", orders: "الطلبات", grade: "التقييم", base: "الأساسي", extra: "إضافي", due: "المستحقات", petrol: "البنزين", ded: "الخصومات", net: "صافي الراتب", draft: "مسودة — غير منشور", emp_t: "ملخص الموظفين", pay_t: "ملخص الرواتب", dues_t: "المستحقات والمخالفات — المتبقي", loan_t: "السلف — المتبقي", net_t: "مدفوعات الإنترنت", fuel_t: "ملخص البنزين", veh_t: "حالة المركبات", acc_t: "ملخص الحوادث", tgt_t: "ترتيب الطلبات", bank_t: "قائمة التحويلات البنكية", exp_t: "مصروفات الشركة",
     k_emp: "الموظفون", k_active: "نشط", k_total: "المبلغ الكلي", k_left: "المتبقي", k_monthly: "الخصم الشهري", k_drivers: "السائقون", k_orders: "إجمالي الطلبات", k_net: "إجمالي الصافي", k_ded: "إجمالي الخصومات", k_due: "مستحق الآن", k_soon: "قريباً", k_monthly_net: "الإجمالي الشهري", k_enrolled: "مسجّلون", k_spent: "المصروف", k_allow: "البدل", k_veh: "المركبات", k_issue: "تحتاج متابعة", k_acc: "الحوادث", k_pend: "قيد الانتظار", k_fines: "إجمالي الغرامات",
     date: "التاريخ", reason: "السبب", type: "النوع", amount: "المبلغ", remaining: "المتبقي", monthly: "شهرياً", last: "آخر دفعة", next: "الدفعة القادمة", entries: "القيود", fault: "الخطأ %", driver: "السائق", cat: "الفئة", acctn: "الحساب", details: "التفاصيل", note: "ملاحظة", by: "بواسطة", month: "الشهر", generated: "تاريخ الإصدار", page: "صفحة", sar: "ريال", open: "مفتوح", cleared: "مسدد", waived: "معفى", ok: "سليمة", repair: "إصلاح", service: "صيانة", substitute: "بديلة", rank: "#", accidents: "الحوادث", fuel_allow: "البدل", spent: "المصروف" },
@@ -5644,8 +5644,9 @@ function xpSets0(v, o){
   o = o || {}; const inP = d => { d = String(d || "").slice(0, 10); return !o.F || (d >= o.F && d <= o.T); }, pm = o.m0 || "";
   const E = state.emp || {}, en = id => E[id]?.fullName || id || "—", live = ([, e]) => e.status !== "DELETED";
   if (v === "employees") {
-    const L = Object.entries(E).filter(live).sort((a, b) => String(a[1].fullName).localeCompare(String(b[1].fullName))), act = L.filter(([, e]) => e.status === "ACTIVE");
-    return { file: "employees", title: xl("emp_t"),
+    const ef = o.ef || {}, L = Object.entries(E).filter(live).filter(([, e]) => (!ef.work || (ef.work === "1") === (e.isActive !== false)) && (!ef.plat || (e.platform || "") === ef.plat)).sort((a, b) => (a[1].isActive === false) - (b[1].isActive === false) || String(a[1].fullName).localeCompare(String(b[1].fullName))), act = L.filter(([, e]) => e.status === "ACTIVE");
+    const efTxt = [ef.work ? xl(ef.work === "1" ? "ef_w1" : "ef_w0") : "", ef.plat].filter(Boolean).join(" · ");
+    return { file: "employees" + (efTxt ? "-" + efTxt.replace(/[^\w]+/g, "") : ""), title: xl("emp_t") + (efTxt ? " — " + efTxt : ""),
       sheets: [{ name: xl("k_emp"), head: EI_COLS.map(c => c[1]),
         rows: L.map(([id, e]) => [id, e.fullName || "", e.fullNameAr || "", e.status, e.platform || "", e.city || "", e.payType || "", e.mobile || "", e.residentId || "", e.jahezId || "", e.card || "", e.cardSerial || "", e.plate || "", e.vehicleName || "", e.vehicleModel || "", e.bankName || "", e.accountName || "", e.iban || "", e.dailyLimit ?? "", e.monthlyLimit ?? ""]) }],
       kpis: [[xl("k_emp"), L.length], [xl("k_active"), act.length], ["Keeta", act.filter(([, e]) => /keeta/i.test(e.platform || "")).length], ["HungerStation", act.filter(([, e]) => /hunger/i.test(e.platform || "")).length]],
@@ -5800,7 +5801,7 @@ function xpSets0(v, o){
 }
 function xpSets(v, o){
   o = o || {};
-  const F = o.f || (o.m && !o.f && !o.t ? o.m + "-01" : ""), T = o.t || (o.m && !o.f && !o.t ? o.m + "-31" : ""), oo = { F: F || (T ? "0000-01-01" : ""), T: T || (F ? "9999-12-31" : ""), m0: o.m || (o.f ? o.f.slice(0, 7) : (o.t || "").slice(0, 7)) };
+  const F = o.f || (o.m && !o.f && !o.t ? o.m + "-01" : ""), T = o.t || (o.m && !o.f && !o.t ? o.m + "-31" : ""), oo = { F: F || (T ? "0000-01-01" : ""), T: T || (F ? "9999-12-31" : ""), m0: o.m || (o.f ? o.f.slice(0, 7) : (o.t || "").slice(0, 7)), ef: o.ef };
   const S = xpSets0(v, oo); if (!S) return S;
   const per = (o.f || o.t) ? `${o.f ? dmy(o.f) : "…"} – ${o.t ? dmy(o.t) : "…"}` : (o.m ? monthLabel(o.m) : "");
   if (per) { S.period = per; S.file += (o.f || o.t) ? `-${o.f || ""}_${o.t || ""}` : (S.file.includes(o.m) ? "" : "-" + o.m); }
@@ -5808,6 +5809,12 @@ function xpSets(v, o){
 }
 const XP_PERIOD = ["payroll", "dues", "loans", "internet", "fuel", "accidents", "target", "expenses", "perf", "orddetail"];
 function xpAsk(v, kind){
+  if (v === "employees") {
+    const sel = (n, a) => `<label class="full"><span>${xl(n)}</span><select class="input" name="${n}">${a.map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></label>`;
+    openDialog({ title: `${kind === "pdf" ? "📄 " + xl("pdf") : "⬇ " + xl("xlsx")}`, body: `<div class="form">${sel("ef_work", [["", xl("ef_all")], ["1", xl("ef_w1")], ["0", xl("ef_w0")]])}${sel("ef_plat", [["", xl("ef_all")], ...PLATFORMS.map(p => [p, p])])}</div>`, submit: "⬇",
+      onSubmit: async fd => { const o = { ef: { work: fd.ef_work || "", plat: fd.ef_plat || "" } }; setTimeout(() => (kind === "pdf" ? xpPdf(v, o) : xpExcel(v, o)).catch(e => { console.error(e); toast(xl("na")); }), 50); } });
+    return;
+  }
   if (!XP_PERIOD.includes(v)) return kind === "pdf" ? xpPdf(v) : xpExcel(v);
   openDialog({ title: `${kind === "pdf" ? "📄 " + xl("pdf") : "⬇ " + xl("xlsx")}`,
     body: `<div class="form"><label class="full"><span>${xl("month")}</span><input class="input" type="month" name="m"></label>
