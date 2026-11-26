@@ -882,6 +882,9 @@ const CATS = ["TRAFFIC_VIOLATION","ACCIDENT","COMPANY_DEDUCTION","DELAY","MISSIN
 const PAY_LINK = { advance: "ADVANCE", company: "COMPANY_DEDUCTION", accident: "ACCIDENT" };   /* Traffic violation is NOT taken from Dues overview: it is only a payroll deduction */
 Object.assign(I18N.en, {"pc_st_draft": "Driver is taking photos", "pc_st_sub": "Waiting for approval", "pc_st_ok": "Approved · locked", "pc_st_reset": "Reset — driver must retake", "pc_approve": "Approve", "pc_reset": "Reset", "pc_reset_q": "Clear these photos? The driver will have to take them again.", "pc_approve_q": "Approve these photos? They will be locked in the driver's app.", "pc_done": "Done", "pc_nopic": "Photo not available", "tgc_title": "Photo channel (Telegram)", "tgc_hint": "Vehicle photos taken by drivers are stored in this Telegram channel so the app stays fast. Create a private channel, add the bot as an Admin, then post any message in the channel — it will appear below.", "tgc_chat": "Channel ID (starts with -100)", "tgc_found": "Detected channel", "tgc_use": "Use it", "tgc_test": "Send test", "tgc_ok": "Test message sent to the channel", "tgc_bad": "Could not send. Is the bot an Admin of the channel?", "tgc_saved": "Saved"});
 Object.assign(I18N.en, {"tgm_title": "Managers (Telegram)", "tgm_hint": "Managers can type a vehicle plate number to the bot and get all its details. A manager first sends /start to the bot (private chat) and receives their Telegram ID — paste IDs here, separated by commas. Anyone in the main Telegram chat above can also look up plates.", "tgm_ids": "Manager Telegram IDs"});
+Object.assign(I18N.en, {"ei_btn":"Import","ei_title":"Import employees from Excel","ei_help":"Download the current Excel, edit it or add new rows, then upload it here. You see every change first and nothing is saved until you confirm. Empty cells are left as they are.","ei_dl":"Download current Excel","ei_pick":"Edited Excel file","ei_preview":"Preview changes","ei_nofile":"Choose an Excel file","ei_badfile":"Could not read this file","ei_nocol":"No employee columns found — use the downloaded Excel","ei_row":"row","ei_upd":"Updated","ei_new":"New","ei_same":"No change","ei_prob":"Skipped","ei_apply":"Apply","ei_none":"Nothing to change.","ei_resetnote":"Iqama changes reset that employee's PIN — the driver must set it again.","ei_done":"Import done"});
+Object.assign(I18N.bn, {"ei_btn":"ইম্পোর্ট","ei_title":"Excel থেকে কর্মী ইম্পোর্ট","ei_help":"বর্তমান Excel ডাউনলোড করে এডিট করুন বা নতুন সারি যোগ করুন, তারপর এখানে আপলোড করুন। আগে সব পরিবর্তন দেখাবে, নিশ্চিত না করা পর্যন্ত কিছু সেভ হবে না। খালি ঘর যেমন আছে তেমনই থাকবে।","ei_dl":"বর্তমান Excel ডাউনলোড","ei_pick":"এডিট করা Excel ফাইল","ei_preview":"পরিবর্তন দেখুন","ei_nofile":"Excel ফাইল বাছুন","ei_badfile":"ফাইলটি পড়া যায়নি","ei_nocol":"কর্মীর কোনো কলাম পাওয়া যায়নি — ডাউনলোড করা Excel ব্যবহার করুন","ei_row":"সারি","ei_upd":"আপডেট","ei_new":"নতুন","ei_same":"পরিবর্তন নেই","ei_prob":"বাদ পড়েছে","ei_apply":"প্রয়োগ করুন","ei_none":"পরিবর্তনের কিছু নেই।","ei_resetnote":"ইকামা বদলালে ওই কর্মীর পিন রিসেট হবে — ড্রাইভারকে আবার পিন দিতে হবে।","ei_done":"ইম্পোর্ট সম্পন্ন"});
+Object.assign(I18N.ar, {"ei_btn":"استيراد","ei_title":"استيراد الموظفين من Excel","ei_help":"نزّل ملف Excel الحالي وعدّله أو أضف صفوفاً جديدة ثم ارفعه هنا. ستظهر كل التغييرات أولاً ولن يُحفظ شيء حتى تؤكد. الخلايا الفارغة تبقى كما هي.","ei_dl":"تنزيل Excel الحالي","ei_pick":"ملف Excel المعدّل","ei_preview":"معاينة التغييرات","ei_nofile":"اختر ملف Excel","ei_badfile":"تعذّرت قراءة الملف","ei_nocol":"لم يتم العثور على أعمدة الموظفين — استخدم الملف المنزّل","ei_row":"صف","ei_upd":"تحديث","ei_new":"جديد","ei_same":"بدون تغيير","ei_prob":"تم تخطيه","ei_apply":"تطبيق","ei_none":"لا شيء للتغيير.","ei_resetnote":"تغيير الإقامة يعيد تعيين رمز PIN للموظف — يجب على السائق تعيينه من جديد.","ei_done":"تم الاستيراد"});
 Object.assign(I18N.en, {"rp_nov": "No vehicle"});
 Object.assign(I18N.en, {"rc_multi": "you can add up to {n} photos", "rc_remove": "remove", "rc_max": "At most {n} receipt photos."});
 Object.assign(I18N.en, {"rp_pdf": "VEHICLE REPAIR REPORT", "rp_tot": "Total repair cost", "rp_cnt2": "Repairs", "rp_vn": "Vehicles", "rp_det": "Repair details", "rp_paid": "Paid from", "rp_dl": "Download receipt", "rp_dl_err": "Could not download the receipt"});
@@ -1469,7 +1472,7 @@ function vEmployees(){
       </div></td></tr>`;
   return `
   <div class="head"><div><h1>${t("nav_employees")}</h1><p>${all.length} · ${act.length} ${t("ACTIVE")}</p></div>
-    <div class="tools"><button class="btn ghost" data-act="gc-open">👥 ${t("gc_title")}</button><button class="btn ghost" data-act="notice-new" data-needs-write>📣 ${t("nt_send")}</button><button class="btn" data-act="emp-new" data-needs-write>+ ${t("addEmp")}</button></div></div>
+    <div class="tools"><button class="btn ghost" data-act="gc-open">👥 ${t("gc_title")}</button><button class="btn ghost" data-act="notice-new" data-needs-write>📣 ${t("nt_send")}</button><button class="btn ghost" data-act="emp-import" data-needs-write>📥 ${t("ei_btn")}</button><button class="btn" data-act="emp-new" data-needs-write>+ ${t("addEmp")}</button></div></div>
   ${(()=>{const req=all.filter(([id,e])=>(state.pinreq[id]?.at||0)>(e.pinResetAt||0));return req.length?`<div class="note warn"><b>${t("pin_req")}:</b> ${req.map(([id,e])=>`<button class="btn ghost sm" data-act="emp-pin" data-id="${id}" data-needs-write style="margin:4px 4px 0 0">${esc(e.fullName)} · ${t("pin_change")}</button>`).join("")}</div>`:""})()}
   <div class="chips"><b>${t("wk_on")}: ${act.filter(([, e]) => e.isActive !== false).length} | ${t("wk_off")}: ${act.filter(([, e]) => e.isActive === false).length}</b>
     ${[["", t("all")], ["1", t("wk_on")], ["0", t("wk_off")]].map(([v, l]) => `<button class="chip ${(state.qWork || "") === v ? "on" : ""}" data-act="emp-chip" data-k="qWork" data-v="${v}">${l}</button>`).join("")}</div>
@@ -3969,6 +3972,120 @@ function showPin(name, pin){
     footer: `<button type="button" class="btn" data-close>${t("close")}</button>` });
 }
 
+/* ───────── Employees Excel import: download the sheet, edit or add rows, upload it back ───────── */
+const EI_COLS = [["id","ID"],["fullName","Name"],["fullNameAr","Name (Arabic)"],["status","Status"],["platform","Platform"],["city","City"],["payType","Pay type"],["mobile","Mobile"],["residentId","Iqama"],["jahezId","Jahez ID"],["card","Card"],["cardSerial","Card serial"],["plate","Plate"],["vehicleName","Vehicle name"],["vehicleModel","Vehicle model"],["bankName","Bank"],["accountName","Account name"],["iban","IBAN"],["dailyLimit","Daily limit"],["monthlyLimit","Monthly limit"]];
+const EI_LBL = Object.fromEntries(EI_COLS);
+const eiNorm = s => String(s == null ? "" : s).toLowerCase().replace(/[\s_\-.()\/:]+/g, "");
+function eiHeaderMap(row){
+  const al = {}; EI_COLS.forEach(([k, h]) => { al[eiNorm(h)] = k; });
+  const add = (k, v) => { if (v && !al[eiNorm(v)]) al[eiNorm(v)] = k; };
+  ["en", "bn", "ar"].forEach(L => { const P = XPL[L] || {}; add("id", P.id); add("fullName", P.name); add("status", P.status); add("platform", P.platform); add("city", P.city); add("payType", P.paytype); add("mobile", P.mobile); add("residentId", P.iqama); add("card", P.card); add("plate", P.plate); add("bankName", P.bank); add("accountName", P.acct); add("iban", P.iban); });
+  al[eiNorm("Iqama")] = "residentId"; al[eiNorm("Resident ID")] = "residentId"; al[eiNorm("Jahez ID")] = "jahezId"; al[eiNorm("Pay type")] = "payType";
+  const map = {};
+  row.forEach((h, i) => { let k = al[eiNorm(h)]; if (!k) return; if (k === "fullName" && eiNorm(h) === eiNorm("الاسم") && Object.values(map).includes("fullName")) k = "fullNameAr"; if (!Object.values(map).includes(k)) map[i] = k; });
+  return map;
+}
+function eiPlan(rows){
+  const hi = rows.findIndex(r => Object.keys(eiHeaderMap(r)).length >= 3);
+  if (hi < 0) return { err: "ei_nocol" };
+  const map = eiHeaderMap(rows[hi]), E = state.emp || {}, live = ([, e]) => e.status !== "DELETED";
+  const byIq = {}; Object.entries(E).filter(live).forEach(([k, e]) => { if (e.residentId) byIq[e.residentId] = k; });
+  const items = [], probs = [], seenKeys = new Set();
+  for (let r = hi + 1; r < rows.length; r++) {
+    const raw = rows[r]; if (!raw || raw.every(c => String(c ?? "").trim() === "")) continue;
+    const xr = r + 1, cells = {}, errs = [];
+    Object.entries(map).forEach(([i, k]) => {
+      let v = raw[i]; if (v == null || String(v).trim() === "") return;
+      if (typeof v === "number") { if (Math.abs(v) >= 1e15) { errs.push(EI_LBL[k] + ": number too long — format the column as Text"); return; } v = String(v); }
+      cells[k] = String(v).trim();
+    });
+    const nm = cells.fullName || cells.residentId || "?";
+    const val = {};
+    for (const [k, v0] of Object.entries(cells)) {
+      let v = v0;
+      if (k === "id") continue;
+      if (k === "status") { v = v.toUpperCase(); if (!["ACTIVE", "INACTIVE", "PENDING"].includes(v)) { errs.push("Status: " + v0); continue; } }
+      else if (k === "platform") { const m = PLATFORMS.find(p => eiNorm(p) === eiNorm(v)); if (!m) { errs.push("Platform: " + v0); continue; } v = m; }
+      else if (k === "payType") { v = v.toUpperCase().replace(/[\s-]+/g, "_"); if (!PAY_TYPES.includes(v)) { errs.push("Pay type: " + v0); continue; } }
+      else if (k === "mobile") { v = v.replace(/[^\d]/g, ""); if (/^5\d{8}$/.test(v)) v = "0" + v; else if (/^9665\d{8}$/.test(v)) v = "0" + v.slice(3); if (!v) { errs.push("Mobile: " + v0); continue; } }
+      else if (k === "residentId") { v = v.replace(/\D/g, ""); if (!/^\d{10}$/.test(v)) { errs.push("Iqama: " + v0); continue; } }
+      else if (k === "jahezId") { v = v.replace(/\D/g, ""); if (!v) { errs.push("Jahez ID: " + v0); continue; } }
+      else if (k === "plate") v = v.toUpperCase();
+      else if (k === "iban") { v = v.replace(/\s/g, "").toUpperCase(); if (!/^SA\d{22}$/.test(v)) { errs.push("IBAN: " + v0); continue; } }
+      else if (k === "dailyLimit" || k === "monthlyLimit") { const n = Number(v); if (!isFinite(n) || n < 0) { errs.push(EI_LBL[k] + ": " + v0); continue; } v = n; }
+      val[k] = v;
+    }
+    let key = cells.id && E[cells.id] && live([cells.id, E[cells.id]]) ? cells.id : null;
+    if (!key && val.residentId && byIq[val.residentId]) key = byIq[val.residentId];
+    if (cells.id && E[cells.id] && E[cells.id].status === "DELETED" && !key) errs.push("ID " + cells.id + " is deleted");
+    if (key && seenKeys.has(key)) errs.push("Same employee appears twice");
+    if (errs.length) { probs.push({ xr, nm, msg: errs.join("; ") }); continue; }
+    if (key) {
+      seenKeys.add(key); const cur = E[key], patch = {}, ch = [];
+      Object.entries(val).forEach(([k, v]) => { if (String(cur[k] ?? "") !== String(v)) { patch[k] = v; ch.push([k, cur[k] ?? "", v]); } });
+      const pt = patch.payType || cur.payType; if (pt === "FLAT" && patch.payType && !(+cur.poRate > 0)) { probs.push({ xr, nm: cur.fullName, msg: "Pay type FLAT needs a rate (set it on the employee page)" }); continue; }
+      items.push({ xr, key, isNew: false, nm: cur.fullName, patch, ch });
+    } else {
+      const miss = ["fullName", "residentId", "mobile"].filter(k => !val[k]);
+      if (miss.length) { probs.push({ xr, nm, msg: "New employee needs: " + miss.map(k => EI_LBL[k]).join(", ") }); continue; }
+      if (val.payType === "FLAT") { probs.push({ xr, nm, msg: "Pay type FLAT needs a rate (set it on the employee page)" }); continue; }
+      const data = { platform: "Keeta", payType: "TARGET", dailyLimit: 60, monthlyLimit: 1500, city: "", plate: "", jahezId: "", card: "", cardSerial: "", vehicleName: "", vehicleModel: "", bankName: "", accountName: "", iban: "", fullNameAr: "", ...val };
+      items.push({ xr, key: null, isNew: true, nm: val.fullName, patch: data, ch: [] });
+    }
+  }
+  /* uniqueness on the final state: Iqama and petrol card */
+  for (let pass = 0; pass < 3; pass++) {
+    const fin = {}; Object.entries(E).filter(live).forEach(([k, e]) => { fin[k] = { residentId: e.residentId || "", card: e.card || "" }; });
+    items.forEach((it, i) => { const k = it.key || "n" + i; fin[k] = { ...(fin[k] || {}), ...Object.fromEntries(["residentId", "card"].filter(f => it.patch[f] != null).map(f => [f, it.patch[f]])) }; });
+    const bad = new Map();
+    ["residentId", "card"].forEach(f => { const seen = {}; Object.entries(fin).forEach(([k, o]) => { const v = o[f]; if (!v) return; (seen[v] = seen[v] || []).push(k); }); Object.entries(seen).forEach(([v, ks]) => { if (ks.length > 1) items.forEach((it, i) => { const k = it.key || "n" + i; if (ks.includes(k) && it.patch[f] != null && String(it.patch[f]) === v) bad.set(k, (f === "card" ? "Card " : "Iqama ") + v + " is used by more than one employee"); }); }); });
+    let hit = false;
+    for (let i = items.length - 1; i >= 0; i--) { const it = items[i], k = it.key || "n" + i; if (bad.has(k)) { probs.push({ xr: it.xr, nm: it.nm, msg: bad.get(k) }); items.splice(i, 1); hit = true; } }
+    if (!hit) break;
+  }
+  const upd = items.filter(i => !i.isNew && i.ch.length), nw = items.filter(i => i.isNew), same = items.filter(i => !i.isNew && !i.ch.length);
+  return { upd, nw, same, probs: probs.sort((a, b) => a.xr - b.xr) };
+}
+function eiPickDialog(){
+  openDialog({ title: "📥 " + t("ei_title"), submit: t("ei_preview"),
+    body: `<p class="full sub" style="margin:0">${t("ei_help")}</p>
+      <div class="full"><button type="button" class="btn ghost sm" data-act="xp-xlsx" data-v="employees">⬇ ${t("ei_dl")}</button></div>
+      <label class="f full">${t("ei_pick")}<input class="input" type="file" id="eiFile" accept=".xlsx,.xlsm,.xls" required></label>`,
+    onSubmit: async () => {
+      const f = $("#eiFile")?.files?.[0]; if (!f) fail(t("ei_nofile"));
+      if (!window.XLSX) fail(t("na"));
+      let rows;
+      try { const wb = XLSX.read(new Uint8Array(await f.arrayBuffer()), { type: "array" }); const ws = wb.Sheets[wb.SheetNames[0]]; rows = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true, defval: "", blankrows: false }); }
+      catch (x) { console.error(x); fail(t("ei_badfile")); }
+      const plan = eiPlan(rows); if (plan.err) fail(t(plan.err));
+      setTimeout(() => eiPreview(plan), 60);
+    }});
+}
+function eiPreview(plan){
+  const li = it => `<div class="ei-it"><b>${esc(it.nm)}</b> <span class="sub">· ${t("ei_row")} ${it.xr}</span>${it.isNew ? `<div class="sub">${esc([it.patch.platform, it.patch.mobile, it.patch.residentId, it.patch.plate, it.patch.card].filter(Boolean).join(" · "))}</div>` : it.ch.map(([k, o, n]) => `<div class="ei-ch"><span class="sub">${EI_LBL[k]}:</span> <s>${esc(o === "" ? "—" : o)}</s> → <b>${esc(n)}</b></div>`).join("")}</div>`;
+  const sec = (h, a) => a.length ? `<div class="full"><div class="sec">${h} (${a.length})</div>${a.map(li).join("")}</div>` : "";
+  const prob = plan.probs.length ? `<div class="full"><div class="sec" style="color:var(--bad,#c0392b)">⚠ ${t("ei_prob")} (${plan.probs.length})</div>${plan.probs.map(p => `<div class="ei-it"><b>${esc(p.nm)}</b> <span class="sub">· ${t("ei_row")} ${p.xr}</span><div class="sub">${esc(p.msg)}</div></div>`).join("")}</div>` : "";
+  const iqCh = plan.upd.some(i => i.patch.residentId);
+  const n = plan.upd.length + plan.nw.length;
+  openDialog({ title: "📥 " + t("ei_title"), submit: n ? t("ei_apply") + " (" + n + ")" : t("close"),
+    body: `<style>.ei-it{padding:6px 0;border-bottom:1px solid var(--line,#8883)}.ei-ch{font-size:13px;word-break:break-word}</style>
+      <div class="full" style="display:flex;gap:8px;flex-wrap:wrap"><span class="chip">✏️ ${t("ei_upd")}: ${plan.upd.length}</span><span class="chip">➕ ${t("ei_new")}: ${plan.nw.length}</span><span class="chip">＝ ${t("ei_same")}: ${plan.same.length}</span><span class="chip">⚠ ${t("ei_prob")}: ${plan.probs.length}</span></div>
+      ${iqCh ? `<p class="full sub" style="margin:0">⚠ ${t("ei_resetnote")}</p>` : ""}
+      <div class="full" style="max-height:52vh;overflow:auto">${sec("✏️ " + t("ei_upd"), plan.upd)}${sec("➕ " + t("ei_new"), plan.nw)}${prob}${n || plan.probs.length ? "" : `<p class="sub">${t("ei_none")}</p>`}</div>`,
+    onSubmit: async () => {
+      if (!n) return;
+      const now = Date.now(), pins = [];
+      for (const it of plan.upd) { const p = { ...it.patch, updatedAt: now }; if (it.patch.residentId) p.pinCheck = ""; await db.doc("employees/" + it.key).update(p); }
+      for (const it of plan.nw) {
+        const pin = randomPin(), salt = uid(), id = "e" + uid(), d = it.patch;
+        await db.doc("employees/" + id).set({ ...d, status: d.status || "PENDING", pinSalt: salt, pinHash: await sha(salt + pin), pinCheck: await pinCheckOf(d.residentId, pin), pinVer: 1, createdAt: now, updatedAt: now });
+        pins.push([d.fullName, pin]);
+      }
+      toast(t("ei_done") + ": " + plan.upd.length + " ✏️ · " + plan.nw.length + " ➕");
+      if (pins.length) setTimeout(() => openDialog({ title: t("pinTitle"), body: `<p class="sub full">${t("pinText")}</p><div class="full">${pins.map(([nm, p]) => `<div style="display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line,#8883)"><span>${esc(nm)}</span><b class="mono">${p}</b></div>`).join("")}</div>`, footer: `<button type="button" class="btn" data-close>${t("close")}</button>` }), 80);
+    }});
+}
+
 /* ───────── actions ───────── */
 document.addEventListener("click", async e => {
   const b = e.target.closest("[data-act]"); if (!b) return;
@@ -3976,6 +4093,7 @@ document.addEventListener("click", async e => {
   try {
     if (act === "tab") { state.finesTab = b.dataset.v; render(); }
 
+    if (act === "emp-import") { eiPickDialog(); return; }
     if (act === "emp-new" || act === "emp-edit") {
       photoCrop = null;
       const cur = id ? state.emp[id] : {};
@@ -5528,8 +5646,8 @@ function xpSets0(v, o){
   if (v === "employees") {
     const L = Object.entries(E).filter(live).sort((a, b) => String(a[1].fullName).localeCompare(String(b[1].fullName))), act = L.filter(([, e]) => e.status === "ACTIVE");
     return { file: "employees", title: xl("emp_t"),
-      sheets: [{ name: xl("k_emp"), head: [xl("id"), xl("name"), "الاسم", xl("status"), xl("platform"), xl("city"), xl("paytype"), xl("mobile"), xl("iqama"), "Jahez ID", xl("card"), xl("plate"), xl("vehicle"), xl("bank"), xl("acct"), xl("iban")],
-        rows: L.map(([id, e]) => [id, e.fullName, e.fullNameAr || "", e.status, e.platform || "", e.city || "", e.payType || "", e.mobile || "", e.residentId || "", e.jahezId || "", e.card || "", e.plate || "", [e.vehicleName, e.vehicleModel].filter(Boolean).join(" "), e.bankName || "", e.accountName || "", e.iban || ""]) }],
+      sheets: [{ name: xl("k_emp"), head: EI_COLS.map(c => c[1]),
+        rows: L.map(([id, e]) => [id, e.fullName || "", e.fullNameAr || "", e.status, e.platform || "", e.city || "", e.payType || "", e.mobile || "", e.residentId || "", e.jahezId || "", e.card || "", e.cardSerial || "", e.plate || "", e.vehicleName || "", e.vehicleModel || "", e.bankName || "", e.accountName || "", e.iban || "", e.dailyLimit ?? "", e.monthlyLimit ?? ""]) }],
       kpis: [[xl("k_emp"), L.length], [xl("k_active"), act.length], ["Keeta", act.filter(([, e]) => /keeta/i.test(e.platform || "")).length], ["HungerStation", act.filter(([, e]) => /hunger/i.test(e.platform || "")).length]],
       tables: [{ head: [xl("rank"), xl("name"), xl("platform"), xl("city"), xl("plate"), xl("mobile")], w: [.06, .32, .17, .13, .14, .18], rows: act.map(([, e], i) => [i + 1, e.fullName, e.platform || "-", e.city || "-", e.plate || "-", e.mobile || "-"]) }] };
   }
