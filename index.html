@@ -3973,14 +3973,14 @@ function showPin(name, pin){
 }
 
 /* ───────── Employees Excel import: download the sheet, edit or add rows, upload it back ───────── */
-const EI_COLS = [["id","ID"],["fullName","Name"],["fullNameAr","Name (Arabic)"],["status","Status"],["platform","Platform"],["city","City"],["payType","Pay type"],["mobile","Mobile"],["residentId","Iqama"],["jahezId","Jahez ID"],["card","Card"],["cardSerial","Card serial"],["plate","Plate"],["vehicleName","Vehicle name"],["vehicleModel","Vehicle model"],["bankName","Bank"],["accountName","Account name"],["iban","IBAN"],["dailyLimit","Daily limit"],["monthlyLimit","Monthly limit"]];
+const EI_COLS = [["fullName","Name"],["fullNameAr","Name (Arabic)"],["status","Status"],["platform","Platform"],["city","City"],["payType","Pay type"],["mobile","Mobile"],["residentId","Iqama"],["jahezId","Courier ID"],["card","Card"],["cardSerial","Card serial"],["plate","Plate"],["vehicleName","Vehicle name"],["vehicleModel","Vehicle model"],["bankName","Bank"],["accountName","Account name"],["iban","IBAN"],["dailyLimit","Daily limit"],["monthlyLimit","Monthly limit"]];
 const EI_LBL = Object.fromEntries(EI_COLS);
 const eiNorm = s => String(s == null ? "" : s).toLowerCase().replace(/[\s_\-.()\/:]+/g, "");
 function eiHeaderMap(row){
   const al = {}; EI_COLS.forEach(([k, h]) => { al[eiNorm(h)] = k; });
   const add = (k, v) => { if (v && !al[eiNorm(v)]) al[eiNorm(v)] = k; };
   ["en", "bn", "ar"].forEach(L => { const P = XPL[L] || {}; add("id", P.id); add("fullName", P.name); add("status", P.status); add("platform", P.platform); add("city", P.city); add("payType", P.paytype); add("mobile", P.mobile); add("residentId", P.iqama); add("card", P.card); add("plate", P.plate); add("bankName", P.bank); add("accountName", P.acct); add("iban", P.iban); });
-  al[eiNorm("Iqama")] = "residentId"; al[eiNorm("Resident ID")] = "residentId"; al[eiNorm("Jahez ID")] = "jahezId"; al[eiNorm("Pay type")] = "payType";
+  al[eiNorm("ID")] = "id"; al[eiNorm("Iqama")] = "residentId"; al[eiNorm("Resident ID")] = "residentId"; al[eiNorm("Jahez ID")] = "jahezId"; al[eiNorm("Pay type")] = "payType";
   const map = {};
   row.forEach((h, i) => { let k = al[eiNorm(h)]; if (!k) return; if (k === "fullName" && eiNorm(h) === eiNorm("الاسم") && Object.values(map).includes("fullName")) k = "fullNameAr"; if (!Object.values(map).includes(k)) map[i] = k; });
   return map;
@@ -4009,7 +4009,7 @@ function eiPlan(rows){
       else if (k === "payType") { v = v.toUpperCase().replace(/[\s-]+/g, "_"); if (!PAY_TYPES.includes(v)) { errs.push("Pay type: " + v0); continue; } }
       else if (k === "mobile") { v = v.replace(/[^\d]/g, ""); if (/^5\d{8}$/.test(v)) v = "0" + v; else if (/^9665\d{8}$/.test(v)) v = "0" + v.slice(3); if (!v) { errs.push("Mobile: " + v0); continue; } }
       else if (k === "residentId") { v = v.replace(/\D/g, ""); if (!/^\d{10}$/.test(v)) { errs.push("Iqama: " + v0); continue; } }
-      else if (k === "jahezId") { v = v.replace(/\D/g, ""); if (!v) { errs.push("Jahez ID: " + v0); continue; } }
+      else if (k === "jahezId") { v = v.replace(/\D/g, ""); if (!v) { errs.push("Courier ID: " + v0); continue; } }
       else if (k === "plate") v = v.toUpperCase();
       else if (k === "iban") { v = v.replace(/\s/g, "").toUpperCase(); if (!/^SA\d{22}$/.test(v)) { errs.push("IBAN: " + v0); continue; } }
       else if (k === "dailyLimit" || k === "monthlyLimit") { const n = Number(v); if (!isFinite(n) || n < 0) { errs.push(EI_LBL[k] + ": " + v0); continue; } v = n; }
@@ -5648,7 +5648,7 @@ function xpSets0(v, o){
     const efTxt = [ef.work ? xl(ef.work === "1" ? "ef_w1" : "ef_w0") : "", ef.plat].filter(Boolean).join(" · ");
     return { file: "employees" + (efTxt ? "-" + efTxt.replace(/[^\w]+/g, "") : ""), title: xl("emp_t") + (efTxt ? " — " + efTxt : ""),
       sheets: [{ name: xl("k_emp"), head: EI_COLS.map(c => c[1]),
-        rows: L.map(([id, e]) => [id, e.fullName || "", e.fullNameAr || "", e.status, e.platform || "", e.city || "", e.payType || "", e.mobile || "", e.residentId || "", e.jahezId || "", e.card || "", e.cardSerial || "", e.plate || "", e.vehicleName || "", e.vehicleModel || "", e.bankName || "", e.accountName || "", e.iban || "", e.dailyLimit ?? "", e.monthlyLimit ?? ""]) }],
+        rows: L.map(([id, e]) => [e.fullName || "", e.fullNameAr || "", e.status, e.platform || "", e.city || "", e.payType || "", e.mobile || "", e.residentId || "", e.jahezId || "", e.card || "", e.cardSerial || "", e.plate || "", e.vehicleName || "", e.vehicleModel || "", e.bankName || "", e.accountName || "", e.iban || "", e.dailyLimit ?? "", e.monthlyLimit ?? ""]) }],
       kpis: [[xl("k_emp"), L.length], [xl("k_active"), act.length], ["Keeta", act.filter(([, e]) => /keeta/i.test(e.platform || "")).length], ["HungerStation", act.filter(([, e]) => /hunger/i.test(e.platform || "")).length]],
       tables: [{ head: [xl("rank"), xl("name"), xl("platform"), xl("city"), xl("plate"), xl("mobile")], w: [.06, .32, .17, .13, .14, .18], rows: act.map(([, e], i) => [i + 1, e.fullName, e.platform || "-", e.city || "-", e.plate || "-", e.mobile || "-"]) }] };
   }
